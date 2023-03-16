@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Iasi City Public Transport Isochrones</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@6.6.1/dist/ol.css" />
+    <style>
+        #map {
+            height: 600px;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/ol@6.6.1/dist/ol.js"></script>
+    <script>
+        var map = new ol.Map({
+            target: 'map',
+            view: new ol.View({
+                center: ol.proj.fromLonLat([27.58797, 47.15984]), // Center on Iasi City
+                zoom: 12
+            }),
+            layers: [
+                new ol.layer.Tile({
+                    source: new ol.source.OSM()
+                })
+            ]
+        });
+
+        // Create a marker for the origin point
+        var marker = new ol.Feature({
+            geometry: new ol.geom.Point(ol.proj.fromLonLat([27.58797, 47.15984]))
+        });
+        var markerLayer = new ol.layer.Vector({
+            source: new ol.source.Vector({
+                features: [marker]
+            }),
+            style: new ol.style.Style({
+                image: new ol.style.Icon({
+                    src: 'https://openlayers.org/en/latest/examples/data/icon.png'
+                })
+            })
+        });
+        map.addLayer(markerLayer);
+
+        // Define the travel time intervals in seconds
+        var intervals = [5 * 60, 10 * 60, 15 * 60, 30 * 60, 45 * 60, 60 * 60];
+
+        // Generate isochrones for each interval and add them to the map
+        intervals.forEach(function (interval) {
+            var url = 'https://api.openrouteservice.org/isochrones?locations=' + marker.getGeometry().getCoordinates()[0] + ',' + marker.getGeometry().getCoordinates()[1] + '&range_type=time&range=' + interval + '&interval=60&attributes=area';
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', url);
+            xhr.setRequestHeader('Accept', 'application/json');
+            xhr.setRequestHeader('Authorization', 'Bearer YOUR_API_KEY');
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    var response = JSON.parse(xhr.responseText);
+                    var color = getColor(interval / 60); // Convert interval to minutes
+                    var isochroneLayer = new ol.layer.Vector({
+                        source: new ol.source.Vector({
+                            features: new ol.format.GeoJSON().readFeatures(response.features)
+                        }),
+                        style: new ol.style.Style({
+                            fill: new ol.style.Fill({
+                                color: color
+                            }),
+                            stroke: new ol.style.Stroke({
+                                color: color,
+                                width: 1
+                            })
+                        })
+                    });
+                    map.addLayer(isochroneLayer);
+                }
+            };
+            xhr.send();
+        });
+
+        // Helper function to generate a color based on the interval
+        function getColor(minutes) {
+            var colors = ['#ffffcc', '#a1dab4', '#41b6c4', '#2c7fb8',
+                          '#253494', '#081d58'];
+           
