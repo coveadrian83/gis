@@ -18,26 +18,17 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-
-      - name: Cache Gradle
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
+          cache: gradle
 
       - name: Permisiuni Gradle wrapper
         run: chmod +x SocialMediaTracker/gradlew
 
       - name: Build APK (debug)
         working-directory: SocialMediaTracker
-        run: ./gradlew assembleDebug --no-daemon
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: Redenumire APK
-        run: mv SocialMediaTracker/app/build/outputs/apk/debug/app-debug.apk SocialMediaTracker/app/build/outputs/apk/debug/FaraEcrane.apk
+        run: cp SocialMediaTracker/app/build/outputs/apk/debug/app-debug.apk SocialMediaTracker/app/build/outputs/apk/debug/FaraEcrane.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
