@@ -285,7 +285,7 @@
     return featuresOf(fc).map(function (f, idx) {
       var p = f.properties || {};
       var siruta = pick(p, ['siruta', 'SIRUTA', 'natcode', 'natCode', 'NATCODE', 'siruta_uat', 'uat_siruta', 'cod_siruta', 'code']);
-      var name = pick(p, ['uat_name', 'name', 'NAME', 'Name', 'nume', 'denumire', 'uat', 'UAT', 'NUME']);
+      var name = pick(p, ['canonical_name', 'uat_name', 'name', 'NAME', 'Name', 'nume', 'denumire', 'uat', 'UAT', 'NUME']);
       if (!siruta) warnings.push('UAT fără cod SIRUTA (feature #' + idx + ')');
       var polys = toPolygons(f.geometry);
       var cleanName = String(name || ('UAT ' + (siruta || idx))).replace(/^(municipiul|orasul|oraşul|orașul|comuna)\s+/i, '');
