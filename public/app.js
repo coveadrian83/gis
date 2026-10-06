@@ -335,7 +335,7 @@
     switch (c.unit_type) {
       case 'IAS_ZONE': return 'Iași · zona ' + c.unit_name + ' (' + c.unit_id + ')';
       case 'LOCALITY': return 'Localitatea ' + c.unit_name + (c.uat_name && c.uat_name !== c.unit_name ? ', UAT ' + c.uat_name : '') + ' · SIRUTA ' + c.locality_siruta;
-      case 'UAT_REST': return c.flags && c.flags.indexOf('IASI_NO_ZONE') >= 0 ? 'Municipiul Iași · în afara celor 17 zone de analiză' : 'UAT ' + c.uat_name;
+      case 'UAT_REST': return c.flags && c.flags.indexOf('IASI_NO_ZONE') >= 0 ? 'Municipiul Iași · în afara celor 17 zone de analiză' : 'Comuna ' + c.uat_name + ' (pentru sat, caută-l după nume)';
       default: return c.flags && c.flags.indexOf('GEO_MISSING') >= 0 ? 'Clasificare la server' : 'În afara Zonei Metropolitane Iași (acceptat, marcat separat)';
     }
   }

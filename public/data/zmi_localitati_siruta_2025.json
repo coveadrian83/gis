@@ -1,0 +1,836 @@
+[
+  {
+    "siruta_loc": "95079",
+    "locality_name": "Iași",
+    "siruta_uat": "95060",
+    "uat_name": "Iași"
+  },
+  {
+    "siruta_loc": "95756",
+    "locality_name": "Aroneanu",
+    "siruta_uat": "95747",
+    "uat_name": "Aroneanu"
+  },
+  {
+    "siruta_loc": "95765",
+    "locality_name": "Dorobanț",
+    "siruta_uat": "95747",
+    "uat_name": "Aroneanu"
+  },
+  {
+    "siruta_loc": "95774",
+    "locality_name": "Rediu Aldei",
+    "siruta_uat": "95747",
+    "uat_name": "Aroneanu"
+  },
+  {
+    "siruta_loc": "95783",
+    "locality_name": "Șorogani",
+    "siruta_uat": "95747",
+    "uat_name": "Aroneanu"
+  },
+  {
+    "siruta_loc": "95097",
+    "locality_name": "Bârnova",
+    "siruta_uat": "95088",
+    "uat_name": "Bârnova"
+  },
+  {
+    "siruta_loc": "95104",
+    "locality_name": "Cercu",
+    "siruta_uat": "95088",
+    "uat_name": "Bârnova"
+  },
+  {
+    "siruta_loc": "95113",
+    "locality_name": "Păun",
+    "siruta_uat": "95088",
+    "uat_name": "Bârnova"
+  },
+  {
+    "siruta_loc": "95122",
+    "locality_name": "Pietrăria",
+    "siruta_uat": "95088",
+    "uat_name": "Bârnova"
+  },
+  {
+    "siruta_loc": "95131",
+    "locality_name": "Todirel",
+    "siruta_uat": "95088",
+    "uat_name": "Bârnova"
+  },
+  {
+    "siruta_loc": "95140",
+    "locality_name": "Vișan",
+    "siruta_uat": "95088",
+    "uat_name": "Bârnova"
+  },
+  {
+    "siruta_loc": "96263",
+    "locality_name": "Ciurea",
+    "siruta_uat": "96254",
+    "uat_name": "Ciurea"
+  },
+  {
+    "siruta_loc": "96272",
+    "locality_name": "Curături",
+    "siruta_uat": "96254",
+    "uat_name": "Ciurea"
+  },
+  {
+    "siruta_loc": "96281",
+    "locality_name": "Dumbrava",
+    "siruta_uat": "96254",
+    "uat_name": "Ciurea"
+  },
+  {
+    "siruta_loc": "96290",
+    "locality_name": "Hlincea",
+    "siruta_uat": "96254",
+    "uat_name": "Ciurea"
+  },
+  {
+    "siruta_loc": "96307",
+    "locality_name": "Lunca Cetățuii",
+    "siruta_uat": "96254",
+    "uat_name": "Ciurea"
+  },
+  {
+    "siruta_loc": "96316",
+    "locality_name": "Picioru Lupului",
+    "siruta_uat": "96254",
+    "uat_name": "Ciurea"
+  },
+  {
+    "siruta_loc": "96325",
+    "locality_name": "Slobozia",
+    "siruta_uat": "96254",
+    "uat_name": "Ciurea"
+  },
+  {
+    "siruta_loc": "96389",
+    "locality_name": "Osoi",
+    "siruta_uat": "96370",
+    "uat_name": "Comarna"
+  },
+  {
+    "siruta_loc": "96398",
+    "locality_name": "Comarna",
+    "siruta_uat": "96370",
+    "uat_name": "Comarna"
+  },
+  {
+    "siruta_loc": "96405",
+    "locality_name": "Curagău",
+    "siruta_uat": "96370",
+    "uat_name": "Comarna"
+  },
+  {
+    "siruta_loc": "96414",
+    "locality_name": "Stânca",
+    "siruta_uat": "96370",
+    "uat_name": "Comarna"
+  },
+  {
+    "siruta_loc": "96432",
+    "locality_name": "Costuleni",
+    "siruta_uat": "96423",
+    "uat_name": "Costuleni"
+  },
+  {
+    "siruta_loc": "96441",
+    "locality_name": "Covasna",
+    "siruta_uat": "96423",
+    "uat_name": "Costuleni"
+  },
+  {
+    "siruta_loc": "96450",
+    "locality_name": "Cozia",
+    "siruta_uat": "96423",
+    "uat_name": "Costuleni"
+  },
+  {
+    "siruta_loc": "96469",
+    "locality_name": "Hilița",
+    "siruta_uat": "96423",
+    "uat_name": "Costuleni"
+  },
+  {
+    "siruta_loc": "96897",
+    "locality_name": "Dobrovăț",
+    "siruta_uat": "96888",
+    "uat_name": "Dobrovăț"
+  },
+  {
+    "siruta_loc": "97107",
+    "locality_name": "Golăiești",
+    "siruta_uat": "97090",
+    "uat_name": "Golăiești"
+  },
+  {
+    "siruta_loc": "97116",
+    "locality_name": "Bran",
+    "siruta_uat": "97090",
+    "uat_name": "Golăiești"
+  },
+  {
+    "siruta_loc": "97125",
+    "locality_name": "Cilibiu",
+    "siruta_uat": "97090",
+    "uat_name": "Golăiești"
+  },
+  {
+    "siruta_loc": "97134",
+    "locality_name": "Cotu lui Ivan",
+    "siruta_uat": "97090",
+    "uat_name": "Golăiești"
+  },
+  {
+    "siruta_loc": "97143",
+    "locality_name": "Grădinari",
+    "siruta_uat": "97090",
+    "uat_name": "Golăiești"
+  },
+  {
+    "siruta_loc": "97152",
+    "locality_name": "Medeleni",
+    "siruta_uat": "97090",
+    "uat_name": "Golăiești"
+  },
+  {
+    "siruta_loc": "97161",
+    "locality_name": "Petrești",
+    "siruta_uat": "97090",
+    "uat_name": "Golăiești"
+  },
+  {
+    "siruta_loc": "97170",
+    "locality_name": "Podu Jijiei",
+    "siruta_uat": "97090",
+    "uat_name": "Golăiești"
+  },
+  {
+    "siruta_loc": "97250",
+    "locality_name": "Grajduri",
+    "siruta_uat": "97241",
+    "uat_name": "Grajduri"
+  },
+  {
+    "siruta_loc": "97269",
+    "locality_name": "Cărbunari",
+    "siruta_uat": "97241",
+    "uat_name": "Grajduri"
+  },
+  {
+    "siruta_loc": "97278",
+    "locality_name": "Corcodel",
+    "siruta_uat": "97241",
+    "uat_name": "Grajduri"
+  },
+  {
+    "siruta_loc": "97287",
+    "locality_name": "Lunca",
+    "siruta_uat": "97241",
+    "uat_name": "Grajduri"
+  },
+  {
+    "siruta_loc": "97296",
+    "locality_name": "Pădureni",
+    "siruta_uat": "97241",
+    "uat_name": "Grajduri"
+  },
+  {
+    "siruta_loc": "97303",
+    "locality_name": "Poiana cu Cetate",
+    "siruta_uat": "97241",
+    "uat_name": "Grajduri"
+  },
+  {
+    "siruta_loc": "97312",
+    "locality_name": "Valea Satului",
+    "siruta_uat": "97241",
+    "uat_name": "Grajduri"
+  },
+  {
+    "siruta_loc": "95168",
+    "locality_name": "Holboca",
+    "siruta_uat": "95159",
+    "uat_name": "Holboca"
+  },
+  {
+    "siruta_loc": "95177",
+    "locality_name": "Cristești",
+    "siruta_uat": "95159",
+    "uat_name": "Holboca"
+  },
+  {
+    "siruta_loc": "95186",
+    "locality_name": "Dancu",
+    "siruta_uat": "95159",
+    "uat_name": "Holboca"
+  },
+  {
+    "siruta_loc": "95195",
+    "locality_name": "Orzeni",
+    "siruta_uat": "95159",
+    "uat_name": "Holboca"
+  },
+  {
+    "siruta_loc": "95202",
+    "locality_name": "Rusenii Noi",
+    "siruta_uat": "95159",
+    "uat_name": "Holboca"
+  },
+  {
+    "siruta_loc": "95211",
+    "locality_name": "Rusenii Vechi",
+    "siruta_uat": "95159",
+    "uat_name": "Holboca"
+  },
+  {
+    "siruta_loc": "95220",
+    "locality_name": "Valea Lungă",
+    "siruta_uat": "95159",
+    "uat_name": "Holboca"
+  },
+  {
+    "siruta_loc": "97526",
+    "locality_name": "Horlești",
+    "siruta_uat": "97517",
+    "uat_name": "Horlești"
+  },
+  {
+    "siruta_loc": "97535",
+    "locality_name": "Bogdănești",
+    "siruta_uat": "97517",
+    "uat_name": "Horlești"
+  },
+  {
+    "siruta_loc": "97544",
+    "locality_name": "Scoposeni",
+    "siruta_uat": "97517",
+    "uat_name": "Horlești"
+  },
+  {
+    "siruta_loc": "97688",
+    "locality_name": "Lețcani",
+    "siruta_uat": "97679",
+    "uat_name": "Lețcani"
+  },
+  {
+    "siruta_loc": "97697",
+    "locality_name": "Bogonos",
+    "siruta_uat": "97679",
+    "uat_name": "Lețcani"
+  },
+  {
+    "siruta_loc": "97704",
+    "locality_name": "Cogeasca",
+    "siruta_uat": "97679",
+    "uat_name": "Lețcani"
+  },
+  {
+    "siruta_loc": "97713",
+    "locality_name": "Cucuteni",
+    "siruta_uat": "97679",
+    "uat_name": "Lețcani"
+  },
+  {
+    "siruta_loc": "97928",
+    "locality_name": "Miroslava",
+    "siruta_uat": "97919",
+    "uat_name": "Miroslava"
+  },
+  {
+    "siruta_loc": "97937",
+    "locality_name": "Balciu",
+    "siruta_uat": "97919",
+    "uat_name": "Miroslava"
+  },
+  {
+    "siruta_loc": "97946",
+    "locality_name": "Brătuleni",
+    "siruta_uat": "97919",
+    "uat_name": "Miroslava"
+  },
+  {
+    "siruta_loc": "97955",
+    "locality_name": "Ciurbești",
+    "siruta_uat": "97919",
+    "uat_name": "Miroslava"
+  },
+  {
+    "siruta_loc": "97964",
+    "locality_name": "Cornești",
+    "siruta_uat": "97919",
+    "uat_name": "Miroslava"
+  },
+  {
+    "siruta_loc": "97973",
+    "locality_name": "Dancaș",
+    "siruta_uat": "97919",
+    "uat_name": "Miroslava"
+  },
+  {
+    "siruta_loc": "97982",
+    "locality_name": "Găureni",
+    "siruta_uat": "97919",
+    "uat_name": "Miroslava"
+  },
+  {
+    "siruta_loc": "97991",
+    "locality_name": "Horpaz",
+    "siruta_uat": "97919",
+    "uat_name": "Miroslava"
+  },
+  {
+    "siruta_loc": "98006",
+    "locality_name": "Proselnici",
+    "siruta_uat": "97919",
+    "uat_name": "Miroslava"
+  },
+  {
+    "siruta_loc": "98015",
+    "locality_name": "Uricani",
+    "siruta_uat": "97919",
+    "uat_name": "Miroslava"
+  },
+  {
+    "siruta_loc": "98024",
+    "locality_name": "Valea Adâncă",
+    "siruta_uat": "97919",
+    "uat_name": "Miroslava"
+  },
+  {
+    "siruta_loc": "98033",
+    "locality_name": "Valea Ursului",
+    "siruta_uat": "97919",
+    "uat_name": "Miroslava"
+  },
+  {
+    "siruta_loc": "98042",
+    "locality_name": "Vorovești",
+    "siruta_uat": "97919",
+    "uat_name": "Miroslava"
+  },
+  {
+    "siruta_loc": "98122",
+    "locality_name": "Mogoșești",
+    "siruta_uat": "98113",
+    "uat_name": "Mogoșești"
+  },
+  {
+    "siruta_loc": "98131",
+    "locality_name": "Budești",
+    "siruta_uat": "98113",
+    "uat_name": "Mogoșești"
+  },
+  {
+    "siruta_loc": "98140",
+    "locality_name": "Hadâmbu",
+    "siruta_uat": "98113",
+    "uat_name": "Mogoșești"
+  },
+  {
+    "siruta_loc": "98159",
+    "locality_name": "Mânjești",
+    "siruta_uat": "98113",
+    "uat_name": "Mogoșești"
+  },
+  {
+    "siruta_loc": "98266",
+    "locality_name": "Movileni",
+    "siruta_uat": "98257",
+    "uat_name": "Movileni"
+  },
+  {
+    "siruta_loc": "98275",
+    "locality_name": "Iepureni",
+    "siruta_uat": "98257",
+    "uat_name": "Movileni"
+  },
+  {
+    "siruta_loc": "98284",
+    "locality_name": "Larga-Jijia",
+    "siruta_uat": "98257",
+    "uat_name": "Movileni"
+  },
+  {
+    "siruta_loc": "98293",
+    "locality_name": "Potângeni",
+    "siruta_uat": "98257",
+    "uat_name": "Movileni"
+  },
+  {
+    "siruta_loc": "98514",
+    "locality_name": "Popricani",
+    "siruta_uat": "98505",
+    "uat_name": "Popricani"
+  },
+  {
+    "siruta_loc": "98523",
+    "locality_name": "Cârlig",
+    "siruta_uat": "98505",
+    "uat_name": "Popricani"
+  },
+  {
+    "siruta_loc": "98532",
+    "locality_name": "Cotu Morii",
+    "siruta_uat": "98505",
+    "uat_name": "Popricani"
+  },
+  {
+    "siruta_loc": "98541",
+    "locality_name": "Cuza Vodă",
+    "siruta_uat": "98505",
+    "uat_name": "Popricani"
+  },
+  {
+    "siruta_loc": "98550",
+    "locality_name": "Moimești",
+    "siruta_uat": "98505",
+    "uat_name": "Popricani"
+  },
+  {
+    "siruta_loc": "98569",
+    "locality_name": "Rediu Mitropoliei",
+    "siruta_uat": "98505",
+    "uat_name": "Popricani"
+  },
+  {
+    "siruta_loc": "98578",
+    "locality_name": "Țipilești",
+    "siruta_uat": "98505",
+    "uat_name": "Popricani"
+  },
+  {
+    "siruta_loc": "98587",
+    "locality_name": "Vânători",
+    "siruta_uat": "98505",
+    "uat_name": "Popricani"
+  },
+  {
+    "siruta_loc": "98596",
+    "locality_name": "Vulturi",
+    "siruta_uat": "98505",
+    "uat_name": "Popricani"
+  },
+  {
+    "siruta_loc": "98612",
+    "locality_name": "Prisăcani",
+    "siruta_uat": "98603",
+    "uat_name": "Prisăcani"
+  },
+  {
+    "siruta_loc": "98621",
+    "locality_name": "Măcărești",
+    "siruta_uat": "98603",
+    "uat_name": "Prisăcani"
+  },
+  {
+    "siruta_loc": "98630",
+    "locality_name": "Moreni",
+    "siruta_uat": "98603",
+    "uat_name": "Prisăcani"
+  },
+  {
+    "siruta_loc": "95248",
+    "locality_name": "Rediu",
+    "siruta_uat": "95239",
+    "uat_name": "Rediu"
+  },
+  {
+    "siruta_loc": "95257",
+    "locality_name": "Breazu",
+    "siruta_uat": "95239",
+    "uat_name": "Rediu"
+  },
+  {
+    "siruta_loc": "95266",
+    "locality_name": "Horlești",
+    "siruta_uat": "95239",
+    "uat_name": "Rediu"
+  },
+  {
+    "siruta_loc": "95275",
+    "locality_name": "Tăutești",
+    "siruta_uat": "95239",
+    "uat_name": "Rediu"
+  },
+  {
+    "siruta_loc": "98747",
+    "locality_name": "Românești",
+    "siruta_uat": "98738",
+    "uat_name": "Românești"
+  },
+  {
+    "siruta_loc": "98756",
+    "locality_name": "Avântu",
+    "siruta_uat": "98738",
+    "uat_name": "Românești"
+  },
+  {
+    "siruta_loc": "98765",
+    "locality_name": "Ursoaia",
+    "siruta_uat": "98738",
+    "uat_name": "Românești"
+  },
+  {
+    "siruta_loc": "98925",
+    "locality_name": "Scânteia",
+    "siruta_uat": "98916",
+    "uat_name": "Scânteia"
+  },
+  {
+    "siruta_loc": "98934",
+    "locality_name": "Bodești",
+    "siruta_uat": "98916",
+    "uat_name": "Scânteia"
+  },
+  {
+    "siruta_loc": "98943",
+    "locality_name": "Boroșești",
+    "siruta_uat": "98916",
+    "uat_name": "Scânteia"
+  },
+  {
+    "siruta_loc": "98952",
+    "locality_name": "Ciocârlești",
+    "siruta_uat": "98916",
+    "uat_name": "Scânteia"
+  },
+  {
+    "siruta_loc": "98961",
+    "locality_name": "Lunca Rateș",
+    "siruta_uat": "98916",
+    "uat_name": "Scânteia"
+  },
+  {
+    "siruta_loc": "98970",
+    "locality_name": "Rediu",
+    "siruta_uat": "98916",
+    "uat_name": "Scânteia"
+  },
+  {
+    "siruta_loc": "98989",
+    "locality_name": "Tufeștii de Sus",
+    "siruta_uat": "98916",
+    "uat_name": "Scânteia"
+  },
+  {
+    "siruta_loc": "98836",
+    "locality_name": "Schitu Duca",
+    "siruta_uat": "98827",
+    "uat_name": "Schitu Duca"
+  },
+  {
+    "siruta_loc": "98845",
+    "locality_name": "Blaga",
+    "siruta_uat": "98827",
+    "uat_name": "Schitu Duca"
+  },
+  {
+    "siruta_loc": "98854",
+    "locality_name": "Dumitreștii Gălății",
+    "siruta_uat": "98827",
+    "uat_name": "Schitu Duca"
+  },
+  {
+    "siruta_loc": "98863",
+    "locality_name": "Pocreaca",
+    "siruta_uat": "98827",
+    "uat_name": "Schitu Duca"
+  },
+  {
+    "siruta_loc": "98881",
+    "locality_name": "Poiana",
+    "siruta_uat": "98827",
+    "uat_name": "Schitu Duca"
+  },
+  {
+    "siruta_loc": "98872",
+    "locality_name": "Poieni",
+    "siruta_uat": "98827",
+    "uat_name": "Schitu Duca"
+  },
+  {
+    "siruta_loc": "98890",
+    "locality_name": "Satu Nou",
+    "siruta_uat": "98827",
+    "uat_name": "Schitu Duca"
+  },
+  {
+    "siruta_loc": "98907",
+    "locality_name": "Slobozia",
+    "siruta_uat": "98827",
+    "uat_name": "Schitu Duca"
+  },
+  {
+    "siruta_loc": "95300",
+    "locality_name": "Tomești",
+    "siruta_uat": "95293",
+    "uat_name": "Tomești"
+  },
+  {
+    "siruta_loc": "95319",
+    "locality_name": "Chicerea",
+    "siruta_uat": "95293",
+    "uat_name": "Tomești"
+  },
+  {
+    "siruta_loc": "95328",
+    "locality_name": "Goruni",
+    "siruta_uat": "95293",
+    "uat_name": "Tomești"
+  },
+  {
+    "siruta_loc": "95337",
+    "locality_name": "Vlădiceni",
+    "siruta_uat": "95293",
+    "uat_name": "Tomești"
+  },
+  {
+    "siruta_loc": "99888",
+    "locality_name": "Țigănași",
+    "siruta_uat": "99879",
+    "uat_name": "Țigănași"
+  },
+  {
+    "siruta_loc": "99897",
+    "locality_name": "Cârniceni",
+    "siruta_uat": "99879",
+    "uat_name": "Țigănași"
+  },
+  {
+    "siruta_loc": "99904",
+    "locality_name": "Mihail Kogălniceanu",
+    "siruta_uat": "99879",
+    "uat_name": "Țigănași"
+  },
+  {
+    "siruta_loc": "99913",
+    "locality_name": "Stejarii",
+    "siruta_uat": "99879",
+    "uat_name": "Țigănași"
+  },
+  {
+    "siruta_loc": "99931",
+    "locality_name": "Țuțora",
+    "siruta_uat": "99922",
+    "uat_name": "Țuțora"
+  },
+  {
+    "siruta_loc": "99940",
+    "locality_name": "Chiperești",
+    "siruta_uat": "99922",
+    "uat_name": "Țuțora"
+  },
+  {
+    "siruta_loc": "99959",
+    "locality_name": "Oprișeni",
+    "siruta_uat": "99922",
+    "uat_name": "Țuțora"
+  },
+  {
+    "siruta_loc": "96012",
+    "locality_name": "Bosia",
+    "siruta_uat": "96003",
+    "uat_name": "Ungheni"
+  },
+  {
+    "siruta_loc": "96021",
+    "locality_name": "Coada Stâncii",
+    "siruta_uat": "96003",
+    "uat_name": "Ungheni"
+  },
+  {
+    "siruta_loc": "96030",
+    "locality_name": "Mânzătești",
+    "siruta_uat": "96003",
+    "uat_name": "Ungheni"
+  },
+  {
+    "siruta_loc": "96049",
+    "locality_name": "Ungheni",
+    "siruta_uat": "96003",
+    "uat_name": "Ungheni"
+  },
+  {
+    "siruta_loc": "95284",
+    "locality_name": "Valea Lupului",
+    "siruta_uat": "100353",
+    "uat_name": "Valea Lupului"
+  },
+  {
+    "siruta_loc": "100013",
+    "locality_name": "Victoria",
+    "siruta_uat": "100004",
+    "uat_name": "Victoria"
+  },
+  {
+    "siruta_loc": "100022",
+    "locality_name": "Frăsuleni",
+    "siruta_uat": "100004",
+    "uat_name": "Victoria"
+  },
+  {
+    "siruta_loc": "100031",
+    "locality_name": "Icușeni",
+    "siruta_uat": "100004",
+    "uat_name": "Victoria"
+  },
+  {
+    "siruta_loc": "100040",
+    "locality_name": "Luceni",
+    "siruta_uat": "100004",
+    "uat_name": "Victoria"
+  },
+  {
+    "siruta_loc": "100059",
+    "locality_name": "Sculeni",
+    "siruta_uat": "100004",
+    "uat_name": "Victoria"
+  },
+  {
+    "siruta_loc": "100068",
+    "locality_name": "Stânca",
+    "siruta_uat": "100004",
+    "uat_name": "Victoria"
+  },
+  {
+    "siruta_loc": "100077",
+    "locality_name": "Șendreni",
+    "siruta_uat": "100004",
+    "uat_name": "Victoria"
+  },
+  {
+    "siruta_loc": "100228",
+    "locality_name": "Voinești",
+    "siruta_uat": "100219",
+    "uat_name": "Voinești"
+  },
+  {
+    "siruta_loc": "100237",
+    "locality_name": "Lungani",
+    "siruta_uat": "100219",
+    "uat_name": "Voinești"
+  },
+  {
+    "siruta_loc": "100246",
+    "locality_name": "Schitu Stavnic",
+    "siruta_uat": "100219",
+    "uat_name": "Voinești"
+  },
+  {
+    "siruta_loc": "100255",
+    "locality_name": "Slobozia",
+    "siruta_uat": "100219",
+    "uat_name": "Voinești"
+  },
+  {
+    "siruta_loc": "100264",
+    "locality_name": "Vocotești",
+    "siruta_uat": "100219",
+    "uat_name": "Voinești"
+  }
+]

@@ -124,7 +124,7 @@ for (const [name, makeStorage] of [
       const n = (await admin('GET', 'trips/' + nightId)).body.row;
       assert.equal(n.duration_min, 30);
       assert.match(n.validation_flags, /OVERNIGHT/);
-      assert.match(n.validation_flags, /D_LOCALITY_NEAREST/);
+      assert.equal(n.destination_unit_id, 'UAT-90001');
     });
 
     test('decizie manuală + audit; sumarul numără corect statusurile', async () => {

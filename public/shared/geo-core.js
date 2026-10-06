@@ -285,7 +285,7 @@
     return featuresOf(fc).map(function (f, idx) {
       var p = f.properties || {};
       var siruta = pick(p, ['siruta', 'SIRUTA', 'natcode', 'natCode', 'NATCODE', 'siruta_uat', 'uat_siruta', 'cod_siruta', 'code']);
-      var name = pick(p, ['uat_name', 'name', 'NAME', 'Name', 'nume', 'denumire', 'uat', 'UAT', 'NUME']);
+      var name = pick(p, ['canonical_name', 'uat_name', 'name', 'NAME', 'Name', 'nume', 'denumire', 'uat', 'UAT', 'NUME']);
       if (!siruta) warnings.push('UAT fără cod SIRUTA (feature #' + idx + ')');
       var polys = toPolygons(f.geometry);
       var cleanName = String(name || ('UAT ' + (siruta || idx))).replace(/^(municipiul|orasul|oraşul|orașul|comuna)\s+/i, '');
@@ -480,14 +480,36 @@
     return null;
   }
 
-  function nearestLocality(model, uatSiruta, lat, lng) {
-    var best = null, bestD = Infinity;
-    model.localities.forEach(function (l) {
-      if (l.uat_siruta !== uatSiruta || l.lat === null || l.lng === null) return;
-      var d = haversineKm(lat, lng, l.lat, l.lng);
-      if (d < bestD) { bestD = d; best = l; }
+  /** Distanța aproximativă (km) de la punct la conturul unui set de poligoane. */
+  function distanceToPolygonsKm(polygons, lat, lng) {
+    var kx = 111.32 * Math.cos(lat * Math.PI / 180), ky = 110.57, best = Infinity;
+    polygons.forEach(function (poly) {
+      poly.forEach(function (ring) {
+        for (var i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+          var ax = (ring[j][0] - lng) * kx, ay = (ring[j][1] - lat) * ky;
+          var bx = (ring[i][0] - lng) * kx, by = (ring[i][1] - lat) * ky;
+          var dx = bx - ax, dy = by - ay, len = dx * dx + dy * dy;
+          var t = len ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / len)) : 0;
+          var px = ax + t * dx, py = ay + t * dy;
+          var d = Math.sqrt(px * px + py * py);
+          if (d < best) best = d;
+        }
+      });
     });
-    return best ? { locality: best, distance_km: bestD } : null;
+    return best;
+  }
+
+  /** Zona cea mai apropiată, dacă e la cel mult maxKm (fâșii rămase între limita UAT și zone). */
+  function nearestZone(model, lat, lng, maxKm) {
+    var best = null, bestD = maxKm;
+    model.zones.forEach(function (z) {
+      if (!z.polygons.length || !z.bbox) return;
+      var pad = maxKm / 70;
+      if (lng < z.bbox[0] - pad || lng > z.bbox[2] + pad || lat < z.bbox[1] - pad || lat > z.bbox[3] + pad) return;
+      var d = distanceToPolygonsKm(z.polygons, lat, lng);
+      if (d <= bestD) { bestD = d; best = z; }
+    });
+    return best;
   }
 
   function unitFromZone(z, uat) {
@@ -521,17 +543,13 @@
     if (uat.isIasi) {
       var z = findZone(model, lat, lng);
       if (z) return Object.assign(unitFromZone(z, uat), { flags: flags });
+      var zn = model.hasZones ? nearestZone(model, lat, lng, 0.5) : null;
+      if (zn) return Object.assign(unitFromZone(zn, uat), { flags: ['ZONE_NEAREST'] });
       flags.push('IASI_NO_ZONE');
       return { unit_type: UNIT_TYPES.UAT_REST, unit_id: 'UAT-' + uat.siruta, unit_name: uat.name + ' (în afara zonelor)', zone_id: null, locality_siruta: null, uat_siruta: uat.siruta, uat_name: uat.name, flags: flags };
     }
-    var near = nearestLocality(model, uat.siruta, lat, lng);
-    if (near) {
-      flags.push('LOCALITY_NEAREST');
-      return {
-        unit_type: UNIT_TYPES.LOCALITY, unit_id: 'LOC-' + near.locality.siruta, unit_name: near.locality.name,
-        zone_id: null, locality_siruta: near.locality.siruta, uat_siruta: uat.siruta, uat_name: uat.name, flags: flags
-      };
-    }
+    // Fără poligoane de localitate/intravilan, un clic liber pe hartă NU este atribuit forțat unei localități
+    // (decizia metodologică din v0.4): unitatea O–D rămâne UAT-ul. Localitatea SIRUTA se alege din căutare.
     return { unit_type: UNIT_TYPES.UAT_REST, unit_id: 'UAT-' + uat.siruta, unit_name: uat.name, zone_id: null, locality_siruta: null, uat_siruta: uat.siruta, uat_name: uat.name, flags: flags };
   }
 
