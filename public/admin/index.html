@@ -151,13 +151,18 @@
             <h3>Date geografice</h3>
             <div id="geoStatus"></div>
             <div class="stack">
-              <button type="button" id="btnReloadGeo">Reîncarcă datele geografice</button>
-              <button type="button" id="btnReprocess">Reprocesează toate deplasările</button>
+              <button type="button" id="btnReloadGeo">Reîncarcă datele geografice și verifică datele</button>
             </div>
-            <p class="muted small">Reprocesarea reconstruiește TRIPS_ANALYSIS din TRIPS_RAW cu geometriile și regulile curente. Datele brute nu se modifică; deciziile manuale VALID/CHECK/EXCLUDE se păstrează.</p>
+            <p class="muted small">Analiza (zone, statusuri, statistici) se recalculează automat la fiecare afișare din datele brute, cu geometriile și regulile curente. Datele brute nu se modifică; deciziile manuale se păstrează.</p>
+            <h3 style="margin-top:16px">Retenție</h3>
+            <p class="muted small">Elimină coordonatele precise ale deplasărilor mai vechi; clasificarea (zonă / localitate / UAT) rămâne.</p>
+            <div class="inline-form">
+              <label>Mai vechi de <input type="number" id="purgeDays" value="90" min="1" style="width:5em"> zile</label>
+              <button type="button" id="btnPurge">Elimină coordonatele</button>
+            </div>
             <p id="opResult" class="small"></p>
           </div>
-          <div class="card">
+          <div class="card span-all">
             <h3>Reguli automate de validare</h3>
             <table class="data compact" id="flagsTable"><thead><tr><th>Flag</th><th>Efect</th><th>Semnificație</th></tr></thead><tbody></tbody></table>
           </div>

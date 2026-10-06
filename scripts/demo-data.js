@@ -8,9 +8,9 @@
 const crypto = require('node:crypto');
 const path = require('node:path');
 const config = require('../server/config.js');
-const { openDb } = require('../server/db.js');
-const { loadGeo } = require('../server/geo.js');
-const { submitTrip } = require('../server/trips.js');
+const { createSqliteStorage } = require('../server/storage-sqlite.js');
+const { loadGeoFromDir } = require('../server/geo.js');
+const { prepareSubmission } = require('../server/analysis.js');
 const time = require('../server/time.js');
 const Domain = require('../public/shared/domain.js');
 
@@ -23,7 +23,8 @@ if (dbPath === path.resolve(config.DB_PATH) && !args.includes('--force')) {
   process.exit(2);
 }
 
-const geo = loadGeo(config.DATA_DIR);
+(async () => {
+const geo = await loadGeoFromDir(config.DATA_DIR);
 const places = [];
 geo.pois.forEach((p) => places.push({ source: 'poi', ref: p.id, label: p.name, lat: p.lat, lng: p.lng }));
 geo.localities.forEach((l) => {
@@ -39,7 +40,7 @@ if (places.length < 2) {
 
 const rnd = (a) => a[Math.floor(Math.random() * a.length)];
 const jitter = (p) => ({ ...p, lat: p.lat + (Math.random() - 0.5) * 0.004, lng: p.lng + (Math.random() - 0.5) * 0.004 });
-const db = openDb(dbPath);
+const storage = createSqliteStorage(dbPath);
 const participants = Array.from({ length: Math.max(5, Math.round(n / 6)) }, () => 'demo-' + crypto.randomUUID());
 const nowMs = Date.now();
 const today = time.localDate(nowMs);
@@ -66,6 +67,7 @@ for (let i = 0; i < n; i++) {
     pt_line: ['bus', 'tram'].includes(mode) ? rnd(['3', '7', '8', '9', '28', '30', '41', '46']) : null
   };
   if (body.car_role === 'passenger' && body.occupancy === 1) body.occupancy = 2;
-  try { submitTrip(db, geo, config, JSON.stringify(body), nowMs); ok++; } catch { rejected++; }
+  try { await storage.putRaw(prepareSubmission(JSON.stringify(body), geo, config, nowMs).record); ok++; } catch { rejected++; }
 }
 console.log(`${ok} deplasări demo generate în ${dbPath} (${rejected} respinse de reguli).`);
+})();

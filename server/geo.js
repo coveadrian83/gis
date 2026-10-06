@@ -1,8 +1,8 @@
 'use strict';
 
-const fs = require('node:fs');
-const path = require('node:path');
 const GeoCore = require('../public/shared/geo-core.js');
+
+// Încărcarea datelor geografice dintr-o sursă oarecare: fișiere locale (server Node) sau URL (Netlify).
 
 const FILES = {
   zones: 'iasi_17_zone_mva_mvi.geojson',
@@ -11,11 +11,6 @@ const FILES = {
   localitiesCsv: 'zmi_localitati_siruta_2025.csv',
   pois: 'mvi_poi_aliases.json'
 };
-
-function readJson(file) {
-  if (!fs.existsSync(file)) return null;
-  return JSON.parse(fs.readFileSync(file, 'utf8').replace(/^﻿/, ''));
-}
 
 /** Parser CSV minimal (separator , sau ;, ghilimele duble). */
 function parseCsv(text) {
@@ -45,31 +40,58 @@ function parseCsv(text) {
   return rows.slice(1).map((r) => Object.fromEntries(header.map((h, i) => [h, (r[i] || '').trim()])));
 }
 
-function loadGeo(dataDir) {
+/** readText(fileName) → Promise<string|null> */
+async function loadGeoWith(readText) {
   const errors = [];
-  const safe = (fn, label) => {
-    try { return fn(); } catch (e) { errors.push(`${label}: ${e.message}`); return null; }
+  const json = async (name) => {
+    try {
+      const t = await readText(name);
+      return t === null ? null : JSON.parse(t.replace(/^﻿/, ''));
+    } catch (e) { errors.push(`${name}: ${e.message}`); return null; }
   };
-  const zones = safe(() => readJson(path.join(dataDir, FILES.zones)), FILES.zones);
-  const uats = safe(() => readJson(path.join(dataDir, FILES.uats)), FILES.uats);
-  let localities = safe(() => readJson(path.join(dataDir, FILES.localitiesJson)), FILES.localitiesJson);
+  const [zones, uats, locJson, pois] = await Promise.all([json(FILES.zones), json(FILES.uats), json(FILES.localitiesJson), json(FILES.pois)]);
+  let localities = locJson;
   if (!localities) {
-    const csvPath = path.join(dataDir, FILES.localitiesCsv);
-    localities = safe(() => (fs.existsSync(csvPath) ? parseCsv(fs.readFileSync(csvPath, 'utf8')) : null), FILES.localitiesCsv);
+    try {
+      const t = await readText(FILES.localitiesCsv);
+      localities = t === null ? null : parseCsv(t);
+    } catch (e) { errors.push(`${FILES.localitiesCsv}: ${e.message}`); }
   }
-  const pois = safe(() => readJson(path.join(dataDir, FILES.pois)), FILES.pois);
-
   const model = GeoCore.buildModel({ zones, uats, localities, pois });
   model.warnings = errors.concat(model.warnings);
-  model.files = {
-    zones: !!zones, uats: !!uats, localities: !!localities, pois: !!pois
-  };
+  model.files = { zones: !!zones, uats: !!uats, localities: !!localities, pois: !!pois };
+  model.loaded_at = new Date().toISOString();
   return model;
+}
+
+/** Din director local. */
+function loadGeoFromDir(dir) {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  return loadGeoWith(async (name) => {
+    const f = path.join(dir, name);
+    return fs.existsSync(f) ? fs.readFileSync(f, 'utf8') : null;
+  });
+}
+
+/** De la o adresă web (ex. https://site.netlify.app/data/). */
+function loadGeoFromUrl(baseUrl) {
+  return loadGeoWith(async (name) => {
+    const r = await fetch(new URL(name, baseUrl), { headers: { 'cache-control': 'no-cache' } });
+    if (r.status === 404) return null;
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const ct = r.headers.get('content-type') || '';
+    const text = await r.text();
+    // unele găzduiri întorc pagina HTML principală pentru fișiere inexistente
+    if (ct.includes('text/html') || /^\s*</.test(text)) return null;
+    return text;
+  });
 }
 
 function geoStatus(model) {
   return {
     files: model.files,
+    loaded_at: model.loaded_at,
     counts: {
       zones_with_geometry: model.zones.filter((z) => z.polygons.length).length,
       uats: model.uats.length,
@@ -83,4 +105,4 @@ function geoStatus(model) {
   };
 }
 
-module.exports = { FILES, loadGeo, geoStatus, parseCsv };
+module.exports = { FILES, parseCsv, loadGeoWith, loadGeoFromDir, loadGeoFromUrl, geoStatus };

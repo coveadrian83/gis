@@ -1,62 +1,93 @@
-# Mobilitate Iași – Studiu participativ O–D (MVA × MVI) · v0.5
+# Mobilitate Iași – Studiu participativ O–D (MVA × MVI) · v0.6
 
 Aplicație web mobile-first pentru **Studiul participativ de mobilitate Origine–Destinație – Zona Metropolitană Iași**
-(perioada de colectare 1 octombrie 2026 – 30 aprilie 2027), conform documentelor din `docs/`:
-specificația v1.0, metodologia v0.4.5 și ghidul de testare v0.4.5.
+(perioada de colectare 1 octombrie 2026 – 30 aprilie 2027), conform documentelor din `docs/`
+(specificația v1.0, metodologia și ghidul de testare v0.4.5).
 
-Față de prototipul v0.4.5 (doar `localStorage`), v0.5 adaugă etapele 3 și 6 din roadmap:
-**backend central** (TRIPS_RAW / TRIPS_ANALYSIS / AUDIT_LOG), **validare VALID/CHECK/EXCLUDE**
-și **dashboard administrativ** cu filtre, matrice O–D și exporturi, utilizabil fără SQL sau terminal.
+- **Aplicația publică** (`/`): raportarea unei deplasări în 3 pași, 30–45 de secunde, fără cont și fără nume.
+- **Dashboardul** (`/admin/`, cu parolă): validare VALID/CHECK/EXCLUDE, matrice O–D, hartă de fluxuri, acoperire, exporturi.
+- Rulează **direct pe Netlify** (datele se salvează în contul Netlify, în Netlify Blobs) sau pe orice server cu Node.js.
 
-## Ce conține
+---
 
-**Aplicația publică** (`/`) – raportare în 3 pași, ținta fiind 30–45 secunde:
+## Publicare pe Netlify – pas cu pas (fără programare)
+
+### 1. Încarcă fișierele geografice în GitHub (o singură dată)
+Fișierele din pachetul v0.4.5 nu sunt încă în proiect. În GitHub, pe depozitul **coveadrian83/gis**:
+1. intră în directorul **`public/data`** (pe branch-ul folosit de Netlify);
+2. apasă **Add file → Upload files**;
+3. trage în pagină fișierele `iasi_17_zone_mva_mvi.geojson`, `zmi_uat_web.geojson`,
+   `zmi_localitati_siruta_2025.json` (sau `.csv`) și, dacă îl ai, `mvi_poi_aliases.json` (îl înlocuiește pe cel implicit);
+4. apasă **Commit changes**.
+
+### 2. Creează site-ul în Netlify
+1. [app.netlify.com](https://app.netlify.com) → **Add new site** → **Import an existing project** → **GitHub**;
+2. alege depozitul **coveadrian83/gis** și branch-ul (`main` după unirea pull request-ului, altfel `claude/exciting-faraday-didbqc`);
+3. nu modifica nimic la setările de build (sunt citite automat din `netlify.toml`) → **Deploy**.
+
+### 3. Setează parola dashboardului
+1. în site: **Site configuration → Environment variables → Add a variable**;
+2. **Key:** `ADMIN_PASSWORD` · **Value:** o parolă lungă, doar a ta;
+3. **Deploys → Trigger deploy → Deploy site** (ca parola să fie preluată).
+
+### 4. Verifică
+- deschide adresa site-ului (`https://….netlify.app`) și raportează o deplasare de test;
+- deschide `https://….netlify.app/admin/`, intră cu parola și verifică în **Export & date** că apar
+  17/17 zone, 28 de UAT-uri și localitățile; deplasarea de test apare în **Deplasări**;
+- poți șterge deplasările de test din aplicație: **Deplasările mele → Șterge datele mele**.
+
+### 5. Domeniul propriu (opțional)
+**Domain management → Add a domain** → `mobilitate-test.moldovavreainfrastructura.ro` (staging) sau
+`mobilitate.moldovavreainfrastructura.ro` (producție). Netlify îți arată înregistrarea DNS (CNAME) pe care
+administratorul domeniului trebuie s-o adauge; certificatul HTTPS se emite automat.
+
+### Unde sunt datele și cum le descarc
+Datele stau în contul Netlify al site-ului (**Netlify Blobs**, store-ul `mobilitate`). Pentru copii de siguranță
+și analiză, folosește dashboardul → **Export & date**: date brute (JSONL), deplasări (CSV / Excel), matrice O–D,
+fluxuri GeoJSON, audit. Recomandare: descarcă săptămânal exportul de date brute.
+
+> Fiecare modificare încărcată în GitHub pe branch-ul ales republică automat site-ul. Datele colectate **nu** se pierd la republicare.
+
+---
+
+## Ce face aplicația
+
+**Aplicația publică**
 1. Origine și destinație: căutare fără diacritice și tolerantă la greșeli minore, în ordinea
-   repere → localități SIRUTA → cele 17 zone → OpenStreetMap/Nominatim; sau selecție pe hartă.
-   Butoane: Schimbă pe hartă, Șterge, Inversează, Reia O/D, Pan, Încadrează ZMI, Centrează pe Iași, Locația mea.
+   repere → localități SIRUTA → cele 17 zone → OpenStreetMap/Nominatim; sau selecție pe hartă
+   (Schimbă pe hartă, Șterge, Inversează, Reia O/D, Pan, Încadrează ZMI, Centrează pe Iași, Locația mea).
    Localitatea aleasă din nomenclator este validă imediat; Nominatim doar rafinează markerul (Metodologie §7).
 2. Data (implicit azi, max. 7 zile în urmă), ora plecării, ora sosirii, durata calculată imediat (inclusiv peste miezul nopții).
 3. Mod, scop, recurent/ocazional; șofer/pasager și ocupare doar pentru autoturism; linia TP opțională.
 
-Plus: rezumat la final, „Raportează drumul de întoarcere”, relații salvate local pentru raportări repetate,
-„Deplasările mele”, coadă locală când nu există conexiune (retrimitere automată, idempotentă),
-participant pseudonim, parametru de campanie `?source=…`, ștergerea propriilor date (dreptul la ștergere).
+Plus: rezumat, „Raportează drumul de întoarcere”, relații salvate pentru raportări repetate, „Deplasările mele”,
+coadă locală când nu există conexiune (retrimitere automată), participant pseudonim, parametru de campanie
+`?source=…` (ex. pentru codul QR: `…/?source=qr_afis`), ștergerea propriilor date.
 
-**Backend** (`server/`) – Node.js ≥ 22.13, **fără dependențe npm** (folosește `node:http` și `node:sqlite`):
-- clasificare la server (nu se ia de bun ce trimite browserul): zonă `IAS-Z01…Z17` / localitate `LOC-<SIRUTA>` /
-  `UAT-<SIRUTA>` (rest) / `OUT_ZMI`; armonizarea poligoanelor UNNAMED se aplică automat;
-- câmpurile din Anexa B: `duration_min`, `departure_time_band`, `arrival_time_band`, `reporting_delay_hours`,
-  `validation_status`, `validation_flags`, `geometry_version`, `campaign_source` etc., plus `day_type`, `period_tag`, `distance_km`;
-- reguli automate: EXCLUDE doar pentru duplicat cert; CHECK pentru durate < 2 min sau > 180 min, viteză neplauzibilă
-  pentru mod, punct identic, suprapunere în timp, > 12 deplasări/zi, ambele capete în afara ZMI etc.
-  Valorile extreme **nu** se elimină automat;
-- datele brute se păstrează nemodificate; TRIPS_ANALYSIS poate fi reconstruit oricând („Reprocesează”),
-  păstrând deciziile manuale; fiecare decizie intră în AUDIT_LOG;
-- coordonatele se stochează rotunjit (4 zecimale ≈ 11 m); IP-ul nu se salvează; limitare de rată în memorie.
+**Logica de date**
+- TRIPS_RAW: fiecare trimitere se păstrează nemodificată;
+- TRIPS_ANALYSIS se calculează din TRIPS_RAW la fiecare afișare: clasificare point-in-polygon în zonă
+  `IAS-Z01…Z17` (cu armonizarea UNNAMED), localitate `LOC-<SIRUTA>`, `UAT-<SIRUTA>` sau `OUT_ZMI`, plus câmpurile
+  din Anexa B (`duration_min`, `departure_time_band`, `reporting_delay_hours`, `validation_flags`, `geometry_version` …).
+  Dacă geometriile se schimbă, toate deplasările se reclasifică automat;
+- validare automată: EXCLUDE doar pentru duplicat cert; CHECK pentru durate < 2 min sau > 180 min, viteză
+  neplauzibilă pentru mod, punct identic, suprapunere în timp, > 12 deplasări/zi, ambele capete în afara ZMI etc.
+  Valorile extreme **nu** se elimină automat; coordonatorul decide, iar decizia intră în AUDIT_LOG;
+- OD_AGGREGATED: N deplasări / participanți / zile, mediană, medie, P25, P75, P90, P90 − mediană, vârf de plecare,
+  moduri, clasa de volum (<10, 10–29, 30–49, ≥50);
+- confidențialitate: coordonate rotunjite (≈ 11 m), IP nesalvat, retenție (eliminarea coordonatelor vechi, din dashboard).
 
-**Dashboard** (`/admin/`, protejat cu parolă):
-- Sumar: deplasări, participanți unici, zile, VALID/CHECK/EXCLUDE, fluxuri externe, durată mediană, distribuții;
-- Deplasări: listă filtrabilă, detaliu cu date brute, flag-uri explicate, decizie VALID/CHECK/EXCLUDE cu notă;
-- Relații O–D (zonă/localitate sau UAT): N deplasări / participanți / zile, mediană, medie, P25, P75, P90,
-  P90 − mediană, vârf de plecare, moduri, clasa de volum (<10, 10–29, 30–49, ≥50) + hartă de fluxuri;
-- Acoperire: unități subacoperite (pentru promovare adaptivă);
-- Exporturi: CSV (standard sau „Excel RO” cu `;`), GeoJSON fluxuri O–D, acoperire, audit, date brute JSONL.
+## Rulare pe un server propriu (alternativă la Netlify)
 
-## Pornire rapidă
+Node.js ≥ 22.13; datele se salvează în SQLite.
 
 ```bash
-# 1. datele geografice (din pachetul v0.4.5) în public/data/ – vezi public/data/README.md
-cp /cale/pachet_v0.4.5/{iasi_17_zone_mva_mvi.geojson,zmi_uat_web.geojson,zmi_localitati_siruta_2025.json,mvi_poi_aliases.json} public/data/
-npm run check-geo          # verifică ce s-a detectat + căutările din ghidul de testare
-
-# 2. pornire
+npm install
 ADMIN_PASSWORD='o-parola-lunga' npm start      # http://localhost:8080 , dashboard: /admin/
-
-# teste automate
-npm test
-
-# date fictive pentru încercarea dashboardului (bază separată, var/demo.sqlite)
-npm run demo-data -- --n 300
+npm test                                       # teste automate
+npm run check-geo                              # verifică fișierele din public/data
+npm run check-geo -- https://site.netlify.app  # verifică fișierele publicate
+npm run demo-data -- --n 300                   # date fictive în var/demo.sqlite
 DB_PATH=var/demo.sqlite ADMIN_PASSWORD=test npm start
 ```
 
@@ -64,46 +95,39 @@ DB_PATH=var/demo.sqlite ADMIN_PASSWORD=test npm start
 
 | Variabilă | Implicit | Rol |
 |---|---|---|
-| `PORT`, `HOST` | `8080`, `0.0.0.0` | adresa serverului |
-| `DB_PATH` | `var/mobilitate.sqlite` | baza de date SQLite (faceți backup la acest fișier) |
 | `ADMIN_PASSWORD` | – | parola dashboardului; fără ea, `/admin/` este dezactivat |
-| `GEO_DATA_DIR` | `public/data` | directorul fișierelor geografice (servit și la `/data/`) |
+| `SESSION_SECRET` | – | opțional; schimbarea lui deconectează toți administratorii |
 | `GEOMETRY_VERSION` | `ZMI-2025.1` | versiunea zonării, înregistrată la fiecare deplasare |
 | `STUDY_START`, `STUDY_END` | `2026-10-01`, `2027-04-30` | perioada de colectare |
 | `MAX_DAYS_BACK` | `7` | raportare retrospectivă maximă |
 | `GEOCODER_URL` | Nominatim OSM | geocodare fallback; gol = dezactivat |
-| `TILE_URL` | tile.openstreetmap.org | harta de bază |
+| `TILE_URL` | tile.openstreetmap.org | harta de bază (pe Netlify actualizați și CSP din `netlify.toml`) |
 | `COORD_DECIMALS` | `4` | precizia coordonatelor stocate |
-| `PERIODS_FILE` | `config/periods.json` | etichete analitice (ex. Sărbătorile Iașului 8–16 oct.) |
-| `TRUST_PROXY` | `1` | citește `X-Forwarded-For/Proto` (în spatele nginx/Apache) |
+| `RATE_LIMIT_TRIPS` | `40` | trimiteri permise pe IP în 10 minute |
+| `PORT`, `HOST`, `DB_PATH`, `GEO_DATA_DIR`, `TRUST_PROXY` | | doar pentru serverul propriu |
 
-## Publicare
-
-- Hosting cu Node.js ≥ 22.13 (VPS, cPanel „Setup Node.js App”, Render, Fly.io etc.), în spatele unui proxy HTTPS.
-  Exemplu nginx: `location / { proxy_pass http://127.0.0.1:8080; proxy_set_header X-Forwarded-For $remote_addr; proxy_set_header X-Forwarded-Proto $scheme; }`
-- Staging: `mobilitate-test.moldovavreainfrastructura.ro`; producție: `mobilitate.moldovavreainfrastructura.ro` (spec. §23, Anexa C).
-- Doar hosting static? Directorul `public/` funcționează și singur, în **mod demonstrativ** (ca v0.4.5: datele rămân
-  în browser, cu avertisment vizibil) – util pentru teste UX, nu pentru colectare.
-- Backup: copiați periodic `DB_PATH` (de preferat cu `sqlite3 mobilitate.sqlite ".backup backup.sqlite"`).
+Etichetele analitice ale perioadelor (ex. Sărbătorile Iașului 8–16 oct.) sunt în `config/periods.json`.
 
 ## Structura
 
 ```
-server/          backend (http, SQLite, clasificare, validare, agregări, exporturi)
-public/          aplicația publică + dashboard (/admin/) + pagini Confidențialitate / Metodologie
-public/shared/   geo-core.js (căutare + point-in-polygon) și domain.js – comune browser/server
-public/data/     fișierele geografice (GEO_ZONES / GEO_ALIASES)
-config/          perioade analitice
-scripts/         check-geo, reprocess, purge-coords (retenție), demo-data
-test/            teste automate (date geografice sintetice)
-docs/            specificația v1.0, metodologia și ghidul de testare v0.4.5
+netlify/functions/api.mjs   API-ul pe Netlify (stocare Netlify Blobs)
+server/api.js               API-ul comun (Request → Response), folosit de Netlify și de serverul propriu
+server/analysis.js          validarea intrărilor, clasificarea, regulile VALID/CHECK/EXCLUDE
+server/stats.js             agregări O–D, sumar, acoperire, CSV
+server/storage-*.js         stocare Netlify Blobs / SQLite
+server/server.js            serverul Node propriu (fișiere statice + API)
+public/                     aplicația publică, dashboardul (/admin/), Confidențialitate, Metodologie
+public/shared/              geo-core.js (căutare + point-in-polygon) și domain.js – comune browser/server
+public/data/                fișierele geografice
+test/                       teste automate (date geografice sintetice)
+docs/                       specificația v1.0, metodologia și ghidul de testare v0.4.5
 ```
 
-## Înainte de lansarea publică (rămân de făcut)
+## Înainte de lansarea publică
 
-- copierea fișierelor geografice validate MVI (nu sunt în depozit) și `npm run check-geo`;
-- înlocuirea `mvi_poi_aliases.json` (reperele implicite au coordonate aproximative) și extinderea nomenclatorului de repere;
+- încărcarea fișierelor geografice validate MVI și verificarea în dashboard (Export & date);
+- înlocuirea `mvi_poi_aliases.json` (reperele implicite au coordonate aproximative) și extinderea reperelor;
 - finalizarea informării GDPR (`public/confidentialitate.html` este proiect), retenție, operator de date, DPIA;
-- un serviciu de geocodare adecvat volumului (Nominatim public are limită de 1 cerere/s);
-- test controlat cu 20–30 de utilizatori (roadmap etapa 4) pe subdomeniul de staging;
-- opțional, migrare la PostgreSQL/PostGIS dacă volumul o cere (schema este portabilă).
+- un serviciu de geocodare adecvat volumului (Nominatim public: max. 1 cerere/s);
+- test controlat cu 20–30 de utilizatori (roadmap etapa 4).

@@ -4,7 +4,7 @@ const GeoCore = require('../public/shared/geo-core.js');
 const Domain = require('../public/shared/domain.js');
 
 // ---------------------------------------------------------------------------
-// Filtre comune (dashboard + exporturi)
+// Filtre comune (dashboard + exporturi), aplicate pe rândurile TRIPS_ANALYSIS
 // ---------------------------------------------------------------------------
 const LIST_RE = /^[A-Za-z0-9_.:-]{1,60}$/;
 
@@ -13,17 +13,16 @@ function listParam(v) {
   return String(v).split(',').map((s) => s.trim()).filter((s) => LIST_RE.test(s));
 }
 
-function buildWhere(q, defaults = {}) {
-  const where = [];
-  const params = [];
+/** Întoarce un predicat pentru filtrele din query; `defaults.status` se aplică dacă status lipsește. */
+function makeFilter(q, defaults = {}) {
+  const tests = [];
   const date = (s) => (/^\d{4}-\d{2}-\d{2}$/.test(String(s || '')) ? s : null);
-  if (date(q.date_from)) { where.push('trip_date >= ?'); params.push(q.date_from); }
-  if (date(q.date_to)) { where.push('trip_date <= ?'); params.push(q.date_to); }
-
+  if (date(q.date_from)) tests.push((r) => r.trip_date >= q.date_from);
+  if (date(q.date_to)) tests.push((r) => r.trip_date <= q.date_to);
   const inList = (col, values) => {
     if (!values.length) return;
-    where.push(`${col} IN (${values.map(() => '?').join(',')})`);
-    params.push(...values);
+    const set = new Set(values);
+    tests.push((r) => set.has(String(r[col])));
   };
   inList('origin_unit_id', listParam(q.origin));
   inList('destination_unit_id', listParam(q.destination));
@@ -32,19 +31,22 @@ function buildWhere(q, defaults = {}) {
   inList('repeat_type', listParam(q.repeat_type));
   inList('period_tag', listParam(q.period_tag));
   inList('day_type', listParam(q.day_type));
-  inList('campaign_source', listParam(q.campaign_source));
-  const uats = listParam(q.uat);
-  if (uats.length) {
-    const ph = uats.map(() => '?').join(',');
-    where.push(`(origin_uat IN (${ph}) OR destination_uat IN (${ph}))`);
-    params.push(...uats, ...uats);
-  }
+  inList('campaign_source', listParam(q.campaign_source).map((s) => s.toLowerCase()));
+  const uats = new Set(listParam(q.uat));
+  if (uats.size) tests.push((r) => uats.has(r.origin_uat) || uats.has(r.destination_uat));
   const statuses = listParam(q.status !== undefined ? q.status : defaults.status).filter((s) => Domain.STATUSES.includes(s));
   inList('validation_status', statuses);
-  if (q.flag && LIST_RE.test(q.flag)) { where.push("(',' || validation_flags || ',') LIKE ?"); params.push(`%,${q.flag},%`); }
-  if (q.participant && /^[A-Za-z0-9_-]{4,64}$/.test(q.participant)) { where.push('participant_id = ?'); params.push(q.participant); }
-  if (q.trip_id && /^[0-9a-f-]{4,36}$/i.test(q.trip_id)) { where.push('trip_id LIKE ?'); params.push(q.trip_id.toLowerCase() + '%'); }
-  return { sql: where.length ? 'WHERE ' + where.join(' AND ') : '', params };
+  if (q.flag && LIST_RE.test(q.flag)) tests.push((r) => r.validation_flags.split(',').includes(q.flag));
+  if (q.participant && /^[A-Za-z0-9_-]{4,64}$/.test(q.participant)) tests.push((r) => r.participant_id === q.participant);
+  if (q.trip_id && /^[0-9a-f-]{4,36}$/i.test(q.trip_id)) {
+    const p = q.trip_id.toLowerCase();
+    tests.push((r) => r.trip_id.startsWith(p) || r.participant_id.toLowerCase().startsWith(p));
+  }
+  return (r) => tests.every((t) => t(r));
+}
+
+function filterRows(rows, q, defaults) {
+  return rows.filter(makeFilter(q, defaults));
 }
 
 // ---------------------------------------------------------------------------
@@ -93,25 +95,20 @@ function countBy(rows, key) {
   return Object.entries(m).sort((a, b) => b[1] - a[1]).map(([k, n]) => ({ key: k, n }));
 }
 
-function summary(db, q) {
-  const w = buildWhere(q);
-  const rows = db.prepare(`SELECT participant_id, trip_date, duration_min, validation_status, mode, purpose, repeat_type,
-      period_tag, campaign_source, departure_time_band, day_type, origin_unit_type, destination_unit_type
-      FROM trips_analysis ${w.sql}`).all(...w.params);
+function summary(allRows, q) {
+  const rows = filterRows(allRows, q);
   const participants = new Set(rows.map((r) => r.participant_id));
   const days = new Set(rows.map((r) => r.trip_date));
   // distribuția pe statusuri ignoră filtrul de status (altfel EXCLUDE ar apărea mereu 0)
-  const ws = buildWhere({ ...q, status: '' });
   const status = { VALID: 0, CHECK: 0, EXCLUDE: 0 };
-  for (const r of db.prepare(`SELECT validation_status AS s, COUNT(*) AS n FROM trips_analysis ${ws.sql} GROUP BY 1`).all(...ws.params)) status[r.s] = r.n;
+  for (const r of filterRows(allRows, { ...q, status: '' })) status[r.validation_status]++;
   const valid = rows.filter((r) => r.validation_status === 'VALID');
   const external = rows.filter((r) => r.origin_unit_type === 'OUT_ZMI' || r.destination_unit_type === 'OUT_ZMI').length;
-  const rawTotal = db.prepare('SELECT COUNT(*) AS n FROM trips_raw').get().n;
   return {
     n_trips: rows.length,
     n_participants: participants.size,
     n_days: days.size,
-    n_raw_total: rawTotal,
+    n_raw_total: allRows.length,
     status,
     n_external: external,
     duration_valid: describe(valid.map((r) => r.duration_min)),
@@ -136,10 +133,9 @@ function countByMap(rows, key) {
 // ---------------------------------------------------------------------------
 // OD_AGGREGATED
 // ---------------------------------------------------------------------------
-function odAggregate(db, q) {
+function odAggregate(allRows, q) {
   const level = q.level === 'uat' ? 'uat' : 'unit';
-  const w = buildWhere(q, { status: 'VALID' });
-  const rows = db.prepare(`SELECT * FROM trips_analysis ${w.sql}`).all(...w.params);
+  const rows = filterRows(allRows, q, { status: 'VALID' });
   const groups = new Map();
   for (const r of rows) {
     const o = level === 'uat' ? (r.origin_uat || 'OUT_ZMI') : r.origin_unit_id;
@@ -196,9 +192,9 @@ function odAggregate(db, q) {
 }
 
 /** Flux O–D ca GeoJSON (linii între centroizii unităților), pentru QGIS / hartă web. */
-function odGeoJson(db, geo, q) {
-  const od = odAggregate(db, q);
-  const centroids = unitCentroids(db, geo, od.level);
+function odGeoJson(allRows, geo, q) {
+  const od = odAggregate(allRows, q);
+  const centroids = unitCentroids(allRows, geo, od.level);
   const features = [];
   for (const r of od.rows) {
     const a = centroids.get(r.origin_id), b = centroids.get(r.destination_id);
@@ -211,26 +207,28 @@ function odGeoJson(db, geo, q) {
   return { type: 'FeatureCollection', name: 'od_flows', crs: { type: 'name', properties: { name: 'urn:ogc:def:crs:OGC:1.3:CRS84' } }, features };
 }
 
-function unitCentroids(db, geo, level) {
+function unitCentroids(rows, geo, level) {
   const m = new Map();
-  if (level === 'uat') {
-    geo.uats.forEach((u) => u.centroid && m.set(u.siruta, u.centroid));
-  } else {
-    GeoCore.listUnits(geo).forEach((u) => u.centroid && m.set(u.unit_id, u.centroid));
-  }
+  if (level === 'uat') geo.uats.forEach((u) => u.centroid && m.set(u.siruta, u.centroid));
+  else GeoCore.listUnits(geo).forEach((u) => u.centroid && m.set(u.unit_id, u.centroid));
   // unități fără geometrie (ex. exterior ZMI): media coordonatelor observate
-  const obs = db.prepare(`
-    SELECT ${level === 'uat' ? "COALESCE(origin_uat,'OUT_ZMI')" : 'origin_unit_id'} AS id, AVG(origin_lat) AS lat, AVG(origin_lng) AS lng FROM trips_analysis WHERE origin_lat IS NOT NULL GROUP BY 1
-    UNION ALL
-    SELECT ${level === 'uat' ? "COALESCE(destination_uat,'OUT_ZMI')" : 'destination_unit_id'}, AVG(destination_lat), AVG(destination_lng) FROM trips_analysis WHERE destination_lat IS NOT NULL GROUP BY 1
-  `).all();
-  for (const o of obs) if (!m.has(o.id) && o.lat !== null) m.set(o.id, [o.lat, o.lng]);
+  const acc = new Map();
+  const add = (id, lat, lng) => {
+    if (lat === null || lat === undefined) return;
+    const a = acc.get(id) || { lat: 0, lng: 0, n: 0 };
+    a.lat += lat; a.lng += lng; a.n++;
+    acc.set(id, a);
+  };
+  for (const r of rows) {
+    add(level === 'uat' ? r.origin_uat || 'OUT_ZMI' : r.origin_unit_id, r.origin_lat, r.origin_lng);
+    add(level === 'uat' ? r.destination_uat || 'OUT_ZMI' : r.destination_unit_id, r.destination_lat, r.destination_lng);
+  }
+  for (const [id, a] of acc) if (!m.has(id)) m.set(id, [a.lat / a.n, a.lng / a.n]);
   return m;
 }
 
 /** Acoperire pe unități O–D: evidențiază zonele/localitățile subacoperite (spec. §11, §19). */
-function coverage(db, geo, q) {
-  const w = buildWhere(q);
+function coverage(allRows, geo, q) {
   const counts = new Map();
   const add = (id, name, type, uat, field) => {
     let c = counts.get(id);
@@ -240,9 +238,7 @@ function coverage(db, geo, q) {
   for (const u of GeoCore.listUnits(geo)) {
     counts.set(u.unit_id, { unit_id: u.unit_id, unit_name: u.unit_name, unit_type: u.unit_type, uat_name: u.uat_name, as_origin: 0, as_destination: 0 });
   }
-  const rows = db.prepare(`SELECT origin_unit_id, origin_unit_name, origin_unit_type, origin_uat_name,
-      destination_unit_id, destination_unit_name, destination_unit_type, destination_uat_name FROM trips_analysis ${w.sql}`).all(...w.params);
-  for (const r of rows) {
+  for (const r of filterRows(allRows, q)) {
     add(r.origin_unit_id, r.origin_unit_name, r.origin_unit_type, r.origin_uat_name, 'as_origin');
     add(r.destination_unit_id, r.destination_unit_name, r.destination_unit_type, r.destination_uat_name, 'as_destination');
   }
@@ -273,4 +269,4 @@ function toCsv(rows, columns, opts = {}) {
   return '﻿' + lines.join('\r\n') + '\r\n';
 }
 
-module.exports = { buildWhere, describe, percentile, volumeClass, summary, odAggregate, odGeoJson, coverage, toCsv };
+module.exports = { filterRows, makeFilter, describe, percentile, volumeClass, summary, odAggregate, odGeoJson, coverage, toCsv };

@@ -1,10 +1,11 @@
 'use strict';
 
 const crypto = require('node:crypto');
+
+// Logica de analiză, independentă de stocare (SQLite local sau Netlify Blobs).
 const GeoCore = require('../public/shared/geo-core.js');
 const Domain = require('../public/shared/domain.js');
 const time = require('./time.js');
-const { transaction } = require('./db.js');
 
 const MODE_BY_CODE = Domain.byCode(Domain.MODES);
 const PURPOSE_BY_CODE = Domain.byCode(Domain.PURPOSES);
@@ -79,8 +80,12 @@ function str(v, max) {
   return s ? s.slice(0, max) : null;
 }
 
-function parseEndpoint(ep, field) {
+function parseEndpoint(ep, field, lenient) {
   if (!ep || typeof ep !== 'object') throw new InputError(`Lipsește ${field === 'origin' ? 'originea' : 'destinația'}.`, field);
+  if (lenient && ep.coords_purged) {
+    // coordonate eliminate prin politica de retenție: clasificarea vine din instantaneul salvat
+    return { source: ep.source || 'map', ref: str(ep.ref, 40), label: str(ep.label, 160) || 'Punct pe hartă', lat: null, lng: null, approx: false };
+  }
   const lat = Number(ep.lat), lng = Number(ep.lng);
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) throw new InputError('Coordonate invalide.', field);
   if (lat < ACCEPTED_BBOX.minLat || lat > ACCEPTED_BBOX.maxLat || lng < ACCEPTED_BBOX.minLng || lng > ACCEPTED_BBOX.maxLng) {
@@ -137,8 +142,8 @@ function parseInput(body, config, opts) {
     throw new InputError('Ora sosirii este în viitor. Raportează deplasarea după ce ai ajuns.', 'arrival_time');
   }
 
-  out.origin = parseEndpoint(body.origin, 'origin');
-  out.destination = parseEndpoint(body.destination, 'destination');
+  out.origin = parseEndpoint(body.origin, 'origin', !opts.enforceWindow);
+  out.destination = parseEndpoint(body.destination, 'destination', !opts.enforceWindow);
 
   if (!MODE_BY_CODE[body.mode]) throw new InputError('Alege modul de transport.', 'mode');
   out.mode = body.mode;
@@ -176,23 +181,32 @@ function periodTag(config, date) {
 }
 
 /** Construiește rândul TRIPS_ANALYSIS și flag-urile automate (fără reguli care necesită baza de date). */
-function buildAnalysis(input, geo, config, receivedAtMs) {
+function buildAnalysis(input, geo, config, receivedAtMs, snapshot) {
   const flags = [];
-  const o = GeoCore.classifyEndpoint(geo, input.origin);
-  const d = GeoCore.classifyEndpoint(geo, input.destination);
+  const classify = (ep, key) => {
+    if (ep.lat === null) {
+      if (!snapshot || !snapshot[key]) throw new InputError('Coordonate eliminate și fără instantaneu de clasificare.');
+      return { ...snapshot[key], flags: (snapshot[key].flags || []).slice() };
+    }
+    return GeoCore.classifyEndpoint(geo, ep);
+  };
+  const o = classify(input.origin, 'origin');
+  const d = classify(input.destination, 'destination');
   o.flags.forEach((f) => flags.push('O_' + f));
   d.flags.forEach((f) => flags.push('D_' + f));
 
-  const distance = GeoCore.haversineKm(input.origin.lat, input.origin.lng, input.destination.lat, input.destination.lng);
+  const distance = input.origin.lat === null || input.destination.lat === null
+    ? (snapshot && snapshot.distance_km !== undefined ? snapshot.distance_km : null)
+    : GeoCore.haversineKm(input.origin.lat, input.origin.lng, input.destination.lat, input.destination.lng);
   const approx = input.origin.approx || input.destination.approx ||
     o.flags.includes('ZONE_CENTROID') || d.flags.includes('ZONE_CENTROID');
 
   if (input.overnight) flags.push('OVERNIGHT');
-  if (distance < 0.1) flags.push('SAME_POINT');
+  if (distance !== null && distance < 0.1) flags.push('SAME_POINT');
   if (o.unit_id === d.unit_id) flags.push('SAME_UNIT');
   if (input.duration_min < 2) flags.push('DURATION_SHORT');
   if (input.duration_min > 180) flags.push('DURATION_LONG');
-  if (!approx && distance >= 1) {
+  if (!approx && distance !== null && distance >= 1) {
     const speed = distance / (input.duration_min / 60);
     if (speed > (Domain.MAX_STRAIGHT_SPEED[input.mode] || 120)) flags.push('SPEED_HIGH');
   }
@@ -244,34 +258,15 @@ function buildAnalysis(input, geo, config, receivedAtMs) {
   return { row, flags };
 }
 
-/** Reguli care depind de deplasările anterioare ale aceluiași participant. */
-function contextFlags(db, row) {
-  const flags = [];
-  const earlier = db.prepare(`
-    SELECT trip_id, departure_time, arrival_time, duration_min, origin_unit_id, destination_unit_id, validation_flags
-    FROM trips_analysis
-    WHERE participant_id = ? AND trip_date = ? AND trip_id <> ?
-      AND (submitted_at < ? OR (submitted_at = ? AND trip_id < ?))
-  `).all(row.participant_id, row.trip_date, row.trip_id, row.submitted_at, row.submitted_at, row.trip_id);
-
-  const dep = Domain.parseHHMM(row.departure_time);
-  const end = dep + row.duration_min;
-  let duplicate = false, overlap = false;
-  for (const e of earlier) {
-    if (e.validation_flags.split(',').includes('DUPLICATE')) continue;
-    if (e.departure_time === row.departure_time && e.arrival_time === row.arrival_time &&
-        e.origin_unit_id === row.origin_unit_id && e.destination_unit_id === row.destination_unit_id) {
-      duplicate = true;
-      continue;
-    }
-    const ed = Domain.parseHHMM(e.departure_time), ee = ed + e.duration_min;
-    if (dep < ee && ed < end) overlap = true;
-  }
-  if (duplicate) flags.push('DUPLICATE');
-  else if (overlap) flags.push('TIME_OVERLAP');
-  if (earlier.length >= 11) flags.push('HIGH_DAILY_VOLUME');
-  return flags;
-}
+const ANALYSIS_COLUMNS = [
+  'trip_id', 'participant_id', 'trip_date', 'departure_time', 'arrival_time', 'duration_min', 'overnight',
+  'departure_time_band', 'arrival_time_band', 'day_type', 'period_tag',
+  'origin_unit_type', 'origin_unit_id', 'origin_unit_name', 'origin_zone_id', 'origin_locality_siruta', 'origin_uat', 'origin_uat_name', 'origin_label', 'origin_source', 'origin_lat', 'origin_lng',
+  'destination_unit_type', 'destination_unit_id', 'destination_unit_name', 'destination_zone_id', 'destination_locality_siruta', 'destination_uat', 'destination_uat_name', 'destination_label', 'destination_source', 'destination_lat', 'destination_lng',
+  'distance_km', 'mode', 'purpose', 'repeat_type', 'car_role', 'occupancy', 'pt_line',
+  'submitted_at', 'reporting_delay_hours', 'auto_status', 'manual_status', 'validation_status', 'validation_flags',
+  'geometry_version', 'campaign_source', 'reviewed_at', 'review_note'
+];
 
 function statusFromFlags(flags) {
   let status = 'VALID';
@@ -283,119 +278,88 @@ function statusFromFlags(flags) {
   return status;
 }
 
-const ANALYSIS_COLUMNS = [
-  'trip_id', 'participant_id', 'trip_date', 'departure_time', 'arrival_time', 'duration_min', 'overnight',
-  'departure_time_band', 'arrival_time_band', 'day_type', 'period_tag',
-  'origin_unit_type', 'origin_unit_id', 'origin_unit_name', 'origin_zone_id', 'origin_locality_siruta', 'origin_uat', 'origin_uat_name', 'origin_label', 'origin_source', 'origin_lat', 'origin_lng',
-  'destination_unit_type', 'destination_unit_id', 'destination_unit_name', 'destination_zone_id', 'destination_locality_siruta', 'destination_uat', 'destination_uat_name', 'destination_label', 'destination_source', 'destination_lat', 'destination_lng',
-  'distance_km', 'mode', 'purpose', 'repeat_type', 'car_role', 'occupancy', 'pt_line',
-  'submitted_at', 'reporting_delay_hours', 'auto_status', 'manual_status', 'validation_status', 'validation_flags',
-  'geometry_version', 'campaign_source', 'processed_at', 'reviewed_at', 'review_note'
-];
-
-function insertAnalysis(db, row) {
-  const cols = ANALYSIS_COLUMNS;
-  db.prepare(`INSERT INTO trips_analysis (${cols.join(',')}) VALUES (${cols.map(() => '?').join(',')})`)
-    .run(...cols.map((c) => (row[c] === undefined ? null : row[c])));
-}
-
-function finalizeRow(db, built, manual) {
-  const flags = built.flags.concat(contextFlags(db, built.row));
-  const row = built.row;
-  row.validation_flags = flags.join(',');
-  row.auto_status = statusFromFlags(flags);
-  row.manual_status = manual && manual.manual_status ? manual.manual_status : null;
-  row.reviewed_at = manual ? manual.reviewed_at || null : null;
-  row.review_note = manual ? manual.review_note || null : null;
-  row.validation_status = row.manual_status || row.auto_status;
-  row.processed_at = new Date().toISOString();
-  return row;
-}
-
 /**
- * Înregistrează o deplasare nouă: TRIPS_RAW (nemodificat) + TRIPS_ANALYSIS (derivat).
- * Idempotent pe trip_id (aplicația reîncearcă trimiterile eșuate din coada locală).
+ * Validează o trimitere nouă (cu fereastra de raportare) și întoarce
+ * înregistrarea TRIPS_RAW de salvat + rândul de analiză provizoriu (pentru răspuns).
  */
-function submitTrip(db, geo, config, rawText, nowMs = Date.now()) {
+function prepareSubmission(rawText, geo, config, nowMs) {
   let body;
   try { body = JSON.parse(rawText); } catch { throw new InputError('JSON invalid.'); }
   const input = parseInput(body, config, { now: nowMs, enforceWindow: true });
-
-  const existing = db.prepare('SELECT participant_id FROM trips_raw WHERE trip_id = ?').get(input.trip_id);
-  if (existing) {
-    if (existing.participant_id !== input.participant_id) {
-      const e = new InputError('Identificator de deplasare deja folosit.');
-      e.status = 409;
-      throw e;
-    }
-    return { duplicate_submission: true, row: getTrip(db, input.trip_id) };
-  }
-
   const built = buildAnalysis(input, geo, config, nowMs);
-  return transaction(db, () => {
-    db.prepare('INSERT INTO trips_raw (trip_id, participant_id, received_at, app_version, payload_json) VALUES (?,?,?,?,?)')
-      .run(input.trip_id, input.participant_id, new Date(nowMs).toISOString(), input.app_version, rawText);
-    const row = finalizeRow(db, built, null);
-    insertAnalysis(db, row);
-    return { duplicate_submission: false, row };
-  });
-}
-
-function getTrip(db, tripId) {
-  return db.prepare('SELECT * FROM trips_analysis WHERE trip_id = ?').get(tripId) || null;
+  const record = {
+    trip_id: input.trip_id,
+    participant_id: input.participant_id,
+    received_at: new Date(nowMs).toISOString(),
+    app_version: input.app_version,
+    payload_json: rawText
+  };
+  return { record, row: built.row };
 }
 
 /**
- * Reconstruiește integral TRIPS_ANALYSIS din TRIPS_RAW cu geometriile și regulile curente.
- * Deciziile manuale (VALID/CHECK/EXCLUDE) ale coordonatorului sunt păstrate.
+ * Construiește TRIPS_ANALYSIS din TRIPS_RAW (date brute nemodificate) + deciziile manuale.
+ * Rulează la fiecare citire, deci analiza reflectă mereu geometriile și regulile curente.
+ * Regulile contextuale (duplicat, suprapunere, volum zilnic) compară fiecare deplasare
+ * doar cu cele primite ANTERIOR de la același participant.
  */
-function reprocessAll(db, geo, config, actor) {
-  const previous = new Map();
-  for (const r of db.prepare('SELECT * FROM trips_analysis').all()) previous.set(r.trip_id, r);
-  const raws = db.prepare('SELECT trip_id, received_at, payload_json FROM trips_raw ORDER BY received_at, trip_id').all();
-  let ok = 0;
+function analyzeAll(raws, reviews, geo, config) {
+  const sorted = raws.slice().sort((a, b) => (a.received_at < b.received_at ? -1 : a.received_at > b.received_at ? 1 : a.trip_id < b.trip_id ? -1 : 1));
+  const byParticipantDay = new Map();
+  const rows = [];
   const errors = [];
-  transaction(db, () => {
-    db.exec('DELETE FROM trips_analysis');
-    for (const r of raws) {
-      try {
-        const nowMs = Date.parse(r.received_at);
-        const input = parseInput(JSON.parse(r.payload_json), config, { now: nowMs, enforceWindow: false });
-        input.trip_id = r.trip_id;
-        const built = buildAnalysis(input, geo, config, nowMs);
-        insertAnalysis(db, finalizeRow(db, built, previous.get(r.trip_id)));
-        ok++;
-      } catch (e) {
-        // ex. coordonate eliminate prin politica de retenție: rândul de analiză existent se păstrează neschimbat
-        if (previous.has(r.trip_id)) insertAnalysis(db, previous.get(r.trip_id));
-        errors.push({ trip_id: r.trip_id, error: e.message, kept_previous: previous.has(r.trip_id) });
-      }
+  for (const r of sorted) {
+    let row, flags;
+    try {
+      const nowMs = Date.parse(r.received_at);
+      const input = parseInput(JSON.parse(r.payload_json), config, { now: nowMs, enforceWindow: false });
+      input.trip_id = r.trip_id;
+      ({ row, flags } = buildAnalysis(input, geo, config, nowMs, r.snapshot));
+    } catch (e) {
+      errors.push({ trip_id: r.trip_id, error: e.message });
+      continue;
     }
-    db.prepare('INSERT INTO audit_log (at, actor, action, note) VALUES (?,?,?,?)')
-      .run(new Date().toISOString(), actor || 'system', 'REPROCESS', `geometrie ${config.GEOMETRY_VERSION}; ${ok} reprocesate; ${errors.length} erori`);
-  });
-  return { processed: ok, errors };
+    const key = row.participant_id + '|' + row.trip_date;
+    const earlier = byParticipantDay.get(key) || [];
+    const dep = Domain.parseHHMM(row.departure_time), end = dep + row.duration_min;
+    let duplicate = false, overlap = false;
+    for (const e of earlier) {
+      if (e.isDuplicate) continue;
+      if (e.departure_time === row.departure_time && e.arrival_time === row.arrival_time &&
+          e.origin_unit_id === row.origin_unit_id && e.destination_unit_id === row.destination_unit_id) {
+        duplicate = true;
+        continue;
+      }
+      const ed = Domain.parseHHMM(e.departure_time);
+      if (dep < ed + e.duration_min && ed < end) overlap = true;
+    }
+    if (duplicate) flags.push('DUPLICATE');
+    else if (overlap) flags.push('TIME_OVERLAP');
+    if (earlier.length >= 11) flags.push('HIGH_DAILY_VOLUME');
+    earlier.push({ ...row, isDuplicate: duplicate });
+    byParticipantDay.set(key, earlier);
+
+    const review = reviews.get(r.trip_id);
+    row.validation_flags = flags.join(',');
+    row.auto_status = statusFromFlags(flags);
+    row.manual_status = review && review.manual_status ? review.manual_status : null;
+    row.reviewed_at = review ? review.reviewed_at || null : null;
+    row.review_note = review ? review.review_note || null : null;
+    row.validation_status = row.manual_status || row.auto_status;
+    rows.push(row);
+  }
+  return { rows, errors };
 }
 
-/** Decizie manuală a coordonatorului. Datele declarate nu se modifică niciodată. */
-function setStatus(db, tripId, status, note, actor) {
-  if (status !== null && !Domain.STATUSES.includes(status)) throw new InputError('Status invalid.');
-  const row = getTrip(db, tripId);
-  if (!row) {
-    const e = new InputError('Deplasare inexistentă.');
-    e.status = 404;
-    throw e;
-  }
-  const newStatus = status || row.auto_status;
-  const cleanNote = str(note, 500);
-  const at = new Date().toISOString();
-  transaction(db, () => {
-    db.prepare('UPDATE trips_analysis SET manual_status = ?, validation_status = ?, reviewed_at = ?, review_note = ? WHERE trip_id = ?')
-      .run(status, newStatus, at, cleanNote, tripId);
-    db.prepare('INSERT INTO audit_log (at, actor, action, trip_id, old_status, new_status, note) VALUES (?,?,?,?,?,?,?)')
-      .run(at, actor, status ? 'SET_STATUS' : 'RESET_TO_AUTO', tripId, row.validation_status, newStatus, cleanNote);
+/** Instantaneul clasificării, păstrat la eliminarea coordonatelor (politica de retenție). */
+function snapshotOf(row) {
+  const pick = (p) => ({
+    unit_type: row[p + '_unit_type'], unit_id: row[p + '_unit_id'], unit_name: row[p + '_unit_name'],
+    zone_id: row[p + '_zone_id'], locality_siruta: row[p + '_locality_siruta'],
+    uat_siruta: row[p + '_uat'], uat_name: row[p + '_uat_name'],
+    flags: row.validation_flags.split(',').filter((f) => f.startsWith(p === 'origin' ? 'O_' : 'D_')).map((f) => f.slice(2))
   });
-  return getTrip(db, tripId);
+  return { origin: pick('origin'), destination: pick('destination'), distance_km: row.distance_km, geometry_version: row.geometry_version };
 }
 
 module.exports = {
@@ -405,9 +369,8 @@ module.exports = {
   ANALYSIS_COLUMNS,
   parseInput,
   buildAnalysis,
-  submitTrip,
-  getTrip,
-  reprocessAll,
-  setStatus,
+  prepareSubmission,
+  analyzeAll,
+  snapshotOf,
   statusFromFlags
 };

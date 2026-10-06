@@ -3,7 +3,8 @@
 const path = require('node:path');
 const fs = require('node:fs');
 
-const ROOT = path.resolve(__dirname, '..');
+// în pachetul ESM al funcției Netlify __dirname nu există (și nici nu e nevoie de căi locale)
+const ROOT = typeof __dirname !== 'undefined' ? path.resolve(__dirname, '..') : process.cwd();
 
 function env(name, def) {
   const v = process.env[name];
@@ -11,17 +12,17 @@ function env(name, def) {
 }
 
 function loadPeriods() {
-  const file = env('PERIODS_FILE', path.join(ROOT, 'config', 'periods.json'));
-  try {
-    return JSON.parse(fs.readFileSync(file, 'utf8'));
-  } catch {
-    return [];
+  const file = env('PERIODS_FILE', '');
+  if (file) {
+    try { return JSON.parse(fs.readFileSync(file, 'utf8')); } catch { return []; }
   }
+  // require static: fișierul este inclus și în pachetul funcției Netlify
+  return require('../config/periods.json');
 }
 
 const config = {
   ROOT,
-  APP_VERSION: '0.5.0',
+  APP_VERSION: '0.6.0',
   PORT: parseInt(env('PORT', '8080'), 10),
   HOST: env('HOST', '0.0.0.0'),
   PUBLIC_DIR: path.join(ROOT, 'public'),
@@ -38,10 +39,14 @@ const config = {
 
   // Administrare: fără ADMIN_PASSWORD, dashboardul este dezactivat
   ADMIN_PASSWORD: env('ADMIN_PASSWORD', ''),
+  // cheie suplimentară opțională pentru semnarea sesiunilor (schimbarea ei deconectează toți administratorii)
+  SESSION_SECRET: env('SESSION_SECRET', ''),
   SESSION_HOURS: parseInt(env('SESSION_HOURS', '12'), 10),
   // 'auto' = cookie Secure când cererea vine prin HTTPS (inclusiv X-Forwarded-Proto)
   COOKIE_SECURE: env('COOKIE_SECURE', 'auto'),
   TRUST_PROXY: env('TRUST_PROXY', '1') === '1',
+  // trimiteri de deplasări permise pe IP în 10 minute
+  RATE_LIMIT_TRIPS: parseInt(env('RATE_LIMIT_TRIPS', '40'), 10),
 
   // Geocodare externă pentru străzi/repere necunoscute (fallback). Gol = dezactivat.
   GEOCODER_URL: env('GEOCODER_URL', 'https://nominatim.openstreetmap.org/search'),

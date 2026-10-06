@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  var APP_VERSION = '0.5.0';
+  var APP_VERSION = '0.6.0';
   var DATA_FILES = {
     zones: 'data/iasi_17_zone_mva_mvi.geojson',
     uats: 'data/zmi_uat_web.geojson',

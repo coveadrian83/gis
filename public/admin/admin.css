@@ -128,3 +128,6 @@ pre.raw { background: #0f1720; color: #d5e2f0; padding: 10px; border-radius: 8px
 .st-check { border-color: var(--st-check); color: var(--st-check); }
 .st-exclude { border-color: var(--st-exclude); color: var(--st-exclude); }
 .nowrap { white-space: nowrap; }
+.inline-form { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.inline-form label { display: flex; align-items: center; gap: 4px; }
+.span-all { grid-column: 1 / -1; }

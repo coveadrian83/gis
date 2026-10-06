@@ -1,6 +1,6 @@
 {
   "name": "mobilitate-iasi",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "private": true,
   "description": "Studiu participativ de mobilitate Origine–Destinație – Zona Metropolitană Iași (MVA × MVI)",
   "license": "UNLICENSED",
@@ -12,8 +12,10 @@
     "dev": "ADMIN_PASSWORD=${ADMIN_PASSWORD:-test} node --watch server/server.js",
     "test": "node --test test/*.test.js",
     "check-geo": "node scripts/check-geo.js",
-    "reprocess": "node scripts/reprocess.js",
     "purge-coords": "node scripts/purge-coords.js",
     "demo-data": "node scripts/demo-data.js"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^11.1.3"
   }
 }

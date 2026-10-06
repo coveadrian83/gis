@@ -164,7 +164,7 @@
     return api('summary?' + filterQuery()).then(function (s) {
       var d = s.duration_valid;
       $('kpis').innerHTML =
-        kpi(fmtNum(s.n_trips, 0), 'Deplasări (filtrate)', 'din ' + fmtNum(s.n_raw_total, 0) + ' primite') +
+        kpi(fmtNum(s.n_trips, 0), 'Deplasări (filtrate)', 'din ' + fmtNum(s.n_raw_total, 0) + ' primite' + (s.n_unprocessable ? ' · ' + s.n_unprocessable + ' neprocesabile' : '')) +
         kpi(fmtNum(s.n_participants, 0), 'Participanți unici', 'mediană ' + fmtNum(s.trips_per_participant.median) + ' depl./participant') +
         kpi(fmtNum(s.n_days, 0), 'Zile acoperite') +
         kpi('<span class="status VALID">VALID</span> ' + fmtNum(s.status.VALID, 0), 'Coerente') +
@@ -391,7 +391,7 @@
     var missing = !g.files.zones || !g.files.uats || !g.files.localities;
     $('geoBanner').hidden = !missing;
     $('geoBanner').textContent = missing
-      ? 'Date geografice incomplete: copiați fișierele GeoJSON/SIRUTA în public/data (vezi public/data/README.md), apoi „Reîncarcă datele geografice” și „Reprocesează”.'
+      ? 'Date geografice incomplete: copiați fișierele GeoJSON/SIRUTA în public/data (vezi public/data/README.md); pe Netlify, publicați din nou site-ul, apoi „Reîncarcă datele geografice”.'
       : '';
   }
 
@@ -423,19 +423,19 @@
     var b = this;
     b.disabled = true;
     api('reload-geo', { method: 'POST' }).then(function (g) {
-      $('opResult').textContent = 'Date geografice reîncărcate.';
+      $('opResult').textContent = 'Date geografice reîncărcate. Deplasări verificate: ' + g.repair.checked + (g.repair.repaired ? ', readăugate în index: ' + g.repair.repaired : '') + '.';
       return api('meta').then(function (m) { state.meta = m; setupFilters(); renderGeoStatus(g); });
     }).catch(function (e) { $('opResult').textContent = e.message; }).then(function () { b.disabled = false; });
   });
 
-  $('btnReprocess').addEventListener('click', function () {
-    if (!confirm('Reprocesați toate deplasările cu geometriile și regulile curente? Deciziile manuale se păstrează.')) return;
+  $('btnPurge').addEventListener('click', function () {
+    var days = parseInt($('purgeDays').value, 10);
+    if (!(days >= 1)) return;
+    if (!confirm('Eliminați definitiv coordonatele precise pentru deplasările primite acum mai mult de ' + days + ' zile? Clasificarea se păstrează.')) return;
     var b = this;
     b.disabled = true;
-    $('opResult').textContent = 'Se reprocesează…';
-    api('reprocess', { method: 'POST' }).then(function (r) {
-      $('opResult').textContent = r.processed + ' deplasări reprocesate' + (r.errors.length ? '; ' + r.errors.length + ' erori (vezi consola).' : '.');
-      if (r.errors.length) console.warn(r.errors);
+    api('purge-coords', { method: 'POST', body: { older_than_days: days } }).then(function (r) {
+      $('opResult').textContent = 'Coordonate eliminate pentru ' + r.purged + ' deplasări.';
     }).catch(function (e) { $('opResult').textContent = e.message; }).then(function () { b.disabled = false; });
   });
 
@@ -460,7 +460,7 @@
         state.meta = m;
         $('login').hidden = true;
         $('app').hidden = false;
-        $('topMeta').textContent = 'v' + m.config.app_version + ' · zonare ' + m.config.geometry_version + ' · colectare ' + fmtDate(m.config.study_start) + '–' + fmtDate(m.config.study_end);
+        $('topMeta').textContent = 'v' + m.config.app_version + ' · zonare ' + m.config.geometry_version + ' · colectare ' + fmtDate(m.config.study_start) + '–' + fmtDate(m.config.study_end) + ' · stocare ' + m.storage;
         setupFilters();
         renderGeoStatus(m.geo);
         refresh();

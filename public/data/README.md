@@ -10,11 +10,13 @@ Aplicația citește din acest director următoarele fișiere (aceleași nume ca 
 | `mvi_poi_aliases.json` | Repere de căutare: `id`, `name`, `aliases[]`, `lat`, `lng`. | nu |
 
 Denumirile câmpurilor sunt detectate automat (vezi `public/shared/geo-core.js`).
-După copierea fișierelor rulați `npm run check-geo` pentru verificare.
+După copierea fișierelor rulați `npm run check-geo` pentru verificare
+(sau `npm run check-geo -- https://site-ul-tau.netlify.app` pentru fișierele deja publicate).
 
 **Atenție:** `mvi_poi_aliases.json` din depozit conține doar câteva repere implicite cu
 coordonate aproximative (`"verificat": false`). Înlocuiți-l cu fișierul MVI validat.
 
 La orice modificare a geometriilor sau nomenclatoarelor:
 1. creșteți `GEOMETRY_VERSION` (variabilă de mediu, ex. `ZMI-2025.2`);
-2. din dashboard: „Reîncarcă datele geografice”, apoi „Reprocesează toate deplasările”.
+2. publicați din nou site-ul (pe Netlify se face automat la încărcarea fișierelor în GitHub);
+3. din dashboard: „Reîncarcă datele geografice”. Toate deplasările sunt reclasificate automat cu noile geometrii.

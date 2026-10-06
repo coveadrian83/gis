@@ -1,13 +1,20 @@
 'use strict';
 // Verifică fișierele geografice din public/data (sau GEO_DATA_DIR) și raportează ce a fost detectat.
 const config = require('../server/config.js');
-const { loadGeo, geoStatus, FILES } = require('../server/geo.js');
+const { loadGeoFromDir, loadGeoFromUrl, geoStatus, FILES } = require('../server/geo.js');
 const GeoCore = require('../public/shared/geo-core.js');
 
-const geo = loadGeo(config.DATA_DIR);
+// Utilizare: npm run check-geo            (fișierele din public/data)
+//            npm run check-geo -- https://site-ul-tau.netlify.app   (fișierele publicate pe site)
+(async () => {
+const site = process.argv[2];
+const geo = site ? await loadGeoFromUrl(new URL('/data/', site).toString()) : await loadGeoFromDir(config.DATA_DIR);
 const st = geoStatus(geo);
-console.log(`Director: ${config.DATA_DIR}`);
-for (const [k, f] of Object.entries(FILES)) console.log(`  ${f.padEnd(36)} ${k.startsWith('localities') ? (st.files.localities ? 'OK' : 'lipsă') : (st.files[k] ? 'OK' : 'lipsă')}`);
+console.log(`Sursă: ${site ? new URL('/data/', site).toString() : config.DATA_DIR}`);
+for (const [k, f] of Object.entries(FILES)) {
+  if (k === 'localitiesCsv') continue;
+  console.log(`  ${(k === 'localitiesJson' ? f + ' (sau .csv)' : f).padEnd(46)} ${st.files[k === 'localitiesJson' ? 'localities' : k] ? 'OK' : 'lipsă'}`);
+}
 console.log('\nDetectat:', JSON.stringify(st.counts));
 console.log('UAT Iași:', st.iasi_uat ? `${st.iasi_uat.name} (${st.iasi_uat.siruta})` : 'NEGĂSIT');
 console.log('\nZone:');
@@ -30,3 +37,4 @@ if (st.warnings.length) {
   st.warnings.slice(0, 40).forEach((w) => console.log('  - ' + w));
 }
 process.exitCode = st.files.zones && st.files.uats && st.files.localities && st.iasi_uat ? 0 : 1;
+})();
