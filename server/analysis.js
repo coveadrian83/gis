@@ -60,6 +60,8 @@ const FLAG_LABELS = {
   D_LOCALITY_NEAREST: 'Destinație atribuită celei mai apropiate localități SIRUTA',
   O_ZONE_CENTROID: 'Origine aleasă ca zonă (centroid)',
   D_ZONE_CENTROID: 'Destinație aleasă ca zonă (centroid)',
+  O_ZONE_NEAREST: 'Origine la marginea Iașului, atribuită celei mai apropiate zone (< 500 m)',
+  D_ZONE_NEAREST: 'Destinație la marginea Iașului, atribuită celei mai apropiate zone (< 500 m)',
   O_IASI_NO_ZONE: 'Origine în Iași, dar în afara celor 17 zone',
   D_IASI_NO_ZONE: 'Destinație în Iași, dar în afara celor 17 zone',
   O_LOCALITY_IN_IASI: 'Localitate din Municipiul Iași – atribuită zonei MVA–MVI',

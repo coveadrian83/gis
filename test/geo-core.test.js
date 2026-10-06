@@ -40,6 +40,12 @@ test('clasificare point-in-polygon', () => {
   assert.equal(GeoCore.classifyPoint(geo, 44.43, 26.10).unit_type, 'OUT_ZMI');
 });
 
+test('fâșie la marginea Iașului (< 500 m de o zonă) → zona cea mai apropiată', () => {
+  const c = GeoCore.classifyPoint(geo, 47.149, 27.59); // ~110 m sud de Centru
+  assert.equal(c.unit_id, 'IAS-Z15');
+  assert.ok(c.flags.includes('ZONE_NEAREST'));
+});
+
 test('localitatea aleasă din nomenclator își păstrează identitatea SIRUTA (marker provizoriu)', () => {
   const u = geo.uatBySiruta['90001'];
   const c = GeoCore.classifyEndpoint(geo, { source: 'locality', ref: '95113', lat: u.centroid[0], lng: u.centroid[1], approx: true });
