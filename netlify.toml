@@ -1,0 +1,35 @@
+# Publicare pe Netlify
+#  - paginile (aplicația publică și dashboardul /admin/) vin din directorul public/
+#  - API-ul (/api/*) rulează ca funcție Netlify: netlify/functions/api.mjs
+#  - datele se salvează în Netlify Blobs (în contul Netlify, fără configurare suplimentară)
+# Singura setare obligatorie: variabila de mediu ADMIN_PASSWORD (parola dashboardului).
+
+[build]
+  publish = "public"
+  command = "echo 'fără pas de build'"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[functions]
+  node_bundler = "esbuild"
+  included_files = ["config/periods.json"]
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://tile.openstreetmap.org; connect-src 'self' https://nominatim.openstreetmap.org; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(self), camera=(), microphone=()"
+
+[[headers]]
+  for = "/admin/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/data/*"
+  [headers.values]
+    Cache-Control = "no-cache"

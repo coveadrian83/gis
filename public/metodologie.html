@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Metodologie – Mobilitate Iași · MVA × MVI</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <article class="doc">
+    <p><a href="./">← Înapoi la aplicație</a></p>
+    <h1>Studiu participativ de mobilitate Origine–Destinație</h1>
+    <p>Zona Metropolitană Iași · Moldova Vrea Infrastructură (MVI) × Moldova Vrea Autostradă (MVA)<br>
+      Perioada de colectare: <strong>1 octombrie 2026 – 30 aprilie 2027</strong></p>
+
+    <h2>Ce măsurăm</h2>
+    <p>Unitatea de observație este <strong>deplasarea efectiv realizată</strong> între o origine și o destinație principală.
+      O persoană poate raporta oricâte deplasări; repetarea aceluiași drum în zile diferite este utilă pentru a măsura
+      variabilitatea timpilor și nu reprezintă duplicare.</p>
+
+    <h2>Modelul geografic</h2>
+    <ul>
+      <li>în Municipiul Iași – 17 zone de analiză MVA–MVI (cod <code>IAS-Z01</code>…<code>IAS-Z17</code>);</li>
+      <li>în restul ZMI – localitatea oficială (cod SIRUTA), cu agregare la UAT;</li>
+      <li>deplasările către/din afara ZMI sunt acceptate și analizate separat.</li>
+    </ul>
+    <p>Reperele, străzile și denumirile populare sunt doar instrumente de căutare; punctul ales este atribuit automat unei
+      zone prin operație point-in-polygon.</p>
+
+    <h2>Ce rezultă</h2>
+    <p>Pentru fiecare relație O–D, unde volumul permite: număr de deplasări, de participanți și de zile; durata mediană
+      (indicatorul principal), media, P25, P75, P90 și diferența P90 – mediană (variabilitate / rezervă de timp);
+      distribuția pe intervale de plecare, moduri de transport, scopuri, ocupare auto și linii de transport public.</p>
+
+    <h2>Limite</h2>
+    <p>Eșantionul este deschis, voluntar și autoselectat. Rezultatele <strong>nu sunt reprezentative statistic</strong>
+      pentru întreaga populație și nu substituie un model oficial de transport; ele descriu deplasările raportate și se
+      interpretează în funcție de numărul de deplasări, participanți și zile.</p>
+    <table>
+      <tr><th>Deplasări pe relație</th><th>Interpretare</th></tr>
+      <tr><td>&lt; 10</td><td>relația poate fi semnalată, fără interpretare statistică</td></tr>
+      <tr><td>10–29</td><td>rezultate descriptive, marcate ca volum redus</td></tr>
+      <tr><td>30–49</td><td>analiză descriptivă mai robustă</td></tr>
+      <tr><td>≥ 50</td><td>distribuții și comparații mai consistente</td></tr>
+    </table>
+
+    <h2>Validare</h2>
+    <p>Fiecare deplasare primește automat un status: <strong>VALID</strong> (coerentă), <strong>CHECK</strong> (posibilă, dar
+      neobișnuită – revizuită de coordonator) sau <strong>EXCLUDE</strong> (duplicat cert sau eroare evidentă). Valorile extreme
+      nu sunt eliminate automat: o durată foarte mare poate reprezenta tocmai un episod de congestie relevant.</p>
+  </article>
+</body>
+</html>

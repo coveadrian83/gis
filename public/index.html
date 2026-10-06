@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Cât durează drumul tău? – Mobilitate Iași · MVA × MVI</title>
+  <meta name="description" content="Studiu participativ de mobilitate Origine–Destinație în Zona Metropolitană Iași. 30–45 de secunde. Fără nume. Fără adresă exactă.">
+  <meta name="theme-color" content="#123a6b">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">O→D</span>
+      <div>
+        <h1>Cât durează drumul tău?</h1>
+        <p>Studiu de mobilitate · Zona Metropolitană Iași · MVA × MVI</p>
+      </div>
+    </div>
+    <button type="button" class="link-btn" id="btnHistory" aria-haspopup="dialog">Deplasările mele <span class="badge" id="historyCount" hidden></span></button>
+  </header>
+
+  <div class="notice" id="notice" hidden></div>
+
+  <nav class="progress" aria-label="Progres">
+    <ol>
+      <li data-step="1" class="active"><span>1</span> Origine și destinație</li>
+      <li data-step="2"><span>2</span> Data și orele</li>
+      <li data-step="3"><span>3</span> Mod și scop</li>
+    </ol>
+    <div class="progress-bar"><div id="progressFill"></div></div>
+    <p class="progress-label" id="progressLabel">Pasul 1/3</p>
+  </nav>
+
+  <main class="layout">
+    <section class="map-wrap" id="mapWrap" aria-label="Hartă">
+      <div id="map"></div>
+      <div class="map-hint" id="mapHint" role="status"></div>
+      <div class="map-tools" role="toolbar" aria-label="Navigare hartă">
+        <button type="button" id="btnPan" aria-pressed="false" title="Mod Pan: mută harta fără a selecta puncte">✋ Pan</button>
+        <button type="button" id="btnFit" title="Încadrează Zona Metropolitană Iași">Încadrează ZMI</button>
+        <button type="button" id="btnCenter" title="Centrează pe Municipiul Iași">Centrează pe Iași</button>
+        <button type="button" id="btnLocate" title="Folosește locația mea pentru punctul activ">📍 Locația mea</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <!-- PASUL 1 -->
+      <form class="step" id="step1" data-step="1" novalidate>
+        <h2>De unde ai plecat și unde ai ajuns?</h2>
+        <p class="help">Caută un sat, un cartier sau un reper (merge și fără diacritice) ori atinge harta.</p>
+
+        <div class="saved" id="savedWrap" hidden>
+          <p class="saved-title">Relațiile tale salvate</p>
+          <div class="chips" id="savedList"></div>
+        </div>
+
+        <div class="endpoint" id="ep-origin" data-which="origin">
+          <label for="q-origin"><span class="pin pin-o">O</span> Origine</label>
+          <div class="search">
+            <input id="q-origin" type="search" autocomplete="off" spellcheck="false" placeholder="ex.: Păun, Copou, Gara…" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="r-origin">
+            <ul class="results" id="r-origin" role="listbox" hidden></ul>
+          </div>
+          <div class="ep-status" id="s-origin" aria-live="polite"></div>
+          <div class="ep-actions">
+            <button type="button" class="small" data-action="pick" data-which="origin">Schimbă originea pe hartă</button>
+            <button type="button" class="small ghost" data-action="clear" data-which="origin">Șterge</button>
+          </div>
+        </div>
+
+        <div class="endpoint" id="ep-destination" data-which="destination">
+          <label for="q-destination"><span class="pin pin-d">D</span> Destinație</label>
+          <div class="search">
+            <input id="q-destination" type="search" autocomplete="off" spellcheck="false" placeholder="ex.: Universitate, Palas, Vișan…" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="r-destination">
+            <ul class="results" id="r-destination" role="listbox" hidden></ul>
+          </div>
+          <div class="ep-status" id="s-destination" aria-live="polite"></div>
+          <div class="ep-actions">
+            <button type="button" class="small" data-action="pick" data-which="destination">Schimbă destinația pe hartă</button>
+            <button type="button" class="small ghost" data-action="clear" data-which="destination">Șterge</button>
+          </div>
+        </div>
+
+        <div class="row-actions">
+          <button type="button" class="ghost" id="btnSwap">⇅ Inversează</button>
+          <button type="button" class="ghost" id="btnResetOD">Reia O/D</button>
+        </div>
+
+        <button type="submit" class="primary" id="btnStep2" disabled>CONTINUĂ LA PASUL 2</button>
+      </form>
+
+      <!-- PASUL 2 -->
+      <form class="step" id="step2" data-step="2" hidden novalidate>
+        <h2>Când ai făcut deplasarea?</h2>
+        <p class="od-recap" id="recap2"></p>
+        <div class="field">
+          <label for="tripDate">Data deplasării</label>
+          <div class="inline">
+            <input id="tripDate" type="date" required>
+            <button type="button" class="small ghost" data-date="0">Azi</button>
+            <button type="button" class="small ghost" data-date="-1">Ieri</button>
+          </div>
+          <p class="hint" id="dateHint"></p>
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <label for="depTime">Ora plecării</label>
+            <input id="depTime" type="time" required step="60">
+          </div>
+          <div class="field">
+            <label for="arrTime">Ora sosirii</label>
+            <div class="inline">
+              <input id="arrTime" type="time" required step="60">
+              <button type="button" class="small ghost" id="btnNow" title="Ora curentă">Acum</button>
+            </div>
+          </div>
+        </div>
+        <div class="duration" id="durationBox" aria-live="polite">Durata se calculează automat.</div>
+        <p class="error" id="err2" role="alert" hidden></p>
+        <div class="nav-buttons">
+          <button type="button" class="ghost" data-back="1">← Înapoi</button>
+          <button type="submit" class="primary" id="btnStep3" disabled>CONTINUĂ LA PASUL 3</button>
+        </div>
+      </form>
+
+      <!-- PASUL 3 -->
+      <form class="step" id="step3" data-step="3" hidden novalidate>
+        <h2>Cum și de ce?</h2>
+        <p class="od-recap" id="recap3"></p>
+        <fieldset class="field">
+          <legend>Mod de transport principal</legend>
+          <div class="chips choice" id="modeChips"></div>
+        </fieldset>
+
+        <div id="carFields" hidden>
+          <fieldset class="field">
+            <legend>Ai fost…</legend>
+            <div class="chips choice" id="roleChips"></div>
+          </fieldset>
+          <fieldset class="field">
+            <legend>Câte persoane erau în mașină (inclusiv șoferul)?</legend>
+            <div class="chips choice" id="occChips"></div>
+          </fieldset>
+        </div>
+
+        <div class="field" id="ptFields" hidden>
+          <label for="ptLine">Linia folosită <span class="opt">(opțional)</span></label>
+          <input id="ptLine" type="text" maxlength="30" placeholder="ex.: 28, 3, 46b, IR 1662" autocomplete="off">
+        </div>
+
+        <fieldset class="field">
+          <legend>Scopul deplasării</legend>
+          <div class="chips choice" id="purposeChips"></div>
+        </fieldset>
+
+        <fieldset class="field">
+          <legend>Este un drum pe care îl faci des?</legend>
+          <div class="chips choice wide" id="repeatChips"></div>
+        </fieldset>
+
+        <p class="error" id="err3" role="alert" hidden></p>
+        <div class="nav-buttons">
+          <button type="button" class="ghost" data-back="2">← Înapoi</button>
+          <button type="submit" class="primary" id="btnSubmit" disabled>TRIMITE</button>
+        </div>
+      </form>
+
+      <!-- CONFIRMARE -->
+      <section class="step done" id="stepDone" hidden aria-live="polite">
+        <div class="done-icon" aria-hidden="true">✓</div>
+        <h2 id="doneTitle">Mulțumim! Deplasarea a fost înregistrată.</h2>
+        <dl class="summary" id="doneSummary"></dl>
+        <p class="hint" id="doneNote"></p>
+        <div class="stack">
+          <button type="button" class="primary" id="btnAnother">RAPORTEAZĂ ALTĂ DEPLASARE</button>
+          <button type="button" id="btnReturn">⇄ Raportează drumul de întoarcere</button>
+          <button type="button" class="ghost" id="btnSave">☆ Salvează relația pentru data viitoare</button>
+        </div>
+      </section>
+
+      <footer class="foot">
+        <p><strong>Fără nume. Fără adresă exactă.</strong> Datele sunt folosite doar agregat, pentru studiul de mobilitate.
+          <a href="confidentialitate.html">Confidențialitate</a> · <a href="metodologie.html">Metodologie</a></p>
+        <p class="ver" id="versionInfo"></p>
+      </footer>
+    </section>
+  </main>
+
+  <dialog id="historyDialog" aria-labelledby="historyTitle">
+    <form method="dialog" class="dialog-body">
+      <h2 id="historyTitle">Deplasările mele</h2>
+      <p class="hint">Lista este păstrată doar pe acest dispozitiv.</p>
+      <ul class="history" id="historyList"></ul>
+      <details class="danger-zone">
+        <summary>Șterge datele mele</summary>
+        <p>Poți șterge din studiu toate deplasările trimise de pe acest dispozitiv. Operațiunea este ireversibilă.</p>
+        <button type="button" class="danger" id="btnErase">Șterge toate deplasările mele</button>
+        <p class="hint" id="eraseMsg"></p>
+      </details>
+      <div class="nav-buttons"><button class="primary" value="close">Închide</button></div>
+    </form>
+  </dialog>
+
+  <script src="vendor/leaflet/leaflet.js"></script>
+  <script src="shared/geo-core.js"></script>
+  <script src="shared/domain.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

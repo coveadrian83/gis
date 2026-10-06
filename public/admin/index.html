@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard – Mobilitate Iași · MVA × MVI</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <!-- Autentificare -->
+  <section id="login" class="login" hidden>
+    <form id="loginForm" class="card">
+      <h1>Dashboard studiu O–D</h1>
+      <p class="muted">Mobilitate Iași · MVA × MVI</p>
+      <label for="pwd">Parolă administrator</label>
+      <input id="pwd" type="password" autocomplete="current-password" required>
+      <button type="submit" class="primary">Autentificare</button>
+      <p class="error" id="loginErr" hidden></p>
+    </form>
+  </section>
+
+  <div id="app" hidden>
+    <header class="top">
+      <div>
+        <strong>Dashboard studiu O–D</strong>
+        <span class="muted" id="topMeta"></span>
+      </div>
+      <nav class="tabs" role="tablist">
+        <button role="tab" data-tab="summary" aria-selected="true">Sumar</button>
+        <button role="tab" data-tab="trips">Deplasări</button>
+        <button role="tab" data-tab="od">Relații O–D</button>
+        <button role="tab" data-tab="coverage">Acoperire</button>
+        <button role="tab" data-tab="data">Export &amp; date</button>
+        <button role="tab" data-tab="audit">Audit</button>
+      </nav>
+      <button type="button" id="btnLogout" class="ghost">Ieșire</button>
+    </header>
+
+    <div class="banner" id="geoBanner" hidden></div>
+
+    <!-- Filtre comune -->
+    <form class="filters" id="filters">
+      <label>De la <input type="date" name="date_from"></label>
+      <label>Până la <input type="date" name="date_to"></label>
+      <label>Origine <select name="origin" data-units></select></label>
+      <label>Destinație <select name="destination" data-units></select></label>
+      <label>UAT (O sau D) <select name="uat" id="fUat"></select></label>
+      <label>Mod <select name="mode" id="fMode"></select></label>
+      <label>Scop <select name="purpose" id="fPurpose"></select></label>
+      <label>Recurență <select name="repeat_type" id="fRepeat"></select></label>
+      <label>Perioadă <select name="period_tag" id="fPeriod"></select></label>
+      <label>Zi <select name="day_type"><option value="">toate</option><option value="weekday">lucrătoare</option><option value="weekend">weekend</option></select></label>
+      <label>Sursă <input type="text" name="campaign_source" placeholder="ex. facebook_mvi" size="12"></label>
+      <fieldset class="status-filter">
+        <legend>Status</legend>
+        <label><input type="checkbox" name="st" value="VALID" checked> VALID</label>
+        <label><input type="checkbox" name="st" value="CHECK" checked> CHECK</label>
+        <label><input type="checkbox" name="st" value="EXCLUDE"> EXCLUDE</label>
+      </fieldset>
+      <div class="filter-actions">
+        <button type="submit" class="primary">Aplică</button>
+        <button type="button" id="btnResetFilters" class="ghost">Resetează</button>
+      </div>
+    </form>
+
+    <main>
+      <!-- SUMAR -->
+      <section class="tab" id="tab-summary">
+        <div class="kpis" id="kpis"></div>
+        <div class="grid">
+          <div class="card"><h3>Deplasări pe zi</h3><div id="chDate" class="bars"></div></div>
+          <div class="card"><h3>Ora plecării</h3><div id="chBand" class="bars"></div></div>
+          <div class="card"><h3>Mod de transport</h3><div id="chMode" class="bars"></div></div>
+          <div class="card"><h3>Scop</h3><div id="chPurpose" class="bars"></div></div>
+          <div class="card"><h3>Recurent / ocazional</h3><div id="chRepeat" class="bars"></div></div>
+          <div class="card"><h3>Perioade analitice</h3><div id="chPeriod" class="bars"></div></div>
+          <div class="card"><h3>Canal de recrutare</h3><div id="chSource" class="bars"></div></div>
+          <div class="card"><h3>Tip zi</h3><div id="chDay" class="bars"></div></div>
+        </div>
+      </section>
+
+      <!-- DEPLASĂRI -->
+      <section class="tab" id="tab-trips" hidden>
+        <div class="toolbar">
+          <label>Flag <select id="fFlag"><option value="">oricare</option></select></label>
+          <label>ID deplasare/participant <input type="text" id="fId" placeholder="primele caractere" size="14"></label>
+          <span class="muted" id="tripsCount"></span>
+          <span class="spacer"></span>
+          <button type="button" class="ghost" id="prevPage">← Anterioare</button>
+          <button type="button" class="ghost" id="nextPage">Următoare →</button>
+        </div>
+        <div class="table-wrap">
+          <table class="data" id="tripsTable">
+            <thead><tr>
+              <th>Data</th><th>Plecare–sosire</th><th class="num">Durată</th><th>Origine</th><th>Destinație</th>
+              <th>Mod</th><th>Scop</th><th>Status</th><th>Flag-uri</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- RELAȚII O–D -->
+      <section class="tab" id="tab-od" hidden>
+        <div class="toolbar">
+          <label>Nivel <select id="odLevel"><option value="unit">Zonă / localitate</option><option value="uat">UAT</option></select></label>
+          <label>Min. deplasări <input type="number" id="odMin" value="1" min="1" style="width:5em"></label>
+          <span class="muted">Statisticile folosesc statusurile bifate în filtre (implicit VALID + CHECK; pentru analiza finală – doar VALID).</span>
+        </div>
+        <div class="od-layout">
+          <div class="card map-card"><div id="odMap"></div><p class="muted small">Grosimea liniei ∝ număr de deplasări. Linii între centroizii unităților O–D.</p></div>
+          <div class="table-wrap">
+            <table class="data" id="odTable">
+              <thead><tr>
+                <th>Origine</th><th>Destinație</th><th class="num">N depl.</th><th class="num">N part.</th><th class="num">N zile</th>
+                <th class="num">Mediană</th><th class="num">Medie</th><th class="num">P25</th><th class="num">P75</th><th class="num">P90</th>
+                <th class="num">P90 − med.</th><th>Vârf plecare</th><th>Moduri</th><th>Volum</th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ACOPERIRE -->
+      <section class="tab" id="tab-coverage" hidden>
+        <div class="toolbar">
+          <label>Prag subacoperire <input type="number" id="covThreshold" value="10" min="1" style="width:5em"></label>
+          <span class="muted" id="covInfo"></span>
+        </div>
+        <div class="table-wrap">
+          <table class="data" id="covTable">
+            <thead><tr><th>Unitate O–D</th><th>Tip</th><th>UAT</th><th class="num">Ca origine</th><th class="num">Ca destinație</th><th class="num">Total</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- EXPORT & DATE -->
+      <section class="tab" id="tab-data" hidden>
+        <div class="grid">
+          <div class="card">
+            <h3>Exporturi (cu filtrele curente)</h3>
+            <ul class="exports" id="exports"></ul>
+            <p class="muted small">„Excel RO” = separator <code>;</code> și virgulă zecimală. GeoJSON în WGS84 (pentru GeoPackage EPSG:3844 se reproiectează în QGIS).</p>
+          </div>
+          <div class="card">
+            <h3>Date geografice</h3>
+            <div id="geoStatus"></div>
+            <div class="stack">
+              <button type="button" id="btnReloadGeo">Reîncarcă datele geografice și verifică datele</button>
+            </div>
+            <p class="muted small">Analiza (zone, statusuri, statistici) se recalculează automat la fiecare afișare din datele brute, cu geometriile și regulile curente. Datele brute nu se modifică; deciziile manuale se păstrează.</p>
+            <h3 style="margin-top:16px">Retenție</h3>
+            <p class="muted small">Elimină coordonatele precise ale deplasărilor mai vechi; clasificarea (zonă / localitate / UAT) rămâne.</p>
+            <div class="inline-form">
+              <label>Mai vechi de <input type="number" id="purgeDays" value="90" min="1" style="width:5em"> zile</label>
+              <button type="button" id="btnPurge">Elimină coordonatele</button>
+            </div>
+            <p id="opResult" class="small"></p>
+          </div>
+          <div class="card span-all">
+            <h3>Reguli automate de validare</h3>
+            <table class="data compact" id="flagsTable"><thead><tr><th>Flag</th><th>Efect</th><th>Semnificație</th></tr></thead><tbody></tbody></table>
+          </div>
+        </div>
+      </section>
+
+      <!-- AUDIT -->
+      <section class="tab" id="tab-audit" hidden>
+        <div class="table-wrap">
+          <table class="data" id="auditTable">
+            <thead><tr><th>#</th><th>Moment</th><th>Actor</th><th>Acțiune</th><th>Deplasare</th><th>Din</th><th>În</th><th>Notă</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Detaliu deplasare -->
+  <dialog id="tripDialog">
+    <div class="dialog-body">
+      <div class="dialog-head">
+        <h2>Deplasare <code id="dTripId"></code></h2>
+        <button type="button" class="ghost" id="dClose" aria-label="Închide">✕</button>
+      </div>
+      <div id="dContent"></div>
+      <div class="review">
+        <h3>Decizie de validare</h3>
+        <p class="muted small">Coordonatorul poate valida sau exclude, dar nu modifică informația declarată.</p>
+        <label for="dNote">Notă (opțional)</label>
+        <textarea id="dNote" rows="2" maxlength="500"></textarea>
+        <div class="status-buttons">
+          <button type="button" data-status="VALID" class="st-valid">VALID</button>
+          <button type="button" data-status="CHECK" class="st-check">CHECK</button>
+          <button type="button" data-status="EXCLUDE" class="st-exclude">EXCLUDE</button>
+          <button type="button" data-status="AUTO" class="ghost">Revino la automat</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="../vendor/leaflet/leaflet.js"></script>
+  <script src="../shared/domain.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
