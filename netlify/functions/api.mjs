@@ -26,11 +26,20 @@ function reloadGeo(req) {
   return getGeo(req);
 }
 
+// Netlify dă funcției, la fiecare cerere, un jeton de acces la Blobs valabil doar pentru acea cerere.
+// De aceea store-ul NU se păstrează între cereri: fiecare operațiune cere store-ul curent (jeton valid).
+// (Păstrarea lui ducea, după câteva minute, la eroarea „Failed to decode token: Token expired”.)
+const currentStore = () => getStore({ name: 'mobilitate', consistency: 'strong' });
+const store = {
+  get: (...a) => currentStore().get(...a),
+  getWithMetadata: (...a) => currentStore().getWithMetadata(...a),
+  setJSON: (...a) => currentStore().setJSON(...a),
+  list: (...a) => currentStore().list(...a),
+  delete: (...a) => currentStore().delete(...a)
+};
+
 export default async (req, context) => {
-  if (!api) {
-    const store = getStore({ name: 'mobilitate', consistency: 'strong' });
-    api = apiModule.createApi(configModule, { storage: storageModule.createBlobStorage(store), getGeo, reloadGeo });
-  }
+  if (!api) api = apiModule.createApi(configModule, { storage: storageModule.createBlobStorage(store), getGeo, reloadGeo });
   return api.handle(req, { ip: (context && context.ip) || req.headers.get('x-nf-client-connection-ip') || 'necunoscut' });
 };
 

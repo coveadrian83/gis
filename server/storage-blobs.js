@@ -42,8 +42,9 @@ function createBlobStorage(store) {
       const data = cur ? cur.data : init();
       const next = fn(data);
       if (next === undefined) return data;
-      const res = cur && cur.etag
-        ? await store.setJSON(key, next, { onlyIfMatch: cur.etag })
+      // fără ETag (ex. simulatorul local Netlify) nu putem face scriere condiționată: scriem direct
+      const res = cur
+        ? await store.setJSON(key, next, cur.etag ? { onlyIfMatch: cur.etag } : {})
         : await store.setJSON(key, next, { onlyIfNew: true });
       if (res && res.modified === false) {
         await sleep(15 + Math.random() * 60 * (attempt + 1));
@@ -82,7 +83,9 @@ function createBlobStorage(store) {
         if (existing) await addToIndex(existing);
         return { created: false };
       }
-      await addToIndex(rec);
+      // deplasarea e deja salvată în raw/<id>; dacă indexul zilei nu poate fi actualizat acum,
+      // listRaws() o găsește oricum, iar „Reîncarcă / verifică datele” o readaugă în index
+      try { await addToIndex(rec); } catch (e) { console.error('Index neactualizat pentru', rec.trip_id, e.message); }
       return { created: true };
     },
 
@@ -91,15 +94,20 @@ function createBlobStorage(store) {
     },
 
     async listRaws() {
+      const [days, rawKeys] = await Promise.all([readDays(), listKeys('raw/')]);
       const seen = new Set();
       const out = [];
-      for (const d of await readDays()) {
+      for (const d of days) {
         for (const r of d.records) {
           if (seen.has(r.trip_id)) continue;
           seen.add(r.trip_id);
           out.push(r);
         }
       }
+      // plasă de siguranță: deplasări salvate individual, dar lipsă din index
+      const missing = rawKeys.filter((k) => !seen.has(k.slice(4)));
+      const recs = await mapLimit(missing, 8, (k) => store.get(k, JSON_OPTS));
+      recs.forEach((r) => { if (r && !seen.has(r.trip_id)) { seen.add(r.trip_id); out.push(r); } });
       return out;
     },
 
@@ -188,7 +196,7 @@ function createBlobStorage(store) {
 
     /** Readaugă în index deplasările salvate individual, dar lipsă din index (după o întrerupere). */
     async repair() {
-      const indexed = new Set((await this.listRaws()).map((r) => r.trip_id));
+      const indexed = new Set((await readDays()).flatMap((d) => d.records.map((r) => r.trip_id)));
       const rawKeys = await listKeys('raw/');
       const missing = rawKeys.filter((k) => !indexed.has(k.slice(4)));
       await mapLimit(missing, 8, async (k) => {

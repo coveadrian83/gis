@@ -1,7 +1,7 @@
 'use strict';
 // Imitație în memorie a API-ului @netlify/blobs (getWithMetadata/get/setJSON/list/delete, cu ETag),
 // cu întârzieri aleatoare ca să apară conflicte reale de scriere.
-function createFakeBlobStore({ jitter = true } = {}) {
+function createFakeBlobStore({ jitter = true, etags = true } = {}) {
   const data = new Map();
   let n = 0;
   const wait = () => new Promise((r) => setTimeout(r, jitter ? Math.random() * 4 : 0));
@@ -10,7 +10,7 @@ function createFakeBlobStore({ jitter = true } = {}) {
     async getWithMetadata(key) {
       await wait();
       const v = data.get(key);
-      return v ? { data: JSON.parse(v.body), etag: v.etag, metadata: {} } : null;
+      return v ? { data: JSON.parse(v.body), etag: etags ? v.etag : undefined, metadata: {} } : null;
     },
     async get(key) {
       await wait();
