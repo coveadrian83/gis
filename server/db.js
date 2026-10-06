@@ -39,6 +39,13 @@ CREATE TABLE IF NOT EXISTS reviews (
   review_note   TEXT
 );
 
+-- documente mici de configurare editate din dashboard (ex. reperele)
+CREATE TABLE IF NOT EXISTS kv (
+  key        TEXT PRIMARY KEY,
+  json       TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS audit_log (
   id         INTEGER PRIMARY KEY AUTOINCREMENT,
   at         TEXT NOT NULL,

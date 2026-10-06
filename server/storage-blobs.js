@@ -10,6 +10,7 @@ const time = require('./time.js');
  *   day/<YYYY-MM-DD>    – index pe ziua primirii: listă de înregistrări, pentru citirea rapidă a tuturor datelor
  *   reviews             – deciziile manuale { trip_id: { manual_status, reviewed_at, review_note } }
  *   audit/<YYYY-MM>     – jurnalul de audit pe luni
+ *   pois                – reperele adăugate/modificate din dashboard
  *
  * Scrierile în documentele comune folosesc scriere condiționată (ETag) cu reîncercare,
  * astfel încât trimiterile simultane nu se suprascriu.
@@ -174,6 +175,15 @@ function createBlobStorage(store) {
         if (out.length >= limit) break;
       }
       return out.slice(0, limit);
+    },
+
+    /** Reperele adăugate/modificate din dashboard: { id: reper | { deleted: true } }. */
+    async getPoiOverrides() {
+      return (await store.get('pois', JSON_OPTS)) || {};
+    },
+
+    async updatePoiOverrides(fn) {
+      return mutate('pois', fn, () => ({}));
     },
 
     /** Readaugă în index deplasările salvate individual, dar lipsă din index (după o întrerupere). */

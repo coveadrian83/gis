@@ -33,6 +33,7 @@
         <button role="tab" data-tab="trips">Deplasări</button>
         <button role="tab" data-tab="od">Relații O–D</button>
         <button role="tab" data-tab="coverage">Acoperire</button>
+        <button role="tab" data-tab="pois">Repere</button>
         <button role="tab" data-tab="data">Export &amp; date</button>
         <button role="tab" data-tab="audit">Audit</button>
       </nav>
@@ -139,6 +140,34 @@
         </div>
       </section>
 
+      <!-- REPERE -->
+      <section class="tab" id="tab-pois" hidden>
+        <p class="muted small">Reperele ajută participanții să găsească rapid locul (scriind „spita” apar toate spitalele, „univ” toate universitățile).
+          Ele nu sunt unități statistice: punctul ales este atribuit automat zonei / UAT-ului. Reperele fără coordonate nu apar participanților.</p>
+        <div class="toolbar">
+          <label>Caută <input type="search" id="poiFilter" placeholder="nume sau alias" size="18"></label>
+          <label>Categorie <select id="poiCatFilter"></select></label>
+          <label>Stare <select id="poiStateFilter">
+            <option value="">toate</option><option value="nocoords">fără coordonate</option>
+            <option value="unverified">neverificate</option><option value="verified">verificate</option>
+          </select></label>
+          <span class="muted" id="poiCount"></span>
+          <span class="spacer"></span>
+          <button type="button" class="primary" id="btnPoiAdd">+ Adaugă reper</button>
+          <button type="button" id="btnPoiImport">Import listă / Excel</button>
+          <button type="button" id="btnPoiLocate">Localizează automat reperele fără coordonate</button>
+        </div>
+        <p class="small" id="poiProgress"></p>
+        <div class="table-wrap">
+          <table class="data" id="poiTable">
+            <thead><tr><th>Reper</th><th>Categorie</th><th>Zonă / UAT</th><th>Stare</th><th>Sursă</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p class="small muted">Export: <a id="poiCsv" href="../api/admin/export/pois.csv">CSV</a> · <a id="poiCsvRo" href="../api/admin/export/pois.csv?format=excel_ro">Excel RO</a>
+          – fișierul exportat se poate completa în Excel și reimporta.</p>
+      </section>
+
       <!-- EXPORT & DATE -->
       <section class="tab" id="tab-data" hidden>
         <div class="grid">
@@ -204,7 +233,59 @@
     </div>
   </dialog>
 
+  <!-- Editare reper -->
+  <dialog id="poiDialog">
+    <form class="dialog-body" id="poiForm">
+      <div class="dialog-head">
+        <h2 id="poiDialogTitle">Reper</h2>
+        <button type="button" class="ghost" id="poiClose" aria-label="Închide">✕</button>
+      </div>
+      <div class="poi-grid">
+        <div>
+          <label class="blk">Denumire <input type="text" id="poiName" required maxlength="160"></label>
+          <label class="blk">Categorie <select id="poiCategory"></select></label>
+          <label class="blk">Alte denumiri / prescurtări <span class="muted small">(separate prin ;)</span>
+            <input type="text" id="poiAliases" placeholder="ex.: Spiridon; Urgențe"></label>
+          <label class="blk">Caută locul pe hartă
+            <span class="inline-form"><input type="search" id="poiSearch" placeholder="nume, adresă…"><button type="button" id="poiSearchBtn">Caută</button></span>
+          </label>
+          <ul class="poi-results" id="poiResults"></ul>
+          <p class="small">Coordonate: <span id="poiCoords">– (apasă pe hartă sau caută)</span></p>
+          <label class="chk"><input type="checkbox" id="poiVerified"> Am verificat poziția pe hartă</label>
+          <p class="error" id="poiErr" hidden></p>
+          <div class="status-buttons">
+            <button type="submit" class="primary">Salvează</button>
+            <button type="button" class="ghost" id="poiCancel">Anulează</button>
+          </div>
+        </div>
+        <div><div id="poiMap"></div><p class="small muted">Apasă pe hartă pentru a pune reperul; poți trage markerul.</p></div>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Import repere -->
+  <dialog id="importDialog">
+    <form class="dialog-body" id="importForm">
+      <div class="dialog-head">
+        <h2>Import repere</h2>
+        <button type="button" class="ghost" id="importClose" aria-label="Închide">✕</button>
+      </div>
+      <p class="small">Variantă simplă: <strong>câte un nume pe rând</strong>, toate din categoria aleasă mai jos. Apoi folosește
+        „Localizează automat” și verifică pe hartă.<br>
+        Variantă din Excel: copiază coloanele <code>nume; categorie; alias-uri; lat; lng</code> (cu sau fără rând de antet) și lipește-le aici.
+        Reperele cu același nume sunt actualizate, nu dublate.</p>
+      <label class="blk">Categorie implicită <select id="importCategory"></select></label>
+      <textarea id="importText" rows="12" placeholder="Spitalul Clinic Județean de Urgență „Sf. Spiridon”&#10;Institutul Regional de Oncologie&#10;…"></textarea>
+      <p class="small" id="importPreview"></p>
+      <div class="status-buttons">
+        <button type="submit" class="primary">Importă</button>
+        <button type="button" class="ghost" id="importCancel">Anulează</button>
+      </div>
+    </form>
+  </dialog>
+
   <script src="../vendor/leaflet/leaflet.js"></script>
+  <script src="../shared/geo-core.js"></script>
   <script src="../shared/domain.js"></script>
   <script src="admin.js"></script>
 </body>

@@ -175,6 +175,37 @@ for (const [name, makeStorage] of [
       assert.equal((await admin('POST', 'purge-coords', { older_than_days: 90 })).body.purged, 0);
     });
 
+    test('repere: listă publică, adăugare, import din Excel, ștergere', async () => {
+      // fixture: 2 repere în fișier (Gara, Palas)
+      let pub = (await call('GET', '/api/pois')).body;
+      assert.equal(pub.length, 2);
+      const add = await admin('POST', 'pois', { name: 'Spitalul Clinic Județean de Urgență „Sf. Spiridon”', category: 'spital', aliases: 'Spiridon; Urgențe', lat: 47.1667, lng: 27.5785, verified: true });
+      assert.equal(add.status, 200);
+      assert.match(add.body.id, /^POI-SPITAL/);
+      const noCoords = await admin('POST', 'pois', { name: 'Institutul Regional de Oncologie', category: 'spital' });
+      assert.equal(noCoords.body.lat, null);
+      pub = (await call('GET', '/api/pois')).body;
+      assert.equal(pub.length, 3, 'reperul fără coordonate nu apare public');
+      // import tip Excel RO (virgulă zecimală); „Gara Iași” există → actualizat, nu dublat
+      const imp = await admin('POST', 'pois/import', { default_category: 'altul', items: [
+        { name: 'Gara Iași', category: 'transport', aliases: ['Gara Mare'] },
+        { name: 'Iulius Mall', category: 'comercial', lat: '47,1569', lng: '27,6045' }
+      ] });
+      assert.deepEqual(imp.body, { added: 1, updated: 1 });
+      const list = (await admin('GET', 'pois')).body.rows;
+      assert.equal(list.length, 5);
+      const gara = list.find((x) => x.name === 'Gara Iași');
+      assert.equal(gara.lat, 47.1654, 'coordonatele existente se păstrează');
+      assert.equal(gara.unit_id, 'IAS-Z15');
+      assert.equal(list.find((x) => x.name === 'Iulius Mall').lat, 47.1569);
+      assert.equal((await admin('POST', 'pois', { name: 'x', lat: 10, lng: 10 })).status, 400);
+      await admin('POST', 'pois/delete', { id: add.body.id });
+      assert.equal((await call('GET', '/api/pois')).body.length, 3);
+      const csv = await admin('GET', 'export/pois.csv');
+      assert.match(csv.text, /Iulius Mall/);
+      assert.ok((await admin('GET', 'audit')).body.rows.some((a) => a.action === 'POI_IMPORT'));
+    });
+
     test('dreptul la ștergere al participantului', async () => {
       const r = await call('POST', '/api/participant/erase', { participant_id: 'test-participant-0002' });
       assert.equal(r.body.deleted, 1);

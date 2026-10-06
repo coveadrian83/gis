@@ -129,12 +129,13 @@
       state.tab = b.getAttribute('data-tab');
       document.querySelectorAll('.tabs button').forEach(function (x) { x.setAttribute('aria-selected', x === b ? 'true' : 'false'); });
       document.querySelectorAll('.tab').forEach(function (t) { t.hidden = t.id !== 'tab-' + state.tab; });
+      $('filters').hidden = state.tab === 'pois' || state.tab === 'audit';
       refresh();
     });
   });
 
   function refresh() {
-    var fn = { summary: loadSummary, trips: loadTrips, od: loadOd, coverage: loadCoverage, data: loadData, audit: loadAudit }[state.tab];
+    var fn = { summary: loadSummary, trips: loadTrips, od: loadOd, coverage: loadCoverage, pois: loadPois, data: loadData, audit: loadAudit }[state.tab];
     fn().catch(function (e) { console.error(e); });
   }
 
@@ -405,6 +406,7 @@
       ['Fluxuri O–D (GeoJSON)', 'export/od.geojson?' + odq, false],
       ['Acoperire pe unități', 'export/coverage.csv?' + q, true],
       ['Jurnal de audit', 'export/audit.csv', true],
+      ['Repere', 'export/pois.csv', true],
       ['Date brute – TRIPS_RAW (JSONL, toate)', 'export/raw.jsonl', false]
     ];
     $('exports').innerHTML = items.map(function (it) {
@@ -440,6 +442,262 @@
   });
 
   // ---------------------------------------------------------------------------
+  // Repere
+  // ---------------------------------------------------------------------------
+  var CATS = Domain.byCode(Domain.POI_CATEGORIES);
+  var poiState = { rows: [], editing: null, map: null, marker: null, lat: null, lng: null, locating: false };
+
+  function fillCategorySelect(sel, withAll) {
+    sel.innerHTML = '';
+    if (withAll) sel.appendChild(option('', 'toate'));
+    Domain.POI_CATEGORIES.forEach(function (c) { sel.appendChild(option(c.code, c.icon + ' ' + c.label)); });
+  }
+
+  function poiStateBadge(p) {
+    if (p.lat === null) return '<span class="badge-state none">fără coordonate</span>';
+    return p.verified ? '<span class="badge-state ok">✓ verificat</span>' : '<span class="badge-state warn">? neverificat</span>';
+  }
+
+  function loadPois() {
+    return api('pois').then(function (r) {
+      poiState.rows = r.rows;
+      renderPois();
+    });
+  }
+
+  function renderPois() {
+    var q = GeoCore.normalize($('poiFilter').value);
+    var cat = $('poiCatFilter').value, st = $('poiStateFilter').value;
+    var rows = poiState.rows.filter(function (p) {
+      if (cat && p.category !== cat) return false;
+      if (st === 'nocoords' && p.lat !== null) return false;
+      if (st === 'unverified' && (p.lat === null || p.verified)) return false;
+      if (st === 'verified' && !p.verified) return false;
+      if (q && [p.name].concat(p.aliases).every(function (x) { return GeoCore.normalize(x).indexOf(q) < 0; })) return false;
+      return true;
+    });
+    var all = poiState.rows;
+    $('poiCount').textContent = rows.length + ' din ' + all.length + ' · ' +
+      all.filter(function (p) { return p.lat === null; }).length + ' fără coordonate · ' +
+      all.filter(function (p) { return p.lat !== null && !p.verified; }).length + ' neverificate';
+    var tb = document.querySelector('#poiTable tbody');
+    tb.innerHTML = rows.length ? rows.map(function (p) {
+      var c = CATS[p.category] || CATS.altul;
+      return '<tr data-id="' + esc(p.id) + '"><td><strong>' + esc(p.name) + '</strong>' +
+        (p.aliases.length ? '<span class="unit-sub">' + esc(p.aliases.join(' · ')) + '</span>' : '') + '</td>' +
+        '<td>' + c.icon + ' ' + esc(c.single) + '</td>' +
+        '<td>' + (p.unit_name ? esc(p.unit_name) + (p.uat_name && p.unit_name !== p.uat_name ? '<span class="unit-sub">' + esc(p.uat_name) + '</span>' : '') : '–') + '</td>' +
+        '<td>' + poiStateBadge(p) + '</td><td class="small muted">' + esc(p.source) + '</td>' +
+        '<td class="row-actions-sm"><button type="button" data-edit>Editează</button> <button type="button" class="ghost" data-del>Șterge</button></td></tr>';
+    }).join('') : '<tr><td colspan="6" class="empty">Niciun reper pentru filtrele alese.</td></tr>';
+  }
+
+  ['poiFilter', 'poiCatFilter', 'poiStateFilter'].forEach(function (id) { $(id).addEventListener('input', renderPois); });
+
+  document.querySelector('#poiTable tbody').addEventListener('click', function (e) {
+    var tr = e.target.closest('tr[data-id]');
+    if (!tr) return;
+    var p = poiState.rows.find(function (x) { return x.id === tr.getAttribute('data-id'); });
+    if (!p) return;
+    if (e.target.hasAttribute('data-edit')) openPoi(p);
+    else if (e.target.hasAttribute('data-del')) {
+      if (!confirm('Ștergi reperul „' + p.name + '”? Nu va mai apărea în căutarea participanților.')) return;
+      api('pois/delete', { method: 'POST', body: { id: p.id } }).then(loadPois).catch(function (err) { alert(err.message); });
+    }
+  });
+
+  function geocode(q, bounded) {
+    var url = state.meta.config.geocoder_url;
+    if (!url) return Promise.reject(new Error('Geocodarea nu este configurată.'));
+    var b = state.meta.geo.bbox || [27.28, 46.87, 27.99, 47.39];
+    var params = new URLSearchParams({
+      q: q, format: 'jsonv2', limit: '6', countrycodes: 'ro', 'accept-language': 'ro',
+      viewbox: [b[0], b[3], b[2], b[1]].join(','), bounded: bounded ? '1' : '0'
+    });
+    return fetch(url + '?' + params.toString(), { headers: { Accept: 'application/json' } })
+      .then(function (r) { if (!r.ok) throw new Error('Geocodare indisponibilă (' + r.status + ')'); return r.json(); });
+  }
+
+  function cleanForSearch(name) { return String(name).replace(/[„”"“]/g, '').replace(/\s+/g, ' ').trim(); }
+
+  function setPoiPoint(lat, lng, zoom) {
+    poiState.lat = Math.round(lat * 1e6) / 1e6;
+    poiState.lng = Math.round(lng * 1e6) / 1e6;
+    $('poiCoords').textContent = poiState.lat + ', ' + poiState.lng;
+    if (!poiState.marker) {
+      poiState.marker = L.marker([lat, lng], { draggable: true }).addTo(poiState.map);
+      poiState.marker.on('dragend', function (e) { var ll = e.target.getLatLng(); setPoiPoint(ll.lat, ll.lng); });
+    } else poiState.marker.setLatLng([lat, lng]);
+    if (zoom) poiState.map.setView([lat, lng], 16);
+  }
+
+  function openPoi(p) {
+    poiState.editing = p || null;
+    $('poiDialogTitle').textContent = p ? 'Editează reperul' : 'Reper nou';
+    $('poiName').value = p ? p.name : '';
+    $('poiCategory').value = p ? p.category : 'altul';
+    $('poiAliases').value = p ? p.aliases.join('; ') : '';
+    $('poiVerified').checked = !!(p && p.verified);
+    $('poiSearch').value = p ? cleanForSearch(p.name) : '';
+    $('poiResults').innerHTML = '';
+    $('poiErr').hidden = true;
+    $('poiCoords').textContent = '– (apasă pe hartă sau caută)';
+    poiState.lat = null; poiState.lng = null;
+    $('poiDialog').showModal();
+    var cfg = state.meta.config;
+    if (!poiState.map) {
+      poiState.map = L.map('poiMap');
+      L.tileLayer(cfg.tile_url, { maxZoom: 19, attribution: cfg.tile_attribution }).addTo(poiState.map);
+      poiState.map.on('click', function (e) { setPoiPoint(e.latlng.lat, e.latlng.lng); $('poiVerified').checked = true; });
+    }
+    if (poiState.marker) { poiState.map.removeLayer(poiState.marker); poiState.marker = null; }
+    setTimeout(function () {
+      poiState.map.invalidateSize();
+      if (p && p.lat !== null) setPoiPoint(p.lat, p.lng, true);
+      else poiState.map.setView([47.1585, 27.6014], 12);
+    }, 50);
+  }
+
+  function runPoiSearch() {
+    var q = $('poiSearch').value.trim();
+    if (!q) return;
+    var ul = $('poiResults');
+    ul.innerHTML = '<li>Se caută…</li>';
+    geocode(/ia[sș]i/i.test(q) ? q : q + ', Iași', false).then(function (list) {
+      ul.innerHTML = '';
+      if (!list.length) { ul.innerHTML = '<li>Niciun rezultat. Încearcă altă formulare sau apasă direct pe hartă.</li>'; return; }
+      list.forEach(function (r) {
+        var li = document.createElement('li');
+        li.textContent = r.display_name;
+        li.addEventListener('click', function () { setPoiPoint(parseFloat(r.lat), parseFloat(r.lon), true); });
+        ul.appendChild(li);
+      });
+    }).catch(function (e) { ul.innerHTML = '<li>' + esc(e.message) + '</li>'; });
+  }
+
+  $('poiSearchBtn').addEventListener('click', runPoiSearch);
+  $('poiSearch').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); runPoiSearch(); } });
+  $('btnPoiAdd').addEventListener('click', function () { openPoi(null); });
+  $('poiClose').addEventListener('click', function () { $('poiDialog').close(); });
+  $('poiCancel').addEventListener('click', function () { $('poiDialog').close(); });
+
+  $('poiForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var body = {
+      id: poiState.editing ? poiState.editing.id : undefined,
+      name: $('poiName').value,
+      category: $('poiCategory').value,
+      aliases: $('poiAliases').value,
+      lat: poiState.lat, lng: poiState.lng,
+      verified: $('poiVerified').checked
+    };
+    api('pois', { method: 'POST', body: body }).then(function () {
+      $('poiDialog').close();
+      return loadPois();
+    }).catch(function (err) { $('poiErr').textContent = err.message; $('poiErr').hidden = false; });
+  });
+
+  // --- import listă / Excel ---
+  function categoryFrom(text, def) {
+    var t = GeoCore.normalize(text);
+    if (!t) return def;
+    var hit = Domain.POI_CATEGORIES.find(function (c) {
+      return c.code === t || GeoCore.normalize(c.label) === t || GeoCore.normalize(c.single) === t ||
+        c.keywords.some(function (k) { return GeoCore.normalize(k) === t; });
+    }) || Domain.POI_CATEGORIES.find(function (c) {
+      return GeoCore.normalize(c.label).indexOf(t) === 0 || GeoCore.normalize(c.single).indexOf(t) === 0;
+    });
+    return hit ? hit.code : def;
+  }
+
+  function parseImport(text, defCat) {
+    var lines = text.split(/\r?\n/).map(function (l) { return l.replace(/\s+$/, ''); }).filter(function (l) { return l.trim(); });
+    if (!lines.length) return [];
+    var sep = /\t/.test(lines[0]) ? '\t' : /;/.test(lines[0]) ? ';' : null;
+    if (!sep) return lines.map(function (l) { return { name: l.trim(), category: defCat }; });
+    var split = function (l) { return l.split(sep).map(function (c) { return c.replace(/^"|"$/g, '').trim(); }); };
+    var head = split(lines[0]).map(function (h) { return GeoCore.normalize(h); });
+    var hasHeader = head.some(function (h) { return ['nume', 'name', 'denumire', 'categorie', 'category'].indexOf(h) >= 0; });
+    var idx = { id: -1, name: 0, category: 1, aliases: 2, lat: 3, lng: 4, verified: -1 };
+    if (hasHeader) {
+      var find = function (names) { for (var i = 0; i < head.length; i++) if (names.indexOf(head[i]) >= 0) return i; return -1; };
+      idx = {
+        id: find(['id']), name: find(['nume', 'name', 'denumire']), category: find(['categorie', 'category']),
+        aliases: find(['aliasuri', 'alias uri', 'alias', 'aliases', 'alte denumiri']), lat: find(['lat', 'latitudine', 'latitude']),
+        lng: find(['lng', 'lon', 'longitudine', 'longitude']), verified: find(['verificat', 'verified'])
+      };
+      lines = lines.slice(1);
+    }
+    return lines.map(function (l) {
+      var c = split(l);
+      var get = function (i) { return i >= 0 && i < c.length ? c[i] : ''; };
+      return {
+        id: get(idx.id) || undefined,
+        name: get(idx.name),
+        category: categoryFrom(get(idx.category), defCat),
+        aliases: get(idx.aliases).split(/[;|,]/).map(function (a) { return a.trim(); }).filter(Boolean),
+        lat: get(idx.lat), lng: get(idx.lng),
+        verified: GeoCore.normalize(get(idx.verified)) === 'da'
+      };
+    }).filter(function (r) { return r.name && r.name.length >= 2; });
+  }
+
+  function updateImportPreview() {
+    var items = parseImport($('importText').value, $('importCategory').value);
+    var withCoords = items.filter(function (i) { return i.lat && i.lng; }).length;
+    $('importPreview').textContent = items.length ? items.length + ' repere de importat (' + withCoords + ' cu coordonate). Primul: „' + items[0].name + '” – ' + CATS[items[0].category].single : '';
+  }
+  $('importText').addEventListener('input', updateImportPreview);
+  $('importCategory').addEventListener('change', updateImportPreview);
+  $('btnPoiImport').addEventListener('click', function () { $('importText').value = ''; $('importPreview').textContent = ''; $('importDialog').showModal(); });
+  $('importClose').addEventListener('click', function () { $('importDialog').close(); });
+  $('importCancel').addEventListener('click', function () { $('importDialog').close(); });
+  $('importForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var items = parseImport($('importText').value, $('importCategory').value);
+    if (!items.length) return;
+    api('pois/import', { method: 'POST', body: { items: items, default_category: $('importCategory').value } }).then(function (r) {
+      $('importDialog').close();
+      $('poiProgress').textContent = 'Import: ' + r.added + ' repere noi, ' + r.updated + ' actualizate.';
+      return loadPois();
+    }).catch(function (err) { $('importPreview').textContent = err.message; });
+  });
+
+  // --- localizare automată (OpenStreetMap, câte o cerere pe secundă) ---
+  $('btnPoiLocate').addEventListener('click', function () {
+    var btn = this;
+    if (poiState.locating) { poiState.locating = false; return; }
+    var todo = poiState.rows.filter(function (p) { return p.lat === null; });
+    if (!todo.length) { $('poiProgress').textContent = 'Toate reperele au coordonate.'; return; }
+    poiState.locating = true;
+    btn.textContent = 'Oprește localizarea';
+    var found = 0, missed = [], i = 0;
+    var wait = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+    function next() {
+      if (!poiState.locating || i >= todo.length) {
+        poiState.locating = false;
+        btn.textContent = 'Localizează automat reperele fără coordonate';
+        $('poiProgress').textContent = 'Localizare terminată: ' + found + ' găsite (marcate „neverificat” – verifică-le pe hartă)' +
+          (missed.length ? '; negăsite: ' + missed.join(', ') + ' – folosește „Editează” → „Caută”.' : '.');
+        return loadPois();
+      }
+      var p = todo[i++];
+      $('poiProgress').textContent = 'Se caută ' + i + '/' + todo.length + ': ' + p.name + '…';
+      var queries = [cleanForSearch(p.name) + ', Iași'].concat(p.aliases.slice(0, 1).map(function (a) { return a + ', Iași'; }));
+      var tryQ = function (k) {
+        if (k >= queries.length) return Promise.resolve(null);
+        return geocode(queries[k], true).then(function (list) { return list[0] || wait(1100).then(function () { return tryQ(k + 1); }); });
+      };
+      return tryQ(0).then(function (hit) {
+        if (!hit) { missed.push(p.name); return; }
+        found++;
+        return api('pois', { method: 'POST', body: { id: p.id, name: p.name, category: p.category, aliases: p.aliases, lat: parseFloat(hit.lat), lng: parseFloat(hit.lon), verified: false } });
+      }).catch(function () { missed.push(p.name); }).then(function () { return wait(1100); }).then(next);
+    }
+    next();
+  });
+
+  // ---------------------------------------------------------------------------
   // Audit
   // ---------------------------------------------------------------------------
   function loadAudit() {
@@ -462,6 +720,9 @@
         $('app').hidden = false;
         $('topMeta').textContent = 'v' + m.config.app_version + ' · zonare ' + m.config.geometry_version + ' · colectare ' + fmtDate(m.config.study_start) + '–' + fmtDate(m.config.study_end) + ' · stocare ' + m.storage;
         setupFilters();
+        fillCategorySelect($('poiCatFilter'), true);
+        fillCategorySelect($('poiCategory'), false);
+        fillCategorySelect($('importCategory'), false);
         renderGeoStatus(m.geo);
         refresh();
       });

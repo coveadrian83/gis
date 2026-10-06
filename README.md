@@ -1,4 +1,4 @@
-# Mobilitate Iași – Studiu participativ O–D (MVA × MVI) · v0.6
+# Mobilitate Iași – Studiu participativ O–D (MVA × MVI) · v0.7
 
 Aplicație web mobile-first pentru **Studiul participativ de mobilitate Origine–Destinație – Zona Metropolitană Iași**
 (perioada de colectare 1 octombrie 2026 – 30 aprilie 2027), conform documentelor din `docs/`
@@ -40,6 +40,19 @@ Fișierele din pachetul v0.4.5 nu sunt încă în proiect. În GitHub, pe depozi
 **Domain management → Add a domain** → `mobilitate-test.moldovavreainfrastructura.ro` (staging) sau
 `mobilitate.moldovavreainfrastructura.ro` (producție). Netlify îți arată înregistrarea DNS (CNAME) pe care
 administratorul domeniului trebuie s-o adauge; certificatul HTTPS se emite automat.
+
+### Completarea reperelor (dashboard → Repere)
+Reperele ajută participanții să găsească locul: scriind **„univ”** apar toate universitățile, **„spita”** toate spitalele,
+**„mall”** centrele comerciale, **„piata”** piețele ș.a.m.d. (categoriile și cuvintele-cheie sunt în `public/shared/domain.js`).
+- **+ Adaugă reper**: nume, categorie, alte denumiri (ex. „Spiridon; Urgențe”), apoi „Caută” sau apasă direct pe hartă;
+- **Import listă / Excel**: lipești câte un nume pe rând (toate din categoria aleasă) sau coloane copiate din Excel
+  (`nume, categorie, alias-uri, lat, lng`); reperele cu același nume se actualizează, nu se dublează;
+- **Localizează automat**: caută în OpenStreetMap coordonatele reperelor care nu au (câte unul pe secundă);
+  rezultatele apar „neverificat” – deschide-le cu „Editează” și confirmă poziția pe hartă;
+- reperele fără coordonate nu apar participanților; exportul CSV/Excel al reperelor se poate completa și reimporta.
+
+Lista de pornire conține principalele universități, spitale, centre comerciale, piețe și noduri din Iași – doar cu
+numele; coordonatele se completează cu „Localizează automat” + verificare.
 
 ### Unde sunt datele și cum le descarc
 Datele stau în contul Netlify al site-ului (**Netlify Blobs**, store-ul `mobilitate`). Pentru copii de siguranță
