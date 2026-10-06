@@ -512,16 +512,6 @@
     return best;
   }
 
-  function nearestLocality(model, uatSiruta, lat, lng) {
-    var best = null, bestD = Infinity;
-    model.localities.forEach(function (l) {
-      if (l.uat_siruta !== uatSiruta || l.lat === null || l.lng === null) return;
-      var d = haversineKm(lat, lng, l.lat, l.lng);
-      if (d < bestD) { bestD = d; best = l; }
-    });
-    return best ? { locality: best, distance_km: bestD } : null;
-  }
-
   function unitFromZone(z, uat) {
     return {
       unit_type: UNIT_TYPES.IAS_ZONE, unit_id: z.code, unit_name: z.name,
@@ -558,14 +548,8 @@
       flags.push('IASI_NO_ZONE');
       return { unit_type: UNIT_TYPES.UAT_REST, unit_id: 'UAT-' + uat.siruta, unit_name: uat.name + ' (în afara zonelor)', zone_id: null, locality_siruta: null, uat_siruta: uat.siruta, uat_name: uat.name, flags: flags };
     }
-    var near = nearestLocality(model, uat.siruta, lat, lng);
-    if (near) {
-      flags.push('LOCALITY_NEAREST');
-      return {
-        unit_type: UNIT_TYPES.LOCALITY, unit_id: 'LOC-' + near.locality.siruta, unit_name: near.locality.name,
-        zone_id: null, locality_siruta: near.locality.siruta, uat_siruta: uat.siruta, uat_name: uat.name, flags: flags
-      };
-    }
+    // Fără poligoane de localitate/intravilan, un clic liber pe hartă NU este atribuit forțat unei localități
+    // (decizia metodologică din v0.4): unitatea O–D rămâne UAT-ul. Localitatea SIRUTA se alege din căutare.
     return { unit_type: UNIT_TYPES.UAT_REST, unit_id: 'UAT-' + uat.siruta, unit_name: uat.name, zone_id: null, locality_siruta: null, uat_siruta: uat.siruta, uat_name: uat.name, flags: flags };
   }
 

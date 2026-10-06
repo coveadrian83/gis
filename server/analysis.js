@@ -56,8 +56,6 @@ const FLAG_LABELS = {
   SAME_UNIT: 'Deplasare în interiorul aceleiași unități O–D',
   O_LOCATION_APPROX: 'Poziția originii este aproximativă (centrul UAT)',
   D_LOCATION_APPROX: 'Poziția destinației este aproximativă (centrul UAT)',
-  O_LOCALITY_NEAREST: 'Origine atribuită celei mai apropiate localități SIRUTA',
-  D_LOCALITY_NEAREST: 'Destinație atribuită celei mai apropiate localități SIRUTA',
   O_ZONE_CENTROID: 'Origine aleasă ca zonă (centroid)',
   D_ZONE_CENTROID: 'Destinație aleasă ca zonă (centroid)',
   O_ZONE_NEAREST: 'Origine la marginea Iașului, atribuită celei mai apropiate zone (< 500 m)',

@@ -34,9 +34,10 @@ test('clasificare point-in-polygon', () => {
   const rest = GeoCore.classifyPoint(geo, 47.11, 27.51);
   assert.equal(rest.unit_type, 'UAT_REST');
   assert.ok(rest.flags.includes('IASI_NO_ZONE'));
-  const near = GeoCore.classifyPoint(geo, 47.071, 27.621);
-  assert.equal(near.unit_id, 'LOC-95121');
-  assert.ok(near.flags.includes('LOCALITY_NEAREST'));
+  // clic liber într-o comună: UAT-ul, fără atribuire forțată la localitate (metodologia v0.4)
+  const comuna = GeoCore.classifyPoint(geo, 47.071, 27.621);
+  assert.equal(comuna.unit_id, 'UAT-90001');
+  assert.equal(comuna.unit_type, 'UAT_REST');
   assert.equal(GeoCore.classifyPoint(geo, 44.43, 26.10).unit_type, 'OUT_ZMI');
 });
 
