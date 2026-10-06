@@ -227,12 +227,25 @@ test('Netlify Blobs: 40 de trimiteri simultane nu se pierd (scriere condiționat
   assert.equal((await storage.listRaws()).length, 40);
 });
 
-test('Netlify Blobs: repararea indexului readaugă deplasări salvate doar individual', async () => {
+test('Netlify Blobs fără ETag (simulatorul local): trimiterile succesive reușesc', async () => {
+  const storage = createBlobStorage(createFakeBlobStore({ jitter: false, etags: false }));
+  const api = createApi(cfg, { storage, getGeo: async () => geo });
+  for (let i = 0; i < 3; i++) {
+    const r = await api.handle(new Request('https://t/api/trips', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(trip({ participant_id: 'fara-etag-' + String(i).padStart(4, '0') }))
+    }));
+    assert.equal(r.status, 201);
+  }
+  assert.equal((await storage.listRaws()).length, 3);
+});
+
+test('Netlify Blobs: deplasările lipsă din index nu se pierd; repararea le readaugă', async () => {
   const store = createFakeBlobStore({ jitter: false });
   const storage = createBlobStorage(store);
   const t = trip();
   await store.setJSON('raw/' + t.trip_id, { trip_id: t.trip_id, participant_id: PID, received_at: new Date().toISOString(), payload_json: JSON.stringify(t) });
-  assert.equal((await storage.listRaws()).length, 0);
+  assert.equal((await storage.listRaws()).length, 1, 'găsită și fără index');
   assert.deepEqual(await storage.repair(), { checked: 1, repaired: 1 });
   assert.equal((await storage.listRaws()).length, 1);
 });
@@ -257,4 +270,21 @@ describe('server Node propriu', () => {
     const r = await fetch(base + '/api/trips', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(trip()) });
     assert.equal(r.status, 201);
   });
+});
+
+test('o eroare a stocării (ex. jeton expirat) devine 500 generic, nu mesajul intern', async () => {
+  const broken = createBlobStorage({
+    async get() { const e = new Error('Netlify Blobs has generated an internal error (Failed to decode token: Token expired)'); e.status = 401; throw e; },
+    async getWithMetadata() { return this.get(); },
+    async setJSON() { return this.get(); },
+    async list() { return this.get(); },
+    async delete() { return this.get(); }
+  });
+  const api = createApi(cfg, { storage: broken, getGeo: async () => geo });
+  const orig = console.error; console.error = () => {};
+  const r = await api.handle(new Request('https://t/api/trips', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(trip()) }));
+  console.error = orig;
+  assert.equal(r.status, 500);
+  const body = await r.json();
+  assert.doesNotMatch(body.error, /token/i);
 });

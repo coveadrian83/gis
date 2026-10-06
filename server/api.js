@@ -498,9 +498,12 @@ function createApi(cfg, deps) {
     try {
       return await route(req, ctx.ip || 'necunoscut');
     } catch (e) {
-      const status = e.status || 500;
+      // doar erorile noastre de validare ajung la utilizator; orice altă eroare (ex. stocare) este 500,
+      // iar aplicația publică păstrează deplasarea pe dispozitiv și o retrimite automat
+      const ours = e instanceof HttpError || e instanceof analysis.InputError;
+      const status = ours ? e.status : 500;
       if (status >= 500) console.error(e);
-      return json(status, { error: status >= 500 ? 'Eroare internă.' : e.message, field: e.field });
+      return json(status, { error: status >= 500 ? 'Eroare temporară a serverului. Încearcă din nou.' : e.message, field: ours ? e.field : undefined });
     }
   }
 
