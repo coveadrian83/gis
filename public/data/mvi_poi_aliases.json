@@ -1,0 +1,7 @@
+[
+  { "id": "POI-GARA-IASI", "name": "Gara Iași", "aliases": ["Gara", "Gara de Nord", "Gara Mare", "Gara Iasi"], "category": "transport", "lat": 47.1654, "lng": 27.5703, "verificat": false },
+  { "id": "POI-PALAS", "name": "Palas Iași", "aliases": ["Palas", "Palas Mall", "Palatul Culturii"], "category": "comercial", "lat": 47.1564, "lng": 27.5871, "verificat": false },
+  { "id": "POI-UAIC", "name": "Universitatea „Alexandru Ioan Cuza” din Iași", "aliases": ["Universitate", "UAIC", "Universitatea Cuza", "Corpul A"], "category": "educatie", "lat": 47.1742, "lng": 27.5718, "verificat": false },
+  { "id": "POI-TUIASI", "name": "Universitatea Tehnică „Gheorghe Asachi” din Iași", "aliases": ["Politehnica", "Poli", "TUIASI", "Universitatea Tehnica", "Asachi"], "category": "educatie", "lat": 47.1538, "lng": 27.5937, "verificat": false },
+  { "id": "POI-PODU-ROS", "name": "Podu Roș", "aliases": ["Podu Ros", "Podul Ros"], "category": "nod", "lat": 47.1521, "lng": 27.5893, "verificat": false }
+]

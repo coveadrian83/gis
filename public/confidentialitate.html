@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Confidențialitate – Mobilitate Iași · MVA × MVI</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <article class="doc">
+    <p><a href="./">← Înapoi la aplicație</a></p>
+    <h1>Informare privind datele</h1>
+
+    <p class="draft"><strong>Proiect de lucru.</strong> Această informare trebuie finalizată înainte de lansarea publică
+      (rolul operatorului/operatorilor de date, temeiul legal, durata de retenție, datele de contact, screeningul de risc/DPIA) –
+      spec. §17.2 și roadmap etapa 7.</p>
+
+    <h2>Ce date colectăm</h2>
+    <table>
+      <tr><th>Dată</th><th>De ce</th></tr>
+      <tr><td>Originea și destinația (punct pe hartă, localitate, zonă sau reper)</td><td>Clasificarea deplasării într-o zonă de analiză / localitate SIRUTA / UAT. Coordonatele se stochează rotunjit (≈ 10 m) și pot fi generalizate sau eliminate conform politicii de retenție.</td></tr>
+      <tr><td>Data, ora plecării și ora sosirii</td><td>Calculul duratei și al intervalelor orare.</td></tr>
+      <tr><td>Modul de transport, scopul, caracterul recurent/ocazional; pentru autoturism rolul și ocuparea; opțional linia de transport public</td><td>Analiza comparativă a deplasărilor.</td></tr>
+      <tr><td>Un identificator aleator generat de browser</td><td>Separarea numărului de deplasări de numărul de participanți, fără a ști cine sunteți.</td></tr>
+      <tr><td>Canalul prin care ați ajuns (ex. <code>?source=facebook_mvi</code>)</td><td>Evaluarea eficienței comunicării.</td></tr>
+    </table>
+
+    <h2>Ce NU colectăm</h2>
+    <ul>
+      <li>nume, e-mail, telefon sau cont de utilizator;</li>
+      <li>adresa exactă a locuinței sau a locului de muncă (nu este necesară; puteți alege localitatea, cartierul sau un reper);</li>
+      <li>adresa IP nu este salvată în baza de date a studiului;</li>
+      <li>nu folosim cookie-uri de urmărire sau instrumente de publicitate.</li>
+    </ul>
+
+    <h2>Cum sunt folosite datele</h2>
+    <p>Datele sunt analizate statistic și publicate <strong>exclusiv agregat</strong> (de ex. durata mediană pe o relație O–D),
+      niciodată ca înregistrări individuale. Datele brute sunt separate de datele de analiză.</p>
+
+    <h2>Servicii externe</h2>
+    <p>Harta de bază este furnizată de OpenStreetMap. La căutarea unor străzi sau repere care nu există în nomenclatorul
+      local, textul căutat este trimis serviciului de geocodare OpenStreetMap Nominatim.</p>
+
+    <h2>Datele de pe dispozitivul dumneavoastră</h2>
+    <p>Identificatorul aleator, relațiile salvate și lista „Deplasările mele” sunt păstrate doar în browser (localStorage).
+      Din meniul „Deplasările mele” → „Șterge datele mele” puteți șterge atât datele locale, cât și toate deplasările
+      trimise de pe acest dispozitiv din baza de date a studiului.</p>
+
+    <h2>Contact</h2>
+    <p class="draft">[de completat: operator de date, adresă de contact, responsabil protecția datelor, dacă este cazul]</p>
+  </article>
+</body>
+</html>
