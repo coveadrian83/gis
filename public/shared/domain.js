@@ -46,6 +46,25 @@
 
   var STATUSES = ['VALID', 'CHECK', 'EXCLUDE'];
 
+  /*
+   * Categoriile de repere. `keywords`: ce poate tasta un participant ca să vadă TOATE reperele categoriei
+   * (fără diacritice, se potrivește și începutul cuvântului: „univ”, „spita”, „mall”).
+   * Codurile sunt stabile (ajung în fișiere); etichetele și cuvintele-cheie pot fi modificate liber.
+   */
+  var POI_CATEGORIES = [
+    { code: 'universitate', label: 'Universități și facultăți', single: 'Universitate', icon: '🎓', keywords: ['universitate', 'universitati', 'univ', 'facultate', 'facultati', 'campus', 'camin', 'camine'] },
+    { code: 'spital', label: 'Spitale și clinici', single: 'Spital / clinică', icon: '🏥', keywords: ['spital', 'spitale', 'clinica', 'clinici', 'urgenta', 'urgente', 'maternitate', 'policlinica', 'institutul'] },
+    { code: 'comercial', label: 'Centre comerciale', single: 'Centru comercial', icon: '🛍️', keywords: ['mall', 'centru comercial', 'shopping', 'magazin', 'hipermarket', 'supermarket'] },
+    { code: 'piata', label: 'Piețe', single: 'Piață', icon: '🧺', keywords: ['piata', 'piete', 'targ', 'hala'] },
+    { code: 'transport', label: 'Gări, autogări, aeroport', single: 'Transport', icon: '🚉', keywords: ['gara', 'gari', 'autogara', 'aeroport', 'terminal', 'depou'] },
+    { code: 'educatie', label: 'Școli și licee', single: 'Școală / liceu', icon: '🏫', keywords: ['scoala', 'scoli', 'liceu', 'licee', 'colegiu', 'colegii', 'gradinita'] },
+    { code: 'administratie', label: 'Instituții publice', single: 'Instituție', icon: '🏛️', keywords: ['primaria', 'primarie', 'prefectura', 'consiliul', 'tribunal', 'judecatoria', 'institutie', 'anaf'] },
+    { code: 'loc_munca', label: 'Locuri de muncă / zone industriale', single: 'Loc de muncă', icon: '🏭', keywords: ['fabrica', 'uzina', 'birouri', 'office', 'parc industrial', 'parc tehnologic', 'zona industriala'] },
+    { code: 'agrement', label: 'Parcuri, sport, cultură', single: 'Agrement / cultură', icon: '🌳', keywords: ['parc', 'parcuri', 'gradina', 'stadion', 'sala', 'teatru', 'opera', 'muzeu'] },
+    { code: 'nod', label: 'Intersecții și noduri rutiere', single: 'Nod rutier', icon: '🚦', keywords: ['intersectie', 'rond', 'sens giratoriu', 'pod', 'pasaj'] },
+    { code: 'altul', label: 'Alte repere', single: 'Reper', icon: '★', keywords: [] }
+  ];
+
   // Viteză maximă plauzibilă în linie dreaptă (km/h), pentru semnalarea CHECK
   var MAX_STRAIGHT_SPEED = { car: 110, bus: 70, tram: 50, train: 140, bike: 35, walk: 9, moto: 110, taxi: 110, multimodal: 110 };
 
@@ -96,6 +115,7 @@
     CAR_ROLES: CAR_ROLES,
     OCCUPANCY: OCCUPANCY,
     STATUSES: STATUSES,
+    POI_CATEGORIES: POI_CATEGORIES,
     MAX_STRAIGHT_SPEED: MAX_STRAIGHT_SPEED,
     byCode: byCode,
     isPublicTransport: isPublicTransport,

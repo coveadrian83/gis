@@ -13,8 +13,12 @@ Denumirile câmpurilor sunt detectate automat (vezi `public/shared/geo-core.js`)
 După copierea fișierelor rulați `npm run check-geo` pentru verificare
 (sau `npm run check-geo -- https://site-ul-tau.netlify.app` pentru fișierele deja publicate).
 
-**Atenție:** `mvi_poi_aliases.json` din depozit conține doar câteva repere implicite cu
-coordonate aproximative (`"verificat": false`). Înlocuiți-l cu fișierul MVI validat.
+**Repere:** `mvi_poi_aliases.json` este lista de pornire. Reperele se completează cel mai ușor din
+dashboard → tabul **Repere** (adăugare, căutare pe hartă, import dintr-o listă sau din Excel), fără a modifica acest fișier.
+Reperele fără coordonate (`lat`/`lng` = null) nu apar participanților până nu sunt localizate.
+Categoriile (spital, universitate, comercial, piata, transport, educatie, administratie, loc_munca, agrement, nod, altul)
+sunt definite în `public/shared/domain.js`; scriind începutul categoriei („spita”, „univ”, „mall”), participantul vede
+toate reperele din ea.
 
 La orice modificare a geometriilor sau nomenclatoarelor:
 1. creșteți `GEOMETRY_VERSION` (variabilă de mediu, ex. `ZMI-2025.2`);

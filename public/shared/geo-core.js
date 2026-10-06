@@ -98,6 +98,9 @@
     var words = text.split(' ');
     for (var i = 0; i < words.length; i++) if (words[i].indexOf(q) === 0) return 75;
     if (text.indexOf(q) >= 0) return 60;
+    // mai multe cuvinte: fiecare cuvânt căutat începe un cuvânt din denumire („spital spiridon”, „sf spiridon”)
+    var qw = q.split(' ');
+    if (qw.length > 1 && qw.every(function (w) { return words.some(function (t) { return t.indexOf(w) === 0; }); })) return 70;
     var qc = q.replace(/ /g, ''), tc = text.replace(/ /g, '');
     if (qc.length >= 3 && tc.indexOf(qc) >= 0) return 55;
     // greșeli minore de tastare
@@ -354,21 +357,37 @@
     var out = [];
     rows.forEach(function (r, idx) {
       var p = r && r.type === 'Feature' ? Object.assign({}, r.properties, coordsFromPoint(r.geometry)) : r;
+      if (!p || p.deleted) return;
       var name = pick(p, ['name', 'nume', 'denumire', 'label']);
+      if (!name) { warnings.push('Reper fără denumire (rând #' + idx + ')'); return; }
+      // reperele fără coordonate sunt păstrate (de localizat din dashboard), dar nu apar în căutarea publică
       var lat = num(pick(p, ['lat', 'latitude', 'y'])), lng = num(pick(p, ['lng', 'lon', 'longitude', 'x']));
-      if (!name || lat === null || lng === null) { warnings.push('Reper incomplet (rând #' + idx + ')'); return; }
+      if (lat === null || lng === null) { lat = null; lng = null; }
       var aliases = pick(p, ['aliases', 'alias', 'aliasuri']) || [];
-      if (typeof aliases === 'string') aliases = aliases.split(/[;|,]/);
+      if (typeof aliases === 'string') aliases = aliases.split(/[;|]/);
+      var verified = pick(p, ['verified', 'verificat']);
       out.push({
         id: String(pick(p, ['id', 'poi_id', 'cod']) || ('POI-' + (idx + 1))),
-        name: String(name),
+        name: String(name).trim(),
         aliases: aliases.map(function (a) { return String(a).trim(); }).filter(Boolean),
-        category: pick(p, ['category', 'categorie', 'tip']) || null,
+        category: pick(p, ['category', 'categorie', 'tip']) || 'altul',
         lat: lat,
-        lng: lng
+        lng: lng,
+        verified: verified === true || verified === 'true' || verified === 'da' || verified === 1
       });
     });
     return out;
+  }
+
+  /** Categoriile de repere care corespund unei căutări (ex. „spita” → spitale, „univ” → universități). */
+  function matchingCategories(categories, q) {
+    if (!categories || q.length < 3) return [];
+    return categories.filter(function (c) {
+      return (c.keywords || []).some(function (k) {
+        k = normalize(k);
+        return k.indexOf(q) === 0 || (q.indexOf(k) === 0 && q.length <= k.length + 3 && q.indexOf(' ') < 0);
+      });
+    }).map(function (c) { return c.code; });
   }
 
   /**
@@ -418,8 +437,17 @@
 
     // index de căutare
     var entries = [];
+    var catByCode = {};
+    (opts.poiCategories || []).forEach(function (c) { catByCode[c.code] = c; });
+    model.poiCategories = opts.poiCategories || [];
     pois.forEach(function (p) {
-      entries.push({ kind: 'poi', ref: p.id, label: p.name, sub: 'Reper', keys: [p.name].concat(p.aliases).map(normalize), lat: p.lat, lng: p.lng });
+      if (p.lat === null || p.lng === null) return;
+      var cat = catByCode[p.category];
+      entries.push({
+        kind: 'poi', ref: p.id, label: p.name, category: p.category,
+        sub: cat ? cat.single : 'Reper',
+        keys: [p.name].concat(p.aliases).map(normalize), lat: p.lat, lng: p.lng
+      });
     });
     localities.forEach(function (l) {
       var u = l.uat_name ? (l.uat_name === l.name ? 'UAT ' + l.uat_name : l.uat_name) : '';
@@ -440,25 +468,34 @@
   var KIND_ORDER = { poi: 0, locality: 1, zone: 2 };
 
   /** Căutare locală: repere → localități SIRUTA → zone; tolerantă la diacritice și greșeli minore. */
+  /**
+   * Căutare locală: repere → localități SIRUTA → zone; tolerantă la diacritice și greșeli minore.
+   * Dacă textul corespunde unei categorii de repere („univ”, „spita”, „mall”), apar toate reperele categoriei.
+   */
   function search(model, query, limit) {
     var q = normalize(query);
     if (q.length < 2) return [];
+    limit = limit || 8;
+    var cats = matchingCategories(model.poiCategories, q);
     var res = [];
     model.searchEntries.forEach(function (e) {
       var best = 0;
       for (var i = 0; i < e.keys.length; i++) best = Math.max(best, matchScore(q, e.keys[i]));
-      if (best > 0) res.push({ entry: e, score: best });
+      var inCat = e.kind === 'poi' && cats.indexOf(e.category) >= 0;
+      if (best > 0 || inCat) res.push({ entry: e, score: best, inCat: inCat });
     });
     res.sort(function (a, b) {
-      // potrivirile puternice (exacte/prefix) urcă indiferent de categorie; altfel ordinea metodologică
-      var sa = a.score >= 75 ? 1 : 0, sb = b.score >= 75 ? 1 : 0;
+      // 1) potrivirile puternice pe nume; 2) reperele din categoria căutată; 3) ordinea metodologică
+      var sa = a.score >= 75 ? 2 : a.inCat ? 1 : 0, sb = b.score >= 75 ? 2 : b.inCat ? 1 : 0;
       if (sa !== sb) return sb - sa;
       var ka = KIND_ORDER[a.entry.kind], kb = KIND_ORDER[b.entry.kind];
       if (ka !== kb) return ka - kb;
+      if (a.inCat && b.inCat && a.entry.category !== b.entry.category) return a.entry.category < b.entry.category ? -1 : 1;
       if (b.score !== a.score) return b.score - a.score;
       return a.entry.label.localeCompare(b.entry.label, 'ro');
     });
-    return res.slice(0, limit || 8).map(function (r) { return r.entry; });
+    var n = cats.length ? Math.max(limit, 40) : limit;
+    return res.slice(0, n).map(function (r) { return r.entry; });
   }
 
   // ---------------------------------------------------------------------------
@@ -623,6 +660,8 @@
     haversineKm: haversineKm,
     buildModel: buildModel,
     search: search,
+    matchingCategories: matchingCategories,
+    normalizePois: function (data) { return normalizePois(data, []); },
     classifyPoint: classifyPoint,
     classifyEndpoint: classifyEndpoint,
     listUnits: listUnits,

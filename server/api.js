@@ -169,6 +169,58 @@ function createApi(cfg, deps) {
 
   const stamp = () => time.localDate().replace(/-/g, '');
 
+  // --- repere (fișierul public/data/mvi_poi_aliases.json + modificările din dashboard) ------------
+  const POI_CATS = new Set(Domain.POI_CATEGORIES.map((c) => c.code));
+  const ACCEPTED = { minLat: 43.5, maxLat: 48.8, minLng: 20.0, maxLng: 30.5 };
+
+  async function mergedPois(req) {
+    const geo = await deps.getGeo(req);
+    const over = await storage.getPoiOverrides();
+    const map = new Map();
+    for (const p of geo.pois) map.set(p.id, { ...p, source: 'fișier' });
+    for (const [id, o] of Object.entries(over)) {
+      if (o.deleted) { map.delete(id); continue; }
+      const n = GeoCore.normalizePois([{ ...o, id }])[0];
+      if (n) map.set(id, { ...n, source: map.has(id) ? 'fișier, modificat' : 'dashboard', updated_at: o.updated_at || null });
+    }
+    return { geo, pois: [...map.values()].sort((a, b) => a.name.localeCompare(b.name, 'ro')) };
+  }
+
+  function cleanText(v, max) {
+    return String(v === undefined || v === null ? '' : v).replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max);
+  }
+
+  function sanitizePoi(input) {
+    const name = cleanText(input.name, 160);
+    if (name.length < 2) throw new HttpError(400, 'Denumirea reperului este obligatorie.');
+    let aliases = input.aliases || [];
+    if (typeof aliases === 'string') aliases = aliases.split(/[;|]/);
+    aliases = aliases.map((a) => cleanText(a, 80)).filter(Boolean).slice(0, 20);
+    let lat = input.lat === '' || input.lat === null || input.lat === undefined ? null : Number(String(input.lat).replace(',', '.'));
+    let lng = input.lng === '' || input.lng === null || input.lng === undefined ? null : Number(String(input.lng).replace(',', '.'));
+    if (lat === null || lng === null || !Number.isFinite(lat) || !Number.isFinite(lng)) { lat = null; lng = null; }
+    else if (lat < ACCEPTED.minLat || lat > ACCEPTED.maxLat || lng < ACCEPTED.minLng || lng > ACCEPTED.maxLng) {
+      throw new HttpError(400, `Coordonate în afara ariei acceptate pentru „${name}”.`);
+    }
+    return {
+      name,
+      category: POI_CATS.has(input.category) ? input.category : 'altul',
+      aliases,
+      lat: lat === null ? null : Math.round(lat * 1e6) / 1e6,
+      lng: lng === null ? null : Math.round(lng * 1e6) / 1e6,
+      verified: lat !== null && (input.verified === true || input.verified === 'true' || input.verified === 'da')
+    };
+  }
+
+  function newPoiId(name, taken) {
+    const base = 'POI-' + (GeoCore.compact(name).toUpperCase().slice(0, 24) || 'REPER');
+    let id = base, i = 2;
+    while (taken.has(id)) id = base + '-' + i++;
+    return id;
+  }
+
+
+
   async function audit(e) {
     await storage.appendAudit({ at: new Date().toISOString(), actor: 'coordonator', ...e });
   }
@@ -199,6 +251,12 @@ function createApi(cfg, deps) {
         duration_min: row.duration_min,
         distance_km: row.distance_km
       });
+    }
+
+    if (p === '/api/pois' && method === 'GET') {
+      const { pois } = await mergedPois(req);
+      return json(200, pois.filter((x) => x.lat !== null).map((x) => ({ id: x.id, name: x.name, aliases: x.aliases, category: x.category, lat: x.lat, lng: x.lng })),
+        { 'Cache-Control': 'public, max-age=60' });
     }
 
     // Dreptul la ștergere: participantul își șterge toate deplasările trimise de pe dispozitiv
@@ -289,6 +347,73 @@ function createApi(cfg, deps) {
       return json(200, { ...row, manual_status: status, validation_status: newStatus, reviewed_at: at, review_note: note });
     }
 
+    // --- repere ---
+    if (p === '/api/admin/pois' && method === 'GET') {
+      const { geo, pois } = await mergedPois(req);
+      return json(200, {
+        categories: Domain.POI_CATEGORIES,
+        rows: pois.map((x) => {
+          const c = x.lat !== null ? GeoCore.classifyPoint(geo, x.lat, x.lng) : null;
+          return { ...x, unit_id: c ? c.unit_id : null, unit_name: c ? c.unit_name : null, uat_name: c ? c.uat_name : null };
+        })
+      });
+    }
+    if (p === '/api/admin/pois' && method === 'POST') {
+      const body = await readJson(req);
+      const poi = sanitizePoi(body);
+      const { pois } = await mergedPois(req);
+      const taken = new Set(pois.map((x) => x.id));
+      const id = body.id && /^[A-Za-z0-9_-]{1,60}$/.test(body.id) ? body.id : newPoiId(poi.name, taken);
+      const saved = { ...poi, updated_at: new Date().toISOString() };
+      await storage.updatePoiOverrides((o) => ({ ...o, [id]: saved }));
+      await audit({ action: taken.has(id) ? 'POI_EDIT' : 'POI_ADD', note: `${id}: ${poi.name}` });
+      return json(200, { id, ...saved });
+    }
+    if (p === '/api/admin/pois/delete' && method === 'POST') {
+      const body = await readJson(req);
+      const id = String(body.id || '');
+      if (!/^[A-Za-z0-9_-]{1,60}$/.test(id)) return json(400, { error: 'Identificator invalid.' });
+      await storage.updatePoiOverrides((o) => ({ ...o, [id]: { deleted: true, updated_at: new Date().toISOString() } }));
+      await audit({ action: 'POI_DELETE', note: id });
+      return json(200, { ok: true });
+    }
+    if (p === '/api/admin/pois/import' && method === 'POST') {
+      const body = await readJson(req);
+      const items = Array.isArray(body.items) ? body.items.slice(0, 500) : [];
+      if (!items.length) return json(400, { error: 'Lista este goală.' });
+      const { pois } = await mergedPois(req);
+      const taken = new Set(pois.map((x) => x.id));
+      const byName = new Map(pois.map((x) => [GeoCore.normalize(x.name), x]));
+      const now = new Date().toISOString();
+      const updates = {};
+      let added = 0, updated = 0;
+      for (const it of items) {
+        const poi = sanitizePoi({ category: body.default_category, ...it, category: it.category || body.default_category });
+        const existing = (it.id && pois.find((x) => x.id === it.id)) || byName.get(GeoCore.normalize(poi.name));
+        if (existing) {
+          // nu ștergem coordonatele/aliasurile existente dacă rândul importat nu le are
+          updates[existing.id] = {
+            ...poi,
+            aliases: poi.aliases.length ? poi.aliases : existing.aliases,
+            lat: poi.lat !== null ? poi.lat : existing.lat,
+            lng: poi.lat !== null ? poi.lng : existing.lng,
+            verified: poi.lat !== null ? poi.verified : existing.verified,
+            updated_at: now
+          };
+          updated++;
+        } else {
+          const id = newPoiId(poi.name, taken);
+          taken.add(id);
+          byName.set(GeoCore.normalize(poi.name), { id, ...poi });
+          updates[id] = { ...poi, updated_at: now };
+          added++;
+        }
+      }
+      await storage.updatePoiOverrides((o) => ({ ...o, ...updates }));
+      await audit({ action: 'POI_IMPORT', note: `${added} adăugate, ${updated} actualizate` });
+      return json(200, { added, updated });
+    }
+
     if (p === '/api/admin/od') return json(200, stats.odAggregate((await loadAnalysis(req)).rows, q));
     if (p === '/api/admin/coverage') {
       const a = await loadAnalysis(req);
@@ -349,6 +474,12 @@ function createApi(cfg, deps) {
         const rows = (await storage.listAudit(100000)).reverse();
         return download(`audit_log_${stamp()}${suffix}.csv`, csvType,
           stats.toCsv(rows, ['id', 'at', 'actor', 'action', 'trip_id', 'old_status', 'new_status', 'note'], { excelRo }));
+      }
+      if (name === 'pois' && ext === 'csv') {
+        const { pois } = await mergedPois(req);
+        const rows = pois.map((x) => ({ ...x, aliases: x.aliases.join('; '), verified: x.verified ? 'da' : 'nu' }));
+        return download(`repere_${stamp()}${suffix}.csv`, csvType,
+          stats.toCsv(rows, ['id', 'name', 'category', 'aliases', 'lat', 'lng', 'verified', 'source'], { excelRo }));
       }
       if (name === 'raw' && ext === 'jsonl') {
         const rows = (await storage.listRaws()).sort((x, y) => x.received_at.localeCompare(y.received_at));

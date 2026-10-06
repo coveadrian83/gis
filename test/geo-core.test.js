@@ -2,6 +2,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const GeoCore = require('../public/shared/geo-core.js');
+const Domain = require('../public/shared/domain.js');
 const { build } = require('./fixtures.js');
 
 const geo = build();
@@ -62,4 +63,21 @@ test('poligon cu gol (inel interior)', () => {
   ] });
   assert.equal(GeoCore.inPolygons(polys, 1, 1), true);
   assert.equal(GeoCore.inPolygons(polys, 5, 5), false);
+});
+
+test('căutare pe categorii de repere: „spita” → toate spitalele, „univ” → toate universitățile', () => {
+  const m = GeoCore.buildModel({
+    poiCategories: Domain.POI_CATEGORIES,
+    pois: [
+      { id: 'a', name: 'Spitalul Clinic Județean de Urgență „Sf. Spiridon”', category: 'spital', aliases: ['Spiridon'], lat: 47.17, lng: 27.58 },
+      { id: 'b', name: 'Institutul Regional de Oncologie', category: 'spital', aliases: ['IRO'], lat: 47.15, lng: 27.6 },
+      { id: 'c', name: 'Universitatea „Alexandru Ioan Cuza”', category: 'universitate', lat: 47.17, lng: 27.57 },
+      { id: 'd', name: 'Universitatea Tehnică „Gheorghe Asachi”', category: 'universitate', lat: 47.15, lng: 27.59 },
+      { id: 'e', name: 'Spital fără coordonate', category: 'spital' }
+    ]
+  });
+  assert.deepEqual(GeoCore.search(m, 'spita').map((e) => e.ref).sort(), ['a', 'b']);
+  assert.deepEqual(GeoCore.search(m, 'univ').map((e) => e.ref).sort(), ['c', 'd']);
+  assert.deepEqual(GeoCore.search(m, 'spital spiridon').map((e) => e.ref), ['a']);
+  assert.deepEqual(GeoCore.search(m, 'iro').map((e) => e.ref), ['b']);
 });

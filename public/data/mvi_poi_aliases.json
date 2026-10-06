@@ -1,7 +1,505 @@
 [
-  { "id": "POI-GARA-IASI", "name": "Gara Iași", "aliases": ["Gara", "Gara de Nord", "Gara Mare", "Gara Iasi"], "category": "transport", "lat": 47.1654, "lng": 27.5703, "verificat": false },
-  { "id": "POI-PALAS", "name": "Palas Iași", "aliases": ["Palas", "Palas Mall", "Palatul Culturii"], "category": "comercial", "lat": 47.1564, "lng": 27.5871, "verificat": false },
-  { "id": "POI-UAIC", "name": "Universitatea „Alexandru Ioan Cuza” din Iași", "aliases": ["Universitate", "UAIC", "Universitatea Cuza", "Corpul A"], "category": "educatie", "lat": 47.1742, "lng": 27.5718, "verificat": false },
-  { "id": "POI-TUIASI", "name": "Universitatea Tehnică „Gheorghe Asachi” din Iași", "aliases": ["Politehnica", "Poli", "TUIASI", "Universitatea Tehnica", "Asachi"], "category": "educatie", "lat": 47.1538, "lng": 27.5937, "verificat": false },
-  { "id": "POI-PODU-ROS", "name": "Podu Roș", "aliases": ["Podu Ros", "Podul Ros"], "category": "nod", "lat": 47.1521, "lng": 27.5893, "verificat": false }
+ {
+  "id": "POI-GARA-IASI",
+  "name": "Gara Iași",
+  "category": "transport",
+  "aliases": [
+   "Gara",
+   "Gara de Nord",
+   "Gara Mare",
+   "Gara Iasi"
+  ],
+  "lat": 47.1654,
+  "lng": 27.5703,
+  "verified": false
+ },
+ {
+  "id": "POI-PALAS",
+  "name": "Palas Iași",
+  "category": "comercial",
+  "aliases": [
+   "Palas",
+   "Palas Mall",
+   "Palatul Culturii"
+  ],
+  "lat": 47.1564,
+  "lng": 27.5871,
+  "verified": false
+ },
+ {
+  "id": "POI-UAIC",
+  "name": "Universitatea „Alexandru Ioan Cuza” din Iași",
+  "category": "universitate",
+  "aliases": [
+   "UAIC",
+   "Universitatea Cuza",
+   "Corpul A"
+  ],
+  "lat": 47.1742,
+  "lng": 27.5718,
+  "verified": false
+ },
+ {
+  "id": "POI-TUIASI",
+  "name": "Universitatea Tehnică „Gheorghe Asachi” din Iași",
+  "category": "universitate",
+  "aliases": [
+   "Politehnica",
+   "Poli",
+   "TUIASI",
+   "Asachi"
+  ],
+  "lat": 47.1538,
+  "lng": 27.5937,
+  "verified": false
+ },
+ {
+  "id": "POI-PODU-ROS",
+  "name": "Podu Roș",
+  "category": "nod",
+  "aliases": [
+   "Podu Ros",
+   "Podul Ros"
+  ],
+  "lat": 47.1521,
+  "lng": 27.5893,
+  "verified": false
+ },
+ {
+  "id": "POI-UMF",
+  "name": "Universitatea de Medicină și Farmacie „Grigore T. Popa”",
+  "category": "universitate",
+  "aliases": [
+   "UMF",
+   "Medicina",
+   "Farmacie"
+  ],
+  "lat": null,
+  "lng": null,
+  "verified": false
+ },
+ {
+  "id": "POI-USV",
+  "name": "Universitatea pentru Științele Vieții „Ion Ionescu de la Brad”",
+  "category": "universitate",
+  "aliases": [
+   "USV",
+   "Agronomie",
+   "USAMV"
+  ],
+  "lat": null,
+  "lng": null,
+  "verified": false
+ },
+ {
+  "id": "POI-UNAGE",
+  "name": "Universitatea Națională de Arte „George Enescu”",
+  "category": "universitate",
+  "aliases": [
+   "UNAGE",
+   "Arte",
+   "Conservator"
+  ],
+  "lat": null,
+  "lng": null,
+  "verified": false
+ },
+ {
+  "id": "POI-APOLLONIA",
+  "name": "Universitatea „Apollonia”",
+  "category": "universitate",
+  "aliases": [
+   "Apollonia"
+  ],
+  "lat": null,
+  "lng": null,
+  "verified": false
+ },
+ {
+  "id": "POI-PETRE-ANDREI",
+  "name": "Universitatea „Petre Andrei”",
+  "category": "universitate",
+  "aliases": [
+   "Petre Andrei"
+  ],
+  "lat": null,
+  "lng": null,
+  "verified": false
+ },
+ {
+  "id": "POI-SPIRIDON",
+  "name": "Spitalul Clinic Județean de Urgență „Sf. Spiridon”",
+  "category": "spital",
+  "aliases": [
+   "Spiridon",
+   "Sf. Spiridon",
+   "Urgențe Spiridon"
+  ],
+  "lat": null,
+  "lng": null,
+  "verified": false
+ },
+ {
+  "id": "POI-SF-MARIA",
+  "name": "Spitalul Clinic de Urgență pentru Copii „Sf. Maria”",
+  "category": "spital",
+  "aliases": [
+   "Sf. Maria",
+   "Spitalul de copii"
+  ],
+  "lat": null,
+  "lng": null,
+  "verified": false
+ },
+ {
+  "id": "POI-IRO",
+  "name": "Institutul Regional de Oncologie",
+  "category": "spital",
+  "aliases": [
+   "IRO",
+   "Oncologie"
+  ],
+  "lat": null,
+  "lng": null,
+  "verified": false
+ },
+ {
+  "id": "POI-IBCV",
+  "name": "Institutul de Boli Cardiovasculare „Prof. Dr. George I.M. Georgescu”",
+  "category": "spital",
+  "aliases": [
+   "Cardiologie",
+   "IBCV"
+  ],
+  "lat": null,
+  "lng": null,
+  "verified": false
+ },
+ {
+  "id": "POI-OBLU",
+  "name": "Spitalul Clinic de Urgență „Prof. Dr. Nicolae Oblu”",
+  "category": "spital",
+  "aliases": [
+   "Oblu",
+   "Neurochirurgie"
+  ],
+  "lat": null,
+  "lng": null,
+  "verified": false
+ },
+ {
+  "id": "POI-PARASCHEVA",
+  "name": "Spitalul Clinic de Boli Infecțioase „Sf. Parascheva”",
+  "category": "spital",
+  "aliases": [
+   "Boli Infecțioase",
+   "Sf. Parascheva"
+  ],
+  "lat": null,
+  "lng": null,
+  "verified": false
+ },
+ {
+  "id": "POI-SOCOLA",
+  "name": "Institutul de Psihiatrie „Socola”",
+  "category": "spital",
+  "aliases": [
+   "Socola",
+   "Psihiatrie"
+  ],
+  "lat": null,
+  "lng": null,
+  "verified": false
+ },
+ {
+  "id": "POI-PNEUMO",
+  "name": "Spitalul Clinic de Pneumoftiziologie",
+  "category": "spital",
+  "aliases": [
+   "Pneumo",
+   "Pneumoftiziologie"
+  ],
+  "lat": null,
+  "lng": null,
+  "verified": false
+ },
+ {
+  "id": "POI-SPITAL-CF",
+  "name": "Spitalul Clinic CF Iași",
+  "category": "spital",
+  "aliases": [
+   "Spitalul CF",
+   "Căi Ferate"
+  ],
+  "lat": null,
+  "lng": null,
+  "verified": false
+ },
+ {
+  "id": "POI-RECUPERARE",
+  "name": "Spitalul Clinic de Recuperare",
+  "category": "spital",
+  "aliases": [
+   "Recuperare"
+  ],
+  "lat": null,
+  "lng": null,
+  "verified": false
+ },
+ {
+  "id": "POI-CUZA-VODA",
+  "name": "Maternitatea „Cuza Vodă”",
+  "category": "spital",
+  "aliases": [
+   "Cuza Vodă",
+   "Maternitate Cuza Voda"
+  ],
+  "lat": null,
+  "lng": null,
+  "verified": false
+ },
+ {
+  "id": "POI-ELENA-DOAMNA",
+  "name": "Maternitatea „Elena Doamna”",
+  "category": "spital",
+  "aliases": [
+   "Elena Doamna"
+  ],
+  "lat": null,
+  "lng": null,
+  "verified": false
+ },
+ {
+  "id": "POI-PARHON",
+  "name": "Spitalul Clinic „Dr. C.I. Parhon”",
+  "category": "spital",
+  "aliases": [
+   "Parhon"
+  ],
+  "lat": null,
+  "lng": null,
+  "verified": false
+ },
+ {
+  "id": "POI-SPITAL-MILITAR",
+  "name": "Spitalul Militar de Urgență „Dr. Iacob Czihac”",
+  "category": "spital",
+  "aliases": [
+   "Spitalul Militar",
+   "Czihac"
+  ],
+  "lat": null,
+  "lng": null,
+  "verified": false
+ },
+ {
+  "id": "POI-IULIUS",
+  "name": "Iulius Mall / Iulius Town",
+  "category": "comercial",
+  "aliases": [
+   "Iulius",
+   "Iulius Town",
+   "Iulius Mall"
+  ],
+  "lat": null,
+  "lng": null,
+  "verified": false
+ },
+ {
+  "id": "POI-FELICIA",
+  "name": "Felicia Shopping Center",
+  "category": "comercial",
+  "aliases": [
+   "Felicia"
+  ],
+  "lat": null,
+  "lng": null,
+  "verified": false
+ },
+ {
+  "id": "POI-ERA",
+  "name": "Era Shopping Park",
+  "category": "comercial",
+  "aliases": [
+   "Era",
+   "Era Park"
+  ],
+  "lat": null,
+  "lng": null,
+  "verified": false
+ },
+ {
+  "id": "POI-PIATA-NICOLINA",
+  "name": "Piața Nicolina",
+  "category": "piata",
+  "aliases": [],
+  "lat": null,
+  "lng": null,
+  "verified": false
+ },
+ {
+  "id": "POI-PIATA-ACB",
+  "name": "Piața Alexandru cel Bun",
+  "category": "piata",
+  "aliases": [],
+  "lat": null,
+  "lng": null,
+  "verified": false
+ },
+ {
+  "id": "POI-PIATA-DACIA",
+  "name": "Piața Dacia",
+  "category": "piata",
+  "aliases": [],
+  "lat": null,
+  "lng": null,
+  "verified": false
+ },
+ {
+  "id": "POI-PIATA-TATARASI",
+  "name": "Piața Tătărași",
+  "category": "piata",
+  "aliases": [],
+  "lat": null,
+  "lng": null,
+  "verified": false
+ },
+ {
+  "id": "POI-AEROPORT",
+  "name": "Aeroportul Internațional Iași",
+  "category": "transport",
+  "aliases": [
+   "Aeroport",
+   "Aeroportul Iasi"
+  ],
+  "lat": null,
+  "lng": null,
+  "verified": false
+ },
+ {
+  "id": "POI-AUTOGARA-CODREANU",
+  "name": "Autogara Codreanu",
+  "category": "transport",
+  "aliases": [
+   "Autogara"
+  ],
+  "lat": null,
+  "lng": null,
+  "verified": false
+ },
+ {
+  "id": "POI-PRIMARIA",
+  "name": "Primăria Municipiului Iași",
+  "category": "administratie",
+  "aliases": [
+   "Primăria",
+   "Primaria Iasi"
+  ],
+  "lat": null,
+  "lng": null,
+  "verified": false
+ },
+ {
+  "id": "POI-PREFECTURA",
+  "name": "Prefectura / Consiliul Județean Iași",
+  "category": "administratie",
+  "aliases": [
+   "Prefectura",
+   "Consiliul Județean"
+  ],
+  "lat": null,
+  "lng": null,
+  "verified": false
+ },
+ {
+  "id": "POI-PARC-COPOU",
+  "name": "Parcul Copou",
+  "category": "agrement",
+  "aliases": [
+   "Grădina Copou",
+   "Teiul lui Eminescu"
+  ],
+  "lat": null,
+  "lng": null,
+  "verified": false
+ },
+ {
+  "id": "POI-BOTANICA",
+  "name": "Grădina Botanică „Anastasie Fătu”",
+  "category": "agrement",
+  "aliases": [
+   "Botanica",
+   "Grădina Botanică"
+  ],
+  "lat": null,
+  "lng": null,
+  "verified": false
+ },
+ {
+  "id": "POI-STADION",
+  "name": "Stadionul „Emil Alexandrescu”",
+  "category": "agrement",
+  "aliases": [
+   "Stadion"
+  ],
+  "lat": null,
+  "lng": null,
+  "verified": false
+ },
+ {
+  "id": "POI-TEATRU",
+  "name": "Teatrul Național „Vasile Alecsandri”",
+  "category": "agrement",
+  "aliases": [
+   "Teatrul Național",
+   "Opera"
+  ],
+  "lat": null,
+  "lng": null,
+  "verified": false
+ },
+ {
+  "id": "POI-PIATA-UNIRII",
+  "name": "Piața Unirii",
+  "category": "nod",
+  "aliases": [
+   "Unirii"
+  ],
+  "lat": null,
+  "lng": null,
+  "verified": false
+ },
+ {
+  "id": "POI-PODU-DE-PIATRA",
+  "name": "Podu de Piatră",
+  "category": "nod",
+  "aliases": [
+   "Podul de Piatra"
+  ],
+  "lat": null,
+  "lng": null,
+  "verified": false
+ },
+ {
+  "id": "POI-ROND-AGRONOMIE",
+  "name": "Rond Agronomie",
+  "category": "nod",
+  "aliases": [
+   "Agronomie rond"
+  ],
+  "lat": null,
+  "lng": null,
+  "verified": false
+ },
+ {
+  "id": "POI-ROND-TUDOR",
+  "name": "Rond Tudor Vladimirescu",
+  "category": "nod",
+  "aliases": [
+   "Tudor Vladimirescu"
+  ],
+  "lat": null,
+  "lng": null,
+  "verified": false
+ }
 ]

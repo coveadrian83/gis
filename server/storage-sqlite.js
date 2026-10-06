@@ -83,6 +83,24 @@ function createSqliteStorage(dbPathOrDb) {
       return db.prepare('SELECT * FROM audit_log ORDER BY id DESC LIMIT ?').all(limit);
     },
 
+    /** Reperele adăugate/modificate din dashboard: { id: reper | { deleted: true } }. */
+    async getPoiOverrides() {
+      const r = db.prepare("SELECT json FROM kv WHERE key = 'pois'").get();
+      return r ? JSON.parse(r.json) : {};
+    },
+
+    async updatePoiOverrides(fn) {
+      return transaction(db, () => {
+        const r = db.prepare("SELECT json FROM kv WHERE key = 'pois'").get();
+        const next = fn(r ? JSON.parse(r.json) : {});
+        if (next !== undefined) {
+          db.prepare("INSERT INTO kv (key, json, updated_at) VALUES ('pois', ?, ?) ON CONFLICT(key) DO UPDATE SET json = excluded.json, updated_at = excluded.updated_at")
+            .run(JSON.stringify(next), new Date().toISOString());
+        }
+        return next;
+      });
+    },
+
     async repair() {
       return { checked: db.prepare('SELECT COUNT(*) AS n FROM trips_raw').get().n, repaired: 0 };
     }

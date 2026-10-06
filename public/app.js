@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  var APP_VERSION = '0.6.0';
+  var APP_VERSION = '0.7.0';
   var DATA_FILES = {
     zones: 'data/iasi_17_zone_mva_mvi.geojson',
     uats: 'data/zmi_uat_web.geojson',
@@ -160,10 +160,11 @@
       optional(fetchJson(DATA_FILES.zones)),
       optional(fetchJson(DATA_FILES.uats)),
       locP,
-      optional(fetchJson(DATA_FILES.pois))
+      // reperele: lista curentă de la server (inclusiv cele adăugate din dashboard); altfel fișierul
+      optional(fetchJson('api/pois')).then(function (p) { return p || optional(fetchJson(DATA_FILES.pois)); })
     ]).then(function (r) {
       state.cfg = r[0];
-      state.geo = GeoCore.buildModel({ zones: r[1], uats: r[2], localities: r[3], pois: r[4] });
+      state.geo = GeoCore.buildModel({ zones: r[1], uats: r[2], localities: r[3], pois: r[4], poiCategories: Domain.POI_CATEGORIES });
     });
   }
 
@@ -484,12 +485,18 @@
     rs.items = items;
     rs.sel = items.length ? 0 : -1;
     ul.innerHTML = '';
-    var lastKind = null;
+    var lastGroup = null;
     var labels = { poi: 'Repere', locality: 'Localități (SIRUTA)', zone: 'Zone de analiză Iași', geocoder: 'OpenStreetMap' };
+    var cats = Domain.byCode(Domain.POI_CATEGORIES);
     items.forEach(function (it, i) {
-      if (it.kind !== lastKind) { ul.appendChild(el('li', { class: 'sep', role: 'presentation', text: labels[it.kind] })); lastKind = it.kind; }
+      var cat = it.kind === 'poi' ? cats[it.category] : null;
+      var group = it.kind + (cat ? ':' + cat.code : '');
+      if (group !== lastGroup) {
+        ul.appendChild(el('li', { class: 'sep', role: 'presentation', text: cat ? cat.label : labels[it.kind] }));
+        lastGroup = group;
+      }
       var li = el('li', { role: 'option', id: 'opt-' + which + '-' + i, 'aria-selected': i === rs.sel ? 'true' : 'false' }, [
-        el('span', { class: 'k', 'aria-hidden': 'true', text: KIND_ICON[it.kind] || '•' }),
+        el('span', { class: 'k', 'aria-hidden': 'true', text: cat ? cat.icon : (KIND_ICON[it.kind] || '•') }),
         el('span', null, [el('span', { class: 't', text: it.label }), el('span', { class: 's', text: it.sub || '' })])
       ]);
       li.addEventListener('mousedown', function (e) { e.preventDefault(); selectEntry(which, it); });
@@ -526,7 +533,7 @@
     var rs = resultsState[which];
     rs.seq++;
     if (GeoCore.normalize(q).length < 2) { closeResults(which); return; }
-    var local = GeoCore.search(state.geo, q, 8);
+    var local = GeoCore.search(state.geo, q, 8); // pentru o categorie („spita”, „univ”) întoarce toate reperele ei
     var wantExternal = !!state.cfg.geocoder_url && GeoCore.normalize(q).length >= 3 && local.length < 4;
     renderResults(which, local, wantExternal);
     if (wantExternal) externalSearch(which, q, local);
