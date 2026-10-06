@@ -1,0 +1,10 @@
+# Publicare pe Netlify: site static din directorul public/.
+# Fără server central, aplicația rulează în „mod demonstrativ” (datele rămân în browser).
+[build]
+  publish = "public"
+  command = "echo 'fără pas de build'"
+
+[[headers]]
+  for = "/admin/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
