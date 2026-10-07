@@ -1,0 +1,48 @@
+{
+ "name": "Iași",
+ "bbox": [
+  27.45859,
+  47.07087,
+  27.70983,
+  47.24172
+ ],
+ "start": [
+  47.16485,
+  27.58186
+ ],
+ "center": [
+  47.1563,
+  27.5842
+ ],
+ "radius_m": 9500,
+ "nodes": 20828,
+ "edges": 27000,
+ "pois": 1874,
+ "counts": {
+  "Alimentație": 412,
+  "Sănătate": 338,
+  "Educație": 177,
+  "Parcuri și locuri de joacă": 298,
+  "Cafenele și restaurante": 370,
+  "Bănci de odihnă": 40,
+  "Stații de transport public": 239
+ },
+ "steps": 406,
+ "steps_with_wheelchair_ramp": 6,
+ "osmnx": "2.1.1",
+ "generated": "2026-10-07T11:51Z",
+ "elevation": {
+  "source": "Copernicus GLO-30 (DSM), deschidere morfologică 5 px + gauss σ=1",
+  "min_m": 34.3,
+  "max_m": 413.2,
+  "street_length_share_by_grade_pct": {
+   "0-3": 33.0,
+   "3-5": 17.7,
+   "5-8": 16.5,
+   "8-12": 15.0,
+   "12+": 17.9
+  },
+  "osm_incline_edges": 248,
+  "generated": "2026-10-07T11:51Z"
+ }
+}

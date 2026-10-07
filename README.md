@@ -90,6 +90,28 @@ coadă locală când nu există conexiune (retrimitere automată), participant p
   moduri, clasa de volum (<10, 10–29, 30–49, ≥50);
 - confidențialitate: coordonate rotunjite (≈ 11 m), IP nesalvat, retenție (eliminarea coordonatelor vechi, din dashboard).
 
+## Harta „15 minute. Pentru cine?” – Iași (`/15min/`)
+
+Hartă interactivă a accesibilității pietonale, adaptată după
+[martincantcode/15-minutes](https://github.com/martincantcode/15-minutes) (licență MIT): câte facilități
+(alimentație, sănătate, educație, parcuri, cafenele și restaurante), bănci de odihnă și stații de transport public
+(tren, tramvai, autobuz) se pot atinge pe jos în 5–30 de minute, în funcție de viteza de mers (0,8–1,8 m/s),
+de evitarea scărilor și de **pantă** (Copernicus GLO-30, funcția lui Tobler, scări mai lente la urcare, pantă maximă
+acceptată – ex. 8 % pentru scaun rulant/cărucior). Totul rulează în browser, pe date OpenStreetMap; nu este nevoie de server.
+
+- **Punct**: apăsați pe hartă; comparația cu referința (1,4 m/s, cu scări) și cu 5 profiluri predefinite;
+  link partajabil (`/15min/#lat=…&lng=…&min=15&spd=1.1&st=1`).
+- **Zone**: analiza celor 17 zone MVA–MVI pe o grilă regulată (facilități medii, pierdere față de referință,
+  proporția punctelor cu toate cele 5 categorii, stații utilizabile), hartă coroplet și export CSV.
+- **Date**: `public/15min/data/iasi/` se generează cu `scripts/export_15min.py` (osmnx) și `scripts/elevatie_15min.py`
+  (panta), automat în GitHub Actions
+  la modificarea scriptului sau manual: **Actions → Export date 15 minute (Iași) → Run workflow** (reîmprospătare OSM).
+- **Linia de comandă**: `node scripts/analiza-15min.js [--min 15 --speed 1.1 --avoid --out var/zone.csv]` –
+  același calcul ca pagina (`public/15min/core.js`).
+- Metodologia și limitele: `public/15min/metodologie.html`.
+
+---
+
 ## Rulare pe un server propriu (alternativă la Netlify)
 
 Node.js ≥ 22.13; datele se salvează în SQLite.
@@ -133,6 +155,10 @@ server/server.js            serverul Node propriu (fișiere statice + API)
 public/                     aplicația publică, dashboardul (/admin/), Confidențialitate, Metodologie
 public/shared/              geo-core.js (căutare + point-in-polygon) și domain.js – comune browser/server
 public/data/                fișierele geografice
+public/15min/               harta „15 minute. Pentru cine?” – Iași (core.js = calculul, data/iasi = export OSM)
+scripts/export_15min.py     exportul rețelei pietonale și al facilităților din OSM (osmnx)
+scripts/elevatie_15min.py   panta: elevația Copernicus GLO-30 pe fiecare segment (elev.bin)
+scripts/analiza-15min.js    analiza pe puncte și pe zone din linia de comandă (--scari: scările și străzile abrupte)
 test/                       teste automate (date geografice sintetice)
 docs/                       specificația v1.0, metodologia și ghidul de testare v0.4.5
 ```

@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Metodologie – 15 minute. Pentru cine? – Iași</title>
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <style>
+    body { margin: 0; background: #f7f4ec; color: #15171a; font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+    main { max-width: 760px; margin: 0 auto; padding: 24px 16px 60px; }
+    h1 { font-size: 28px; line-height: 1.15; } h1 span { color: #1f7a99; }
+    h2 { font-size: 19px; margin-top: 28px; }
+    table { border-collapse: collapse; width: 100%; font-size: 14px; }
+    td, th { border-bottom: 1px solid #ddd8cc; padding: 4px 6px 4px 0; text-align: left; vertical-align: top; }
+    code { font-size: 13px; background: #ece7da; padding: 0 3px; border-radius: 3px; }
+    pre { background: #ece7da; padding: 10px; overflow-x: auto; font-size: 13px; }
+  </style>
+</head>
+<body>
+<main>
+  <p><a href="./">← Înapoi la hartă</a></p>
+  <h1>15 minute. <span>Pentru cine?</span><br>Metodologie – Iași</h1>
+
+  <h2>1. Întrebarea</h2>
+  <p>Conceptul „orașului de 15 minute” (Carlos Moreno) presupune de obicei o viteză de mers de 1,4 m/s și un traseu care poate folosi scări. Dar 15 minute nu înseamnă același lucru pentru toată lumea: viteza de mers variază între aproximativ 0,8 și 1,8 m/s (meta-studiul Giannoulaki &amp; Christoforou, 2024), iar scările sunt acces pentru unii și barieră pentru alții. Harta arată, pentru orice punct din Iași, ce se pierde când pornim de la alte ipoteze decât cea standard.</p>
+
+  <h2>2. Date</h2>
+  <ul>
+    <li><b>Rețeaua pietonală</b>: OpenStreetMap, descărcată cu OSMnx (<code>network_type="walk"</code>), pătrat de 19 × 19 km centrat pe cele 17 zone MVA–MVI (municipiul și marginile comunelor limitrofe). Scările (<code>highway=steps</code>) sunt păstrate ca segmente separate; cele cu <code>ramp:wheelchair=yes</code> sunt considerate practicabile.</li>
+    <li><b>Facilitățile</b>, pe categorii:
+      <table>
+        <tr><th>Categorie</th><th>Etichete OpenStreetMap</th></tr>
+        <tr><td>Alimentație</td><td>shop = supermarket, convenience, greengrocer, bakery, butcher</td></tr>
+        <tr><td>Sănătate</td><td>amenity = pharmacy, doctors, clinic, hospital, dentist</td></tr>
+        <tr><td>Educație</td><td>amenity = school, kindergarten, library</td></tr>
+        <tr><td>Parcuri și locuri de joacă</td><td>leisure = park, playground, garden</td></tr>
+        <tr><td>Cafenele și restaurante</td><td>amenity = cafe, restaurant, pub, bar</td></tr>
+        <tr><td>Bănci de odihnă</td><td>amenity = bench</td></tr>
+        <tr><td>Stații de transport public</td><td>railway = station, halt (tren) · railway = tram_stop (tramvai) · highway = bus_stop (autobuz)</td></tr>
+      </table>
+      Stațiile cu același nume și același mod aflate la mai puțin de 300 m (cele două sensuri, peronul și poziția de oprire) sunt numărate o singură dată. O stație este „fără trepte” doar dacă are <code>wheelchair=yes</code>.</li>
+    <li><b>Zonele</b>: cele 17 zone de analiză MVA–MVI ale municipiului (<code>public/data/iasi_17_zone_mva_mvi.geojson</code>), aceleași ca în studiul O–D.</li>
+  </ul>
+
+  <h2>3. Calculul pentru un punct</h2>
+  <ol>
+    <li>Punctul ales se leagă de cel mai apropiat nod al rețelei (maximum 500 m); distanța de legătură se parcurge cu aceeași viteză.</li>
+    <li>Algoritmul Dijkstra calculează timpul de mers până la fiecare nod, oprindu-se la timpul disponibil (5–30 min). Cu „Evită scările”, segmentele de scări fără rampă sunt excluse.</li>
+    <li>O facilitate este accesibilă dacă timpul până la nodul cel mai apropiat de ea, plus distanța în linie dreaptă de la nod la facilitate, nu depășește timpul disponibil.</li>
+    <li>Rezultatul se compară cu referința: 1,4 m/s, scări permise, același timp. Străzile gri de pe hartă sunt cele pe care referința le atinge, iar profilul ales nu.</li>
+  </ol>
+  <p>Profilurile predefinite: <b>Referință</b> 1,4 m/s; <b>Mers lent</b> 1,1 m/s; <b>Lent, fără scări</b> 1,1 m/s; <b>Mobilitate redusă</b> 0,8 m/s, fără scări; <b>Mers rapid</b> 1,8 m/s. Sunt ipoteze de lucru pentru comparație, nu categorii de persoane.</p>
+
+  <h2>3a. Panta și scările</h2>
+  <p>Iașul este construit pe dealuri (Copou, Țicău, Galata, Bucium, Cetățuia) deasupra luncii Bahluiului, deci „15 minute pe jos” depinde mult de relief. Opțiunea <b>„Ține cont de pantă”</b> (activă implicit) folosește:</p>
+  <ul>
+    <li><b>Elevația</b>: modelul Copernicus GLO-30 (30 m, AWS Open Data). Fiind un model al suprafeței, include clădirile și copacii; o deschidere morfologică pe 5 × 5 pixeli (≈ 150 m) și o netezire gaussiană ușoară le îndepărtează în mare parte, păstrând pantele naturale. Elevația se citește la fiecare 15 m de-a lungul fiecărui segment de stradă.</li>
+    <li><b>Viteza pe pantă</b>: funcția lui Tobler, normalizată astfel încât pe teren plat să rămână viteza aleasă: <code>f(s) = e<sup>−3,5·|s+0,05|</sup> / e<sup>−3,5·0,05</sup></code>. Exemple: coborâre de 5 % → ×1,19; urcare de 5 % → ×0,84; urcare de 10 % → ×0,70; urcare de 20 % → ×0,50. Timpul diferă deci în cele două sensuri ale aceleiași străzi.</li>
+    <li><b>Scările</b>: viteza orizontală pe scări este 45 % din viteza de mers la urcare și 55 % la coborâre (ordinul de mărime din Fruin, 1971). Sensul urcării vine din <code>incline=up/down</code> din OSM sau din modelul de elevație; diferența de nivel din <code>step_count × 0,16 m</code> sau din model.</li>
+    <li><b>Etichetele OSM au prioritate</b>: o stradă cu <code>incline</code> numeric (ex. „12%”) folosește panta din OSM, nu pe cea din model. Completarea etichetelor <code>incline</code> și <code>step_count</code> în OpenStreetMap (Râpa Galbenă, scările din Țicău și Copou) îmbunătățește direct rezultatele.</li>
+    <li><b>Pantă maximă acceptată</b> (5–12 %): segmentele de stradă mai abrupte (panta maximă pe orice porțiune de 30 m) sunt excluse, ca scările pentru „Evită scările”. 8 % corespunde rampei 1:12; profilul „Scaun rulant / cărucior” folosește 1,0 m/s, fără scări, pantă ≤ 8 %.</li>
+    <li><b>Ipoteza clasică</b> (referința, liniile gri, coloana „vs. clasic”) rămâne 1,4 m/s, teren plat, cu scări – presupunerea obișnuită a „orașului de 15 minute”. Diferența arată cât pierde fiecare profil din cauza vitezei, a scărilor și a reliefului.</li>
+  </ul>
+  <p>Stratul <b>„Panta străzilor”</b> colorează segmentele cu panta maximă de 5–8 %, 8–12 % și peste 12 %. Lista scărilor și a străzilor celor mai abrupte din fiecare zonă: <code>node scripts/analiza-15min.js --scari</code>.</p>
+
+  <h2>4. Analiza pe zone</h2>
+  <p>Pentru fiecare dintre cele 17 zone se generează puncte pe o grilă regulată (implicit la 400 m), reținute doar dacă se află în interiorul zonei și la cel mult 150 m de o stradă (punctele din câmpuri, păduri sau zone industriale fără rețea pietonală sunt excluse și raportate separat). Dacă o zonă are mai multe puncte decât limita aleasă (implicit 80), se păstrează o selecție uniformă din grilă. Din fiecare punct se fac calculele de la §3, cu profilul ales (inclusiv panta) și cu ipoteza clasică.</p>
+  <table>
+    <tr><th>Indicator</th><th>Semnificație</th></tr>
+    <tr><td>Facilități medii (profil / ref.)</td><td>media, pe punctele zonei, a numărului de facilități din cele 5 categorii principale accesibile în timpul ales</td></tr>
+    <tr><td>Pierdere (%)</td><td>1 − media profilului / media referinței</td></tr>
+    <tr><td>5/5 (%)</td><td>proporția punctelor din care se ajunge la toate cele 5 categorii – un indicator simplu de „oraș de 15 minute”</td></tr>
+    <tr><td>Stații</td><td>media stațiilor de transport public utilizabile (fără scări: doar cele marcate <code>wheelchair=yes</code>)</td></tr>
+    <tr><td>acces_&lt;categorie&gt;_pct (CSV)</td><td>proporția punctelor din care categoria respectivă este accesibilă</td></tr>
+  </table>
+  <p>Grila tratează la fel fiecare punct al zonei: rezultatul descrie teritoriul, nu populația. Pentru o ponderare cu populația se pot folosi ulterior datele recensământului 2021 la nivel de grilă de 1 km (INS / Eurostat).</p>
+
+  <h2>5. Limite</h2>
+  <ul>
+    <li>Panta vine dintr-un model de 30 m: rampele și scările scurte sunt aproximate, iar pe străzile înguste dintre clădiri înalte modelul poate greși cu câțiva metri. Funcția lui Tobler descrie un adult; pentru persoanele în vârstă sau în scaun rulant efectul pantei este probabil mai mare (de aceea există limita de pantă).</li>
+    <li>Nu sunt incluse: transportul public ca mod de deplasare, iluminatul, starea trotuarelor, bordurile, trecerile de pietoni semaforizate, timpii de așteptare.</li>
+    <li>OpenStreetMap este incomplet: facilitățile lipsă scad numerele, iar multe stații nu au eticheta <code>wheelchair</code>. Evitarea scărilor exclude doar scările cartografiate; nu este un traseu complet pentru scaun rulant.</li>
+    <li>Facilitățile sunt legate de cel mai apropiat nod; parcurile și clădirile mari sunt un singur punct, deci numerele de la marginea zonei accesibile sunt aproximative.</li>
+    <li>Străzile cu trotuare cartografiate separat pot lipsi din rețea acolo unde trotuarele nu sunt cartografiate.</li>
+  </ul>
+
+  <h2>6. Reproducere și actualizare</h2>
+  <p>Datele se generează cu <code>scripts/export_15min.py</code>, automat în GitHub Actions (fluxul „Export date 15 minute (Iași)”, pornit manual din tabul Actions) sau local:</p>
+  <pre>pip install osmnx
+python scripts/export_15min.py                # scrie public/15min/data/iasi/
+pip install rasterio scipy
+python scripts/elevatie_15min.py              # adaugă panta (elev.bin)
+node scripts/analiza-15min.js                 # comparația profilurilor și tabelul zonelor
+node scripts/analiza-15min.js --min 15 --speed 0.8 --avoid --out var/zone_08.csv
+node scripts/analiza-15min.js --speed 1.0 --avoid --max-grade 8   # scaun rulant
+node scripts/analiza-15min.js --flat          # fără pantă, ca în versiunea inițială
+node scripts/analiza-15min.js --scari         # scările și străzile abrupte pe zone</pre>
+  <p>Pagina și scripturile folosesc același cod de calcul (<code>public/15min/core.js</code>), deci rezultatele sunt identice.</p>
+
+  <h2>7. Surse și licențe</h2>
+  <ul>
+    <li>Ideea și codul de bază: Martin Bangratz, <a href="https://github.com/martincantcode/15-minutes">„15 minutes. For whom?”</a>, licență MIT.</li>
+    <li>Giannoulaki, M. &amp; Christoforou, Z. (2024), meta-studiu privind viteza de mers a pietonilor.</li>
+    <li>Tobler, W. (1993), funcția de viteză pe pantă (<i>hiking function</i>); Fruin, J. (1971), <i>Pedestrian Planning and Design</i>.</li>
+    <li>Elevație: Copernicus GLO-30 DEM, © DLR e.V. 2010–2014 și © Airbus Defence and Space GmbH 2014–2018, furnizat în cadrul programului Copernicus al UE.</li>
+    <li>Date: © contribuitorii <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, licență ODbL; fișierele din <code>public/15min/data/</code> sunt derivate din acestea.</li>
+  </ul>
+</main>
+</body>
+</html>

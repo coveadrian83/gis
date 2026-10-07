@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>15 minute. Pentru cine? – Iași</title>
+  <meta name="description" content="Hartă interactivă a accesibilității pietonale în Iași: cât de departe ajungi pe jos în 15 minute, în funcție de viteza de mers și de scări.">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<aside id="panel">
+  <h1>15 minute.<br><span>Pentru cine?</span></h1>
+  <p class="sub">Iași · accesibilitate pietonală pe rețeaua de străzi OpenStreetMap</p>
+  <p class="note">Apăsați pe hartă sau trageți markerul. Străzile colorate sunt cele la care ajungeți cu setările alese, colorate după timpul de mers. Străzile gri sunt accesibile în ipoteza clasică (1,4 m/s, teren plat, cu scări), dar nu și cu setările dumneavoastră.</p>
+
+  <div class="ctl">
+    <div class="lbl">Profil de deplasare</div>
+    <div class="profiles" id="profiles">
+      <button type="button" data-speed="1.4" data-avoid="0" data-grade="0">Adult<small>1,4 m/s</small></button>
+      <button type="button" data-speed="1.1" data-avoid="0" data-grade="0">Mers lent<small>1,1 m/s</small></button>
+      <button type="button" data-speed="1.1" data-avoid="1" data-grade="0">Lent, fără scări<small>1,1 m/s</small></button>
+      <button type="button" data-speed="0.8" data-avoid="1" data-grade="0">Mobilitate redusă<small>0,8 m/s, fără scări</small></button>
+      <button type="button" data-speed="1" data-avoid="1" data-grade="8">Scaun rulant / cărucior<small>1,0 m/s, fără scări, pantă ≤ 8%</small></button>
+      <button type="button" data-speed="1.8" data-avoid="0" data-grade="0">Mers rapid<small>1,8 m/s</small></button>
+    </div>
+  </div>
+
+  <div class="ctl"><label>Timp disponibil: <b id="minOut">15</b> min
+    <input type="range" id="minutes" min="5" max="30" value="15"></label></div>
+
+  <div class="ctl"><label>Viteza de mers: <b id="spdOut"></b>
+    <input type="range" id="speed" min="0.8" max="1.8" step="0.05" value="1.4"></label>
+    <div class="note">Intervalul 0,8–1,8 m/s urmează meta-studiul Giannoulaki &amp; Christoforou (2024).</div></div>
+
+  <div class="ctl"><label><input type="checkbox" id="steps"> Evită scările (traseu fără trepte)</label></div>
+
+  <div class="ctl" id="slopeBox" hidden>
+    <label><input type="checkbox" id="slope" checked> Ține cont de pantă (relief)</label>
+    <div class="note">Urcările și coborârile abrupte încetinesc mersul (funcția lui Tobler); scările se urcă mai încet decât se coboară. Elevația: Copernicus GLO-30; unde OpenStreetMap are <code>incline</code> sau <code>step_count</code>, acestea au prioritate.</div>
+    <label class="inline">Pantă maximă acceptată
+      <select id="maxGrade">
+        <option value="0">fără limită</option>
+        <option value="12">12%</option>
+        <option value="8">8% (rampă 1:12)</option>
+        <option value="6">6%</option>
+        <option value="5">5%</option>
+      </select></label>
+  </div>
+
+  <div class="ctl">
+    <div id="legend"></div>
+    <div id="legendLabels"><span>0 min</span><span id="legendEnd"></span></div>
+  </div>
+
+  <div id="zoneHere" class="note"></div>
+  <div id="stats"></div>
+  <div id="status">Se încarcă rețeaua de străzi…</div>
+
+  <div id="compare"></div>
+
+  <div class="ctl toggles">
+    <label><input type="checkbox" id="showAm" checked> Facilități</label>
+    <label><input type="checkbox" id="showSt" checked> Stații de transport public</label>
+    <label><input type="checkbox" id="showBn"> Bănci de odihnă <span class="dot bench"></span></label>
+    <label><input type="checkbox" id="showSteps"> Scări <span class="keyline red"></span><span id="rampHint" hidden> <span class="keyline orange"></span> cu rampă</span></label>
+    <label id="gradeToggle" hidden><input type="checkbox" id="showGrade"> Panta străzilor
+      <span class="gradekey"><span style="background:#f2c14e"></span>5–8% <span style="background:#e8743b"></span>8–12% <span style="background:#b3261e"></span>&gt;12%</span></label>
+    <label><input type="checkbox" id="showZones" checked> Cele 17 zone MVA–MVI</label>
+  </div>
+
+  <div class="ctl"><button id="copyLink" type="button">Copiază linkul acestei vederi</button> <span class="note" id="copyMsg"></span></div>
+
+  <details id="zonesBox" open>
+    <summary>Analiză pe zone (17 zone MVA–MVI)</summary>
+    <p class="note">Pentru fiecare zonă se iau puncte pe o grilă regulată (legate de cea mai apropiată stradă, la cel mult 150 m) și se numără facilitățile atinse în timpul ales, cu profilul curent (inclusiv panta, dacă este bifată) și în ipoteza clasică (1,4 m/s, teren plat, cu scări).</p>
+    <div class="row">
+      <label>Grilă
+        <select id="spacing">
+          <option value="300">300 m</option>
+          <option value="400" selected>400 m</option>
+          <option value="600">600 m</option>
+        </select></label>
+      <label>Max. puncte/zonă
+        <select id="maxPoints">
+          <option value="40">40</option>
+          <option value="80" selected>80</option>
+          <option value="200">200</option>
+        </select></label>
+    </div>
+    <div class="row">
+      <button id="runZones" type="button" class="primary">Calculează pentru zone</button>
+      <button id="csvZones" type="button" disabled>Descarcă CSV</button>
+    </div>
+    <div id="zonesStatus" class="note"></div>
+    <div id="zonesResult" hidden>
+      <label>Colorează zonele după
+        <select id="metric">
+          <option value="amen_mean">Facilități medii (profil)</option>
+          <option value="loss_pct">Pierdere față de referință (%)</option>
+          <option value="full_share">Puncte cu toate cele 5 categorii (%)</option>
+          <option value="stations_mean">Stații utilizabile, medie (profil)</option>
+        </select></label>
+      <div id="zoneLegend"></div>
+      <div class="tablewrap"><table id="zoneTable"></table></div>
+      <p class="note">Apăsați pe un rând pentru a vedea zona pe hartă. „5/5” = proporția punctelor din care se ajunge la toate cele 5 categorii (alimentație, sănătate, educație, parcuri, cafenele și restaurante).</p>
+    </div>
+  </details>
+
+  <p class="note" id="dataInfo"></p>
+  <p class="note">Panta vine dintr-un model de elevație de 30 m: scările și rampele scurte sunt aproximate, iar străzile foarte înguste dintre clădiri pot apărea mai abrupte sau mai line decât sunt. Nu sunt incluse: transportul public ca mod de deplasare, iluminatul, starea trotuarelor, bordurile. Datele vin din OpenStreetMap și sunt incomplete pe alocuri; o stație contează ca accesibilă fără trepte doar dacă OSM o marchează <code>wheelchair=yes</code>. Evitarea scărilor exclude doar scările cartografiate.</p>
+  <p class="note">Adaptare pentru Iași a proiectului <a href="https://github.com/martincantcode/15-minutes" target="_blank" rel="noopener">„15 minutes. For whom?”</a> (Martin Bangratz, licență MIT). Date © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">contribuitorii OpenStreetMap</a>, ODbL; elevație Copernicus GLO-30 (© DLR, Airbus, programul Copernicus). <a href="metodologie.html">Metodologie</a> · <a href="../">Studiul O–D</a></p>
+  <p class="note" id="baseNote"></p>
+</aside>
+<div id="map"></div>
+
+<script src="../vendor/leaflet/leaflet.js"></script>
+<script src="core.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
