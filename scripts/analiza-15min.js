@@ -26,12 +26,7 @@ const PROFILES = [
 const PLACES = [
   ['Piața Unirii', 47.16485, 27.58186],
   ['Palatul Culturii', 47.15742, 27.58673],
-  ['Gara Iași', 47.16502, 27.56998],
   ['Universitatea „Al. I. Cuza” (Copou)', 47.17411, 27.57178],
-  ['Podu Roș', 47.15330, 27.59410],
-  ['Tătărași (Piața Tătărași)', 47.16120, 27.60690],
-  ['Nicolina (CUG)', 47.13620, 27.58550],
-  ['Dacia', 47.15650, 27.55250]
 ];
 
 function args() {
