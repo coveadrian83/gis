@@ -37,6 +37,8 @@ a { color: var(--c-primary-2); }
 }
 .brand h1 { margin: 0; font-size: 18px; line-height: 1.2; }
 .brand p { margin: 2px 0 0; font-size: 12px; opacity: .85; }
+.brand p.orgs { opacity: 1; font-size: 12.5px; }
+.brand p.orgs strong { color: var(--c-accent); font-weight: 700; }
 .link-btn {
   background: transparent; border: 1px solid rgba(255,255,255,.5); color: #fff; border-radius: 999px;
   padding: 6px 12px; font-size: 13px; cursor: pointer; white-space: nowrap;
@@ -67,7 +69,8 @@ a { color: var(--c-primary-2); }
 #map { position: absolute; inset: 0; background: #dfe6ee; }
 .panel { background: var(--c-surface); padding: 16px; }
 @media (min-width: 900px) {
-  .layout { flex-direction: row; height: calc(100vh - 64px - 74px); }
+  body { display: flex; flex-direction: column; height: 100vh; }
+  .layout { flex-direction: row; flex: 1; min-height: 0; }
   .map-wrap { flex: 1; height: auto; }
   .panel { width: 440px; flex: none; overflow-y: auto; border-left: 1px solid var(--c-border); }
 }
@@ -207,3 +210,11 @@ dialog::backdrop { background: rgba(16, 24, 40, .45); }
 .doc table { border-collapse: collapse; width: 100%; font-size: 14px; }
 .doc td, .doc th { border: 1px solid var(--c-border); padding: 6px 8px; text-align: left; vertical-align: top; }
 .draft { background: #fff4d6; border: 1px solid #f0d78c; border-radius: 8px; padding: 10px 12px; }
+
+/* antet pe telefon: mai mult loc pentru numele organizațiilor */
+@media (max-width: 560px) {
+  .topbar { align-items: flex-start; padding: 10px 12px; }
+  .brand-mark { display: none; }
+  .brand h1 { font-size: 17px; }
+  .link-btn { padding: 5px 10px; font-size: 12px; }
+}
