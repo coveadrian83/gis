@@ -939,6 +939,7 @@
       ]));
     });
     $('eraseMsg').textContent = '';
+    $('participantCode').textContent = getParticipantId();
     var dlg = $('historyDialog');
     if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', '');
   }
