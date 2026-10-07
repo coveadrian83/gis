@@ -5,18 +5,20 @@
   var C = window.Min15Core;
   var DATA_DIR = 'data/iasi/';
   var ZONES_URL = '../data/iasi_17_zone_mva_mvi.geojson';
-  var REF_SPEED = C.REF.speed;
+  var REF = C.REF;
   var CAT_COLORS = ['#5b9a3c', '#d9534f', '#7b5ea7', '#2e8b57', '#e8a13a', '#8a5a2b', '#15171a'];
   // stații după eticheta OSM wheelchair: 0 fără etichetă, 1 da, 2 parțial, 3 nu
   var STATION_COLORS = ['#aaaaaa', '#2e8b57', '#e8a13a', '#555555'];
   var PALETTE = ['#0b4f6c', '#1f9e9a', '#9bc53d', '#f2c14e', '#e8743b'];   // timp de mers, aproape → departe
   var PROFILES = [
-    { name: 'Referință', speed: 1.4, avoid: false },
-    { name: 'Mers lent', speed: 1.1, avoid: false },
-    { name: 'Lent, fără scări', speed: 1.1, avoid: true },
-    { name: 'Mobilitate redusă (0,8 m/s, fără scări)', speed: 0.8, avoid: true },
-    { name: 'Mers rapid', speed: 1.8, avoid: false }
+    { name: 'Adult (1,4 m/s)', speed: 1.4, avoid: false, maxGrade: 0 },
+    { name: 'Mers lent (1,1 m/s)', speed: 1.1, avoid: false, maxGrade: 0 },
+    { name: 'Lent, fără scări', speed: 1.1, avoid: true, maxGrade: 0 },
+    { name: 'Mobilitate redusă (0,8 m/s, fără scări)', speed: 0.8, avoid: true, maxGrade: 0 },
+    { name: 'Scaun rulant / cărucior (1,0 m/s, fără scări, ≤ 8%)', speed: 1.0, avoid: true, maxGrade: 8 },
+    { name: 'Mers rapid (1,8 m/s)', speed: 1.8, avoid: false, maxGrade: 0 }
   ];
+  var GRADE_CLASSES = [[5, '#f2c14e'], [8, '#e8743b'], [12, '#b3261e']];   // pantă ≥ prag → culoare
 
   var $ = function (id) { return document.getElementById(id); };
   var statusEl = $('status');
@@ -67,8 +69,15 @@
   var grad = []; for (var gi = 0; gi <= 10; gi++) grad.push(colorAt(gi / 10));
   $('legend').style.background = 'linear-gradient(to right, ' + grad.join(',') + ')';
 
+  function hasSlope() { return !!(G && G.lfw); }
   function settings() {
-    return { T: $('minutes').value * 60, minutes: +$('minutes').value, speed: +$('speed').value, avoid: $('steps').checked };
+    var slope = hasSlope() && $('slope').checked;
+    var prof = C.profile({ speed: +$('speed').value, avoid: $('steps').checked, slope: slope, maxGrade: hasSlope() ? +$('maxGrade').value : 0 });
+    return { T: $('minutes').value * 60, minutes: +$('minutes').value, speed: prof.speed, avoid: prof.avoid, slope: prof.slope, maxGrade: prof.maxGrade, prof: prof };
+  }
+  function describe(p) {
+    return p.speed.toFixed(2).replace('.', ',') + ' m/s' + (p.avoid ? ', fără scări' : ', cu scări') +
+      (p.slope ? ', cu pantă' : ', teren plat') + (p.maxGrade ? ', pantă ≤ ' + p.maxGrade + '%' : '');
   }
   function labels() {
     var s = settings();
@@ -76,7 +85,8 @@
     $('legendEnd').textContent = s.minutes + ' min';
     $('spdOut').textContent = s.speed.toFixed(2).replace('.', ',') + ' m/s (' + (s.speed * 3.6).toFixed(1).replace('.', ',') + ' km/h)';
     Array.prototype.forEach.call(document.querySelectorAll('#profiles button'), function (b) {
-      b.classList.toggle('on', Math.abs(+b.dataset.speed - s.speed) < 1e-6 && (b.dataset.avoid === '1') === s.avoid);
+      b.classList.toggle('on', Math.abs(+b.dataset.speed - s.speed) < 1e-6 && (b.dataset.avoid === '1') === s.avoid &&
+        (!hasSlope() || +b.dataset.grade === s.maxGrade));
     });
   }
   function schedule() {
@@ -99,17 +109,17 @@
       draw(); return;
     }
     statusEl.className = ''; statusEl.textContent = '';
-    var dAdj = C.dijkstra(G, snap.node, snap.dist / s.speed, s.speed, s.avoid, T, wsAdj);
-    var dRef = C.dijkstra(G, snap.node, snap.dist / REF_SPEED, REF_SPEED, false, T, wsRef);
-    var reachAdj = C.collectReach(G, dAdj, T, s.speed, s.avoid), reachRef = C.collectReach(G, dRef, T, REF_SPEED, false);
-    var cA = C.countReach(POIS, dAdj, s.speed, T, s.avoid, true), cR = C.countReach(POIS, dRef, REF_SPEED, T, false, false);
-    state = { T: T, speed: s.speed, avoid: s.avoid, reachAdj: reachAdj, reachRef: reachRef, inAdj: cA.inside, dAdj: dAdj };
-    showStats(reachAdj, reachRef, cA, cR);
+    var dAdj = C.dijkstra(G, snap.node, snap.dist / s.speed, s.prof, T, wsAdj);
+    var dRef = C.dijkstra(G, snap.node, snap.dist / REF.speed, REF, T, wsRef);
+    var reachAdj = C.collectReach(G, dAdj, T, s.prof), reachRef = C.collectReach(G, dRef, T, REF);
+    var cA = C.countReach(POIS, dAdj, s.prof, T, true), cR = C.countReach(POIS, dRef, REF, T, false);
+    state = { T: T, speed: s.speed, avoid: s.avoid, prof: s.prof, reachAdj: reachAdj, reachRef: reachRef, inAdj: cA.inside, dAdj: dAdj };
+    showStats(reachAdj, reachRef, cA, cR, snap);
     showCompare(snap, T, s);
     draw();
   }
 
-  function showStats(rA, rR, cA, cR) {
+  function showStats(rA, rR, cA, cR, snap) {
     var km = function (m) { return fmt(m / 1000, 1); };
     var pct = rR.lengthM > 0 ? Math.round((rA.lengthM / rR.lengthM - 1) * 100) : 0;
     var rows = C.AMENITY_CATS.map(function (c) {
@@ -123,10 +133,11 @@
     var modes = [[2, 'tramvai'], [3, 'autobuz'], [1, 'tren']].map(function (m) {
       return cA.stByMode[m[0]] + ' ' + m[1] + ' (din ' + cR.stByMode[m[0]] + ')';
     }).join(' · ');
-    $('stats').innerHTML =
-      '<div><b>' + km(rA.lengthM) + ' km</b> de străzi accesibile (' + (pct >= 0 ? '+' : '') + pct + '% față de referința de ' + km(rR.lengthM) + ' km)</div>' +
+    var elev = hasSlope() ? '<div class="note">Altitudinea punctului: ' + fmt(G.ele[snap.node]) + ' m. Setări: ' + describe(state.prof) + '.</div>' : '';
+    $('stats').innerHTML = elev +
+      '<div><b>' + km(rA.lengthM) + ' km</b> de străzi accesibile (' + (pct >= 0 ? '+' : '') + pct + '% față de ipoteza clasică: ' + km(rR.lengthM) + ' km)</div>' +
       '<table>' + rows + '<tr><td><b>Total facilități</b></td><td><b>' + cA.amen + '</b></td><td>din ' + cR.amen + '</td></tr></table>' +
-      '<div class="note">' + cA.present + ' din 5 categorii prezente, ' + perKm + ' facilități pe km de stradă accesibilă. Coloanele: setările dvs., apoi referința (1,4 m/s, cu scări).</div>' +
+      '<div class="note">' + cA.present + ' din 5 categorii prezente, ' + perKm + ' facilități pe km de stradă accesibilă. Coloanele: setările dvs., apoi ipoteza clasică (1,4 m/s, teren plat, cu scări).</div>' +
       '<div style="margin-top:8px">Bănci de odihnă: <b>' + cA.cats[C.BENCH] + '</b> din ' + cR.cats[C.BENCH] + '</div>' +
       '<div style="margin-top:10px"><b>Stații de transport public</b>: ' + cA.cats[C.STATION] + ' din ' + cR.cats[C.STATION] + '</div>' +
       '<div class="note">' + modes + '</div>' +
@@ -134,22 +145,27 @@
       '<div class="note">' + (state.avoid ? 'Cu evitarea scărilor, doar stațiile marcate fără trepte contează ca utilizabile (' + cA.stUsable + '); celelalte apar estompate.' : 'Bifați „Evită scările” pentru a estompa stațiile care nu sunt marcate fără trepte.') + ' Multe stații din Iași nu au încă eticheta în OpenStreetMap.</div>';
   }
 
-  // același punct, toate profilurile predefinite – comparația din postarea originală
+  // același punct, toate profilurile predefinite – comparația din postarea originală, plus panta
   function showCompare(snap, T, s) {
-    var ctxRows = PROFILES.map(function (p) {
-      var d = C.dijkstra(G, snap.node, snap.dist / p.speed, p.speed, p.avoid, T, wsCmp);
-      var r = C.countReach(POIS, d, p.speed, T, p.avoid, false);
-      return { p: p, r: r };
-    });
-    var ref = ctxRows[0].r;
-    var rows = ctxRows.map(function (x) {
-      var cur = Math.abs(x.p.speed - s.speed) < 1e-6 && x.p.avoid === s.avoid;
-      var rel = ref.amen ? Math.round(x.r.amen / ref.amen * 100) + '%' : '–';
-      return '<tr' + (cur ? ' class="cur"' : '') + '><td>' + x.p.name + '</td><td>' + x.r.amen + '</td><td>' + rel + '</td><td>' + x.r.stUsable + '</td></tr>';
+    var run = function (p) {
+      var d = C.dijkstra(G, snap.node, snap.dist / p.speed, p, T, wsCmp);
+      return C.countReach(POIS, d, p, T, false);
+    };
+    var list = [{ name: 'Ipoteza clasică (1,4 m/s, plat, cu scări)', prof: REF }].concat(PROFILES.map(function (p) {
+      return { name: p.name, prof: C.profile({ speed: p.speed, avoid: p.avoid, slope: s.slope, maxGrade: hasSlope() ? p.maxGrade : 0 }) };
+    }));
+    var ref = null;
+    var rows = list.map(function (x, i) {
+      var r = run(x.prof);
+      if (i === 0) ref = r;
+      var cur = i > 0 && C.sameProfile(x.prof, s.prof);
+      var rel = ref.amen ? Math.round(r.amen / ref.amen * 100) + '%' : '–';
+      return '<tr' + (cur ? ' class="cur"' : '') + '><td>' + x.name + '</td><td>' + r.amen + '</td><td>' + rel + '</td><td>' + r.stUsable + '</td></tr>';
     }).join('');
-    $('compare').innerHTML = '<h3>Același punct, ' + (T / 60) + ' minute, alte profiluri</h3>' +
-      '<table><thead><tr><th>Profil</th><th>Facilități</th><th>vs. ref.</th><th>Stații*</th></tr></thead><tbody>' + rows + '</tbody></table>' +
-      '<div class="note">* stații utilizabile: fără scări contează doar cele marcate wheelchair=yes.</div>';
+    $('compare').innerHTML = '<h3>Același punct, ' + (T / 60) + ' minute, alte profiluri' + (s.slope ? ', cu pantă' : '') + '</h3>' +
+      '<table><thead><tr><th>Profil</th><th>Facilități</th><th>vs. clasic</th><th>Stații*</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+      '<div class="note">* stații utilizabile: fără scări contează doar cele marcate wheelchair=yes.' +
+      (s.slope ? ' Profilurile folosesc panta; prima linie este ipoteza clasică, pe teren plat.' : '') + '</div>';
   }
 
   function showZoneHere() {
@@ -174,6 +190,28 @@
     ctx.stroke();
   }
 
+  // panta străzilor din imagine, ca un contur colorat sub rețeaua accesibilă (doar ≥ 5 %)
+  function drawGrades(ctx, X, Y, S, tl, size, z) {
+    var x0 = tl.x / S, x1 = (tl.x + size.x) / S, y0 = tl.y / S, y1 = (tl.y + size.y) / S;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.lineWidth = Math.max(4, Math.min(9, 3 + (z - 12) * 1.2));
+    for (var k = 0; k < GRADE_CLASSES.length; k++) {
+      var lo = GRADE_CLASSES[k][0], hi = k + 1 < GRADE_CLASSES.length ? GRADE_CLASSES[k + 1][0] : C.STAIRS_GRADE;
+      ctx.beginPath(); ctx.strokeStyle = GRADE_CLASSES[k][1]; ctx.globalAlpha = 0.55;
+      for (var e = 0; e < G.nE; e++) {
+        var gr = G.grd[e];
+        if (gr < lo || gr >= hi) continue;
+        var u = G.eu[e], v = G.ev[e], ux = G.mx[u], uy = G.my[u], vx = G.mx[v], vy = G.my[v];
+        if ((ux < x0 && vx < x0) || (ux > x1 && vx > x1) || (uy < y0 && vy < y0) || (uy > y1 && vy > y1)) continue;
+        var p = C.edgePath(G, e, false);
+        ctx.moveTo(X(p[0]), Y(p[1]));
+        for (var i = 2; i < p.length; i += 2) ctx.lineTo(X(p[i]), Y(p[i + 1]));
+      }
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
+
   function draw() {
     var size = map.getSize(), dpr = window.devicePixelRatio || 1;
     canvas.width = size.x * dpr; canvas.height = size.y * dpr;
@@ -188,6 +226,7 @@
     var z = map.getZoom(), S = 256 * Math.pow(2, z), tl = map.getPixelBounds().min;
     var X = function (v) { return v * S - tl.x; }, Y = function (v) { return v * S - tl.y; };
     if (streetBase && z >= 12) drawStreetBase(ctx, X, Y, S, tl, size);
+    if (hasSlope() && $('showGrade').checked && z >= 13) drawGrades(ctx, X, Y, S, tl, size, z);
     if (!state) return;
     var width = Math.max(1.5, Math.min(5, 1.2 + (z - 12) * 0.5));
     ctx.lineCap = 'round'; ctx.lineJoin = 'round';
@@ -292,7 +331,7 @@
     if (!G || !ZONES || zoneRunning) return;
     zoneRunning = true;
     var s = settings(), opts = {
-      minutes: s.minutes, profile: { speed: s.speed, avoid: s.avoid },
+      minutes: s.minutes, profile: s.prof,
       spacing: +$('spacing').value, maxPoints: +$('maxPoints').value, maxSnap: 150
     };
     var ctx = { g: G, grid: grid, pois: POIS, ws: C.workspace(G) };
@@ -318,7 +357,7 @@
       zoneResults = { rows: rows, byId: byId, range: range, opts: opts };
       var pts = rows.reduce(function (a, r) { return a + r.points; }, 0);
       $('zonesStatus').textContent = 'Calculat în ' + fmt((Date.now() - t0) / 1000, 1) + ' s: ' + pts + ' puncte, ' + opts.minutes + ' min, ' +
-        opts.profile.speed.toFixed(2).replace('.', ',') + ' m/s' + (opts.profile.avoid ? ', fără scări' : ', cu scări') + ', grilă ' + opts.spacing + ' m.';
+        describe(opts.profile) + ', grilă ' + opts.spacing + ' m; comparat cu ipoteza clasică.';
       $('zonesResult').hidden = false;
       if (!$('showZones').checked) { $('showZones').checked = true; zoneLayer.addTo(map); }
       renderZones();
@@ -355,7 +394,8 @@
     var blob = new Blob(['﻿' + C.zonesCsv(zoneResults.rows, POIS.cats)], { type: 'text/csv;charset=utf-8' });
     var a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'iasi_15min_zone_' + o.minutes + 'min_' + o.profile.speed.toFixed(2) + 'ms' + (o.profile.avoid ? '_fara_scari' : '') + '_grila' + o.spacing + 'm.csv';
+    a.download = 'iasi_15min_zone_' + o.minutes + 'min_' + o.profile.speed.toFixed(2) + 'ms' + (o.profile.avoid ? '_fara_scari' : '') +
+      (o.profile.slope ? '_panta' : '') + (o.profile.maxGrade ? '_max' + o.profile.maxGrade : '') + '_grila' + o.spacing + 'm.csv';
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
   });
@@ -373,7 +413,7 @@
     hashTimer = setTimeout(function () {
       var s = settings();
       var q = new URLSearchParams({ lat: origin.lat.toFixed(5), lng: origin.lng.toFixed(5), min: s.minutes,
-        spd: s.speed, st: s.avoid ? 1 : 0, z: map.getZoom() });
+        spd: s.speed, st: s.avoid ? 1 : 0, pa: $('slope').checked ? 1 : 0, pm: $('maxGrade').value, z: map.getZoom() });
       try { history.replaceState(null, '', '#' + q.toString()); } catch (e) { /* unele browsere limitează */ }
     }, 300);
   }
@@ -385,6 +425,8 @@
     var m = num('min', 5, 30); if (m !== null) $('minutes').value = Math.round(m);
     var sp = num('spd', 0.8, 1.8); if (sp !== null) $('speed').value = sp;
     if (q.get('st') === '1') $('steps').checked = true;
+    if (q.get('pa') === '0') $('slope').checked = false;
+    if (q.get('pm') && document.querySelector('#maxGrade option[value="' + parseInt(q.get('pm'), 10) + '"]')) $('maxGrade').value = String(parseInt(q.get('pm'), 10));
     labels();
     var z = num('z', 10, 19);
     return { zoom: z !== null ? z : 14, hadOrigin: had };
@@ -397,12 +439,13 @@
 
   // ---------------------------------------------------------------- evenimente
   ['minutes', 'speed'].forEach(function (id) { $(id).addEventListener('input', schedule); });
-  $('steps').addEventListener('change', schedule);
-  ['showAm', 'showSt', 'showBn', 'showSteps'].forEach(function (id) { $(id).addEventListener('change', draw); });
+  ['steps', 'slope', 'maxGrade'].forEach(function (id) { $(id).addEventListener('change', schedule); });
+  ['showAm', 'showSt', 'showBn', 'showSteps', 'showGrade'].forEach(function (id) { $(id).addEventListener('change', draw); });
   $('profiles').addEventListener('click', function (ev) {
     var b = ev.target.closest('button');
     if (!b) return;
     $('speed').value = b.dataset.speed; $('steps').checked = b.dataset.avoid === '1';
+    if (hasSlope()) $('maxGrade').value = b.dataset.grade || '0';
     schedule();
   });
   map.on('click', function (e) { origin = e.latlng; marker.setLatLng(origin); schedule(); });
@@ -414,10 +457,16 @@
     return fetch(DATA_DIR + url).then(function (r) { if (!r.ok) throw new Error(url + ' lipsește (' + r.status + ')'); return r[kind](); });
   }
   labels();
-  Promise.all([getOk('meta.json', 'json'), getOk('graph.bin', 'arrayBuffer'), getOk('pois.json', 'json')]).then(function (res) {
+  // panta este opțională: fără elev.bin pagina funcționează ca originalul, pe teren plat
+  var elevReq = fetch(DATA_DIR + 'elev.bin').then(function (r) { return r.ok ? r.arrayBuffer() : null; }).catch(function () { return null; });
+  Promise.all([getOk('meta.json', 'json'), getOk('graph.bin', 'arrayBuffer'), getOk('pois.json', 'json'), elevReq]).then(function (res) {
     var meta = res[0];
     META = meta;
     G = C.parseGraph(res[1]); grid = C.buildGrid(G);
+    if (res[3]) {
+      try { C.parseElev(res[3], G); $('slopeBox').hidden = false; $('gradeToggle').hidden = false; }
+      catch (err) { console.warn('Panta nu s-a putut încărca:', err); delete G.lfw; }
+    }
     wsAdj = C.workspace(G); wsRef = C.workspace(G); wsCmp = C.workspace(G);
     var pts = res[2].pts, snapped = C.snapPois(G, grid, pts);
     POIS = { cats: res[2].cats, pts: pts, snap: snapped };
@@ -436,7 +485,8 @@
     map.setMinZoom(10);
     var gen = meta.generated ? meta.generated.slice(0, 10).split('-').reverse().join('.') : '–';
     $('dataInfo').textContent = 'Date OpenStreetMap exportate la ' + gen + ': ' + fmt(meta.nodes) + ' noduri, ' + fmt(meta.edges) +
-      ' segmente de stradă, ' + fmt(meta.pois) + ' facilități și stații' + (meta.steps !== undefined ? ', ' + fmt(meta.steps) + ' scări cartografiate' : '') + '.';
+      ' segmente de stradă, ' + fmt(meta.pois) + ' facilități și stații' + (meta.steps !== undefined ? ', ' + fmt(meta.steps) + ' scări cartografiate' : '') + '.' +
+      (hasSlope() && meta.elevation ? ' Altitudini ' + fmt(meta.elevation.min_m) + '–' + fmt(meta.elevation.max_m) + ' m (Copernicus GLO-30).' : '');
     return loadZones().then(compute);
   }).catch(function (err) {
     console.error(err);

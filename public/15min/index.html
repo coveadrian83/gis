@@ -13,16 +13,17 @@
 <aside id="panel">
   <h1>15 minute.<br><span>Pentru cine?</span></h1>
   <p class="sub">Iași · accesibilitate pietonală pe rețeaua de străzi OpenStreetMap</p>
-  <p class="note">Apăsați pe hartă sau trageți markerul. Străzile colorate sunt cele la care ajungeți cu setările alese, colorate după timpul de mers. Străzile gri sunt accesibile la 1,4 m/s cu scări, dar nu și cu setările dumneavoastră.</p>
+  <p class="note">Apăsați pe hartă sau trageți markerul. Străzile colorate sunt cele la care ajungeți cu setările alese, colorate după timpul de mers. Străzile gri sunt accesibile în ipoteza clasică (1,4 m/s, teren plat, cu scări), dar nu și cu setările dumneavoastră.</p>
 
   <div class="ctl">
     <div class="lbl">Profil de deplasare</div>
     <div class="profiles" id="profiles">
-      <button type="button" data-speed="1.4" data-avoid="0">Referință<small>1,4 m/s</small></button>
-      <button type="button" data-speed="1.1" data-avoid="0">Mers lent<small>1,1 m/s</small></button>
-      <button type="button" data-speed="1.1" data-avoid="1">Lent, fără scări<small>1,1 m/s</small></button>
-      <button type="button" data-speed="0.8" data-avoid="1">Mobilitate redusă<small>0,8 m/s, fără scări</small></button>
-      <button type="button" data-speed="1.8" data-avoid="0">Mers rapid<small>1,8 m/s</small></button>
+      <button type="button" data-speed="1.4" data-avoid="0" data-grade="0">Adult<small>1,4 m/s</small></button>
+      <button type="button" data-speed="1.1" data-avoid="0" data-grade="0">Mers lent<small>1,1 m/s</small></button>
+      <button type="button" data-speed="1.1" data-avoid="1" data-grade="0">Lent, fără scări<small>1,1 m/s</small></button>
+      <button type="button" data-speed="0.8" data-avoid="1" data-grade="0">Mobilitate redusă<small>0,8 m/s, fără scări</small></button>
+      <button type="button" data-speed="1" data-avoid="1" data-grade="8">Scaun rulant / cărucior<small>1,0 m/s, fără scări, pantă ≤ 8%</small></button>
+      <button type="button" data-speed="1.8" data-avoid="0" data-grade="0">Mers rapid<small>1,8 m/s</small></button>
     </div>
   </div>
 
@@ -34,6 +35,19 @@
     <div class="note">Intervalul 0,8–1,8 m/s urmează meta-studiul Giannoulaki &amp; Christoforou (2024).</div></div>
 
   <div class="ctl"><label><input type="checkbox" id="steps"> Evită scările (traseu fără trepte)</label></div>
+
+  <div class="ctl" id="slopeBox" hidden>
+    <label><input type="checkbox" id="slope" checked> Ține cont de pantă (relief)</label>
+    <div class="note">Urcările și coborârile abrupte încetinesc mersul (funcția lui Tobler); scările se urcă mai încet decât se coboară. Elevația: Copernicus GLO-30; unde OpenStreetMap are <code>incline</code> sau <code>step_count</code>, acestea au prioritate.</div>
+    <label class="inline">Pantă maximă acceptată
+      <select id="maxGrade">
+        <option value="0">fără limită</option>
+        <option value="12">12%</option>
+        <option value="8">8% (rampă 1:12)</option>
+        <option value="6">6%</option>
+        <option value="5">5%</option>
+      </select></label>
+  </div>
 
   <div class="ctl">
     <div id="legend"></div>
@@ -51,6 +65,8 @@
     <label><input type="checkbox" id="showSt" checked> Stații de transport public</label>
     <label><input type="checkbox" id="showBn"> Bănci de odihnă <span class="dot bench"></span></label>
     <label><input type="checkbox" id="showSteps"> Scări <span class="keyline red"></span><span id="rampHint" hidden> <span class="keyline orange"></span> cu rampă</span></label>
+    <label id="gradeToggle" hidden><input type="checkbox" id="showGrade"> Panta străzilor
+      <span class="gradekey"><span style="background:#f2c14e"></span>5–8% <span style="background:#e8743b"></span>8–12% <span style="background:#b3261e"></span>&gt;12%</span></label>
     <label><input type="checkbox" id="showZones" checked> Cele 17 zone MVA–MVI</label>
   </div>
 

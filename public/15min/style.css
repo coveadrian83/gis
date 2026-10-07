@@ -30,6 +30,10 @@ button:disabled { cursor: default; opacity: .5; }
 .profiles button small { display: block; color: var(--muted); font-size: 11px; }
 .profiles button.on { border-color: var(--teal); box-shadow: inset 0 0 0 1px var(--teal); }
 .toggles label { display: block; margin: 2px 0; }
+label.inline { display: flex; gap: 8px; align-items: center; margin-top: 6px; }
+label.inline select { padding: 3px 6px; }
+.gradekey { display: inline-flex; gap: 3px; align-items: center; font-size: 11px; color: var(--muted); margin-left: 4px; }
+.gradekey span { display: inline-block; width: 12px; height: 4px; border-radius: 2px; }
 #status { min-height: 1.4em; margin-top: 8px; font-size: 13px; }
 #status.err { color: #b3261e; }
 #zoneHere { margin: 8px 0 4px; }

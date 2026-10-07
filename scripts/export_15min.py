@@ -13,7 +13,9 @@ Utilizare (pe calculatorul propriu sau automat, din GitHub Actions – .github/w
 Rezultat, în public/15min/data/<slug>/:
     graph.bin   rețeaua de străzi și alei pietonale (binar, citit direct de pagină)
     pois.json   facilități, bănci de odihnă, stații de transport public
+    edges.json  etichetele OSM ale muchiilor (denumire, incline, step_count) – pentru scripts/elevatie_15min.py
     meta.json   denumire, încadrare, punct de pornire, data exportului
+Panta (elev.bin) se adaugă apoi cu scripts/elevatie_15min.py, din modelul de elevație Copernicus GLO-30.
 
 Diferențe față de originalul din Köln:
   - stațiile includ, pe lângă gări și stațiile de tramvai, și stațiile de autobuz (highway=bus_stop);
@@ -114,6 +116,7 @@ def build_graph_arrays(G, simplify_tol_deg=3e-5):
     lonlat = np.array([(e5(G.nodes[n]["x"]), e5(G.nodes[n]["y"])) for n in nodes], dtype=np.int32).reshape(-1, 2)
 
     best = {}   # (nod mic, nod mare, tip) -> (lungime m, puncte intermediare mic -> mare)
+    tags = {}   # aceeași cheie -> {name, incline, step_count}
     for u, v, _key, data in G.edges(keys=True, data=True):
         a, b = index[u], index[v]
         if a == b:
@@ -132,6 +135,23 @@ def build_graph_arrays(G, simplify_tol_deg=3e-5):
         key = (min(a, b), max(a, b), kind)
         if key not in best or length < best[key][0]:
             best[key] = (float(length), interior)
+        # etichetele OSM de pantă și de scări, raportate la sensul nod mic → nod mare
+        info = tags.setdefault(key, {})
+        name = first_str(data.get("name"))
+        if name and "name" not in info:
+            info["name"] = name
+        rev = data.get("reversed")
+        if "incline" not in info and isinstance(rev, (bool, np.bool_)):
+            inc = parse_incline(data.get("incline"))
+            if inc is not None:
+                along_low_high = (a < b) != bool(rev)   # sensul căii OSM coincide cu nod mic → nod mare
+                info["incline"] = inc if along_low_high else -inc
+        steps = first_str(data.get("step_count"))
+        if steps and "step_count" not in info:
+            try:
+                info["step_count"] = max(0, int(float(steps)))
+            except ValueError:
+                pass
 
     keys = sorted(best)
     n_edges = len(keys)
@@ -148,7 +168,59 @@ def build_graph_arrays(G, simplify_tol_deg=3e-5):
         shape_pts.extend(interior)
         shape_start[i + 1] = len(shape_pts)
     shape_arr = np.array(shape_pts, dtype="<i4").reshape(-1, 2)
-    return {"lonlat": lonlat, "eu": eu, "ev": ev, "lf": lf, "shape_start": shape_start, "shape_arr": shape_arr}
+    edge_tags = [tags.get(k, {}) for k in keys]
+    return {"lonlat": lonlat, "eu": eu, "ev": ev, "lf": lf, "shape_start": shape_start, "shape_arr": shape_arr,
+            "tags": edge_tags}
+
+
+def first_str(value):
+    if isinstance(value, (list, tuple)):
+        value = next((v for v in value if isinstance(v, str)), None)
+    return value if isinstance(value, str) and value.strip() else None
+
+
+def parse_incline(value):
+    """Eticheta OSM incline → pantă în procente, în sensul căii; +1000 / -1000 = doar sensul (up / down);
+    None dacă lipsește sau nu se poate citi. Acceptă „10%”, „-8 %”, „5°”, „up”, „down”."""
+    value = first_str(value)
+    if not value:
+        return None
+    v = value.strip().lower().replace(",", ".")
+    if v == "up":
+        return 1000
+    if v == "down":
+        return -1000
+    try:
+        if v.endswith("%"):
+            pct = float(v[:-1])
+        elif v.endswith("°"):
+            pct = math.tan(math.radians(float(v[:-1]))) * 100
+        else:
+            pct = float(v)   # fără unitate: procente
+    except ValueError:
+        return None
+    return max(-100.0, min(100.0, pct)) if math.isfinite(pct) else None
+
+
+def write_edge_info(a, out_path):
+    """public/15min/data/<slug>/edges.json – etichetele OSM ale muchiilor (indice = poziția în graph.bin):
+    names = lista denumirilor; name = [[muchie, indice denumire], …]; incline = [[muchie, pantă %], …]
+    (pozitiv = urcă de la nodul mic la cel mare; ±1000 = doar sensul); step_count = [[muchie, trepte], …].
+    Fișierul este folosit de scripts/elevatie_15min.py și de analize, nu de pagină."""
+    names, name_idx, rows = [], {}, {"name": [], "incline": [], "step_count": []}
+    for i, t in enumerate(a["tags"]):
+        if "name" in t:
+            if t["name"] not in name_idx:
+                name_idx[t["name"]] = len(names)
+                names.append(t["name"])
+            rows["name"].append([i, name_idx[t["name"]]])
+        if "incline" in t:
+            rows["incline"].append([i, round(t["incline"], 1)])
+        if "step_count" in t:
+            rows["step_count"].append([i, t["step_count"]])
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump({"edges": len(a["tags"]), "names": names, **rows}, f, ensure_ascii=False, separators=(",", ":"))
+    return {k: len(v) for k, v in rows.items()}
 
 
 def graph_summary(a):
@@ -259,7 +331,7 @@ def main():
     ox.settings.log_console = False
     ox.settings.requests_timeout = 300
     # osmnx renunță la majoritatea etichetelor; o păstrăm pe cea care marchează scările cu rampă
-    ox.settings.useful_tags_way = sorted(set(ox.settings.useful_tags_way) | {"ramp:wheelchair"})
+    ox.settings.useful_tags_way = sorted(set(ox.settings.useful_tags_way) | {"ramp:wheelchair", "incline", "step_count"})
     out = ROOT / "public" / "15min" / "data" / args.slug
     out.mkdir(parents=True, exist_ok=True)
     tags = {"shop": sorted(GROCERY), "amenity": sorted(HEALTH | EDUCATION | EATING | {"bench"}),
@@ -275,7 +347,7 @@ def main():
                      lambda: ox.graph_from_point(center, dist=args.radius, dist_type="bbox",
                                                  network_type="walk", simplify=False), servers)
     try:
-        G = ox.simplify_graph(G, edge_attrs_differ=["highway", "ramp:wheelchair"])   # scările rămân muchii separate
+        G = ox.simplify_graph(G, edge_attrs_differ=["highway", "ramp:wheelchair", "incline", "step_count"])   # scările rămân muchii separate
     except TypeError:
         print("Atenție: această versiune OSMnx nu poate păstra scările separat; muchiile cu scări sunt blocate integral.")
         G = ox.simplify_graph(G)
@@ -286,6 +358,7 @@ def main():
           % (stats["steps"], stats["steps_with_wheelchair_ramp"]))
 
     write_graph_bin(arrays, out / "graph.bin")
+    print("Etichete OSM pe muchii:", write_edge_info(arrays, out / "edges.json"))
     with open(out / "pois.json", "w", encoding="utf-8") as f:
         json.dump({"cats": CATS, "pts": pts}, f, ensure_ascii=False, separators=(",", ":"))
     meta = {"name": args.name, "bbox": stats["bbox"], "start": list(start), "center": list(center),
@@ -295,7 +368,7 @@ def main():
             "osmnx": ox.__version__, "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%MZ")}
     with open(out / "meta.json", "w", encoding="utf-8") as f:
         json.dump(meta, f, ensure_ascii=False, indent=1)
-    for name in ("graph.bin", "pois.json", "meta.json"):
+    for name in ("graph.bin", "edges.json", "pois.json", "meta.json"):
         print(f"{name}: {(out / name).stat().st_size / 1e6:.2f} MB")
     print("Gata:", out)
 
