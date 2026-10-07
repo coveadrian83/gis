@@ -32,6 +32,9 @@ function makeFilter(q, defaults = {}) {
   inList('period_tag', listParam(q.period_tag));
   inList('day_type', listParam(q.day_type));
   inList('campaign_source', listParam(q.campaign_source).map((s) => s.toLowerCase()));
+  if (q.stops === 'direct') tests.push((r) => r.has_stops === 0);
+  else if (q.stops === 'with') tests.push((r) => r.has_stops === 1);
+  else if (q.stops === 'unknown') tests.push((r) => r.has_stops === null || r.has_stops === undefined);
   const uats = new Set(listParam(q.uat));
   if (uats.size) tests.push((r) => uats.has(r.origin_uat) || uats.has(r.destination_uat));
   const statuses = listParam(q.status !== undefined ? q.status : defaults.status).filter((s) => Domain.STATUSES.includes(s));
@@ -115,6 +118,7 @@ function summary(allRows, q) {
     by_mode: countBy(rows, 'mode'),
     by_purpose: countBy(rows, 'purpose'),
     by_repeat: countBy(rows, 'repeat_type'),
+    by_stops: countStops(rows),
     by_period: countBy(rows, 'period_tag'),
     by_source: countBy(rows, 'campaign_source'),
     by_day_type: countBy(rows, 'day_type'),
@@ -122,6 +126,16 @@ function summary(allRows, q) {
     by_date: countBy(rows, 'trip_date').sort((a, b) => String(a.key).localeCompare(String(b.key))),
     trips_per_participant: describe([...countByMap(rows, 'participant_id').values()])
   };
+}
+
+/** Opririle pe drum: o deplasare poate avea mai multe opriri; „neprecizat” pentru cele fără răspuns. */
+function countStops(rows) {
+  const m = {};
+  for (const r of rows) {
+    const keys = r.stops ? String(r.stops).split(';') : ['neprecizat'];
+    for (const k of keys) m[k] = (m[k] || 0) + 1;
+  }
+  return Object.entries(m).sort((a, b) => b[1] - a[1]).map(([key, n]) => ({ key, n }));
 }
 
 function countByMap(rows, key) {
@@ -179,6 +193,8 @@ function odAggregate(allRows, q) {
       max_min: st.max,
       median_distance_km: describe(g.rows.map((r) => r.distance_km).filter((x) => x !== null)).median,
       share_recurrent: Math.round((100 * g.rows.filter((r) => r.repeat_type === 'recurrent').length) / g.rows.length),
+      share_with_stops: Math.round((100 * g.rows.filter((r) => r.has_stops === 1).length) / g.rows.length),
+      median_without_stops_min: describe(g.rows.filter((r) => r.has_stops !== 1).map((r) => r.duration_min)).median,
       mean_car_occupancy: car.length ? Math.round((car.reduce((a, r) => a + r.occupancy, 0) / car.length) * 100) / 100 : null,
       modes: countBy(g.rows, 'mode').map((x) => `${x.key}:${x.n}`).join(' '),
       purposes: countBy(g.rows, 'purpose').map((x) => `${x.key}:${x.n}`).join(' '),

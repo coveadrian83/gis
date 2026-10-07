@@ -22,7 +22,7 @@ function loadPeriods() {
 
 const config = {
   ROOT,
-  APP_VERSION: '0.7.0',
+  APP_VERSION: '0.8.0',
   PORT: parseInt(env('PORT', '8080'), 10),
   HOST: env('HOST', '0.0.0.0'),
   PUBLIC_DIR: path.join(ROOT, 'public'),

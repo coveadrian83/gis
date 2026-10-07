@@ -52,6 +52,7 @@ const FLAG_LABELS = {
   O_POINT_OUTSIDE_LOCALITY_UAT: 'Markerul originii este în afara UAT-ului localității alese',
   D_POINT_OUTSIDE_LOCALITY_UAT: 'Markerul destinației este în afara UAT-ului localității alese',
   OVERNIGHT: 'Deplasare peste miezul nopții',
+  WITH_STOPS: 'Deplasare cu opriri pe drum (durata nu este comparabilă direct cu drumurile directe)',
   LATE_REPORT: 'Raportată la peste 72 h după sosire',
   SAME_UNIT: 'Deplasare în interiorul aceleiași unități O–D',
   O_LOCATION_APPROX: 'Poziția originii este aproximativă (centrul UAT)',
@@ -163,6 +164,16 @@ function parseInput(body, config, opts) {
   }
   out.pt_line = Domain.isPublicTransport(out.mode) ? str(body.pt_line, 30) : null;
 
+  // opriri pe drum: null = neanunțat; [] = drum direct; altfel lista opririlor
+  out.stops = null;
+  if (Array.isArray(body.stops)) {
+    const valid = new Set(Domain.STOP_TYPES.map((x) => x.code));
+    const list = [...new Set(body.stops.map(String).filter((c) => valid.has(c)))];
+    const real = list.filter((c) => c !== 'direct');
+    if (real.length) out.stops = real;
+    else if (list.includes('direct')) out.stops = [];
+  }
+
   const src = String(body.campaign_source || '');
   out.campaign_source = /^[A-Za-z0-9_.-]{1,40}$/.test(src) ? src.toLowerCase() : null;
   out.app_version = str(body.app_version, 20);
@@ -202,6 +213,7 @@ function buildAnalysis(input, geo, config, receivedAtMs, snapshot) {
     o.flags.includes('ZONE_CENTROID') || d.flags.includes('ZONE_CENTROID');
 
   if (input.overnight) flags.push('OVERNIGHT');
+  if (input.stops && input.stops.length) flags.push('WITH_STOPS');
   if (distance !== null && distance < 0.1) flags.push('SAME_POINT');
   if (o.unit_id === d.unit_id) flags.push('SAME_UNIT');
   if (input.duration_min < 2) flags.push('DURATION_SHORT');
@@ -234,6 +246,8 @@ function buildAnalysis(input, geo, config, receivedAtMs, snapshot) {
     mode: input.mode,
     purpose: input.purpose,
     repeat_type: input.repeat_type,
+    stops: input.stops === null ? null : input.stops.length ? input.stops.join(';') : 'direct',
+    has_stops: input.stops === null ? null : input.stops.length ? 1 : 0,
     car_role: input.car_role,
     occupancy: input.occupancy,
     pt_line: input.pt_line,
@@ -263,7 +277,7 @@ const ANALYSIS_COLUMNS = [
   'departure_time_band', 'arrival_time_band', 'day_type', 'period_tag',
   'origin_unit_type', 'origin_unit_id', 'origin_unit_name', 'origin_zone_id', 'origin_locality_siruta', 'origin_uat', 'origin_uat_name', 'origin_label', 'origin_source', 'origin_lat', 'origin_lng',
   'destination_unit_type', 'destination_unit_id', 'destination_unit_name', 'destination_zone_id', 'destination_locality_siruta', 'destination_uat', 'destination_uat_name', 'destination_label', 'destination_source', 'destination_lat', 'destination_lng',
-  'distance_km', 'mode', 'purpose', 'repeat_type', 'car_role', 'occupancy', 'pt_line',
+  'distance_km', 'mode', 'purpose', 'repeat_type', 'stops', 'has_stops', 'car_role', 'occupancy', 'pt_line',
   'submitted_at', 'reporting_delay_hours', 'auto_status', 'manual_status', 'validation_status', 'validation_flags',
   'geometry_version', 'campaign_source', 'reviewed_at', 'review_note'
 ];

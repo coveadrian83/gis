@@ -104,7 +104,7 @@
   function filterQuery(extra) {
     var f = $('filters');
     var p = new URLSearchParams();
-    ['date_from', 'date_to', 'origin', 'destination', 'uat', 'mode', 'purpose', 'repeat_type', 'period_tag', 'day_type', 'campaign_source'].forEach(function (n) {
+    ['date_from', 'date_to', 'origin', 'destination', 'uat', 'mode', 'purpose', 'repeat_type', 'stops', 'period_tag', 'day_type', 'campaign_source'].forEach(function (n) {
       var v = f.elements[n].value.trim();
       if (v) p.set(n, v);
     });
@@ -178,6 +178,8 @@
       bars('chMode', s.by_mode, function (k) { return MODES[k] ? MODES[k].label : k; });
       bars('chPurpose', s.by_purpose, function (k) { return PURPOSES[k] ? PURPOSES[k].label : k; });
       bars('chRepeat', s.by_repeat, function (k) { return LABELS.repeat_type[k] || k; });
+      var stopTypes = Domain.byCode(Domain.STOP_TYPES);
+      bars('chStops', s.by_stops || [], function (k) { return k === 'neprecizat' ? 'Neprecizat' : (stopTypes[k] ? stopTypes[k].label : k); });
       var periodLabels = {};
       state.meta.periods.forEach(function (p) { periodLabels[p.tag] = p.label; });
       bars('chPeriod', s.by_period, function (k) { return periodLabels[k] || k; });
@@ -265,7 +267,8 @@
           ['Distanță linie dreaptă', r.distance_km !== null ? fmtNum(r.distance_km, 2) + ' km' : '–'],
           ['Mod', esc(MODES[r.mode] ? MODES[r.mode].label : r.mode) + (r.car_role ? ' · ' + (r.car_role === 'driver' ? 'șofer' : 'pasager') + ', ' + r.occupancy + (r.occupancy === 5 ? '+' : '') + ' pers.' : '') + (r.pt_line ? ' · linia ' + esc(r.pt_line) : '')],
           ['Scop', esc(PURPOSES[r.purpose] ? PURPOSES[r.purpose].label : r.purpose)],
-          ['Recurență', esc(LABELS.repeat_type[r.repeat_type])]
+          ['Recurență', esc(LABELS.repeat_type[r.repeat_type])],
+          ['Opriri pe drum', r.stops ? esc(String(r.stops).split(';').map(function (c) { var t = Domain.byCode(Domain.STOP_TYPES)[c]; return t ? t.label : c; }).join('; ')) : 'neprecizat']
         ]) + '</div>' +
         '<div><h3>Proveniență și validare</h3>' + kvList([
           ['Participant', '<code>' + esc(r.participant_id.slice(0, 8)) + '…</code> (' + d.participant_trips + ' depl.)'],
@@ -326,13 +329,14 @@
     var q = filterQuery(extra);
     var p1 = api('od?' + q).then(function (od) {
       var tb = document.querySelector('#odTable tbody');
-      if (!od.rows.length) { tb.innerHTML = '<tr><td colspan="14" class="empty">Nicio relație pentru filtrele curente.</td></tr>'; return; }
+      if (!od.rows.length) { tb.innerHTML = '<tr><td colspan="16" class="empty">Nicio relație pentru filtrele curente.</td></tr>'; return; }
       tb.innerHTML = od.rows.map(function (r) {
         return '<tr><td>' + esc(r.origin_name) + '</td><td>' + esc(r.destination_name) + '</td>' +
           '<td class="num">' + r.n_trips + '</td><td class="num">' + r.n_participants + '</td><td class="num">' + r.n_days + '</td>' +
           '<td class="num"><strong>' + fmtNum(r.median_min) + '</strong></td><td class="num">' + fmtNum(r.mean_min) + '</td>' +
           '<td class="num">' + fmtNum(r.p25_min) + '</td><td class="num">' + fmtNum(r.p75_min) + '</td><td class="num">' + fmtNum(r.p90_min) + '</td>' +
-          '<td class="num">' + fmtNum(r.p90_minus_median) + '</td><td>' + esc(r.peak_departure_band || '') + '</td>' +
+          '<td class="num">' + fmtNum(r.p90_minus_median) + '</td><td class="num">' + fmtNum(r.median_without_stops_min) + '</td><td class="num">' + (r.share_with_stops || 0) + '%</td>' +
+          '<td>' + esc(r.peak_departure_band || '') + '</td>' +
           '<td class="small nowrap">' + fmtModes(r.modes) + '</td><td class="small nowrap">' + esc(r.volume_class) + '</td></tr>';
       }).join('');
     });

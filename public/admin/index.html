@@ -53,6 +53,7 @@
       <label>Scop <select name="purpose" id="fPurpose"></select></label>
       <label>Recurență <select name="repeat_type" id="fRepeat"></select></label>
       <label>Perioadă <select name="period_tag" id="fPeriod"></select></label>
+      <label>Opriri <select name="stops"><option value="">toate</option><option value="direct">doar directe</option><option value="with">cu opriri</option><option value="unknown">neprecizat</option></select></label>
       <label>Zi <select name="day_type"><option value="">toate</option><option value="weekday">lucrătoare</option><option value="weekend">weekend</option></select></label>
       <label>Sursă <input type="text" name="campaign_source" placeholder="ex. facebook_mvi" size="12"></label>
       <fieldset class="status-filter">
@@ -77,6 +78,7 @@
           <div class="card"><h3>Mod de transport</h3><div id="chMode" class="bars"></div></div>
           <div class="card"><h3>Scop</h3><div id="chPurpose" class="bars"></div></div>
           <div class="card"><h3>Recurent / ocazional</h3><div id="chRepeat" class="bars"></div></div>
+          <div class="card"><h3>Opriri pe drum</h3><div id="chStops" class="bars"></div></div>
           <div class="card"><h3>Perioade analitice</h3><div id="chPeriod" class="bars"></div></div>
           <div class="card"><h3>Canal de recrutare</h3><div id="chSource" class="bars"></div></div>
           <div class="card"><h3>Tip zi</h3><div id="chDay" class="bars"></div></div>
@@ -118,7 +120,7 @@
               <thead><tr>
                 <th>Origine</th><th>Destinație</th><th class="num">N depl.</th><th class="num">N part.</th><th class="num">N zile</th>
                 <th class="num">Mediană</th><th class="num">Medie</th><th class="num">P25</th><th class="num">P75</th><th class="num">P90</th>
-                <th class="num">P90 − med.</th><th>Vârf plecare</th><th>Moduri</th><th>Volum</th>
+                <th class="num">P90 − med.</th><th class="num" title="Mediana deplasărilor fără opriri declarate">Med. fără opriri</th><th class="num">% cu opriri</th><th>Vârf plecare</th><th>Moduri</th><th>Volum</th>
               </tr></thead>
               <tbody></tbody>
             </table>

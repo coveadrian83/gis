@@ -36,6 +36,19 @@
     { code: 'occasional', label: 'Ocazional' }
   ];
 
+  /*
+   * Opriri pe drum (opțional, selecție multiplă). Scopul deplasării rămâne unul singur (scopul principal);
+   * opririle permit separarea duratelor drumurilor directe de cele cu opriri (ex. copii lăsați la școală).
+   * 'direct' = participantul a confirmat că nu a oprit.
+   */
+  var STOP_TYPES = [
+    { code: 'direct', label: 'Nu, drum direct', exclusive: true },
+    { code: 'escort_child', label: 'Am lăsat / luat copii (școală, grădiniță)' },
+    { code: 'escort_other', label: 'Am lăsat / luat alt pasager' },
+    { code: 'shopping', label: 'Cumpărături / servicii' },
+    { code: 'other', label: 'Altă oprire' }
+  ];
+
   var CAR_ROLES = [
     { code: 'driver', label: 'Șofer' },
     { code: 'passenger', label: 'Pasager' }
@@ -112,6 +125,7 @@
     MODES: MODES,
     PURPOSES: PURPOSES,
     REPEAT_TYPES: REPEAT_TYPES,
+    STOP_TYPES: STOP_TYPES,
     CAR_ROLES: CAR_ROLES,
     OCCUPANCY: OCCUPANCY,
     STATUSES: STATUSES,

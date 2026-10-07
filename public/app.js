@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  var APP_VERSION = '0.7.0';
+  var APP_VERSION = '0.8.0';
   var DATA_FILES = {
     zones: 'data/iasi_17_zone_mva_mvi.geojson',
     uats: 'data/zmi_uat_web.geojson',
@@ -688,6 +688,30 @@
     });
   }
 
+  function checkboxChips(containerId, name, items, onChange) {
+    var c = $(containerId);
+    c.innerHTML = '';
+    items.forEach(function (it) {
+      var input = el('input', { type: 'checkbox', name: name, value: String(it.code) });
+      input.addEventListener('change', function () {
+        // „drum direct” exclude opririle și invers
+        var boxes = document.querySelectorAll('input[name="' + name + '"]');
+        if (input.checked) {
+          boxes.forEach(function (b) {
+            var other = Domain.STOP_TYPES.filter(function (x) { return x.code === b.value; })[0];
+            if (b !== input && (it.exclusive || (other && other.exclusive))) b.checked = false;
+          });
+        }
+        if (onChange) onChange();
+      });
+      c.appendChild(el('label', null, [input, it.label]));
+    });
+  }
+
+  function checkedValues(name) {
+    return Array.prototype.map.call(document.querySelectorAll('input[name="' + name + '"]:checked'), function (b) { return b.value; });
+  }
+
   function radioValue(name) {
     var r = document.querySelector('input[name="' + name + '"]:checked');
     return r ? r.value : null;
@@ -714,6 +738,7 @@
 
   function resetStep3() {
     ['mode', 'car_role', 'occupancy', 'purpose', 'repeat_type'].forEach(function (n) { setRadio(n, null); });
+    document.querySelectorAll('input[name="stops"]').forEach(function (b) { b.checked = false; });
     $('ptLine').value = '';
     onStep3Change();
   }
@@ -740,6 +765,7 @@
       mode: mode,
       purpose: radioValue('purpose'),
       repeat_type: radioValue('repeat_type'),
+      stops: checkedValues('stops').length ? checkedValues('stops') : null,
       car_role: mode === 'car' ? radioValue('car_role') : null,
       occupancy: mode === 'car' ? parseInt(radioValue('occupancy'), 10) : null,
       pt_line: Domain.isPublicTransport(mode) ? ($('ptLine').value.trim() || null) : null
@@ -845,6 +871,10 @@
       ['Mod', modes[payload.mode].label + (payload.pt_line ? ' · linia ' + payload.pt_line : '')],
       ['Scop', purposes[payload.purpose].label]
     ];
+    if (payload.stops && payload.stops.length) {
+      var stopTypes = Domain.byCode(Domain.STOP_TYPES);
+      rows.push(['Opriri', payload.stops.map(function (c) { return stopTypes[c] ? stopTypes[c].label : c; }).join('; ')]);
+    }
     if (result && result.distance_km) rows.push(['Distanță (linie dreaptă)', String(result.distance_km).replace('.', ',') + ' km']);
     var dl = $('doneSummary');
     dl.innerHTML = '';
@@ -1032,6 +1062,7 @@
     radioChips('occChips', 'occupancy', Domain.OCCUPANCY.map(function (n) { return { code: n, label: n === 5 ? '5+' : String(n) }; }), onStep3Change);
     radioChips('purposeChips', 'purpose', Domain.PURPOSES, onStep3Change);
     radioChips('repeatChips', 'repeat_type', Domain.REPEAT_TYPES, onStep3Change);
+    checkboxChips('stopChips', 'stops', Domain.STOP_TYPES, null);
     $('step3').addEventListener('submit', function (e) {
       e.preventDefault();
       if (!$('btnSubmit').disabled) submit();

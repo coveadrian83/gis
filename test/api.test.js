@@ -288,3 +288,34 @@ test('o eroare a stocării (ex. jeton expirat) devine 500 generic, nu mesajul in
   const body = await r.json();
   assert.doesNotMatch(body.error, /token/i);
 });
+
+test('opriri pe drum: scop principal unic + opriri opționale', async () => {
+  const storage = createSqliteStorage(':memory:');
+  const api = createApi(cfg, { storage, getGeo: async () => geo });
+  const send = (stops, i) => api.handle(new Request('https://t/api/trips', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(trip({ participant_id: 'opriri-' + String(i).padStart(4, '0'), stops }))
+  }));
+  for (const [i, s] of [[['escort_child'], 0], [['direct', 'shopping'], 1], [['direct'], 2], [['inventat'], 3], [undefined, 4]].map((x, k) => [x[0], k])) {
+    assert.equal((await send(i, s)).status, 201);
+  }
+  const login = await api.handle(new Request('https://t/api/admin/login', { method: 'POST', body: JSON.stringify({ password: 'parola-test' }) }));
+  const cookie = login.headers.get('set-cookie').split(';')[0];
+  const get = async (p) => (await api.handle(new Request('https://t/api/admin/' + p, { headers: { cookie } }))).json();
+  const rows = (await get('trips?status=VALID,CHECK,EXCLUDE&limit=10')).rows;
+  const by = (pid) => rows.find((r) => r.participant_id === pid);
+  assert.equal(by('opriri-0000').stops, 'escort_child');
+  assert.equal(by('opriri-0000').has_stops, 1);
+  assert.match(by('opriri-0000').validation_flags, /WITH_STOPS/);
+  assert.equal(by('opriri-0001').stops, 'shopping');
+  assert.equal(by('opriri-0002').stops, 'direct');
+  assert.equal(by('opriri-0002').has_stops, 0);
+  assert.equal(by('opriri-0003').stops, null);
+  assert.equal(by('opriri-0004').has_stops, null);
+  assert.equal((await get('trips?status=VALID,CHECK&stops=with')).total, 2);
+  assert.equal((await get('trips?status=VALID,CHECK&stops=direct')).total, 1);
+  const od = (await get('od?status=VALID,CHECK')).rows[0];
+  assert.equal(od.share_with_stops, 40);
+  const sum = await get('summary?status=VALID,CHECK');
+  assert.ok(sum.by_stops.some((x) => x.key === 'escort_child' && x.n === 1));
+});
