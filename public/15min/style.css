@@ -1,0 +1,61 @@
+:root { --ink: #15171a; --paper: #f7f4ec; --teal: #1f7a99; --line: #ddd8cc; --muted: #555; }
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: var(--ink); }
+body { display: flex; background: var(--paper); }
+#panel { width: 390px; padding: 18px 20px; background: var(--paper); overflow-y: auto; font-size: 14px; z-index: 2; }
+h1 { font-weight: 800; font-size: 32px; line-height: 1; margin: 0 0 6px; }
+h1 span { color: var(--teal); }
+.sub { margin: 0 0 8px; font-weight: 600; }
+.ctl { margin: 14px 0; }
+.ctl input[type=range] { width: 100%; }
+.lbl { margin-bottom: 6px; }
+.note { font-size: 12px; line-height: 1.4; color: var(--muted); }
+code { font-size: 11px; }
+table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+td, th { padding: 3px 4px 3px 0; border-bottom: 1px solid var(--line); }
+th { text-align: left; font-weight: 600; font-size: 12px; }
+td:not(:first-child), th:not(:first-child) { text-align: right; white-space: nowrap; }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+.dot.st { width: 12px; height: 12px; border: 2px solid var(--ink); vertical-align: -2px; }
+.dot.bench { background: #8a5a2b; width: 7px; height: 7px; margin: 0 0 0 2px; vertical-align: middle; }
+.keyline { display: inline-block; width: 18px; height: 3px; border-radius: 2px; margin-left: 4px; vertical-align: middle; }
+.keyline.red { background: #c1272d; } .keyline.orange { background: #e8a13a; }
+#legend { height: 10px; border-radius: 5px; margin: 6px 0 2px; }
+#legendLabels { display: flex; justify-content: space-between; font-size: 12px; }
+button, select { font: inherit; padding: 6px 10px; cursor: pointer; }
+button.primary { background: var(--teal); color: #fff; border: 1px solid var(--teal); border-radius: 4px; }
+button:disabled { cursor: default; opacity: .5; }
+.profiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 6px; }
+.profiles button { padding: 5px 6px; border: 1px solid var(--line); background: #fff; border-radius: 4px; text-align: left; line-height: 1.2; font-size: 13px; }
+.profiles button small { display: block; color: var(--muted); font-size: 11px; }
+.profiles button.on { border-color: var(--teal); box-shadow: inset 0 0 0 1px var(--teal); }
+.toggles label { display: block; margin: 2px 0; }
+#status { min-height: 1.4em; margin-top: 8px; font-size: 13px; }
+#status.err { color: #b3261e; }
+#zoneHere { margin: 8px 0 4px; }
+#compare { margin: 10px 0; }
+#compare h3, details summary { font-size: 14px; margin: 0 0 4px; font-weight: 700; }
+#compare tr.cur td { font-weight: 700; }
+details { border-top: 1px solid var(--line); padding-top: 10px; margin: 14px 0; }
+details summary { cursor: pointer; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: end; margin: 8px 0; }
+.row label { font-size: 12px; display: flex; flex-direction: column; gap: 2px; }
+#zonesResult select { width: 100%; margin-top: 2px; }
+#zoneLegend { display: flex; align-items: center; gap: 6px; font-size: 12px; margin: 8px 0 4px; }
+#zoneLegend .bar { flex: 1; height: 10px; border-radius: 5px; }
+.tablewrap { max-height: 340px; overflow-y: auto; }
+#zoneTable tr { cursor: pointer; }
+#zoneTable tbody tr:hover { background: #ece7da; }
+#zoneTable .sw { display: inline-block; width: 10px; height: 10px; margin-right: 5px; border: 1px solid rgba(0,0,0,.3); }
+#map { flex: 1; }
+.leaflet-container { background: #f1efe9; }
+/* harta de fundal estompată, ca rețeaua colorată să iasă în evidență */
+.basemap { filter: grayscale(1) contrast(.85) brightness(1.08); opacity: .75; }
+.zone-label { background: rgba(255,255,255,.8); border: 0; box-shadow: none; font-size: 11px; font-weight: 600; padding: 1px 4px; }
+.zone-label::before { display: none; }
+@media (max-width: 760px) {
+  body { flex-direction: column-reverse; }
+  #panel { width: 100%; height: 55%; padding: 14px 16px; }
+  #map { min-height: 45%; }
+  h1 { font-size: 26px; }
+}

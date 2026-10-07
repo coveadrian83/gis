@@ -4,3 +4,5 @@ var/
 *.sqlite-wal
 *.sqlite-shm
 .env
+cache/
+__pycache__/

@@ -1,0 +1,51 @@
+# Generează datele pentru harta „15 minute. Pentru cine?” – Iași (public/15min/data/iasi/)
+# din OpenStreetMap, cu scripts/export_15min.py, și le salvează în același branch.
+# Rulează singur când se modifică scriptul de export sau acest fișier; poate fi pornit și manual
+# (Actions → „Export date 15 minute (Iași)” → Run workflow), de exemplu pentru a reîmprospăta datele OSM.
+name: Export date 15 minute (Iași)
+
+on:
+  workflow_dispatch:
+    inputs:
+      radius:
+        description: "Metri de la centru la fiecare latură a pătratului exportat"
+        default: "9500"
+  push:
+    paths:
+      - scripts/export_15min.py
+      - .github/workflows/export-15min.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: export-15min-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Instalează osmnx
+        run: pip install "osmnx==2.1.1"
+      - name: Exportă rețeaua și facilitățile din OpenStreetMap
+        run: python scripts/export_15min.py --radius "${{ github.event.inputs.radius || '9500' }}"
+      - name: Verifică datele cu testele aplicației
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: node --test test/min15-core.test.js && node scripts/analiza-15min.js --check
+      - name: Salvează datele în branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898699+github-actions[bot]@users.noreply.github.com"
+          git add public/15min/data
+          if git diff --cached --quiet; then echo "Datele nu s-au schimbat."; exit 0; fi
+          git commit -m "Date OSM actualizate pentru harta 15 minute (Iași)"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
