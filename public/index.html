@@ -6,6 +6,18 @@
   <title>Cât durează drumul tău? – Mobilitate Iași · Moldova Vrea Autostradă × Moldova Vrea Infrastructură</title>
   <meta name="description" content="Studiu participativ de mobilitate Origine–Destinație în Zona Metropolitană Iași, realizat de Moldova Vrea Autostradă (MVA) și Moldova Vrea Infrastructură (MVI). 30–45 de secunde. Fără nume. Fără adresă exactă.">
   <meta name="theme-color" content="#123a6b">
+  <!-- previzualizarea linkului pe Facebook, WhatsApp, Messenger, LinkedIn etc. -->
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="ro_RO">
+  <meta property="og:site_name" content="Mobilitate Iași · MVA × MVI">
+  <meta property="og:title" content="Cât durează drumul tău? Studiu de mobilitate în Zona Metropolitană Iași">
+  <meta property="og:description" content="Spune-ne de unde ai plecat, unde ai ajuns și cât a durat. 30–45 de secunde. Fără nume. Fără adresă exactă. Moldova Vrea Autostradă × Moldova Vrea Infrastructură.">
+  <meta property="og:url" content="https://mobilitate-iasi.netlify.app/">
+  <meta property="og:image" content="https://mobilitate-iasi.netlify.app/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Cât durează drumul tău? Studiu participativ de mobilitate în Zona Metropolitană Iași">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
   <link rel="stylesheet" href="app.css">
@@ -52,6 +64,7 @@
       <form class="step" id="step1" data-step="1" novalidate>
         <h2>De unde ai plecat și unde ai ajuns?</h2>
         <p class="help">Caută un sat, un cartier sau un reper (merge și fără diacritice) ori atinge harta.</p>
+        <p class="counter" id="publicCounter" hidden></p>
 
         <div class="saved" id="savedWrap" hidden>
           <p class="saved-title">Relațiile tale salvate</p>
@@ -187,11 +200,23 @@
           <button type="button" id="btnReturn">⇄ Raportează drumul de întoarcere</button>
           <button type="button" class="ghost" id="btnSave">☆ Salvează relația pentru data viitoare</button>
         </div>
+        <div class="share" id="shareBox">
+          <h3>Ajută studiul: trimite și prietenilor 🙏</h3>
+          <p class="hint">Cu cât participă mai mulți oameni, cu atât rezultatele sunt mai solide pentru Iași.</p>
+          <div class="share-buttons">
+            <button type="button" class="share-native" id="shareNative" hidden>📤 Distribuie</button>
+            <a class="share-wa" id="shareWa" target="_blank" rel="noopener">WhatsApp</a>
+            <a class="share-fb" id="shareFb" target="_blank" rel="noopener">Facebook</a>
+            <button type="button" class="share-copy" id="shareCopy">🔗 Copiază linkul</button>
+          </div>
+          <p class="hint" id="shareMsg" aria-live="polite"></p>
+        </div>
       </section>
 
       <footer class="foot">
         <p><strong>Fără nume. Fără adresă exactă.</strong> Datele sunt folosite doar agregat, pentru studiul de mobilitate.
-          <a href="confidentialitate.html">Confidențialitate</a> · <a href="metodologie.html">Metodologie</a></p>
+          <a href="confidentialitate.html">Confidențialitate</a> · <a href="metodologie.html">Metodologie</a> ·
+          <a href="#" id="footerShare">Trimite și altora</a></p>
         <p class="ver" id="versionInfo"></p>
       </footer>
     </section>

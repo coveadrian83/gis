@@ -220,3 +220,18 @@ dialog::backdrop { background: rgba(16, 24, 40, .45); }
 }
 .muted { color: var(--c-muted); }
 .consent { font-size: 13px; margin-top: 6px; }
+
+/* contor public și distribuire */
+.counter { background: #eef3fa; border-radius: 8px; padding: 8px 10px; font-size: 14px; margin: -4px 0 12px; }
+.counter strong { color: var(--c-primary); font-size: 16px; }
+.share { margin-top: 18px; padding: 14px; border: 1px dashed var(--c-border); border-radius: var(--radius); text-align: left; }
+.share h3 { margin: 0 0 4px; font-size: 16px; }
+.share-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.share-buttons a, .share-buttons button {
+  flex: 1 1 130px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 11px 12px; border-radius: 8px; font-weight: 700; font-size: 15px; text-decoration: none; border: 1px solid transparent; cursor: pointer;
+}
+.share-wa { background: #187a42; color: #fff; }
+.share-fb { background: #1b4f9c; color: #fff; }
+.share-native { background: var(--c-primary); color: #fff; }
+.share-copy { background: #fff; color: var(--c-text); border-color: var(--c-border) !important; }

@@ -34,6 +34,7 @@
         <button role="tab" data-tab="od">Relații O–D</button>
         <button role="tab" data-tab="coverage">Acoperire</button>
         <button role="tab" data-tab="pois">Repere</button>
+        <button role="tab" data-tab="promo">Promovare</button>
         <button role="tab" data-tab="data">Export &amp; date</button>
         <button role="tab" data-tab="audit">Audit</button>
       </nav>
@@ -170,12 +171,65 @@
           – fișierul exportat se poate completa în Excel și reimporta.</p>
       </section>
 
+      <!-- PROMOVARE -->
+      <section class="tab" id="tab-promo" hidden>
+        <div class="grid promo-grid">
+          <div class="card">
+            <h3>1. Link și cod QR pentru fiecare canal</h3>
+            <p class="muted small">Fiecare canal are linkul lui. În Sumar → „Canal de recrutare” vezi apoi câte deplasări a adus fiecare.</p>
+            <label class="blk">Canal
+              <select id="promoChannel">
+                <option value="fb_pagina_mvi">Facebook – pagina MVI</option>
+                <option value="fb_pagina_mva">Facebook – pagina MVA</option>
+                <option value="fb_grupuri">Facebook – grupuri de cartier / comună</option>
+                <option value="whatsapp">WhatsApp – grupuri și mesaje</option>
+                <option value="instagram">Instagram</option>
+                <option value="presa">Presă / articole</option>
+                <option value="qr_afis">QR – afișe și fluturași</option>
+                <option value="qr_eveniment">QR – evenimente / prezentări</option>
+                <option value="email">E-mail / newsletter</option>
+                <option value="custom">Alt canal…</option>
+              </select>
+            </label>
+            <label class="blk" id="promoCustomWrap" hidden>Nume canal (litere, cifre, _)
+              <input type="text" id="promoCustom" maxlength="40" placeholder="ex. grup_bucium_vecini"></label>
+            <div class="inline-form"><input type="text" id="promoUrl" readonly style="flex:1"><button type="button" id="promoCopyUrl">Copiază</button></div>
+            <div class="qr-box"><canvas id="promoQr" width="320" height="320" aria-label="Cod QR"></canvas></div>
+            <div class="inline-form"><button type="button" id="promoQrPng">Descarcă QR (PNG)</button><button type="button" id="promoQrSvg" class="ghost">Descarcă QR (SVG, pentru tipar)</button></div>
+          </div>
+          <div class="card span2">
+            <h3>2. Texte gata de postat</h3>
+            <p class="muted small">Fiecare text conține deja linkul canalului lui și numărul actual de deplasări. Apasă „Copiază” și lipește.</p>
+            <div id="promoTexts"></div>
+          </div>
+          <div class="card span-all">
+            <h3>3. Postare automată și distribuire – ce se poate</h3>
+            <ul class="small promo-tips">
+              <li><strong>Pagina de Facebook a MVI / MVA:</strong> postările se pot <strong>programa automat</strong> din
+                <a href="https://business.facebook.com/latest/content_calendar" target="_blank" rel="noopener">Meta Business Suite → Planificator</a>
+                (gratuit). Ex.: o postare pe săptămână până în aprilie 2027, pregătită într-o oră.</li>
+              <li><strong>Grupuri Facebook și WhatsApp:</strong> Facebook și WhatsApp nu permit postarea automată în grupuri
+                (programele care o fac duc la blocarea contului). Varianta eficientă: textele de mai sus, postate de membri ai
+                echipei sau de voluntari în grupurile lor de cartier / comună – fiecare cu linkul lui.</li>
+              <li><strong>Distribuire de la participanți:</strong> după fiecare deplasare, aplicația afișează butoanele
+                WhatsApp / Facebook / Distribuie. Linkurile lor apar în statistici ca <code>share_wa</code>, <code>share_fb</code>, <code>share_native</code>.</li>
+              <li><strong>Previzualizare:</strong> linkul afișează automat imaginea studiului pe Facebook și WhatsApp.
+                Dacă Facebook arată o versiune veche, folosește
+                <a href="https://developers.facebook.com/tools/debug/" target="_blank" rel="noopener">Sharing Debugger</a> → „Scrape Again”.</li>
+              <li><strong>Ritm recomandat:</strong> lansare cu 2–3 postări în prima săptămână, apoi 1 pe săptămână; rezultate
+                intermediare („după 500 de deplasări: cât durează Bucium → Centru”) atrag cei mai mulți participanți noi.</li>
+              <li><strong>Unde lipsesc date:</strong> tabul „Acoperire” arată zonele / comunele subacoperite – țintește grupurile lor.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
       <!-- EXPORT & DATE -->
       <section class="tab" id="tab-data" hidden>
         <div class="grid">
           <div class="card">
             <h3>Exporturi (cu filtrele curente)</h3>
-            <ul class="exports" id="exports"></ul>
+            <ul class="exports" id="exportList"></ul>
             <p class="muted small">„Excel RO” = separator <code>;</code> și virgulă zecimală. GeoJSON în WGS84 (pentru GeoPackage EPSG:3844 se reproiectează în QGIS).</p>
           </div>
           <div class="card">
@@ -287,6 +341,7 @@
   </dialog>
 
   <script src="../vendor/leaflet/leaflet.js"></script>
+  <script src="../vendor/qrcode.js"></script>
   <script src="../shared/geo-core.js"></script>
   <script src="../shared/domain.js"></script>
   <script src="admin.js"></script>

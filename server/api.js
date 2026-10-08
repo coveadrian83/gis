@@ -253,6 +253,19 @@ function createApi(cfg, deps) {
       });
     }
 
+    // Contor public (doar totaluri): păstrat 5 minute în CDN-ul Netlify, ca să nu consume resurse la fiecare vizită
+    if (p === '/api/public-stats' && method === 'GET') {
+      const raws = await storage.listRaws();
+      return json(200, {
+        n_trips: raws.length,
+        n_participants: new Set(raws.map((r) => r.participant_id)).size,
+        updated_at: new Date().toISOString()
+      }, {
+        'Cache-Control': 'public, max-age=300',
+        'Netlify-CDN-Cache-Control': 'public, durable, max-age=300, stale-while-revalidate=600'
+      });
+    }
+
     if (p === '/api/pois' && method === 'GET') {
       const { pois } = await mergedPois(req);
       return json(200, pois.filter((x) => x.lat !== null).map((x) => ({ id: x.id, name: x.name, aliases: x.aliases, category: x.category, lat: x.lat, lng: x.lng })),

@@ -129,13 +129,13 @@
       state.tab = b.getAttribute('data-tab');
       document.querySelectorAll('.tabs button').forEach(function (x) { x.setAttribute('aria-selected', x === b ? 'true' : 'false'); });
       document.querySelectorAll('.tab').forEach(function (t) { t.hidden = t.id !== 'tab-' + state.tab; });
-      $('filters').hidden = state.tab === 'pois' || state.tab === 'audit';
+      $('filters').hidden = state.tab === 'pois' || state.tab === 'audit' || state.tab === 'promo';
       refresh();
     });
   });
 
   function refresh() {
-    var fn = { summary: loadSummary, trips: loadTrips, od: loadOd, coverage: loadCoverage, pois: loadPois, data: loadData, audit: loadAudit }[state.tab];
+    var fn = { summary: loadSummary, trips: loadTrips, od: loadOd, coverage: loadCoverage, pois: loadPois, promo: loadPromo, data: loadData, audit: loadAudit }[state.tab];
     fn().catch(function (e) { console.error(e); });
   }
 
@@ -413,7 +413,7 @@
       ['Repere', 'export/pois.csv', true],
       ['Date brute – TRIPS_RAW (JSONL, toate)', 'export/raw.jsonl', false]
     ];
-    $('exports').innerHTML = items.map(function (it) {
+    $('exportList').innerHTML = items.map(function (it) {
       var links = '<a href="' + API + it[1] + '">' + (it[2] ? 'CSV' : 'descarcă') + '</a>';
       if (it[2]) links += ' · <a href="' + API + it[1] + (it[1].indexOf('?') >= 0 ? '&' : '?') + 'format=excel_ro">Excel RO</a>';
       return '<li><span>' + esc(it[0]) + '</span><span>' + links + '</span></li>';
@@ -699,6 +699,141 @@
       }).catch(function () { missed.push(p.name); }).then(function () { return wait(1100); }).then(next);
     }
     next();
+  });
+
+  // ---------------------------------------------------------------------------
+  // Promovare: linkuri pe canale, cod QR, texte gata de postat
+  // ---------------------------------------------------------------------------
+  var promoState = { n: 0 };
+
+  function promoLink(channel) {
+    return location.origin + '/?source=' + channel;
+  }
+
+  function currentChannel() {
+    var v = $('promoChannel').value;
+    if (v !== 'custom') return v;
+    var c = $('promoCustom').value.trim().toLowerCase().replace(/[^a-z0-9_.-]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 40);
+    return c || 'alt_canal';
+  }
+
+  function drawQr() {
+    var url = promoLink(currentChannel());
+    $('promoUrl').value = url;
+    var qr = qrcode(0, 'M');
+    qr.addData(url);
+    qr.make();
+    var n = qr.getModuleCount(), margin = 4, canvas = $('promoQr');
+    var scale = Math.floor(canvas.width / (n + margin * 2));
+    var ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    var off = Math.floor((canvas.width - scale * (n + margin * 2)) / 2) + margin * scale;
+    ctx.fillStyle = '#000';
+    for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) if (qr.isDark(r, c)) ctx.fillRect(off + c * scale, off + r * scale, scale, scale);
+    promoState.qr = qr;
+  }
+
+  function downloadFile(name, href) {
+    var a = document.createElement('a');
+    a.href = href;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  function roCount(n, word) {
+    var r = n % 100;
+    return n.toLocaleString('ro-RO') + ((r === 0 && n !== 0) || r >= 20 ? ' de ' : ' ') + word;
+  }
+
+  function promoTexts() {
+    var n = promoState.n;
+    var counter = n >= 10 ? 'Până acum au fost raportate ' + roCount(n, 'deplasări') + '. ' : '';
+    return [
+      { title: 'Facebook – postare pe pagina MVI / MVA', channel: 'fb_pagina_mvi', text:
+        '🚗🚌🚶 Cât durează drumul tău prin Iași?\n\n' +
+        'Moldova Vrea Autostradă și Moldova Vrea Infrastructură derulează un studiu participativ de mobilitate pentru Zona Metropolitană Iași. ' +
+        'Vrem să trecem de la „e aglomerat” la cifre: cât durează, de fapt, drumurile zilnice dintre cartiere și comune, la ce oră și cu ce mijloc de transport.\n\n' +
+        '👉 Spune-ne de unde ai plecat, unde ai ajuns și cât a durat: {LINK}\n' +
+        '⏱ 30–45 de secunde · fără nume · fără adresă exactă\n' +
+        '🔁 Poți raporta oricâte drumuri, inclusiv același drum în zile diferite.\n\n' +
+        counter + 'Rezultatele vor fi publicate agregat și puse la dispoziția autorităților, pentru planificarea mobilității, proiecte de infrastructură și transport public.\n\n' +
+        '#Iasi #mobilitate #MVA #MVI' },
+      { title: 'Grup Facebook de cartier / comună', channel: 'fb_grupuri', text:
+        'Bună ziua, vecini! 👋\n' +
+        'Participăm la un studiu despre cât durează drumurile zilnice din zona noastră spre Iași (și înapoi). ' +
+        'Durează 30–45 de secunde, fără nume și fără adresă exactă: {LINK}\n' +
+        'Cu cât răspund mai mulți oameni din zonă, cu atât datele arată mai clar unde e nevoie de soluții. Mulțumim! 🙏\n' +
+        '(Studiu Moldova Vrea Autostradă × Moldova Vrea Infrastructură)' },
+      { title: 'WhatsApp – mesaj pentru grupuri', channel: 'whatsapp', text:
+        '🚦 *Cât durează drumul tău prin Iași?*\n' +
+        'Ajută-ne cu 30–45 de secunde: de unde ai plecat, unde ai ajuns, cât a durat. Fără nume, fără adresă exactă.\n' +
+        '👉 {LINK}\n' + (counter ? counter + '\n' : '') +
+        'Dă mai departe în grupurile tale! 🙏' },
+      { title: 'Instagram – postare / story', channel: 'instagram', text:
+        'Cât durează drumul tău? ⏱\n' +
+        'Studiu de mobilitate · Zona Metropolitană Iași\n' +
+        'Moldova Vrea Autostradă × Moldova Vrea Infrastructură\n' +
+        '30–45 de secunde · fără nume · fără adresă exactă\n' +
+        '🔗 {LINK}' },
+      { title: 'Presă – paragraf pentru comunicat', channel: 'presa', text:
+        'Moldova Vrea Autostradă (MVA) și Moldova Vrea Infrastructură (MVI) derulează, între octombrie 2026 și aprilie 2027, ' +
+        'un studiu participativ de mobilitate Origine–Destinație pentru Zona Metropolitană Iași. Locuitorii pot raporta, în 30–45 de secunde ' +
+        'și fără date personale, deplasările efectiv realizate: originea, destinația, ora plecării și a sosirii, modul de transport și scopul. ' +
+        'Datele vor fi analizate statistic (durate mediane, variabilitate, ore de vârf, diferențe între moduri de transport) și publicate ' +
+        'exclusiv agregat, ca sursă complementară pentru planificarea mobilității în Iași și în comunele din jur. ' + counter +
+        'Participare: {LINK}' }
+    ];
+  }
+
+  function renderPromoTexts() {
+    var box = $('promoTexts');
+    box.innerHTML = '';
+    promoTexts().forEach(function (t) {
+      var text = t.text.replace('{LINK}', promoLink(t.channel));
+      var wrap = document.createElement('div');
+      wrap.className = 'promo-text';
+      wrap.innerHTML = '<h4><span>' + esc(t.title) + ' <code class="small">' + esc(t.channel) + '</code></span><button type="button">Copiază</button></h4><pre></pre>';
+      wrap.querySelector('pre').textContent = text;
+      var btn = wrap.querySelector('button');
+      btn.addEventListener('click', function () {
+        (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(function () {
+          btn.textContent = '✓ Copiat';
+          setTimeout(function () { btn.textContent = 'Copiază'; }, 2000);
+        }, function () {
+          var range = document.createRange();
+          range.selectNodeContents(wrap.querySelector('pre'));
+          var sel = getSelection(); sel.removeAllRanges(); sel.addRange(range);
+        });
+      });
+      box.appendChild(wrap);
+    });
+  }
+
+  function loadPromo() {
+    drawQr();
+    return fetch('../api/public-stats', { credentials: 'same-origin' }).then(function (r) { return r.json(); })
+      .then(function (s) { promoState.n = s.n_trips || 0; }, function () { /* fără contor */ })
+      .then(renderPromoTexts);
+  }
+
+  $('promoChannel').addEventListener('change', function () {
+    $('promoCustomWrap').hidden = this.value !== 'custom';
+    drawQr();
+  });
+  $('promoCustom').addEventListener('input', drawQr);
+  $('promoCopyUrl').addEventListener('click', function () {
+    var b = this;
+    navigator.clipboard.writeText($('promoUrl').value).then(function () { b.textContent = '✓ Copiat'; setTimeout(function () { b.textContent = 'Copiază'; }, 2000); });
+  });
+  $('promoQrPng').addEventListener('click', function () {
+    downloadFile('qr_' + currentChannel() + '.png', $('promoQr').toDataURL('image/png'));
+  });
+  $('promoQrSvg').addEventListener('click', function () {
+    var svg = promoState.qr.createSvgTag({ cellSize: 10, margin: 4 });
+    downloadFile('qr_' + currentChannel() + '.svg', 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg));
   });
 
   // ---------------------------------------------------------------------------
