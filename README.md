@@ -54,6 +54,17 @@ Reperele ajută participanții să găsească locul: scriind **„univ”** apar
 Lista de pornire conține principalele universități, spitale, centre comerciale, piețe și noduri din Iași – doar cu
 numele; coordonatele se completează cu „Localizează automat” + verificare.
 
+### Promovare (dashboard → Promovare)
+- **link și cod QR pe canal** (pagina MVI/MVA, grupuri Facebook, WhatsApp, presă, afișe…): fiecare link are
+  `?source=…`, iar în Sumar → „Canal de recrutare” se vede câte deplasări a adus fiecare canal;
+- **texte gata de postat** (Facebook, grupuri, WhatsApp, Instagram, presă), cu linkul canalului și numărul actual de deplasări;
+- după fiecare deplasare, participantul vede butoanele **WhatsApp / Facebook / Distribuie / Copiază linkul**
+  (statistici: `share_wa`, `share_fb`, `share_native`, `share_copy`);
+- linkul are **imagine de previzualizare** (`public/og-image.png`, sursa în `docs/promo/og-image.html`);
+- pagina de start afișează un **contor public** („Deja N de deplasări…”), păstrat 5 minute în CDN;
+- postarea automată e posibilă doar pe **paginile** de Facebook, prin programare în Meta Business Suite;
+  Facebook și WhatsApp nu permit postarea automată în grupuri.
+
 ### Unde sunt datele și cum le descarc
 Datele stau în contul Netlify al site-ului (**Netlify Blobs**, store-ul `mobilitate`). Pentru copii de siguranță
 și analiză, folosește dashboardul → **Export & date**: date brute (JSONL), deplasări (CSV / Excel), matrice O–D,

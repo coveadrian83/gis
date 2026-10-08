@@ -319,3 +319,19 @@ test('opriri pe drum: scop principal unic + opriri opționale', async () => {
   const sum = await get('summary?status=VALID,CHECK');
   assert.ok(sum.by_stops.some((x) => x.key === 'escort_child' && x.n === 1));
 });
+
+test('contor public: doar totaluri, cu păstrare în CDN', async () => {
+  const storage = createSqliteStorage(':memory:');
+  const api = createApi(cfg, { storage, getGeo: async () => geo });
+  for (let i = 0; i < 3; i++) {
+    await api.handle(new Request('https://t/api/trips', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(trip({ participant_id: 'contor-' + String(i % 2).padStart(4, '0'), departure_time: '0' + (6 + i) + ':00', arrival_time: '0' + (6 + i) + ':30' })) }));
+  }
+  const r = await api.handle(new Request('https://t/api/public-stats'));
+  assert.equal(r.status, 200);
+  assert.match(r.headers.get('netlify-cdn-cache-control'), /max-age=300/);
+  const body = await r.json();
+  assert.deepEqual(Object.keys(body).sort(), ['n_participants', 'n_trips', 'updated_at']);
+  assert.equal(body.n_trips, 3);
+  assert.equal(body.n_participants, 2);
+});

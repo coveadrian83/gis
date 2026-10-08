@@ -969,6 +969,74 @@
   }
 
   // ---------------------------------------------------------------------------
+  // Distribuire și contor public (promovare de la participant la participant)
+  // ---------------------------------------------------------------------------
+  var SHARE_TITLE = 'Cât durează drumul tău?';
+  var SHARE_TEXT = 'Cât durează drumul tău prin Iași? Participă și tu la studiul de mobilitate ' +
+    'Moldova Vrea Autostradă × Moldova Vrea Infrastructură: 30–45 de secunde, fără nume, fără adresă exactă.';
+
+  /** Linkul distribuit poartă canalul (?source=share_wa etc.), ca să vedem în dashboard ce funcționează. */
+  function shareUrl(channel) {
+    return location.origin + '/?source=share_' + channel;
+  }
+
+  /** „12 deplasări”, dar „68 de deplasări” (regula lui „de” în română). */
+  function roCount(n, word) {
+    var r = n % 100;
+    return n.toLocaleString('ro-RO') + ((r === 0 && n !== 0) || r >= 20 ? ' de ' : ' ') + word;
+  }
+
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text);
+    return new Promise(function (resolve, reject) {
+      var ta = el('textarea', { style: 'position:fixed;opacity:0' });
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); resolve(); } catch (e) { reject(e); }
+      document.body.removeChild(ta);
+    });
+  }
+
+  function nativeShare(channel) {
+    return navigator.share({ title: SHARE_TITLE, text: SHARE_TEXT, url: shareUrl(channel) });
+  }
+
+  function setupShare() {
+    $('shareWa').href = 'https://wa.me/?text=' + encodeURIComponent(SHARE_TEXT + ' ' + shareUrl('wa'));
+    $('shareFb').href = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(shareUrl('fb'));
+    if (navigator.share) {
+      $('shareNative').hidden = false;
+      $('shareNative').addEventListener('click', function () { nativeShare('native').catch(function () { /* anulat */ }); });
+    }
+    $('shareCopy').addEventListener('click', function () {
+      copyText(SHARE_TEXT + ' ' + shareUrl('copy')).then(function () {
+        $('shareMsg').textContent = 'Textul și linkul au fost copiate. Lipește-le într-un mesaj sau într-o postare.';
+      }, function () {
+        $('shareMsg').textContent = shareUrl('copy');
+      });
+    });
+    $('footerShare').addEventListener('click', function (e) {
+      e.preventDefault();
+      if (navigator.share) { nativeShare('native').catch(function () { /* anulat */ }); return; }
+      copyText(SHARE_TEXT + ' ' + shareUrl('copy')).then(function () {
+        toast('Linkul a fost copiat. Trimite-l prietenilor!');
+      });
+    });
+  }
+
+  function loadPublicCounter() {
+    if (!state.backend) return;
+    fetchJson('api/public-stats').then(function (s) {
+      if (!s || s.n_trips < 10) return;
+      var c = $('publicCounter');
+      c.innerHTML = '🚦 Deja <strong>' + esc(roCount(s.n_trips, 'deplasări')) + '</strong> raportate de <strong>' +
+        esc(roCount(s.n_participants, 'participanți')) + '</strong>. Adaugă-o și pe a ta!';
+      c.hidden = false;
+    }, function () { /* contorul e opțional */ });
+  }
+
+  // ---------------------------------------------------------------------------
   // Mesaje
   // ---------------------------------------------------------------------------
   var toastTimer;
@@ -1092,6 +1160,8 @@
       setActive('origin');
       renderSaved();
       renderHistoryCount();
+      setupShare();
+      loadPublicCounter();
       showPersistentNotice();
       $('versionInfo').textContent = 'v' + APP_VERSION + ' · zonare ' + state.cfg.geometry_version;
       flushQueue();
