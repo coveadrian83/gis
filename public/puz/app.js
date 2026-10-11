@@ -4,6 +4,8 @@
   'use strict';
   var DATA_URL = '../data/puz_iasi.geojson';
   var ZONES_URL = '../data/iasi_17_zone_mva_mvi.geojson';
+  var PARCELS_URL = '../data/puz_iasi_parcele.geojson';   // conturul parcelelor OCPI ale PUZ-urilor (opțional)
+  var PARCEL_ZOOM = 15;
   var FUNC = [
     ['locuințe colective', '#c1272d'],
     ['mixt (locuire + servicii)', '#e8743b'],
@@ -54,7 +56,9 @@
   var tileErrors = 0;
   base.on('tileerror', function () { if (++tileErrors === 8) $('baseNote').textContent = 'Harta de fundal nu se încarcă; zonele și PUZ-urile sunt afișate fără fundal.'; });
   var renderer = L.canvas({ padding: 0.3 });
+  var parcelLayer = L.layerGroup().addTo(map);
   var puzLayer = L.layerGroup().addTo(map);
+  var PARCELS = null, BY_HCL = {}, lastList = [];
   var zoneLayer = null;
 
   var ALL = [], ZONES = null, META = {};
@@ -88,6 +92,7 @@
     chips($('funcChips'), FUNC.map(function (f) { return f[0]; }), state.func,
       function (k) { return FUNC_COLOR[k]; }, function (k) { return k; });
     ['yFrom', 'yTo', 'minArea', 'minLevels', 'showApprox', 'groupBy', 'metric'].forEach(function (id) { $(id).onchange = update; });
+    $('showParcels').onchange = drawParcels;
     $('q').oninput = debounce(update, 200);
     $('showZones').onchange = function () { if (zoneLayer) { if ($('showZones').checked) zoneLayer.addTo(map); else map.removeLayer(zoneLayer); } };
     $('csv').onclick = downloadCsv;
@@ -159,7 +164,7 @@
       ['Cartier (OSM)', p.cartier],
       ['UAT', p.uat !== 'Iași' ? p.uat : null],
       ['Cadastral', p.cadastral],
-      ['Localizare', { 'număr': 'la adresă', 'stradă': 'pe stradă (punctul central al străzii)', 'zonă': 'aproximativă – centrul zonei', manual: 'verificată manual' }[p.precizie] || '–']
+      ['Localizare', { 'parcelă': 'pe parcelă (număr cadastral, parcelar OCPI)', 'număr': 'la adresă', 'stradă': 'pe stradă (punctul central al străzii)', 'zonă': 'aproximativă – centrul zonei', manual: 'verificată manual' }[p.precizie] || '–']
     ].filter(function (r) { return r[1]; });
     var links = [];
     if (p.url_pdf) links.push('<a href="' + esc(p.url_pdf) + '" target="_blank" rel="noopener">HCL (PDF oficial)</a>');
@@ -209,6 +214,27 @@
     });
   }
 
+  // conturul parcelelor, doar la zoom de stradă și doar pentru PUZ-urile din selecția curentă
+  function drawParcels() {
+    parcelLayer.clearLayers();
+    if (!PARCELS || !$('showParcels').checked || map.getZoom() < PARCEL_ZOOM) return;
+    var sel = {};
+    lastList.forEach(function (p) { sel[p.hcl] = p; });
+    var view = map.getBounds().pad(0.2);
+    PARCELS.features.forEach(function (f) {
+      var p = sel[f.properties.hcl];
+      if (!p) return;
+      var layer = L.geoJSON(f, {
+        style: { color: FUNC_COLOR[p.functiune] || FUNC_COLOR.altele, weight: 2, opacity: 0.9, fillOpacity: 0.12,
+          dashArray: APPROVED[p.statut] ? null : '4 3' }
+      });
+      if (!view.intersects(layer.getBounds())) return;
+      layer.bindPopup(popup(p), { maxWidth: 360 }).bindTooltip(esc(p.adresa || p.hcl), { sticky: true }).addTo(parcelLayer);
+    });
+  }
+  map.on('zoomend moveend', drawParcels);
+  map.on('zoomend', function () { if (lastList.length) drawGroups(lastList); });
+
   function summary(list) {
     var appr = list.filter(function (p) { return APPROVED[p.statut]; });
     var rej = list.filter(function (p) { return p.statut === 'respins'; });
@@ -256,7 +282,8 @@
     if (key === 'zona') gs.forEach(function (g) { var id = g.key.split('|')[0]; if (id) { zoneVal[id] = g[metric] || 0; max = Math.max(max, zoneVal[id]); } });
     if (zoneLayer) zoneLayer.eachLayer(function (l) {
       var id = l.feature.properties.zone_id, v = zoneVal[id];
-      l.setStyle(key === 'zona' && max ? { fillColor: colorAt((v || 0) / max), fillOpacity: v ? 0.45 : 0.05 } : { fillColor: '#ffffff', fillOpacity: 0.05 });
+      var k = map.getZoom() >= PARCEL_ZOOM ? 0.25 : 1;   // la zoom de stradă zonele nu acoperă parcelele
+      l.setStyle(key === 'zona' && max ? { fillColor: colorAt((v || 0) / max), fillOpacity: (v ? 0.45 : 0.05) * k } : { fillColor: '#ffffff', fillOpacity: 0.05 });
     });
     $('zoneLegend').innerHTML = key === 'zona' && max
       ? '<span>0</span><span class="bar" style="background:linear-gradient(to right,' + [0, .25, .5, .75, 1].map(colorAt).join(',') + ')"></span><span>' + fmt(max, METRICS[metric].fmt) + ' ' + METRICS[metric].label + '</span>'
@@ -318,7 +345,9 @@
     });
     Array.prototype.forEach.call(document.querySelectorAll('#statusChips small'), function (s) { s.textContent = cnt['s:' + s.getAttribute('data-k')] || 0; });
     Array.prototype.forEach.call(document.querySelectorAll('#funcChips small'), function (s) { s.textContent = cnt['f:' + s.getAttribute('data-k')] || 0; });
+    lastList = list;
     drawPoints(list);
+    drawParcels();
     summary(list);
     drawGroups(list);
     writeHash();
@@ -327,8 +356,11 @@
   // ---------------------------------------------------------------- încărcare
   Promise.all([
     fetch(DATA_URL).then(function (r) { if (!r.ok) throw new Error('puz_iasi.geojson: ' + r.status); return r.json(); }),
-    fetch(ZONES_URL).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })
+    fetch(ZONES_URL).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
+    fetch(PARCELS_URL).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })
   ]).then(function (res) {
+    PARCELS = res[2];
+    if (!PARCELS) $('parcelsToggle').hidden = true;
     META = res[0].metadata || {};
     ALL = res[0].features.map(function (f) {
       var p = f.properties;

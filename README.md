@@ -135,12 +135,19 @@ de Consiliul Local Iași din 2016 până azi, pe hartă, peste cele 17 zone MVA�
   primaria-iasi.ro); **apartamentele și locurile de parcare** apar rar în hotărâri și se completează din articolele
   [apix.ro](https://apix.ro) despre PUZ-uri (potrivite după cadastral, adresă și suprafață, cu verificarea
   plauzibilității față de suprafață și CUT; fiecare valoare are linkul articolului și mențiunea „estimare” când textul
-  o indică); localizarea: numărul poștal prin Nominatim (unde OSM îl are), altfel punctul central al străzii din
+  o indică); localizarea: **pe parcelă**, după numărul cadastral din hotărâre, din parcelarul OCPI (vezi mai jos);
+  altfel numărul poștal prin Nominatim (unde OSM îl are), altfel punctul central al străzii din
   OpenStreetMap (Overpass; doar străzile din UAT Iași, ca omonimele din comunele vecine să nu încurce), altfel centrul
   zonei MVA–MVI; precizia e notată (număr / stradă / zonă). Cartierul OSM vine din geocodarea inversă Nominatim.
 - **Capacitate teoretică**: pentru PUZ-urile de locuințe colective și mixte, `adc_max_mp` = suprafață × CUT și
   `apartamente_capacitate` (80% locuibil, 75 mp ADC/apartament; la mixte jumătate) – un plafon de comparație între
   zone, afișat separat și niciodată adunat cu apartamentele cunoscute.
+- **Parcele OCPI**: `data/puz_parcele.geojson` conține doar parcelele menționate în hotărârile PUZ (număr cadastral,
+  contur WGS84, suprafață), extrase cu `python scripts/puz_parcele.py Imobile.shp --sursa "…"` (necesită
+  `pip install pyshp pyproj shapely`) dintr-un export eTerra cu numărul cadastral în `NATIONAL_C`; parcelarul complet
+  nu se publică. Un PUZ e pus pe parcelă doar dacă suprafața parcelelor e între 0,3× și 3× suprafața reglementată
+  (numerele cadastrale vechi, scurte, din 2016–2017 pot coincide cu alte parcele). Conturul apare pe hartă de la zoom 15
+  (`public/data/puz_iasi_parcele.geojson`). La un export nou al parcelarului se rulează din nou `puz_parcele.py`.
 - **Corecturi manuale**: `data/puz_iasi_completari.csv` (`hcl` = ex. `497/2025`; `apartamente`, `locuri_parcare`,
   `lat`, `lon`, `sursa`, `nota`) – au prioritate față de valorile extrase automat.
 - **Generare**: `python scripts/puz_iasi.py [--ani 2024,2025] [--fara-geocodare] [--fara-apix] [--reimprospateaza]`
@@ -201,6 +208,7 @@ public/data/                fișierele geografice
 public/15min/               harta „15 minute. Pentru cine?” – Iași (core.js = calculul, data/iasi = export OSM)
 public/puz/                 harta PUZ-urilor votate de Consiliul Local Iași (date: public/data/puz_iasi.geojson)
 scripts/puz_iasi.py         colectarea PUZ-urilor (hcl.usr.ro + apix.ro), extragerea indicatorilor, localizarea
+scripts/puz_parcele.py      extrasul parcelelor PUZ din parcelarul OCPI (data/puz_parcele.geojson)
 data/puz_iasi_completari.csv  corecturi și completări manuale pentru PUZ-uri
 scripts/export_15min.py     exportul rețelei pietonale și al facilităților din OSM (osmnx)
 scripts/elevatie_15min.py   panta: elevația Copernicus GLO-30 pe fiecare segment (elev.bin)
