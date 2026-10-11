@@ -126,6 +126,8 @@ acceptată – ex. 8 % pentru scaun rulant/cărucior). Totul rulează în browse
 Planurile urbanistice zonale (PUZ, inclusiv PUZ pentru zone construite protejate) aprobate, respinse sau modificate
 de Consiliul Local Iași din 2016 până azi, pe hartă, peste cele 17 zone MVA–MVI, cu agregare pe zone, pe cartiere (OSM) și pe UAT.
 
+**Prelucrarea și integrarea datelor:** dr. geogr. Adrian Covăsnianu.
+
 - **Ce conține fiecare PUZ**: număr și dată HCL, statut (aprobat / respins / modificare …), adresă, identificare
   cadastrală, funcțiune (clasificată automat din obiectul hotărârii), suprafața reglementată, regimul de înălțime și
   numărul de niveluri, H max, POT/CUT, spații verzi, voturile din plen, avizele comisiilor, apartamente și locuri de

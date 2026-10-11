@@ -94,7 +94,8 @@ def main():
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps({
         "type": "FeatureCollection",
-        "metadata": {"sursa": args.sursa or path.name, "extras": dt.date.today().isoformat(),
+        "metadata": {"autor": "Prelucrarea și integrarea datelor: dr. geogr. Adrian Covăsnianu",
+                     "sursa": args.sursa or path.name, "extras": dt.date.today().isoformat(),
                      "parcele_in_sursa": total, "parcele_pastrate": len(feats),
                      "nota": "doar parcelele menționate în hotărârile PUZ; parcelarul complet nu se publică"},
         "features": feats}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")

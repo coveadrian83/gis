@@ -42,6 +42,7 @@ ROOT = Path(__file__).resolve().parent.parent
 CACHE = ROOT / "cache" / "puz"
 DATA = ROOT / "public" / "data"
 COMPLETARI = ROOT / "data" / "puz_iasi_completari.csv"
+AUTOR = "Prelucrarea și integrarea datelor: dr. geogr. Adrian Covăsnianu"
 PARCELE = ROOT / "data" / "puz_parcele.geojson"   # extras din parcelarul OCPI cu scripts/puz_parcele.py
 
 USR = "https://hcl.usr.ro"
@@ -1056,8 +1057,9 @@ def write_outputs(rows):
         feats.append({"type": "Feature", "geometry": geom, "properties": props})
     gj = {"type": "FeatureCollection",
           "metadata": {"generat": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%MZ"),
-                       "sursa": "Hotărârile Consiliului Local Iași (hcl.usr.ro / primaria-iasi.ro); "
-                                "localizare © OpenStreetMap (Nominatim)",
+                       "autor": AUTOR,
+                       "sursa": "Hotărârile Consiliului Local Iași (hcl.usr.ro / primaria-iasi.ro); apix.ro; "
+                                "parcelar OCPI Iași (eTerra); localizare © OpenStreetMap (Nominatim)",
                        "total": len(rows), "localizate": sum(1 for r in rows if r.get("lat"))},
           "features": feats}
     (DATA / "puz_iasi.geojson").write_text(json.dumps(gj, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
@@ -1072,7 +1074,8 @@ def write_outputs(rows):
         polys.append({"type": "Feature", "geometry": {"type": "MultiPolygon", "coordinates": coords},
                       "properties": {"hcl": r["hcl"], "statut": r["statut"], "functiune": r["functiune"]}})
     (DATA / "puz_iasi_parcele.geojson").write_text(json.dumps(
-        {"type": "FeatureCollection", "features": polys}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+        {"type": "FeatureCollection", "metadata": {"autor": AUTOR, "sursa": "parcelar OCPI Iași (eTerra)"},
+         "features": polys}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     for name, sel in (("puz_iasi.csv", rows),
                       ("puz_iasi_de_verificat.csv",
                        [r for r in rows if r.get("precizie") not in ("parcelă", "număr", "stradă", "manual")])):
