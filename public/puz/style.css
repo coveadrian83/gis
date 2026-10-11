@@ -60,3 +60,4 @@ details summary { cursor: pointer; font-size: 14px; font-weight: 700; margin-bot
 .mobgrid div { background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: 6px 8px; }
 .mobgrid b { display: block; font-size: 18px; }
 .mobgrid small { color: var(--muted); font-size: 11px; }
+.pop .iso { font-size: 12px; margin: 6px 0; padding: 4px 6px; background: #eef6f8; border-left: 3px solid var(--teal); }

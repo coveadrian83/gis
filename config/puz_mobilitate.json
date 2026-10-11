@@ -78,6 +78,6 @@
   },
   "acces_transport_public": {
     "raza_m": 800,
-    "_sursa": "Coridorul de 800 m (izocrona de 10 minute de mers pe jos) din Covăsnianu (2023); distanță în linie dreaptă de la punctul PUZ-ului la cea mai apropiată stație. Stațiile (tren, tramvai, autobuz; OpenStreetMap, sensurile unite) sunt cele ale hărții „15 minute” (public/15min/data/iasi/pois.json). PUZ-urile localizate doar pe zonă sau aflate în afara ariei acelei hărți nu primesc distanță."
+    "_sursa": "Coridorul de 800 m (izocrona de 10 minute de mers pe jos, ≈ 1,33 m/s) din Covăsnianu (2023); distanța se măsoară pe rețeaua pietonală a hărții „15 minute” (graph.bin, teren plat), de la nodurile aflate la cel mult 150 m de punctul PUZ-ului până la nodurile aflate la cel mult 60 m de stație; se raportează și distanța în linie dreaptă, ca limită superioară a accesului (rețeaua OSM are goluri: trotuare desenate separat, fără treceri). Stațiile (tren, tramvai, autobuz; OpenStreetMap, sensurile unite) sunt cele ale hărții „15 minute” (public/15min/data/iasi/pois.json). PUZ-urile localizate doar pe zonă sau aflate în afara ariei acelei hărți nu primesc distanță."
   }
 }

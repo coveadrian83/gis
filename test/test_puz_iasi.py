@@ -188,8 +188,35 @@ class PuzMobilitate(unittest.TestCase):
         far = M.transit_access({"_lon": 27.5815, "_lat": 47.1803, "precizie": "parcelă"}, stations, 800)
         self.assertFalse(far["acces_tramvai_tren_800m"])
         self.assertTrue(far["acces_tp_800m"])
+        self.assertEqual(a["acces_metoda"], "linie dreaptă")
         self.assertIsNone(M.transit_access({**p, "precizie": "zonă"}, stations, 800))
         self.assertIsNone(M.transit_access({"_lon": 27.9, "_lat": 47.1653, "precizie": "număr"}, stations, 800))
+
+    def test_network_access(self):
+        """Rețea minimă: PUZ-ul și stația sunt la ~330 m în linie dreaptă, dar drumul ocolește (3 × ~330 m)."""
+        import struct
+        import tempfile
+        nodes = [(27.6000, 47.1600), (27.6000, 47.1630), (27.6044, 47.1630), (27.6044, 47.1600)]   # U întors
+        edges = [(0, 1), (1, 2), (2, 3)]
+        km = M.km
+        buf = struct.pack("<4I", 1, len(nodes), len(edges), 0)
+        buf += b"".join(struct.pack("<2i", round(lo * 1e5), round(la * 1e5)) for lo, la in nodes)
+        buf += b"".join(struct.pack("<I", u) for u, _ in edges) + b"".join(struct.pack("<I", v) for _, v in edges)
+        buf += b"".join(struct.pack("<I", round(km(*nodes[u], *nodes[v]) * 1000 * 10) << 2) for u, v in edges)
+        buf += struct.pack(f"<{len(edges) + 1}I", *([0] * (len(edges) + 1)))
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d) / "graph.bin"
+            path.write_bytes(buf)
+            net = M.Network(path, [(27.6044, 47.1600, 2)])
+        stations = ([(27.6044, 47.1600, 2)], (27.6020, 47.1615), 9500)
+        p = {"_lon": 27.6000, "_lat": 47.1600, "precizie": "parcelă"}
+        a = M.transit_access(p, stations, 800, net)
+        self.assertEqual(a["acces_metoda"], "rețea pietonală")
+        self.assertAlmostEqual(a["dist_statie_linie_dreapta_m"], 334, delta=5)
+        self.assertAlmostEqual(a["dist_statie_m"], 334 + 2 * 332, delta=10)
+        self.assertFalse(a["acces_tramvai_tren_800m"])     # în linie dreaptă ar fi fost în coridor
+        self.assertEqual(a["statii_800m"], 0)
+        self.assertTrue(M.transit_access(p, stations, 1200, net)["acces_tramvai_tren_800m"])
 
 
 if __name__ == "__main__":
