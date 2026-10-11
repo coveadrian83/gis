@@ -30,8 +30,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Instalează pdftotext (pentru adresele anonimizate în registru)
-        run: sudo apt-get install -y poppler-utils
+      - name: Instalează pdftotext (pentru adresele anonimizate în registru; opțional)
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q poppler-utils || echo "::warning::pdftotext indisponibil; adresele anonimizate rămân ca în registru"
       - uses: actions/cache@v4
         with:
           path: cache/puz
