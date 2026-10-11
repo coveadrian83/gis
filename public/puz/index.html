@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PUZ-uri aprobate – Iași</title>
+  <meta name="description" content="Hartă a planurilor urbanistice zonale (PUZ) aprobate și respinse de Consiliul Local Iași, pe zonele MVA–MVI și pe cartiere.">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<aside id="panel">
+  <h1>PUZ-uri<br><span>Iași</span></h1>
+  <p class="sub">Planuri urbanistice zonale votate de Consiliul Local, pe zonele MVA–MVI și pe cartiere</p>
+  <p class="note">Fiecare cerc este un PUZ; mărimea arată suprafața reglementată, culoarea funcțiunea. Cercurile goale sunt PUZ-uri respinse. PUZ-urile sunt puse pe stradă (punctul central al străzii, din OpenStreetMap) sau, unde hotărârea dă doar zona, în centrul zonei – cu contur punctat. Apăsați pe un cerc pentru detalii și pentru hotărârea oficială.</p>
+
+  <div class="ctl row">
+    <label>De la anul <select id="yFrom"></select></label>
+    <label>până la <select id="yTo"></select></label>
+  </div>
+
+  <div class="ctl">
+    <div class="lbl">Statut</div>
+    <div class="chips" id="statusChips"></div>
+  </div>
+
+  <div class="ctl">
+    <div class="lbl">Funcțiune</div>
+    <div class="chips" id="funcChips"></div>
+  </div>
+
+  <div class="ctl row">
+    <label>Suprafață minimă
+      <select id="minArea">
+        <option value="0">oricare</option>
+        <option value="1000">≥ 1.000 mp</option>
+        <option value="5000">≥ 5.000 mp</option>
+        <option value="10000">≥ 1 ha</option>
+        <option value="50000">≥ 5 ha</option>
+      </select></label>
+    <label>Niveluri minime
+      <select id="minLevels">
+        <option value="0">oricare</option>
+        <option value="4">≥ 4</option>
+        <option value="6">≥ 6</option>
+        <option value="9">≥ 9</option>
+        <option value="12">≥ 12</option>
+      </select></label>
+  </div>
+  <div class="ctl"><label class="inline">Caută <input type="search" id="q" placeholder="adresă, HCL, cadastral…"></label></div>
+
+  <div id="summary"></div>
+
+  <div class="ctl toggles">
+    <label><input type="checkbox" id="showZones" checked> Cele 17 zone MVA–MVI</label>
+    <label><input type="checkbox" id="showApprox" checked> PUZ-uri localizate doar pe zonă (contur punctat)</label>
+  </div>
+
+  <details id="zonesBox" open>
+    <summary>Pe zone și cartiere</summary>
+    <div class="row">
+      <label>Grupează pe
+        <select id="groupBy">
+          <option value="zona">zone MVA–MVI</option>
+          <option value="cartier">cartiere (OpenStreetMap)</option>
+          <option value="uat">UAT (ZMI)</option>
+        </select></label>
+      <label>Colorează zonele după
+        <select id="metric">
+          <option value="n">număr de PUZ-uri</option>
+          <option value="area">suprafață reglementată (ha)</option>
+          <option value="apart">apartamente (cunoscute)</option>
+          <option value="park">locuri de parcare (cunoscute)</option>
+          <option value="cap">capacitate teoretică (apartamente)</option>
+          <option value="lvl">niveluri maxime (medie)</option>
+        </select></label>
+    </div>
+    <div id="zoneLegend"></div>
+    <div class="tablewrap"><table id="groupTable"></table></div>
+    <p class="note">Sunt luate în calcul doar PUZ-urile aprobate (inclusiv modificările) care corespund filtrelor și sunt localizate. Apăsați pe un rând pentru a vedea zona pe hartă.</p>
+  </details>
+
+  <div class="ctl"><button id="csv" type="button">Descarcă CSV (selecția curentă)</button></div>
+
+  <p class="note" id="dataInfo"></p>
+  <p class="note">Sursa: textul hotărârilor Consiliului Local Iași (registrul <a href="https://hcl.usr.ro/iasi" target="_blank" rel="noopener">hcl.usr.ro</a>, cu link la PDF-ul oficial de pe primaria-iasi.ro). Indicatorii (suprafață, regim de înălțime, POT/CUT) sunt extrași automat din text și trebuie verificați în hotărâre înainte de a fi citați. Numărul de apartamente și de locuri de parcare apare rar în hotărâri; acolo unde lipsește, se completează din documentație în <code>data/puz_iasi_completari.csv</code>. Localizare © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">contribuitorii OpenStreetMap</a> (Nominatim). <a href="../15min/">Harta 15 minute</a> · <a href="../">Studiul O–D</a></p>
+  <p class="note" id="baseNote"></p>
+</aside>
+<div id="map"></div>
+
+<script src="../vendor/leaflet/leaflet.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

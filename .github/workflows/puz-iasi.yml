@@ -1,0 +1,52 @@
+# Actualizează lista PUZ-urilor votate de Consiliul Local Iași (public/data/puz_iasi.*) cu scripts/puz_iasi.py:
+# hotărârile din registrul hcl.usr.ro, completările din apix.ro și localizarea prin Nominatim.
+# Rulează lunar (pe 5, după ședința ordinară de la sfârșitul lunii), la modificarea scriptului și manual
+# (Actions → „Actualizare PUZ Iași” → Run workflow). Cache-ul (fișe HCL, articole, geocodări) se păstrează între rulări.
+# Pe serverele GitHub, Nominatim adaugă și localizarea la număr poștal (unde OSM o are) și cartierul OSM.
+name: Actualizare PUZ Iași
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 4 5 * *"
+  push:
+    paths:
+      - scripts/puz_iasi.py
+      - .github/workflows/puz-iasi.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: puz-iasi-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  puz:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Instalează pdftotext (pentru adresele anonimizate în registru; opțional)
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q poppler-utils || echo "::warning::pdftotext indisponibil; adresele anonimizate rămân ca în registru"
+      - uses: actions/cache@v4
+        with:
+          path: cache/puz
+          key: puz-iasi-${{ github.run_id }}
+          restore-keys: puz-iasi-
+      - name: Colectează, completează și localizează PUZ-urile
+        run: python scripts/puz_iasi.py --reimprospateaza
+      - name: Salvează datele în branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898699+github-actions[bot]@users.noreply.github.com"
+          git add public/data/puz_iasi.geojson public/data/puz_iasi.csv public/data/puz_iasi_de_verificat.csv
+          if git diff --cached --quiet; then echo "Datele nu s-au schimbat."; exit 0; fi
+          git commit -m "PUZ Iași: date actualizate"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

@@ -121,6 +121,38 @@ acceptată – ex. 8 % pentru scaun rulant/cărucior). Totul rulează în browse
   același calcul ca pagina (`public/15min/core.js`).
 - Metodologia și limitele: `public/15min/metodologie.html`.
 
+## Harta PUZ-urilor votate de Consiliul Local Iași (`/puz/`)
+
+Planurile urbanistice zonale (PUZ, inclusiv PUZ pentru zone construite protejate) aprobate, respinse sau modificate
+de Consiliul Local Iași din 2016 până azi, pe hartă, peste cele 17 zone MVA–MVI, cu agregare pe zone, pe cartiere (OSM) și pe UAT.
+
+- **Ce conține fiecare PUZ**: număr și dată HCL, statut (aprobat / respins / modificare …), adresă, identificare
+  cadastrală, funcțiune (clasificată automat din obiectul hotărârii), suprafața reglementată, regimul de înălțime și
+  numărul de niveluri, H max, POT/CUT, spații verzi, voturile din plen, avizele comisiilor, apartamente și locuri de
+  parcare (unde sunt cunoscute), zona MVA–MVI, cartierul, UAT-ul și linkurile la PDF-ul oficial și la textul integral.
+- **Surse**: textul hotărârilor din registrul [hcl.usr.ro/iasi](https://hcl.usr.ro/iasi) (oglinda hotărârilor
+  primăriei; acolo unde registrul anonimizează numele străzilor, adresa se ia din PDF-ul oficial de pe
+  primaria-iasi.ro); **apartamentele și locurile de parcare** apar rar în hotărâri și se completează din articolele
+  [apix.ro](https://apix.ro) despre PUZ-uri (potrivite după cadastral, adresă și suprafață, cu verificarea
+  plauzibilității față de suprafață și CUT; fiecare valoare are linkul articolului și mențiunea „estimare” când textul
+  o indică); localizarea: numărul poștal prin Nominatim (unde OSM îl are), altfel punctul central al străzii din
+  OpenStreetMap (Overpass; doar străzile din UAT Iași, ca omonimele din comunele vecine să nu încurce), altfel centrul
+  zonei MVA–MVI; precizia e notată (număr / stradă / zonă). Cartierul OSM vine din geocodarea inversă Nominatim.
+- **Capacitate teoretică**: pentru PUZ-urile de locuințe colective și mixte, `adc_max_mp` = suprafață × CUT și
+  `apartamente_capacitate` (80% locuibil, 75 mp ADC/apartament; la mixte jumătate) – un plafon de comparație între
+  zone, afișat separat și niciodată adunat cu apartamentele cunoscute.
+- **Corecturi manuale**: `data/puz_iasi_completari.csv` (`hcl` = ex. `497/2025`; `apartamente`, `locuri_parcare`,
+  `lat`, `lon`, `sursa`, `nota`) – au prioritate față de valorile extrase automat.
+- **Generare**: `python scripts/puz_iasi.py [--ani 2024,2025] [--fara-geocodare] [--fara-apix] [--reimprospateaza]`
+  (doar biblioteca standard Python; `pdftotext` opțional) → `public/data/puz_iasi.geojson`, `puz_iasi.csv` și
+  `puz_iasi_de_verificat.csv` (PUZ-urile nelocalizate sau localizate doar pe zonă). Automat în GitHub Actions – lunar,
+  la modificarea scriptului și manual: **Actions → Actualizare PUZ Iași → Run workflow**. Rularea din GitHub are acces
+  la Nominatim și Overpass (localizare la număr / stradă și cartiere); local, fără ele, scriptul folosește rețeaua
+  pietonală a hărții 15 minute, unde multe străzi centrale lipsesc (trotuarele nu au nume), deci localizează mai puțin.
+- **Teste**: `python3 -m unittest discover -s test -p 'test_puz*.py'`.
+- **Limite**: indicatorii sunt extrași automat din text – verificați hotărârea înainte de a-i cita; un PUZ aprobat nu
+  înseamnă o construcție autorizată sau realizată; apartamentele și parcările sunt cunoscute doar pentru o parte din PUZ-uri.
+
 ---
 
 ## Rulare pe un server propriu (alternativă la Netlify)
@@ -167,6 +199,9 @@ public/                     aplicația publică, dashboardul (/admin/), Confiden
 public/shared/              geo-core.js (căutare + point-in-polygon) și domain.js – comune browser/server
 public/data/                fișierele geografice
 public/15min/               harta „15 minute. Pentru cine?” – Iași (core.js = calculul, data/iasi = export OSM)
+public/puz/                 harta PUZ-urilor votate de Consiliul Local Iași (date: public/data/puz_iasi.geojson)
+scripts/puz_iasi.py         colectarea PUZ-urilor (hcl.usr.ro + apix.ro), extragerea indicatorilor, localizarea
+data/puz_iasi_completari.csv  corecturi și completări manuale pentru PUZ-uri
 scripts/export_15min.py     exportul rețelei pietonale și al facilităților din OSM (osmnx)
 scripts/elevatie_15min.py   panta: elevația Copernicus GLO-30 pe fiecare segment (elev.bin)
 scripts/analiza-15min.js    analiza pe puncte și pe zone din linia de comandă (--scari: scările și străzile abrupte)
