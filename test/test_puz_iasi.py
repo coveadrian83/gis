@@ -87,6 +87,18 @@ class PuzParse(unittest.TestCase):
         self.assertIsNotNone(st.find("strada", "lascar catargi"))   # din Overpass
         self.assertIsNotNone(st.find("strada", "otelariei"))        # din rețeaua pietonală
 
+    def test_locate_by_parcels(self):
+        sq = {"type": "Polygon", "coordinates": [[[27.6, 47.1], [27.601, 47.1], [27.601, 47.101], [27.6, 47.1]]]}
+        parcels = {"161244": (27.6005, 47.1005, 19000.0, sq), "8754": (27.55, 47.17, 460.0, sq)}
+        r = {"cadastral": "161244", "suprafata_mp": 19085.0}
+        lat, lon, geoms = P.locate_by_parcels(r, parcels)
+        self.assertAlmostEqual(lat, 47.1005)
+        self.assertEqual(len(geoms), 1)
+        # număr cadastral vechi, scurt, care coincide cu o parcelă de altă mărime → respins
+        self.assertIsNone(P.locate_by_parcels({"cadastral": "8754", "suprafata_mp": 11932.0}, parcels))
+        self.assertIsNone(P.locate_by_parcels({"cadastral": "8754", "suprafata_mp": None}, parcels))
+        self.assertIsNone(P.locate_by_parcels({"cadastral": "999999", "suprafata_mp": 500.0}, parcels))
+
     def test_apix_extraction(self):
         r = {"hcl": "1/2026", "data": "2026-01-30", "statut": "aprobat", "adresa": "strada Cicoarei nr. 3",
              "cadastral": "", "suprafata_mp": 30123.0, "cut_max": 4.0, "functiune": "locuințe colective"}

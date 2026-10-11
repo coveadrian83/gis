@@ -42,6 +42,7 @@ ROOT = Path(__file__).resolve().parent.parent
 CACHE = ROOT / "cache" / "puz"
 DATA = ROOT / "public" / "data"
 COMPLETARI = ROOT / "data" / "puz_iasi_completari.csv"
+PARCELE = ROOT / "data" / "puz_parcele.geojson"   # extras din parcelarul OCPI cu scripts/puz_parcele.py
 
 USR = "https://hcl.usr.ro"
 NOMINATIM = "https://nominatim.openstreetmap.org"
@@ -662,6 +663,40 @@ def enrich_apix(rows, posts):
     return n_art, n_ap, n_pk
 
 
+# ---------------------------------------------------------------- parcele (OCPI / eTerra)
+
+def load_parcels(path=PARCELE):
+    """Numărul cadastral → (lon, lat, arie mp, geometrie GeoJSON), din extrasul data/puz_parcele.geojson."""
+    if not path.exists():
+        return {}
+    data = json.loads(path.read_text(encoding="utf-8"))
+    return {f["properties"]["cad"]: (f["properties"]["lon"], f["properties"]["lat"], f["properties"]["arie_mp"],
+                                     f["geometry"]) for f in data["features"]}
+
+
+def locate_by_parcels(r, parcels):
+    """PUZ-ul pe parcelele lui: (lat, lon, geometrii) sau None.
+    Se acceptă doar dacă suprafața parcelelor e compatibilă cu suprafața reglementată (0,3–3×): numerele
+    cadastrale vechi, scurte, din hotărârile 2016–2017 pot coincide cu alte parcele din numerotarea actuală."""
+    cads = [c for c in (r.get("cadastral") or "").split(", ") if c in parcels]
+    if not cads:
+        return None
+    area = sum(parcels[c][2] for c in cads)
+    supr = r.get("suprafata_mp")
+    if supr:
+        if not 0.3 <= area / supr <= 3:
+            return None
+    elif any(len(c) < 6 for c in cads):
+        return None
+    big = max(cads, key=lambda c: parcels[c][2])
+    lon0, lat0 = parcels[big][0], parcels[big][1]
+    near = [c for c in cads if merc_dist(parcels[c][0], parcels[c][1], lon0, lat0) < 1000 ** 2]   # parcelele grupate
+    w = sum(parcels[c][2] for c in near) or 1
+    lon = sum(parcels[c][0] * parcels[c][2] for c in near) / w
+    lat = sum(parcels[c][1] * parcels[c][2] for c in near) / w
+    return lat, lon, [parcels[c][3] for c in cads]
+
+
 # ---------------------------------------------------------------- geocodare
 
 STREET_TYPES = r"(?:strada|str\.?|soseaua|sos\.?|șoseaua|bulevardul|bd\.?|b-dul|calea|aleea|al\.?|fundac\w*|intrarea|intr\.?|drumul|piata|piața|splaiul|ulita|stradela|trecatoarea|trecătoarea)"
@@ -1026,9 +1061,21 @@ def write_outputs(rows):
                        "total": len(rows), "localizate": sum(1 for r in rows if r.get("lat"))},
           "features": feats}
     (DATA / "puz_iasi.geojson").write_text(json.dumps(gj, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    # conturul parcelelor fiecărui PUZ localizat pe parcelă (pentru harta la zoom de stradă)
+    polys = []
+    for r in rows:
+        if not r.get("_parcele"):
+            continue
+        coords = []
+        for g in r["_parcele"]:
+            coords += g["coordinates"] if g["type"] == "MultiPolygon" else [g["coordinates"]]
+        polys.append({"type": "Feature", "geometry": {"type": "MultiPolygon", "coordinates": coords},
+                      "properties": {"hcl": r["hcl"], "statut": r["statut"], "functiune": r["functiune"]}})
+    (DATA / "puz_iasi_parcele.geojson").write_text(json.dumps(
+        {"type": "FeatureCollection", "features": polys}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     for name, sel in (("puz_iasi.csv", rows),
                       ("puz_iasi_de_verificat.csv",
-                       [r for r in rows if r.get("precizie") not in ("număr", "stradă", "manual")])):
+                       [r for r in rows if r.get("precizie") not in ("parcelă", "număr", "stradă", "manual")])):
         with (DATA / name).open("w", encoding="utf-8-sig", newline="") as f:
             w = csv.DictWriter(f, FIELDS, extrasaction="ignore")
             w.writeheader()
@@ -1070,9 +1117,16 @@ def main():
     zones = load_polys(DATA / "iasi_17_zone_mva_mvi.geojson", lambda p: (p.get("zone_id"), p.get("zone_name")))
     uats = load_polys(DATA / "zmi_uat_web.geojson", lambda p: p.get("canonical_name") or p.get("name"))
     geo = None if args.fara_geocodare else Geocoder(CACHE / "nominatim.json")
+    parcels = load_parcels()
+    if parcels:
+        print(f"parcele OCPI pentru localizare: {len(parcels)}", file=sys.stderr)
     for i, r in enumerate(rows, 1):
+        on_parcel = locate_by_parcels(r, parcels) if parcels else None
         if r.get("_lat") is not None:
             r["lat"], r["lon"], r["precizie"] = r.pop("_lat"), r.pop("_lon"), "manual"
+        elif on_parcel:
+            r["lat"], r["lon"], r["_parcele"] = on_parcel
+            r["precizie"] = "parcelă"
         elif geo:
             hit = geo.locate(r["adresa"])
             if hit:

@@ -13,7 +13,7 @@
 <aside id="panel">
   <h1>PUZ-uri<br><span>Iași</span></h1>
   <p class="sub">Planuri urbanistice zonale votate de Consiliul Local, pe zonele MVA–MVI și pe cartiere</p>
-  <p class="note">Fiecare cerc este un PUZ; mărimea arată suprafața reglementată, culoarea funcțiunea. Cercurile goale sunt PUZ-uri respinse. PUZ-urile sunt puse pe stradă (punctul central al străzii, din OpenStreetMap) sau, unde hotărârea dă doar zona, în centrul zonei – cu contur punctat. Apăsați pe un cerc pentru detalii și pentru hotărârea oficială.</p>
+  <p class="note">Fiecare cerc este un PUZ; mărimea arată suprafața reglementată, culoarea funcțiunea. Cercurile goale sunt PUZ-uri respinse. PUZ-urile sunt puse pe parcela lor, după numărul cadastral din hotărâre (parcelarul OCPI), iar unde parcela nu e cunoscută, pe stradă (punctul central, din OpenStreetMap) sau în centrul zonei – cu contur punctat. De la zoom de stradă se vede conturul parcelelor. Apăsați pe un cerc pentru detalii și pentru hotărârea oficială.</p>
 
   <div class="ctl row">
     <label>De la anul <select id="yFrom"></select></label>
@@ -55,6 +55,7 @@
   <div class="ctl toggles">
     <label><input type="checkbox" id="showZones" checked> Cele 17 zone MVA–MVI</label>
     <label><input type="checkbox" id="showApprox" checked> PUZ-uri localizate doar pe zonă (contur punctat)</label>
+    <label id="parcelsToggle"><input type="checkbox" id="showParcels" checked> Conturul parcelelor (de la zoom 15)</label>
   </div>
 
   <details id="zonesBox" open>
@@ -84,7 +85,7 @@
   <div class="ctl"><button id="csv" type="button">Descarcă CSV (selecția curentă)</button></div>
 
   <p class="note" id="dataInfo"></p>
-  <p class="note">Sursa: textul hotărârilor Consiliului Local Iași (registrul <a href="https://hcl.usr.ro/iasi" target="_blank" rel="noopener">hcl.usr.ro</a>, cu link la PDF-ul oficial de pe primaria-iasi.ro). Indicatorii (suprafață, regim de înălțime, POT/CUT) sunt extrași automat din text și trebuie verificați în hotărâre înainte de a fi citați. Numărul de apartamente și de locuri de parcare apare rar în hotărâri; acolo unde lipsește, se completează din documentație în <code>data/puz_iasi_completari.csv</code>. Localizare © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">contribuitorii OpenStreetMap</a> (Nominatim). <a href="../15min/">Harta 15 minute</a> · <a href="../">Studiul O–D</a></p>
+  <p class="note">Sursa: textul hotărârilor Consiliului Local Iași (registrul <a href="https://hcl.usr.ro/iasi" target="_blank" rel="noopener">hcl.usr.ro</a>, cu link la PDF-ul oficial de pe primaria-iasi.ro). Indicatorii (suprafață, regim de înălțime, POT/CUT) sunt extrași automat din text și trebuie verificați în hotărâre înainte de a fi citați. Numărul de apartamente și de locuri de parcare apare rar în hotărâri; acolo unde lipsește, se completează din documentație în <code>data/puz_iasi_completari.csv</code>. Localizare: parcelar OCPI Iași (export eTerra, 2023) și © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">contribuitorii OpenStreetMap</a> (Nominatim). <a href="../15min/">Harta 15 minute</a> · <a href="../">Studiul O–D</a></p>
   <p class="note" id="baseNote"></p>
 </aside>
 <div id="map"></div>
