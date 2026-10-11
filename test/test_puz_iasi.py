@@ -6,6 +6,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 import puz_iasi as P  # noqa: E402
+import puz_mobilitate as M  # noqa: E402
 
 HCL_497 = (
     "HOTĂRÂRE privind aprobarea Planului urbanistic zonal Iași, Zona Bucium, identificare cadastrala 161244, "
@@ -117,6 +118,46 @@ class PuzParse(unittest.TestCase):
                 "text": "", "fold": P.fold("Pe strada Aurel Vlaicu nr. 78 se propun 2.200 de apartamente.")}
         P.enrich_apix([r], [post])
         self.assertIsNone(r.get("apartamente"))
+
+
+class PuzMobilitate(unittest.TestCase):
+    cfg = __import__("json").loads((Path(__file__).resolve().parent.parent / "config" / "puz_mobilitate.json").read_text(encoding="utf-8"))
+
+    def test_scenarios(self):
+        p = {"hcl": "1/2025", "statut": "aprobat", "functiune": "locuințe colective", "suprafata_mp": 10000.0,
+             "cut_max": 2.0, "data": "2025-03-01", "cadastral": "", "_lon": 27.5815, "_lat": 47.1653}
+        r = M.model(p, self.cfg, {})
+        # maxim: 10000 × 2 × 0,8 ÷ 75 = 213,3 apartamente; realist: 60%
+        self.assertAlmostEqual(r["maxim_apartamente"], 213.3, places=1)
+        self.assertAlmostEqual(r["realist_apartamente"], 128.0, places=1)
+        pers = 2.73 * 0.65
+        self.assertEqual(r["maxim_locuitori"], round(213.333 * pers))
+        self.assertEqual(r["maxim_PMUD_deplasari_zi"], round(213.333 * pers * 1.61))
+        self.assertGreater(r["maxim_RPL_deplasari_zi"], r["maxim_PMUD_deplasari_zi"])
+        self.assertFalse(r["periferie"])
+        self.assertEqual(r["maxim_atractie_deplasari_zi"], 0)
+
+    def test_known_apartments_and_periphery(self):
+        p = {"hcl": "2/2025", "statut": "aprobat", "functiune": "locuințe colective", "suprafata_mp": 10000.0,
+             "cut_max": 2.0, "apartamente": 100, "_lon": 27.65, "_lat": 47.11}
+        r = M.model(p, self.cfg, {})
+        self.assertEqual(r["realist_apartamente"], 100.0)
+        self.assertEqual(r["maxim_apartamente"], 100.0)
+        self.assertTrue(r["periferie"])
+        self.assertEqual(r["pondere_auto"], 0.40)
+
+    def test_rejected_and_attraction(self):
+        self.assertIsNone(M.model({"statut": "respins", "functiune": "locuințe colective"}, self.cfg, {}))
+        p = {"hcl": "3/2025", "statut": "aprobat", "functiune": "comerț / servicii / birouri", "suprafata_mp": 5000.0,
+             "cut_max": 1.0}
+        r = M.model(p, self.cfg, {})
+        self.assertEqual(r["maxim_locuitori"], 0)
+        self.assertEqual(r["maxim_atractie_deplasari_zi"], 1000)   # 5000 mp ÷ 100 × 20
+
+    def test_built_after_approval(self):
+        parcels = {"161244": {"constructii_mp_pe_an": {"2015": 100.0, "2026": 250.0}}}
+        self.assertEqual(M.built_after({"cadastral": "161244", "data": "2025-12-19"}, parcels), 250.0)
+        self.assertIsNone(M.built_after({"cadastral": "999", "data": "2025-12-19"}, parcels))
 
 
 if __name__ == "__main__":

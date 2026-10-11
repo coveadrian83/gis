@@ -36,8 +36,22 @@
     apart: { label: 'apartamente', fmt: 0 },
     park: { label: 'locuri parcare', fmt: 0 },
     cap: { label: 'apartamente (capacitate teoretică)', fmt: 0 },
-    lvl: { label: 'niveluri (medie)', fmt: 1 }
+    lvl: { label: 'niveluri (medie)', fmt: 1 },
+    loc: { label: 'locuitori noi', fmt: 0 },
+    dep: { label: 'deplasări/zi', fmt: 0 },
+    autoV: { label: 'autoturisme/oră (vârf)', fmt: 0 },
+    atr: { label: 'deplasări atrase/zi', fmt: 0 }
   };
+  var MOBILITY_URL = '../data/puz_mobilitate.json';   // modelul de generare a deplasărilor (opțional)
+  var MOB = null;
+  // indicatorul de mobilitate al unui PUZ pentru scenariul ales (construire × mobilitate)
+  function mobVal(p, kind) {
+    var m = MOB && MOB.puz[p.hcl];
+    if (!m) return 0;
+    var sc = $('scConstr').value, ms = $('scMob').value;
+    return { loc: m[sc + '_locuitori'], dep: m[sc + '_' + ms + '_deplasari_zi'], autoV: m[sc + '_' + ms + '_auto_varf'],
+      atr: m[sc + '_atractie_deplasari_zi'] }[kind] || 0;
+  }
 
   var $ = function (id) { return document.getElementById(id); };
   var fmt = function (v, d) {
@@ -91,7 +105,7 @@
       function (k) { return STATUS.filter(function (s) { return s[0] === k; })[0][1]; });
     chips($('funcChips'), FUNC.map(function (f) { return f[0]; }), state.func,
       function (k) { return FUNC_COLOR[k]; }, function (k) { return k; });
-    ['yFrom', 'yTo', 'minArea', 'minLevels', 'showApprox', 'groupBy', 'metric'].forEach(function (id) { $(id).onchange = update; });
+    ['yFrom', 'yTo', 'minArea', 'minLevels', 'showApprox', 'groupBy', 'metric', 'scConstr', 'scMob', 'tableMode'].forEach(function (id) { $(id).onchange = update; });
     $('showParcels').onchange = drawParcels;
     $('q').oninput = debounce(update, 200);
     $('showZones').onchange = function () { if (zoneLayer) { if ($('showZones').checked) zoneLayer.addTo(map); else map.removeLayer(zoneLayer); } };
@@ -166,6 +180,16 @@
       ['Cadastral', p.cadastral],
       ['Localizare', { 'parcelă': 'pe parcelă (număr cadastral, parcelar OCPI)', 'număr': 'la adresă', 'stradă': 'pe stradă (punctul central al străzii)', 'zonă': 'aproximativă – centrul zonei', manual: 'verificată manual' }[p.precizie] || '–']
     ].filter(function (r) { return r[1]; });
+    var m = MOB && MOB.puz[p.hcl];
+    if (m && (m.realist_locuitori || m.realist_atractie_deplasari_zi)) {
+      var cell = function (sc, ms) { return fmt(m[sc + '_' + ms + '_auto_varf']); };
+      rows.push(['Impact estimat', (m.realist_locuitori ? '≈ ' + fmt(m.realist_locuitori) + ' locuitori (realist), ' + fmt(m.maxim_locuitori) + ' (maxim)<br>' +
+        'autoturisme în ora de vârf – realist: ' + cell('realist', 'RPL') + ' (RPL) / ' + cell('realist', 'PMUD') + ' (PMUD); maxim: ' +
+        cell('maxim', 'RPL') + ' / ' + cell('maxim', 'PMUD') : '') +
+        (m.realist_atractie_deplasari_zi ? (m.realist_locuitori ? '<br>' : '') + 'deplasări atrase de activități: ≈ ' + fmt(m.realist_atractie_deplasari_zi) + '/zi (realist)' : '') +
+        (m.construit_dupa_hcl_mp ? '<br><span class="note">construcții înscrise în eTerra după aprobare (până în 05.2023): ' + fmt(m.construit_dupa_hcl_mp) + ' mp amprentă</span>' : '') +
+        ' <a href="metodologie.html" target="_blank">metodă</a>']);
+    }
     var links = [];
     if (p.url_pdf) links.push('<a href="' + esc(p.url_pdf) + '" target="_blank" rel="noopener">HCL (PDF oficial)</a>');
     if (p.url_usr) links.push('<a href="' + esc(p.url_usr) + '" target="_blank" rel="noopener">text integral</a>');
@@ -248,6 +272,16 @@
       '<div><b>' + fmt(sum(appr, 'locuri_parcare')) + '</b><small>locuri de parcare, cunoscute la ' + known(appr, 'locuri_parcare') + ' PUZ-uri</small></div>' +
       '<div style="grid-column:1/-1"><b>≈ ' + fmt(sum(appr, 'apartamente_capacitate')) + '</b><small>apartamente – capacitate teoretică a PUZ-urilor de locuințe colective și mixte (suprafață × CUT, 75 mp/apartament); plafon de comparație, nu număr de proiect</small></div>' +
       '<div style="grid-column:1/-1"><small>' + fmt(loc) + ' din ' + fmt(list.length) + ' sunt pe hartă; restul nu au putut fi localizate după adresă (vezi CSV-ul).</small></div>';
+    if (MOB) {
+      var tot = function (k) { return appr.reduce(function (s, p) { return s + mobVal(p, k); }, 0); };
+      var other = $('scMob').value === 'RPL' ? 'PMUD' : 'RPL', sc = $('scConstr').value;
+      var otherV = appr.reduce(function (s, p) { var m = MOB.puz[p.hcl]; return s + (m ? m[sc + '_' + other + '_auto_varf'] || 0 : 0); }, 0);
+      $('mobSummary').innerHTML = '<div class="mobgrid">' +
+        '<div><b>' + fmt(tot('loc')) + '</b><small>locuitori noi</small></div>' +
+        '<div><b>' + fmt(tot('dep')) + '</b><small>deplasări produse pe zi</small></div>' +
+        '<div><b>' + fmt(tot('autoV')) + '</b><small>autoturisme în ora de vârf a dimineții (' + other + ': ' + fmt(otherV) + ')</small></div>' +
+        '<div><b>' + fmt(tot('atr')) + '</b><small>deplasări atrase pe zi de comerț, birouri, echipamente (separat)</small></div></div>';
+    }
   }
 
   // ---------------------------------------------------------------- agregare pe zone / cartiere / UAT
@@ -257,8 +291,9 @@
       if (!APPROVED[p.statut] || !p._ll) return;
       var k = key === 'zona' ? (p.zona_id ? p.zona_id + '|' + p.zona : null) : p[key];
       if (!k) k = key === 'zona' ? '|în afara celor 17 zone' : '|necunoscut';
-      var g = G[k] || (G[k] = { key: k, n: 0, area: 0, apart: 0, park: 0, cap: 0, lvlSum: 0, lvlN: 0, nAp: 0, nPk: 0 });
+      var g = G[k] || (G[k] = { key: k, n: 0, area: 0, apart: 0, park: 0, cap: 0, loc: 0, dep: 0, autoV: 0, atr: 0, lvlSum: 0, lvlN: 0, nAp: 0, nPk: 0 });
       g.cap += p.apartamente_capacitate || 0;
+      g.loc += mobVal(p, 'loc'); g.dep += mobVal(p, 'dep'); g.autoV += mobVal(p, 'autoV'); g.atr += mobVal(p, 'atr');
       g.n++;
       g.area += (p.suprafata_mp || 0) / 10000;
       if (p.apartamente) { g.apart += p.apartamente; g.nAp++; }
@@ -289,6 +324,16 @@
       ? '<span>0</span><span class="bar" style="background:linear-gradient(to right,' + [0, .25, .5, .75, 1].map(colorAt).join(',') + ')"></span><span>' + fmt(max, METRICS[metric].fmt) + ' ' + METRICS[metric].label + '</span>'
       : '';
     var head = { zona: 'Zonă', cartier: 'Cartier', uat: 'UAT' }[key];
+    var mobTable = MOB && $('tableMode').value === 'mob';
+    if (mobTable) {
+      $('groupTable').innerHTML = '<thead><tr><th>' + head + '</th><th>PUZ</th><th title="locuitori noi estimați">locuitori</th><th title="deplasări produse de locuitori pe zi">depl./zi</th><th title="autoturisme în ora de vârf a dimineții">auto vârf</th><th title="deplasări atrase de comerț, birouri, echipamente pe zi (separat)">atrase/zi</th></tr></thead><tbody>' +
+        gs.map(function (g) {
+          var parts = g.key.split('|'), label = key === 'zona' ? (parts[1] || parts[0]) : g.key.replace(/^\|/, '');
+          var sw = key === 'zona' && parts[0] ? '<span class="sw" style="background:' + colorAt((zoneVal[parts[0]] || 0) / (max || 1)) + '"></span>' : '';
+          return '<tr data-k="' + esc(g.key) + '"><td>' + sw + esc(label) + '</td><td>' + g.n + '</td><td>' + fmt(g.loc) + '</td><td>' +
+            fmt(g.dep) + '</td><td>' + fmt(g.autoV) + '</td><td>' + fmt(g.atr) + '</td></tr>';
+        }).join('') + '</tbody>';
+    } else
     $('groupTable').innerHTML = '<thead><tr><th>' + head + '</th><th>PUZ</th><th>ha</th><th title="apartamente cunoscute">apart.</th><th title="locuri de parcare cunoscute">parcări</th><th title="capacitate teoretică din suprafață × CUT">cap.</th><th title="niveluri maxime, medie">niv.</th></tr></thead><tbody>' +
       gs.map(function (g) {
         var parts = g.key.split('|'), label = key === 'zona' ? (parts[1] || parts[0]) : g.key.replace(/^\|/, '');
@@ -323,8 +368,13 @@
       'pot_max', 'cut_max', 'spatii_verzi_min', 'adc_max_mp', 'apartamente_capacitate', 'apartamente', 'sursa_apartamente', 'locuri_parcare', 'sursa_parcare',
       'vot_pentru', 'vot_impotriva', 'vot_abtineri', 'zona_id', 'zona', 'cartier', 'uat', 'lat', 'lon', 'precizie', 'cadastral', 'url_pdf', 'url_usr'];
     var q = function (v) { v = v === null || v === undefined ? '' : String(v); return /[",;\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
-    var lines = [cols.join(',')].concat(list.map(function (p) {
-      return cols.map(function (c) { return q(c === 'lat' ? (p._ll && p._ll[0]) : c === 'lon' ? (p._ll && p._ll[1]) : p[c]); }).join(',');
+    var mcols = MOB ? ['realist_locuitori', 'maxim_locuitori', 'realist_PMUD_deplasari_zi', 'realist_RPL_deplasari_zi',
+      'realist_PMUD_auto_varf', 'realist_RPL_auto_varf', 'maxim_PMUD_auto_varf', 'maxim_RPL_auto_varf', 'realist_atractie_deplasari_zi',
+      'construit_dupa_hcl_mp'] : [];
+    var lines = [cols.concat(mcols).join(',')].concat(list.map(function (p) {
+      var m = (MOB && MOB.puz[p.hcl]) || {};
+      return cols.map(function (c) { return q(c === 'lat' ? (p._ll && p._ll[0]) : c === 'lon' ? (p._ll && p._ll[1]) : p[c]); })
+        .concat(mcols.map(function (c) { return q(m[c]); })).join(',');
     }));
     var blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
     var a = document.createElement('a');
@@ -357,8 +407,12 @@
   Promise.all([
     fetch(DATA_URL).then(function (r) { if (!r.ok) throw new Error('puz_iasi.geojson: ' + r.status); return r.json(); }),
     fetch(ZONES_URL).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
-    fetch(PARCELS_URL).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })
+    fetch(PARCELS_URL).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
+    fetch(MOBILITY_URL).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })
   ]).then(function (res) {
+    MOB = res[3];
+    if (MOB) $('mobBox').hidden = false;
+    else Array.prototype.forEach.call(document.querySelectorAll('option[data-mob]'), function (o) { o.remove(); });
     PARCELS = res[2];
     if (!PARCELS) $('parcelsToggle').hidden = true;
     META = res[0].metadata || {};

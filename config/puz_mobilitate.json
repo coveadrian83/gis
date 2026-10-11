@@ -1,0 +1,65 @@
+{
+  "_descriere": "Parametrii modelului de generare a deplasărilor pentru PUZ-urile din Iași (scripts/puz_mobilitate.py). Fiecare valoare are sursa alături; cele marcate „provizoriu” se înlocuiesc cu valori locale (măsurători, studii).",
+  "constructie": {
+    "scenarii": {
+      "realist": {
+        "grad_realizare": 0.6,
+        "_sursa": "ipoteză: proiectele construiesc în medie ~60% din capacitatea maximă permisă de CUT; unde numărul de apartamente e cunoscut (HCL / apix.ro) se folosește acesta"
+      },
+      "maxim": {
+        "grad_realizare": 1.0,
+        "_sursa": "capacitatea maximă teoretică: suprafață × CUT"
+      }
+    },
+    "mp_adc_pe_apartament": 75,
+    "pondere_locuibila_adc": 0.8,
+    "pondere_locuire_mixt": 0.8,
+    "mp_teren_pe_casa": 600,
+    "pondere_teren_loturi": 0.7,
+    "_sursa": "ipoteze de conversie ADC → locuințe (75 mp ADC/apartament, 80% din ADC locuibil; la funcțiuni mixte 80% locuire și 20% spații comerciale/servicii la parter); case individuale: loturi de ~600 mp pe 70% din teren (restul străzi, spații verzi)"
+  },
+  "locuire": {
+    "persoane_pe_locuinta_ocupata": 2.73,
+    "rata_ocupare_locuinte": 0.65,
+    "_sursa": "RPL 2021, municipiul Iași: 271.692 rezidenți (Tab. 1.22), 152.972 locuințe convenționale din care 99.533 ocupate (Tab. 7.12) → 2,73 persoane pe locuință ocupată, ocupare 65%. Ocuparea se referă la rezidenții obișnuiți: chiriașii nerezidenți (în special studenții) nu sunt numărați, deci valoarea e prudentă pentru numărul de persoane prezente."
+  },
+  "mobilitate": {
+    "PMUD": {
+      "deplasari_pe_persoana_zi": 1.61,
+      "_sursa": "Actualizarea PMUD Iași, ancheta la domiciliu iun.–iul. 2021 (eșantion ~1% din populație, zile lucrătoare, metoda „ziua precedentă”): 1,61 deplasări/persoană/zi în municipiul Iași (1,46 în comunele ZMI). Anchetele de acest tip tind să subestimeze deplasările scurte (mai ales pe jos)."
+    },
+    "RPL": {
+      "pondere_ocupati": 0.439,
+      "pondere_elevi_studenti": 0.206,
+      "deplasari_pe_activitate_obligatorie": 2,
+      "pondere_obligatorii_in_total": 0.485,
+      "_sursa": "RPL 2021, municipiul Iași (Tab. 5.29): 119.278 ocupați (43,9%), 55.837 elevi/studenți (20,6%) din 271.692 rezidenți. Deplasări obligatorii = 2 × (ocupați + elevi/studenți) pe rezident (dus-întors); total = obligatorii / 48,5% (ponderea muncă + educație în PMUD 2021: 29,4% + 19,1%). Abordare structurală, pe baza activității populației, independentă de rata de mobilitate declarată în anchetă."
+    }
+  },
+  "modal": {
+    "pondere_auto": 0.264,
+    "pondere_auto_periferie": 0.4,
+    "periferie_km_de_la_centru": 4.0,
+    "centru": [
+      27.5815,
+      47.1653
+    ],
+    "ocupare_auto": 1.3,
+    "_sursa": "PMUD Iași 2021: auto 26,4%, transport public 30,8%, pe jos 41,0%, bicicletă 1,8% (media pe oraș). Pentru PUZ-urile aflate la peste 4 km de Piața Unirii (transport public mai slab) se folosește 40% – provizoriu. Ocupare autoturism 1,3 persoane – provizoriu (nu e publicată în prezentarea PMUD)."
+  },
+  "varf_dimineata": {
+    "pondere_zilnic_PMUD": 0.12,
+    "pondere_obligatorii_ora_varf": 0.45,
+    "pondere_nerezidential": 0.1,
+    "_sursa": "provizoriu, de calibrat cu numărătorile de trafic: ora de vârf a dimineții = 12% din deplasările zilnice (scenariul PMUD); în scenariul RPL, fiecare ocupat/elev pleacă o dată dimineața, iar 45% dintre aceste plecări cad în ora de vârf; activitățile nerezidențiale: 10% din deplasările zilnice."
+  },
+  "nerezidential": {
+    "deplasari_pe_100mp_zi": {
+      "comerț / servicii / birouri": 20,
+      "mixt (locuire + servicii)": 20,
+      "industrie / depozitare": 2,
+      "echipamente publice": 10
+    },
+    "_sursa": "provizoriu, ordine de mărime din literatura internațională (ITE Trip Generation): birouri ~10, comerț ~40, depozitare/industrie ~2 deplasări de persoane pe 100 mp ADC/zi; pentru categoria comerț/servicii/birouri se folosește 20. Acestea sunt deplasări ATRASE de activități și se raportează separat de deplasările PRODUSE de locuitori (nu se adună: o parte sunt aceleași persoane). Atenție: suprafața reglementată de PUZ include uneori construcții existente (extinderi, modificări de PUZ), deci atracția e un plafon."
+  }
+}

@@ -54,3 +54,9 @@ details summary { cursor: pointer; font-size: 14px; font-weight: 700; margin-bot
   #map { min-height: 45%; }
   h1 { font-size: 26px; }
 }
+#mobBox .row label { flex: 1; min-width: 150px; }
+#mobBox select { width: 100%; }
+.mobgrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-top: 8px; }
+.mobgrid div { background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: 6px 8px; }
+.mobgrid b { display: block; font-size: 18px; }
+.mobgrid small { color: var(--muted); font-size: 11px; }

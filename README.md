@@ -158,6 +158,14 @@ de Consiliul Local Iași din 2016 până azi, pe hartă, peste cele 17 zone MVA�
   la modificarea scriptului și manual: **Actions → Actualizare PUZ Iași → Run workflow**. Rularea din GitHub are acces
   la Nominatim și Overpass (localizare la număr / stradă și cartiere); local, fără ele, scriptul folosește rețeaua
   pietonală a hărții 15 minute, unde multe străzi centrale lipsesc (trotuarele nu au nume), deci localizează mai puțin.
+- **Impact asupra mobilității** (`scripts/puz_mobilitate.py`, parametri în `config/puz_mobilitate.json`): deplasările
+  produse de locuitorii noilor locuințe din PUZ-urile aprobate, în scenariul de construire realist (proiect / ~60% din
+  CUT) și maxim (CUT integral), fiecare cu două scenarii de mobilitate – **PMUD** (1,61 deplasări/persoană/zi, ancheta
+  PMUD Iași 2021) și **RPL** (structural: ocupați + elevi/studenți din RPL 2021) –, autoturismele pe zi și în ora de
+  vârf a dimineții, plus deplasările atrase de comerț, birouri și echipamente (separat). Rezultat:
+  `public/data/puz_mobilitate.json` / `.csv`; pe hartă, secțiunea „Impact asupra mobilității”; metodologia și sursele:
+  `/puz/metodologie.html`. Parametrii marcați „provizoriu” (ora de vârf, ocuparea autoturismului, ponderea auto la
+  periferie, ratele nerezidențiale) se înlocuiesc cu valori locale fără modificarea codului.
 - **Teste**: `python3 -m unittest discover -s test -p 'test_puz*.py'`.
 - **Limite**: indicatorii sunt extrași automat din text – verificați hotărârea înainte de a-i cita; un PUZ aprobat nu
   înseamnă o construcție autorizată sau realizată; apartamentele și parcările sunt cunoscute doar pentru o parte din PUZ-uri.
@@ -211,6 +219,7 @@ public/15min/               harta „15 minute. Pentru cine?” – Iași (core.
 public/puz/                 harta PUZ-urilor votate de Consiliul Local Iași (date: public/data/puz_iasi.geojson)
 scripts/puz_iasi.py         colectarea PUZ-urilor (hcl.usr.ro + apix.ro), extragerea indicatorilor, localizarea
 scripts/puz_parcele.py      extrasul parcelelor PUZ din parcelarul OCPI (data/puz_parcele.geojson)
+scripts/puz_mobilitate.py   deplasările generate de PUZ-uri (scenariile PMUD și RPL; config/puz_mobilitate.json)
 data/puz_iasi_completari.csv  corecturi și completări manuale pentru PUZ-uri
 scripts/export_15min.py     exportul rețelei pietonale și al facilităților din OSM (osmnx)
 scripts/elevatie_15min.py   panta: elevația Copernicus GLO-30 pe fiecare segment (elev.bin)
