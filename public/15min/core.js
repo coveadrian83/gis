@@ -147,6 +147,11 @@
 
   // Dijkstra pe timp de mers; se oprește la T secunde. Întoarce secundele pe nod (Infinity = neatins).
   function dijkstra(g, src, startSeconds, prof, T, ws) {
+    return dijkstraMulti(g, [[src, startSeconds]], prof, T, ws);
+  }
+
+  // Același calcul din mai multe surse [[nod, secunde la pornire], …] (un punct legat de mai multe noduri din jur).
+  function dijkstraMulti(g, sources, prof, T, ws) {
     ws = ws || workspace(g);
     var speed = prof.speed;
     var dist = ws.dist, touched = ws.touched, ht = ws.ht, hn = ws.hn, i;
@@ -170,7 +175,7 @@
       ht[k] = lt; hn[k] = ln;
     }
     function set(n, t) { if (dist[n] === Infinity) touched[ws.nt++] = n; dist[n] = t; }
-    set(src, startSeconds); push(startSeconds, src);
+    sources.forEach(function (s) { if (s[1] < dist[s[0]]) { set(s[0], s[1]); push(s[1], s[0]); } });
     while (ht.length) {
       var t = ht[0], n = hn[0]; pop();
       if (t > dist[n]) continue;
@@ -407,7 +412,7 @@
     R_LAT: R_LAT, R_LON: R_LON, STATION: STATION, BENCH: BENCH, AMENITY_CATS: AMENITY_CATS, MODES: MODES, REF: REF,
     STAIRS_GRADE: STAIRS_GRADE, profile: profile, sameProfile: sameProfile, parseElev: parseElev, blocked: blocked, edgeCost: edgeCost,
     merc: merc, parseGraph: parseGraph, buildAdjacency: buildAdjacency, buildGrid: buildGrid, nearestNode: nearestNode,
-    workspace: workspace, dijkstra: dijkstra, collectReach: collectReach, edgePath: edgePath, cutPath: cutPath,
+    workspace: workspace, dijkstra: dijkstra, dijkstraMulti: dijkstraMulti, collectReach: collectReach, edgePath: edgePath, cutPath: cutPath,
     snapPois: snapPois, stationUsable: stationUsable, countReach: countReach, evaluatePoint: evaluatePoint,
     pointInGeometry: pointInGeometry, geometryBbox: geometryBbox, gridPoints: gridPoints, thin: thin,
     quantile: quantile, analyzeZone: analyzeZone, zonesCsv: zonesCsv

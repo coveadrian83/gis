@@ -172,9 +172,12 @@ de Consiliul Local Iași din 2016 până azi, pe hartă, peste cele 17 zone MVA�
   locurile de muncă = ha × normă pe tip de zonă funcțională (birouri 200, retail mare 30, hipermarket 250, producție
   și logistică 40, activități tehnologice 120, comerț mic 20 / ha; tipul se deduce din obiectul hotărârii); o a doua
   variantă a deplasărilor atrase (locuri de muncă × 2 ÷ 29,4% – ponderea muncii, PMUD), lângă cea ITE; densitatea umană
-  = (locuitori + locuri de muncă) / ha; distanța până la cea mai apropiată stație (oricare / tramvai sau tren, stațiile
-  hărții 15 minute) și coridorul de 800 m (10 minute pe jos). Pe hartă: alegerea variantei de atracție, colorarea
-  zonelor după densitate sau acces și tabelul „densitate umană și acces la transport public”.
+  = (locuitori + locuri de muncă) / ha; distanța **pe rețeaua pietonală** a hărții 15 minute (`graph.bin`) până la cea
+  mai apropiată stație (oricare / tramvai sau tren) și izocrona de 10 minute (800 m); distanța în linie dreaptă e
+  raportată alături, ca limită superioară (rețeaua OSM are goluri). Pe hartă: alegerea variantei de atracție, colorarea
+  zonelor după densitate sau acces, tabelul „densitate umană și acces la transport public”, **izocrona de 10 minute
+  pe jos** la trecerea cu mouse-ul peste un PUZ (cu stațiile din ea; `public/15min/core.js`) și mărimea cercurilor
+  după suprafață, deplasări produse, autoturisme în ora de vârf sau deplasări atrase.
 - **Teste**: `python3 -m unittest discover -s test -p 'test_puz*.py'`.
 - **Limite**: indicatorii sunt extrași automat din text – verificați hotărârea înainte de a-i cita; un PUZ aprobat nu
   înseamnă o construcție autorizată sau realizată; apartamentele și parcările sunt cunoscute doar pentru o parte din PUZ-uri.

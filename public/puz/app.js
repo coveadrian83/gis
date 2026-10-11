@@ -76,6 +76,9 @@
   var tileErrors = 0;
   base.on('tileerror', function () { if (++tileErrors === 8) $('baseNote').textContent = 'Harta de fundal nu se încarcă; zonele și PUZ-urile sunt afișate fără fundal.'; });
   var renderer = L.canvas({ padding: 0.3 });
+  map.createPane('iso').style.zIndex = 390;   // sub cercurile PUZ (overlayPane, 400), peste zone
+  map.getPane('iso').style.pointerEvents = 'none';
+  var isoRenderer = L.canvas({ pane: 'iso', padding: 0.3 });
   var parcelLayer = L.layerGroup().addTo(map);
   var puzLayer = L.layerGroup().addTo(map);
   var PARCELS = null, BY_HCL = {}, lastList = [];
@@ -111,8 +114,9 @@
       function (k) { return STATUS.filter(function (s) { return s[0] === k; })[0][1]; });
     chips($('funcChips'), FUNC.map(function (f) { return f[0]; }), state.func,
       function (k) { return FUNC_COLOR[k]; }, function (k) { return k; });
-    ['yFrom', 'yTo', 'minArea', 'minLevels', 'showApprox', 'groupBy', 'metric', 'scConstr', 'scMob', 'scAtr', 'tableMode'].forEach(function (id) { $(id).onchange = update; });
+    ['yFrom', 'yTo', 'minArea', 'minLevels', 'showApprox', 'groupBy', 'metric', 'scConstr', 'scMob', 'scAtr', 'tableMode', 'sizeBy'].forEach(function (id) { $(id).onchange = update; });
     $('showParcels').onchange = drawParcels;
+    $('showIso').onchange = function () { if (!$('showIso').checked) { isoPinned = null; clearIso(); } };
     $('q').oninput = debounce(update, 200);
     $('showZones').onchange = function () { if (zoneLayer) { if ($('showZones').checked) zoneLayer.addTo(map); else map.removeLayer(zoneLayer); } };
     $('csv').onclick = downloadCsv;
@@ -126,7 +130,7 @@
     var h = 'y=' + $('yFrom').value + '-' + $('yTo').value +
       '&st=' + Object.keys(state.status).filter(function (k) { return state.status[k]; }).join(',') +
       '&f=' + FUNC.map(function (f, i) { return state.func[f[0]] ? i : ''; }).filter(String).join(',') +
-      '&a=' + $('minArea').value + '&l=' + $('minLevels').value + '&g=' + $('groupBy').value + '&m=' + $('metric').value +
+      '&a=' + $('minArea').value + '&l=' + $('minLevels').value + '&g=' + $('groupBy').value + '&m=' + $('metric').value + '&s=' + $('sizeBy').value +
       ($('q').value ? '&q=' + encodeURIComponent($('q').value) : '');
     history.replaceState(null, '', '#' + h);
   }
@@ -136,7 +140,7 @@
     if (h.y) { var y = h.y.split('-'); $('yFrom').value = y[0]; $('yTo').value = y[1]; }
     if (h.st !== undefined) { var st = h.st.split(','); Object.keys(state.status).forEach(function (k) { state.status[k] = st.indexOf(k) >= 0; }); }
     if (h.f !== undefined) { var f = h.f.split(','); FUNC.forEach(function (x, i) { state.func[x[0]] = f.indexOf(String(i)) >= 0; }); }
-    ['a:minArea', 'l:minLevels', 'g:groupBy', 'm:metric', 'q:q'].forEach(function (s) { var p = s.split(':'); if (h[p[0]] !== undefined) $(p[1]).value = h[p[0]]; });
+    ['a:minArea', 'l:minLevels', 'g:groupBy', 'm:metric', 's:sizeBy', 'q:q'].forEach(function (s) { var p = s.split(':'); if (h[p[0]] !== undefined) $(p[1]).value = h[p[0]]; });
     chips($('statusChips'), STATUS.map(function (s) { return s[0]; }), state.status,
       function (k) { return STATUS.filter(function (s) { return s[0] === k; })[0][2]; },
       function (k) { return STATUS.filter(function (s) { return s[0] === k; })[0][1]; });
@@ -159,12 +163,20 @@
   }
 
   // ---------------------------------------------------------------- desen
+  var SIZE_LABEL = { area: 'suprafața reglementată', dep: 'deplasările produse pe zi', autoV: 'autoturismele în ora de vârf',
+    atr: 'deplasările atrase pe zi' };
+  var sizeMax = 1;   // valoarea maximă din selecție pentru mărimea aleasă (aria cercului ∝ valoare)
   function radius(p) {
-    var a = p.suprafata_mp || 500;
-    return Math.max(4, Math.min(28, Math.sqrt(a) / 9));
+    var by = $('sizeBy').value;
+    if (by === 'area' || !MOB) {
+      var a = p.suprafata_mp || 500;
+      return Math.max(4, Math.min(28, Math.sqrt(a) / 9));
+    }
+    var v = mobVal(p, by);
+    return v > 0 ? Math.max(3, 28 * Math.sqrt(v / sizeMax)) : 3;
   }
 
-  function popup(p) {
+  function popup(p, iso) {
     var st = STATUS.filter(function (s) { return s[0] === p.statut; })[0] || STATUS[5];
     var rows = [
       ['Data', p.data ? p.data.split('-').reverse().join('.') : '–'],
@@ -196,7 +208,7 @@
           (m.zona_functionala_lm ? ', ≈ ' + fmt(m.realist_atractie_lm_deplasari_zi) + '/zi după locurile de muncă' : '') : '') +
         (m.locuri_munca ? '<br>≈ ' + fmt(m.locuri_munca) + ' locuri de muncă <span class="note">(' + esc(m.zona_functionala_lm) + ', Covăsnianu 2023)</span>' : '') +
         (m.realist_densitate_umana ? '<br>densitate umană: ≈ ' + fmt(m.realist_densitate_umana) + ' persoane/ha (realist), ' + fmt(m.maxim_densitate_umana) + ' (maxim)' : '') +
-        (m.dist_statie_m !== null && m.dist_statie_m !== undefined ? '<br>transport public: stație la ' + fmt(m.dist_statie_m) + ' m' +
+        (m.dist_statie_m !== null && m.dist_statie_m !== undefined ? '<br>transport public' + (m.acces_metoda === 'rețea pietonală' ? ' (pe rețeaua pietonală)' : '') + ': stație la ' + fmt(m.dist_statie_m) + ' m' +
           (m.dist_tramvai_tren_m !== null ? ', tramvai/tren la ' + fmt(m.dist_tramvai_tren_m) + ' m' : '') + '; ' + m.statii_800m + ' stații la ≤ 800 m' +
           (m.acces_tp_800m ? '' : ' <b>(fără stație în 10 minute de mers pe jos)</b>') : '') +
         (m.construit_dupa_hcl_mp ? '<br><span class="note">construcții înscrise în eTerra după aprobare (până în 05.2023): ' + fmt(m.construit_dupa_hcl_mp) + ' mp amprentă</span>' : '') +
@@ -211,6 +223,7 @@
     return '<div class="pop"><h3>HCL ' + esc(p.hcl) + ' <span class="st" style="background:' + st[2] + '">' + esc(p.statut) + '</span></h3>' +
       (p.scop ? '<div class="scop">' + esc(p.scop) + '</div>' : '') +
       '<table>' + rows.map(function (r) { return '<tr><td>' + r[0] + '</td><td>' + r[1] + '</td></tr>'; }).join('') + '</table>' +
+      (iso ? '<div class="iso">' + iso + '</div>' : '') +
       links.join(' · ') + (p.nota ? '<div class="note">' + esc(p.nota) + '</div>' : '') + '</div>';
   }
   function srcNote(s) {
@@ -235,7 +248,10 @@
 
   function drawPoints(list) {
     puzLayer.clearLayers();
-    var showApprox = $('showApprox').checked;
+    var showApprox = $('showApprox').checked, by = $('sizeBy').value;
+    sizeMax = 1;
+    if (by !== 'area' && MOB) list.forEach(function (p) { sizeMax = Math.max(sizeMax, mobVal(p, by)); });
+    $('sizeNote').textContent = SIZE_LABEL[by] || SIZE_LABEL.area;
     var pos = spread(list.slice().sort(function (a, b) { return (a.data || '').localeCompare(b.data || ''); }));
     list.slice().sort(function (a, b) { return (b.suprafata_mp || 0) - (a.suprafata_mp || 0); }).forEach(function (p) {
       if (!p._ll) return;
@@ -243,10 +259,10 @@
       if (approx && !showApprox) return;
       var col = FUNC_COLOR[p.functiune] || FUNC_COLOR.altele;
       var rejected = !APPROVED[p.statut] && p.statut !== 'altul';
-      L.circleMarker(pos[p.hcl] || p._ll, {
+      isoEvents(L.circleMarker(pos[p.hcl] || p._ll, {
         renderer: renderer, radius: radius(p), color: rejected ? '#b3261e' : '#15171a', weight: rejected ? 2 : 1,
         dashArray: approx ? '3 3' : null, fillColor: col, fillOpacity: rejected ? 0.08 : 0.7, opacity: 0.9
-      }).bindPopup(popup(p), { maxWidth: 360 }).bindTooltip(esc(p.adresa || p.hcl), { direction: 'top' }).addTo(puzLayer);
+      }).bindPopup(popup(p), { maxWidth: 360 }).bindTooltip(esc(p.adresa || p.hcl), { direction: 'top' }), p).addTo(puzLayer);
     });
   }
 
@@ -265,7 +281,7 @@
           dashArray: APPROVED[p.statut] ? null : '4 3' }
       });
       if (!view.intersects(layer.getBounds())) return;
-      layer.bindPopup(popup(p), { maxWidth: 360 }).bindTooltip(esc(p.adresa || p.hcl), { sticky: true }).addTo(parcelLayer);
+      isoEvents(layer.bindPopup(popup(p), { maxWidth: 360 }).bindTooltip(esc(p.adresa || p.hcl), { sticky: true }), p).addTo(parcelLayer);
     });
   }
   map.on('zoomend moveend', drawParcels);
@@ -296,7 +312,7 @@
         '<div><b>' + fmt(tot('atr')) + '</b><small>deplasări atrase pe zi de comerț, birouri, echipamente (separat; ' + ($('scAtr').value === 'lm' ? 'locuri de muncă' : 'ITE') + ')</small></div>' +
         '<div><b>' + fmt(tot('lm')) + '</b><small>locuri de muncă noi (Covăsnianu 2023, Tabelul nr. 4)</small></div>' +
         '<div><b>' + fmt(dens.v) + '</b><small>persoane/ha – densitate umană pe cele ' + fmt(dens.ha, 0) + ' ha reglementate</small></div>' +
-        '<div style="grid-column:1/-1"><b>' + fmt(acc.rail, 0) + '% · ' + fmt(acc.any, 0) + '%</b><small>din locuitorii noi au o stație de tramvai/tren, respectiv orice stație, la ≤ 800 m (10 minute pe jos); calculat pentru ' + fmt(acc.n) + ' PUZ-uri localizate</small></div></div>';
+        '<div style="grid-column:1/-1"><b>' + fmt(acc.rail, 0) + '% · ' + fmt(acc.any, 0) + '%</b><small>din locuitorii noi au o stație de tramvai/tren, respectiv orice stație, la ≤ 800 m pe rețeaua pietonală (10 minute pe jos); calculat pentru ' + fmt(acc.n) + ' PUZ-uri localizate</small></div></div>';
     }
   }
 
@@ -409,6 +425,110 @@
     if (pts.length) map.fitBounds(L.latLngBounds(pts), { maxZoom: 16, padding: [30, 30] });
   }
 
+  // ---------------------------------------------------------------- izocrona de 10 minute pe jos
+  // Aceeași rețea pietonală și aceleași reguli ca indicatorul de acces din scripts/puz_mobilitate.py:
+  // 800 m în 10 minute (≈ 1,33 m/s, teren plat), PUZ-ul legat de nodurile din 150 m, stația de nodurile din 60 m.
+  var ISO_DIR = '../15min/data/iasi/', ISO_T = 600, ISO_PROF = { speed: 800 / 600, avoid: false, slope: false, maxGrade: 0 };
+  var ISO_SNAP_PUZ = 150, ISO_SNAP_STATION = 60, ISO_SNAP_MAX = 500;
+  var MODE_COLOR = { 1: '#6b0f1a', 2: '#1f7a99', 3: '#e8743b' }, MODE_NAME = { 1: 'tren', 2: 'tramvai', 3: 'autobuz' };
+  var isoLayer = L.layerGroup().addTo(map), isoNet = null, isoLoading = null, isoFor = null, isoPinned = null, isoCache = {};
+
+  function loadIso() {
+    var C = window.Min15Core;
+    if (!isoLoading) isoLoading = !C ? Promise.resolve(false) : Promise.all([
+      fetch(ISO_DIR + 'graph.bin').then(function (r) { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); }),
+      fetch(ISO_DIR + 'pois.json').then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+    ]).then(function (res) {
+      var g = C.parseGraph(res[0]), net = { C: C, g: g, grid: C.buildGrid(g), ws: C.workspace(g), stations: [] };
+      res[1].pts.forEach(function (s) {
+        if (s[2] !== C.STATION) return;
+        var links = nodesNear(net, s[0], s[1], ISO_SNAP_STATION, 150);
+        if (links.length) net.stations.push({ lon: s[0], lat: s[1], mode: s[4], links: links });
+      });
+      return (isoNet = net);
+    }).catch(function (e) { console.warn('Rețeaua pietonală nu s-a putut încărca:', e); return (isoNet = false); });
+    return isoLoading;
+  }
+
+  // nodurile la cel mult r metri de punct (cel puțin cel mai apropiat, dacă e la cel mult maxSnap): [[nod, metri], …]
+  function nodesNear(net, lon, lat, r, maxSnap) {
+    var C = net.C, g = net.g, grid = net.grid, near = C.nearestNode(g, grid, lon, lat, 8);
+    if (near.node < 0 || near.dist > maxSnap) return [];
+    var out = [[near.node, near.dist]], cosL = Math.cos(lat * Math.PI / 180);
+    var cx = Math.floor((lon - grid.minLon) / grid.cellLon), cy = Math.floor((lat - grid.minLat) / grid.cellLat);
+    for (var y = cy - 2; y <= cy + 2; y++) for (var x = cx - 2; x <= cx + 2; x++) {
+      if (x < 0 || y < 0 || x >= grid.W || y >= grid.H) continue;
+      for (var i = grid.head[y * grid.W + x]; i !== -1; i = grid.next[i]) {
+        var d = Math.hypot((g.lon[i] - lon) * cosL * C.R_LON, (g.lat[i] - lat) * C.R_LAT);
+        if (i !== near.node && d <= r) out.push([i, d]);
+      }
+    }
+    return out;
+  }
+
+  function unmerc(x, y) { return [Math.atan(Math.sinh(Math.PI * (1 - 2 * y))) * 180 / Math.PI, (x - 0.5) * 360]; }
+
+  // străzile atinse în 10 minute și stațiile din izocronă; null dacă punctul nu e legat de rețea
+  function isoCompute(p) {
+    if (isoCache[p.hcl] !== undefined) return isoCache[p.hcl];
+    var net = isoNet, C = net.C, g = net.g, sp = ISO_PROF.speed;
+    var links = nodesNear(net, p._ll[1], p._ll[0], ISO_SNAP_PUZ, ISO_SNAP_MAX);
+    if (!links.length) return (isoCache[p.hcl] = null);
+    var dist = C.dijkstraMulti(g, links.map(function (l) { return [l[0], l[1] / sp]; }), ISO_PROF, ISO_T, net.ws);
+    var lines = C.collectReach(g, dist, ISO_T, ISO_PROF).items.map(function (it) {
+      var pts = C.edgePath(g, it.e, !it.fromLow), ll = [];
+      if (it.frac < 1) pts = C.cutPath(pts, it.frac);
+      for (var i = 0; i < pts.length; i += 2) ll.push(unmerc(pts[i], pts[i + 1]));
+      return ll;
+    });
+    var st = net.stations.filter(function (s) {
+      return s.links.some(function (l) { return dist[l[0]] + l[1] / sp <= ISO_T; });
+    });
+    return (isoCache[p.hcl] = { lines: lines, stations: st });
+  }
+
+  function isoText(p, r) {
+    if (p.precizie === 'zonă') return '<span class="note">PUZ localizat doar pe zonă – izocrona nu se calculează.</span>';
+    if (r === false) return '<span class="note">Rețeaua pietonală nu s-a putut încărca.</span>';
+    if (!r) return '<span class="note">În afara rețelei pietonale a hărții 15 minute.</span>';
+    var by = { 1: 0, 2: 0, 3: 0 };
+    r.stations.forEach(function (s) { by[s.mode] = (by[s.mode] || 0) + 1; });
+    var parts = [1, 2, 3].filter(function (m) { return by[m]; }).map(function (m) { return by[m] + ' ' + MODE_NAME[m]; });
+    return '<b>Pe jos, în 10 minute</b> (≈ 800 m pe rețeaua pietonală): ' +
+      (r.stations.length ? r.stations.length + (r.stations.length === 1 ? ' stație' : ' stații') + ' – ' + parts.join(', ') :
+        '<b>nicio stație de transport public</b>') + ' <a href="metodologie.html" target="_blank">metodă</a>';
+  }
+
+  function clearIso() { isoLayer.clearLayers(); isoFor = null; }
+  function drawIso(p, r) {
+    isoLayer.clearLayers();
+    isoFor = p.hcl;
+    if (!r) return;
+    L.polyline(r.lines, { renderer: isoRenderer, color: '#1f7a99', weight: 2.5, opacity: 0.85, interactive: false }).addTo(isoLayer);
+    r.stations.forEach(function (s) {
+      L.circleMarker([s.lat, s.lon], { renderer: isoRenderer, radius: 5, color: '#fff', weight: 1.5, fillColor: MODE_COLOR[s.mode] || '#555',
+        fillOpacity: 1, interactive: false }).addTo(isoLayer);
+    });
+  }
+  // la hover: izocrona temporară; la deschiderea fișei: izocrona rămâne și fișa primește numărul de stații
+  function showIso(p, pop) {
+    if (!$('showIso').checked || !p._ll) return;
+    if (p.precizie === 'zonă') { if (pop) pop.setContent(popup(p, isoText(p))); return; }
+    isoFor = p.hcl;
+    loadIso().then(function (net) {
+      if (!pop && (isoFor !== p.hcl || (isoPinned && isoPinned !== p.hcl))) return;   // mouse-ul a plecat între timp
+      var r = net ? isoCompute(p) : false;
+      drawIso(p, r);
+      if (pop && pop.isOpen()) pop.setContent(popup(p, isoText(p, r)));
+    });
+  }
+  function isoEvents(layer, p) {
+    return layer.on('mouseover', function () { if (!isoPinned) showIso(p); })
+      .on('mouseout', function () { if (!isoPinned && isoFor === p.hcl) clearIso(); })
+      .on('popupopen', function (e) { isoPinned = p.hcl; showIso(p, e.popup); })
+      .on('popupclose', function () { if (isoPinned === p.hcl) { isoPinned = null; clearIso(); } });
+  }
+
   // ---------------------------------------------------------------- export
   function downloadCsv() {
     var list = selected();
@@ -419,7 +539,8 @@
     var mcols = MOB ? ['realist_locuitori', 'maxim_locuitori', 'realist_PMUD_deplasari_zi', 'realist_RPL_deplasari_zi',
       'realist_PMUD_auto_varf', 'realist_RPL_auto_varf', 'maxim_PMUD_auto_varf', 'maxim_RPL_auto_varf', 'realist_atractie_deplasari_zi',
       'realist_atractie_lm_deplasari_zi', 'locuri_munca', 'zona_functionala_lm', 'realist_densitate_umana', 'maxim_densitate_umana',
-      'dist_statie_m', 'dist_tramvai_tren_m', 'statii_800m', 'acces_tp_800m', 'acces_tramvai_tren_800m', 'construit_dupa_hcl_mp'] : [];
+      'dist_statie_m', 'dist_tramvai_tren_m', 'statii_800m', 'acces_tp_800m', 'acces_tramvai_tren_800m', 'acces_metoda',
+      'dist_statie_linie_dreapta_m', 'dist_tramvai_tren_linie_dreapta_m', 'construit_dupa_hcl_mp'] : [];
     var lines = [cols.concat(mcols).join(',')].concat(list.map(function (p) {
       var m = (MOB && MOB.puz[p.hcl]) || {};
       return cols.map(function (c) { return q(c === 'lat' ? (p._ll && p._ll[0]) : c === 'lon' ? (p._ll && p._ll[1]) : p[c]); })

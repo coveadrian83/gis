@@ -39,8 +39,10 @@
       ['Deplasări atrase/zi – locuri de muncă (separat)', 'realist_atractie_lm_deplasari_zi', 'maxim_atractie_lm_deplasari_zi'],
       ['Locuri de muncă', 'locuri_munca', 'locuri_munca'],
       ['Densitate umană (persoane/ha)', 'realist_densitate_umana', 'maxim_densitate_umana'],
-      ['Locuitori noi cu tramvai/tren la ≤ 800 m (%)', 'realist_locuitori_acces_tramvai_tren_800m_pct', 'maxim_locuitori_acces_tramvai_tren_800m_pct'],
-      ['Locuitori noi cu orice stație la ≤ 800 m (%)', 'realist_locuitori_acces_tp_800m_pct', 'maxim_locuitori_acces_tp_800m_pct'],
+      ['Locuitori noi cu tramvai/tren la ≤ 800 m pe rețeaua pietonală (%)', 'realist_locuitori_acces_tramvai_tren_800m_pct', 'maxim_locuitori_acces_tramvai_tren_800m_pct'],
+      ['Locuitori noi cu orice stație la ≤ 800 m pe rețeaua pietonală (%)', 'realist_locuitori_acces_tp_800m_pct', 'maxim_locuitori_acces_tp_800m_pct'],
+      ['– aceeași pondere, tramvai/tren, în linie dreaptă (limită superioară)', 'realist_locuitori_acces_tramvai_tren_800m_linie_dreapta_pct', 'maxim_locuitori_acces_tramvai_tren_800m_linie_dreapta_pct'],
+      ['– aceeași pondere, orice stație, în linie dreaptă (limită superioară)', 'realist_locuitori_acces_tp_800m_linie_dreapta_pct', 'maxim_locuitori_acces_tp_800m_linie_dreapta_pct'],
       ['Locuri de muncă cu tramvai/tren la ≤ 800 m (%)', 'locuri_munca_acces_tramvai_tren_800m_pct', 'locuri_munca_acces_tramvai_tren_800m_pct']];
     document.getElementById('totals').innerHTML = '<table><tr><th></th><th class="n">realist</th><th class="n">maxim</th></tr>' +
       L.map(function (r) { return '<tr><td>' + r[0] + '</td><td class="n">' + fmt(t[r[1]]) + '</td><td class="n">' + fmt(t[r[2]]) + '</td></tr>'; }).join('') +

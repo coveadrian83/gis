@@ -16,6 +16,7 @@ on:
       - scripts/puz_mobilitate.py
       - config/puz_mobilitate.json
       - public/15min/data/iasi/pois.json
+      - public/15min/data/iasi/graph.bin
       - .github/workflows/puz-iasi.yml
 
 permissions:
