@@ -121,7 +121,7 @@ acceptată – ex. 8 % pentru scaun rulant/cărucior). Totul rulează în browse
   același calcul ca pagina (`public/15min/core.js`).
 - Metodologia și limitele: `public/15min/metodologie.html`.
 
-## Harta PUZ-urilor votate de Consiliul Local Iași (`/puz/`)
+## Unde crește Iașul – harta PUZ-urilor votate de Consiliul Local Iași (`/puz/`)
 
 Planurile urbanistice zonale (PUZ, inclusiv PUZ pentru zone construite protejate) aprobate, respinse sau modificate
 de Consiliul Local Iași din 2016 până azi, pe hartă, peste cele 17 zone MVA–MVI, cu agregare pe zone, pe cartiere (OSM) și pe UAT.
@@ -166,6 +166,9 @@ de Consiliul Local Iași din 2016 până azi, pe hartă, peste cele 17 zone MVA�
   `public/data/puz_mobilitate.json` / `.csv`; pe hartă, secțiunea „Impact asupra mobilității”; metodologia și sursele:
   `/puz/metodologie.html`. Parametrii marcați „provizoriu” (ora de vârf, ocuparea autoturismului, ponderea auto la
   periferie, ratele nerezidențiale) se înlocuiesc cu valori locale fără modificarea codului.
+- **Densitate umană (pas următor)**: locurile de muncă pe tip de zonă funcțională și densitatea umană totală
+  (locuitori + locuri de muncă / ha, coridor de 800 m) după metodologia din disertația autorului – Covăsnianu, A.
+  (2023), *Huburile de mobilitate…*, UAUIM „Ion Mincu”, Tabelul nr. 4 ([ResearchGate](https://www.researchgate.net/publication/388290968_Huburile_de_mobilitate_Un_exemplu_de_dezvoltare_integrata_a_mobilitatii_De_la_concept_tipologie_cadru_ideologic_pana_la_implementarea_trenului_metropolitan_in_Zona_Metropolitana_Bucuresti)).
 - **Teste**: `python3 -m unittest discover -s test -p 'test_puz*.py'`.
 - **Limite**: indicatorii sunt extrași automat din text – verificați hotărârea înainte de a-i cita; un PUZ aprobat nu
   înseamnă o construcție autorizată sau realizată; apartamentele și parcările sunt cunoscute doar pentru o parte din PUZ-uri.

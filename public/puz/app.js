@@ -1,4 +1,4 @@
-/* PUZ-uri Iași: harta planurilor urbanistice zonale votate de Consiliul Local, cu agregare pe zonele MVA–MVI,
+/* Unde crește Iașul: harta planurilor urbanistice zonale votate de Consiliul Local, cu agregare pe zonele MVA–MVI,
  * pe cartiere (OSM) și pe UAT. Datele: ../data/puz_iasi.geojson, generat de scripts/puz_iasi.py. */
 (function () {
   'use strict';
