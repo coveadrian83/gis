@@ -870,6 +870,14 @@ class Geocoder:
         self.blocked = False
         self.streets = OSMStreets()
         self.zones = zone_centroids()
+        iasi = [ps for key, ps in load_polys(DATA / "zmi_uat_web.geojson",
+                                             lambda p: p.get("canonical_name") or p.get("name")) if key == "Iași"]
+        self.iasi = iasi[0] if iasi else None
+
+    def in_iasi(self, hit):
+        """Rezultatele la nivel de număr / stradă trebuie să fie în municipiu: un PUZ votat de CL Iași nu poate fi pe
+        strada omonimă dintr-o comună vecină (ex. Lascăr Catargi din Valea Lupului)."""
+        return self.iasi is None or bool(which([("Iași", self.iasi)], float(hit["lon"]), float(hit["lat"])))
 
     def save(self):
         self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -927,14 +935,15 @@ class Geocoder:
         qs = dict((p, q) for q, p in address_queries(addr))
         if number:
             hit = self.search(qs["număr"])
-            if hit and hit.get("address", {}).get("house_number"):
+            if hit and hit.get("address", {}).get("house_number") and self.in_iasi(hit):
                 return float(hit["lat"]), float(hit["lon"]), "număr", self._cartier(hit), qs["număr"]
         if name:
             pt = self.streets.find(typ, name)
             if pt:
                 return pt[0], pt[1], "stradă", None, f"OSM: {typ or ''} {name}".strip()
             hit = self.search(qs["stradă"])
-            if hit and hit.get("addresstype") not in ("city", "town", "village", "county", "state", "country"):
+            if hit and hit.get("addresstype") not in ("city", "town", "village", "county", "state", "country") \
+                    and self.in_iasi(hit):
                 return float(hit["lat"]), float(hit["lon"]), "stradă", self._cartier(hit), qs["stradă"]
         if zone:
             for k, (lat, lon) in self.zones.items():

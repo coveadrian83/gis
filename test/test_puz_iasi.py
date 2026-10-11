@@ -70,6 +70,14 @@ class PuzParse(unittest.TestCase):
         self.assertEqual(P.split_address("soseaua Iasi - Ungheni nr. 52")[1], "iasi ungheni")
         self.assertEqual(P.split_address("Zona Bucium – Dealul Craitelor (T173)")[3], "bucium")
 
+    def test_homonym_outside_iasi_rejected(self):
+        g = P.Geocoder.__new__(P.Geocoder)
+        iasi = [ps for k, ps in P.load_polys(P.DATA / "zmi_uat_web.geojson",
+                                              lambda p: p.get("canonical_name") or p.get("name")) if k == "Iași"]
+        g.iasi = iasi[0]
+        self.assertTrue(g.in_iasi({"lat": "47.1624", "lon": "27.5867"}))       # centrul Iașului
+        self.assertFalse(g.in_iasi({"lat": "47.179869", "lon": "27.520304"}))  # Valea Lupului
+
     def test_apix_extraction(self):
         r = {"hcl": "1/2026", "data": "2026-01-30", "statut": "aprobat", "adresa": "strada Cicoarei nr. 3",
              "cadastral": "", "suprafata_mp": 30123.0, "cut_max": 4.0, "functiune": "locuințe colective"}
