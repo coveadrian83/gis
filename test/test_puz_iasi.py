@@ -78,6 +78,15 @@ class PuzParse(unittest.TestCase):
         self.assertTrue(g.in_iasi({"lat": "47.1624", "lon": "27.5867"}))       # centrul Iașului
         self.assertFalse(g.in_iasi({"lat": "47.179869", "lon": "27.520304"}))  # Valea Lupului
 
+    def test_partial_overpass_is_merged_with_local_network(self):
+        from unittest import mock
+        partial = [["Strada Lascăr Catargi", 27.585, 47.169]] * 10
+        with mock.patch.object(P, "overpass_streets", return_value=partial):
+            st = P.OSMStreets()
+        self.assertIn("parțial", st.source)
+        self.assertIsNotNone(st.find("strada", "lascar catargi"))   # din Overpass
+        self.assertIsNotNone(st.find("strada", "otelariei"))        # din rețeaua pietonală
+
     def test_apix_extraction(self):
         r = {"hcl": "1/2026", "data": "2026-01-30", "statut": "aprobat", "adresa": "strada Cicoarei nr. 3",
              "cadastral": "", "suprafata_mp": 30123.0, "cut_max": 4.0, "functiune": "locuințe colective"}

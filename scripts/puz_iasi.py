@@ -744,14 +744,19 @@ def merc_dist(lon1, lat1, lon2, lat2):
 OVERPASS = ["https://overpass-api.de/api/interpreter", "https://overpass.private.coffee/api/interpreter",
             "https://overpass.kumi.systems/api/interpreter"]
 # toate străzile cu nume din municipiul Iași (cutia UAT-ului, apoi filtrate pe poligon)
-OVERPASS_Q = '[out:json][timeout:240];way["highway"]["name"](47.08,27.47,47.24,27.71);out tags center qt;'
+OVERPASS_Q = '[out:json][timeout:600][maxsize:536870912];way["highway"]["name"](47.08,27.47,47.24,27.71);out tags center qt;'
+OVERPASS_MIN = 3000   # tronsoane cu nume sub care răspunsul e considerat trunchiat (Iașiul are câteva mii de străzi)
 
 
 def overpass_streets(path):
-    """Străzile cu nume din OpenStreetMap (Overpass), cu cache: [(nume, lon, lat), …]. None dacă nu se pot obține."""
+    """Străzile cu nume din OpenStreetMap (Overpass), cu cache: [(nume, lon, lat), …]. None dacă nu se pot obține
+    complet (un răspuns cu „remark” sau cu prea puține tronsoane nu se păstrează)."""
     if path.exists():
-        return json.loads(path.read_text(encoding="utf-8"))
+        ways = json.loads(path.read_text(encoding="utf-8"))
+        if len(ways) >= OVERPASS_MIN:
+            return ways
     body = urllib.parse.urlencode({"data": OVERPASS_Q}).encode()
+    best = None
     for url in OVERPASS:
         try:
             req = urllib.request.Request(url, data=body, headers={"User-Agent": UA})
@@ -761,22 +766,24 @@ def overpass_streets(path):
                    for w in data.get("elements", []) if w.get("center") and w.get("tags", {}).get("name")]
             print(f"  Overpass ({url}): {len(out)} străzi cu nume"
                   + (f"; mesaj: {data['remark']}" if data.get("remark") else ""), file=sys.stderr)
-            if len(out) > 1000:
+            if len(out) >= OVERPASS_MIN and not data.get("remark"):
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text(json.dumps(out, ensure_ascii=False), encoding="utf-8")
                 return out
+            if out and (best is None or len(out) > len(best)):
+                best = out          # răspuns parțial: folosit în rularea curentă, nesalvat
         except Exception as e:  # noqa: BLE001
             print(f"  Overpass indisponibil ({url}: {e})", file=sys.stderr)
-    return None
+    return best
 
 
 class OSMStreets:
     """Străzile cu nume din OpenStreetMap din municipiul Iași: nume → puncte pe stradă.
-    Sursa: Overpass (toate străzile, cu cache în cache/puz/osm_strazi.json); dacă Overpass nu răspunde, rețeaua
+    Sursa: Overpass (toate străzile, cu cache în cache/puz/osm_strazi_v2.json); dacă Overpass nu răspunde, rețeaua
     pietonală a hărții 15 minute (public/15min/data/iasi), unde însă multe străzi centrale apar doar ca trotuare
     fără nume."""
 
-    def __init__(self, base=ROOT / "public" / "15min" / "data" / "iasi", cache=CACHE / "osm_strazi.json"):
+    def __init__(self, base=ROOT / "public" / "15min" / "data" / "iasi", cache=CACHE / "osm_strazi_v2.json"):
         self.idx = {}
         self.source = None
         # PUZ-urile votate de CL Iași sunt pe teritoriul municipiului: se păstrează doar străzile din UAT Iași
@@ -786,11 +793,13 @@ class OSMStreets:
         inside = (lambda lon, lat: which([("Iași", iasi[0])], lon, lat)) if iasi else (lambda lon, lat: True)
         ways = overpass_streets(cache)
         if ways:
-            self.source = "Overpass"
+            self.source = "Overpass" + ("" if len(ways) >= OVERPASS_MIN else " (parțial)")
             for name, lon, lat in ways:
                 if inside(lon, lat):
                     self._add(name, lon, lat, 1.0)
-            return
+            if len(ways) >= OVERPASS_MIN:
+                return
+        # rețeaua pietonală a hărții 15 minute: rezervă sau completare pentru un răspuns Overpass parțial
         try:
             import struct
             raw = (base / "graph.bin").read_bytes()
@@ -803,7 +812,7 @@ class OSMStreets:
         except Exception as e:  # noqa: BLE001
             print(f"rețeaua OSM locală nu e disponibilă ({e})", file=sys.stderr)
             return
-        self.source = "rețeaua pietonală 15 minute"
+        self.source = (self.source + " + " if self.source else "") + "rețeaua pietonală 15 minute"
         for e, ni in names["name"]:
             u, v = eu[e], ev[e]
             lon = (ll[2 * u] + ll[2 * v]) / 2e5
