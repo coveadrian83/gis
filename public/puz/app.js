@@ -40,7 +40,11 @@
     loc: { label: 'locuitori noi', fmt: 0 },
     dep: { label: 'deplasări/zi', fmt: 0 },
     autoV: { label: 'autoturisme/oră (vârf)', fmt: 0 },
-    atr: { label: 'deplasări atrase/zi', fmt: 0 }
+    atr: { label: 'deplasări atrase/zi', fmt: 0 },
+    lm: { label: 'locuri de muncă', fmt: 0 },
+    dens: { label: 'persoane/ha', fmt: 0 },
+    acc: { label: '% locuitori la ≤ 800 m de tramvai/tren', fmt: 0 },
+    noAcc: { label: 'locuitori la peste 800 m de orice stație', fmt: 0 }
   };
   var MOBILITY_URL = '../data/puz_mobilitate.json';   // modelul de generare a deplasărilor (opțional)
   var MOB = null;
@@ -48,10 +52,12 @@
   function mobVal(p, kind) {
     var m = MOB && MOB.puz[p.hcl];
     if (!m) return 0;
-    var sc = $('scConstr').value, ms = $('scMob').value;
+    var sc = $('scConstr').value, ms = $('scMob').value, at = $('scAtr').value === 'lm' ? '_atractie_lm' : '_atractie';
     return { loc: m[sc + '_locuitori'], dep: m[sc + '_' + ms + '_deplasari_zi'], autoV: m[sc + '_' + ms + '_auto_varf'],
-      atr: m[sc + '_atractie_deplasari_zi'] }[kind] || 0;
+      atr: m[sc + at + '_deplasari_zi'], lm: m.locuri_munca }[kind] || 0;
   }
+  // accesul la transportul public al unui PUZ: null dacă nu a putut fi calculat (localizare pe zonă, în afara ariei)
+  function mobAcc(p, key) { var m = MOB && MOB.puz[p.hcl]; return m && m[key] !== null && m[key] !== undefined ? m[key] : null; }
 
   var $ = function (id) { return document.getElementById(id); };
   var fmt = function (v, d) {
@@ -105,7 +111,7 @@
       function (k) { return STATUS.filter(function (s) { return s[0] === k; })[0][1]; });
     chips($('funcChips'), FUNC.map(function (f) { return f[0]; }), state.func,
       function (k) { return FUNC_COLOR[k]; }, function (k) { return k; });
-    ['yFrom', 'yTo', 'minArea', 'minLevels', 'showApprox', 'groupBy', 'metric', 'scConstr', 'scMob', 'tableMode'].forEach(function (id) { $(id).onchange = update; });
+    ['yFrom', 'yTo', 'minArea', 'minLevels', 'showApprox', 'groupBy', 'metric', 'scConstr', 'scMob', 'scAtr', 'tableMode'].forEach(function (id) { $(id).onchange = update; });
     $('showParcels').onchange = drawParcels;
     $('q').oninput = debounce(update, 200);
     $('showZones').onchange = function () { if (zoneLayer) { if ($('showZones').checked) zoneLayer.addTo(map); else map.removeLayer(zoneLayer); } };
@@ -186,7 +192,13 @@
       rows.push(['Impact estimat', (m.realist_locuitori ? '≈ ' + fmt(m.realist_locuitori) + ' locuitori (realist), ' + fmt(m.maxim_locuitori) + ' (maxim)<br>' +
         'autoturisme în ora de vârf – realist: ' + cell('realist', 'RPL') + ' (RPL) / ' + cell('realist', 'PMUD') + ' (PMUD); maxim: ' +
         cell('maxim', 'RPL') + ' / ' + cell('maxim', 'PMUD') : '') +
-        (m.realist_atractie_deplasari_zi ? (m.realist_locuitori ? '<br>' : '') + 'deplasări atrase de activități: ≈ ' + fmt(m.realist_atractie_deplasari_zi) + '/zi (realist)' : '') +
+        (m.realist_atractie_deplasari_zi ? (m.realist_locuitori ? '<br>' : '') + 'deplasări atrase de activități: ≈ ' + fmt(m.realist_atractie_deplasari_zi) + '/zi (ITE)' +
+          (m.zona_functionala_lm ? ', ≈ ' + fmt(m.realist_atractie_lm_deplasari_zi) + '/zi după locurile de muncă' : '') : '') +
+        (m.locuri_munca ? '<br>≈ ' + fmt(m.locuri_munca) + ' locuri de muncă <span class="note">(' + esc(m.zona_functionala_lm) + ', Covăsnianu 2023)</span>' : '') +
+        (m.realist_densitate_umana ? '<br>densitate umană: ≈ ' + fmt(m.realist_densitate_umana) + ' persoane/ha (realist), ' + fmt(m.maxim_densitate_umana) + ' (maxim)' : '') +
+        (m.dist_statie_m !== null && m.dist_statie_m !== undefined ? '<br>transport public: stație la ' + fmt(m.dist_statie_m) + ' m' +
+          (m.dist_tramvai_tren_m !== null ? ', tramvai/tren la ' + fmt(m.dist_tramvai_tren_m) + ' m' : '') + '; ' + m.statii_800m + ' stații la ≤ 800 m' +
+          (m.acces_tp_800m ? '' : ' <b>(fără stație în 10 minute de mers pe jos)</b>') : '') +
         (m.construit_dupa_hcl_mp ? '<br><span class="note">construcții înscrise în eTerra după aprobare (până în 05.2023): ' + fmt(m.construit_dupa_hcl_mp) + ' mp amprentă</span>' : '') +
         ' <a href="metodologie.html" target="_blank">metodă</a>']);
     }
@@ -276,11 +288,15 @@
       var tot = function (k) { return appr.reduce(function (s, p) { return s + mobVal(p, k); }, 0); };
       var other = $('scMob').value === 'RPL' ? 'PMUD' : 'RPL', sc = $('scConstr').value;
       var otherV = appr.reduce(function (s, p) { var m = MOB.puz[p.hcl]; return s + (m ? m[sc + '_' + other + '_auto_varf'] || 0 : 0); }, 0);
+      var g = groupStats(appr), dens = { v: g.dens, ha: g.haM }, acc = { rail: g.acc, any: g.accAny, n: g.nAcc };
       $('mobSummary').innerHTML = '<div class="mobgrid">' +
         '<div><b>' + fmt(tot('loc')) + '</b><small>locuitori noi</small></div>' +
         '<div><b>' + fmt(tot('dep')) + '</b><small>deplasări produse pe zi</small></div>' +
         '<div><b>' + fmt(tot('autoV')) + '</b><small>autoturisme în ora de vârf a dimineții (' + other + ': ' + fmt(otherV) + ')</small></div>' +
-        '<div><b>' + fmt(tot('atr')) + '</b><small>deplasări atrase pe zi de comerț, birouri, echipamente (separat)</small></div></div>';
+        '<div><b>' + fmt(tot('atr')) + '</b><small>deplasări atrase pe zi de comerț, birouri, echipamente (separat; ' + ($('scAtr').value === 'lm' ? 'locuri de muncă' : 'ITE') + ')</small></div>' +
+        '<div><b>' + fmt(tot('lm')) + '</b><small>locuri de muncă noi (Covăsnianu 2023, Tabelul nr. 4)</small></div>' +
+        '<div><b>' + fmt(dens.v) + '</b><small>persoane/ha – densitate umană pe cele ' + fmt(dens.ha, 0) + ' ha reglementate</small></div>' +
+        '<div style="grid-column:1/-1"><b>' + fmt(acc.rail, 0) + '% · ' + fmt(acc.any, 0) + '%</b><small>din locuitorii noi au o stație de tramvai/tren, respectiv orice stație, la ≤ 800 m (10 minute pe jos); calculat pentru ' + fmt(acc.n) + ' PUZ-uri localizate</small></div></div>';
     }
   }
 
@@ -291,17 +307,40 @@
       if (!APPROVED[p.statut] || !p._ll) return;
       var k = key === 'zona' ? (p.zona_id ? p.zona_id + '|' + p.zona : null) : p[key];
       if (!k) k = key === 'zona' ? '|în afara celor 17 zone' : '|necunoscut';
-      var g = G[k] || (G[k] = { key: k, n: 0, area: 0, apart: 0, park: 0, cap: 0, loc: 0, dep: 0, autoV: 0, atr: 0, lvlSum: 0, lvlN: 0, nAp: 0, nPk: 0 });
+      var g = G[k] || (G[k] = newGroup(k));
       g.cap += p.apartamente_capacitate || 0;
-      g.loc += mobVal(p, 'loc'); g.dep += mobVal(p, 'dep'); g.autoV += mobVal(p, 'autoV'); g.atr += mobVal(p, 'atr');
+      addMob(g, p);
       g.n++;
       g.area += (p.suprafata_mp || 0) / 10000;
       if (p.apartamente) { g.apart += p.apartamente; g.nAp++; }
       if (p.locuri_parcare) { g.park += p.locuri_parcare; g.nPk++; }
       if (p.niveluri_max) { g.lvlSum += p.niveluri_max; g.lvlN++; }
     });
-    return Object.keys(G).map(function (k) { var g = G[k]; g.lvl = g.lvlN ? g.lvlSum / g.lvlN : null; return g; });
+    return Object.keys(G).map(function (k) { var g = G[k]; g.lvl = g.lvlN ? g.lvlSum / g.lvlN : null; return finishMob(g); });
   }
+  function newGroup(k) {
+    return { key: k, n: 0, area: 0, apart: 0, park: 0, cap: 0, loc: 0, dep: 0, autoV: 0, atr: 0, lm: 0, lvlSum: 0, lvlN: 0, nAp: 0, nPk: 0,
+      peopleM: 0, haM: 0, locAcc: 0, locRail: 0, locAny: 0, noAcc: 0, nAcc: 0 };
+  }
+  // indicatorii de mobilitate, densitate și acces ai unui PUZ, adunați în grup
+  function addMob(g, p) {
+    var loc = mobVal(p, 'loc'), lm = mobVal(p, 'lm');
+    g.loc += loc; g.dep += mobVal(p, 'dep'); g.autoV += mobVal(p, 'autoV'); g.atr += mobVal(p, 'atr'); g.lm += lm;
+    if (MOB && MOB.puz[p.hcl] && p.suprafata_mp) { g.peopleM += loc + lm; g.haM += p.suprafata_mp / 10000; }
+    var any = mobAcc(p, 'acces_tp_800m');
+    if (any !== null) {
+      g.nAcc++; g.locAcc += loc;
+      if (mobAcc(p, 'acces_tramvai_tren_800m')) g.locRail += loc;
+      if (any) g.locAny += loc; else g.noAcc += loc;
+    }
+  }
+  function finishMob(g) {
+    g.dens = g.haM ? g.peopleM / g.haM : null;
+    g.acc = g.locAcc ? 100 * g.locRail / g.locAcc : null;
+    g.accAny = g.locAcc ? 100 * g.locAny / g.locAcc : null;
+    return g;
+  }
+  function groupStats(list) { var g = newGroup(''); list.forEach(function (p) { addMob(g, p); }); return finishMob(g); }
 
   function colorAt(t) {
     var x = Math.min(0.9999, Math.max(0, t)) * (PALETTE.length - 1), i = Math.floor(x), f = x - i;
@@ -324,8 +363,17 @@
       ? '<span>0</span><span class="bar" style="background:linear-gradient(to right,' + [0, .25, .5, .75, 1].map(colorAt).join(',') + ')"></span><span>' + fmt(max, METRICS[metric].fmt) + ' ' + METRICS[metric].label + '</span>'
       : '';
     var head = { zona: 'Zonă', cartier: 'Cartier', uat: 'UAT' }[key];
-    var mobTable = MOB && $('tableMode').value === 'mob';
-    if (mobTable) {
+    var mobTable = MOB && $('tableMode').value === 'mob', densTable = MOB && $('tableMode').value === 'dens';
+    if (densTable) {
+      $('groupTable').innerHTML = '<thead><tr><th>' + head + '</th><th>PUZ</th><th title="locuitori noi estimați">locuitori</th><th title="locuri de muncă (Covăsnianu 2023, Tabelul nr. 4)">loc. muncă</th><th title="(locuitori + locuri de muncă) / ha reglementat">pers./ha</th><th title="locuitori noi cu stație de tramvai sau tren la ≤ 800 m">≤800 m tram.</th><th title="locuitori noi cu orice stație de transport public la ≤ 800 m">≤800 m TP</th></tr></thead><tbody>' +
+        gs.map(function (g) {
+          var parts = g.key.split('|'), label = key === 'zona' ? (parts[1] || parts[0]) : g.key.replace(/^\|/, '');
+          var sw = key === 'zona' && parts[0] ? '<span class="sw" style="background:' + colorAt((zoneVal[parts[0]] || 0) / (max || 1)) + '"></span>' : '';
+          var pct = function (v) { return v === null ? '–' : fmt(v) + '%'; };
+          return '<tr data-k="' + esc(g.key) + '"><td>' + sw + esc(label) + '</td><td>' + g.n + '</td><td>' + fmt(g.loc) + '</td><td>' +
+            fmt(g.lm) + '</td><td>' + fmt(g.dens) + '</td><td>' + pct(g.acc) + '</td><td>' + pct(g.accAny) + '</td></tr>';
+        }).join('') + '</tbody>';
+    } else if (mobTable) {
       $('groupTable').innerHTML = '<thead><tr><th>' + head + '</th><th>PUZ</th><th title="locuitori noi estimați">locuitori</th><th title="deplasări produse de locuitori pe zi">depl./zi</th><th title="autoturisme în ora de vârf a dimineții">auto vârf</th><th title="deplasări atrase de comerț, birouri, echipamente pe zi (separat)">atrase/zi</th></tr></thead><tbody>' +
         gs.map(function (g) {
           var parts = g.key.split('|'), label = key === 'zona' ? (parts[1] || parts[0]) : g.key.replace(/^\|/, '');
@@ -370,7 +418,8 @@
     var q = function (v) { v = v === null || v === undefined ? '' : String(v); return /[",;\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
     var mcols = MOB ? ['realist_locuitori', 'maxim_locuitori', 'realist_PMUD_deplasari_zi', 'realist_RPL_deplasari_zi',
       'realist_PMUD_auto_varf', 'realist_RPL_auto_varf', 'maxim_PMUD_auto_varf', 'maxim_RPL_auto_varf', 'realist_atractie_deplasari_zi',
-      'construit_dupa_hcl_mp'] : [];
+      'realist_atractie_lm_deplasari_zi', 'locuri_munca', 'zona_functionala_lm', 'realist_densitate_umana', 'maxim_densitate_umana',
+      'dist_statie_m', 'dist_tramvai_tren_m', 'statii_800m', 'acces_tp_800m', 'acces_tramvai_tren_800m', 'construit_dupa_hcl_mp'] : [];
     var lines = [cols.concat(mcols).join(',')].concat(list.map(function (p) {
       var m = (MOB && MOB.puz[p.hcl]) || {};
       return cols.map(function (c) { return q(c === 'lat' ? (p._ll && p._ll[0]) : c === 'lon' ? (p._ll && p._ll[1]) : p[c]); })

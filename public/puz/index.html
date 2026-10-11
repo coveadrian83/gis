@@ -55,7 +55,7 @@
 
   <details id="mobBox" open hidden>
     <summary>Impact asupra mobilității</summary>
-    <p class="note">Deplasările pe care le-ar produce locuitorii noilor locuințe din PUZ-urile aprobate, estimate în două scenarii de mobilitate: <b>PMUD</b> (rata de mobilitate din ancheta PMUD Iași 2021) și <b>RPL</b> (structural, din ponderea ocupaților și a elevilor/studenților la RPL 2021). Deplasările atrase de comerț, birouri și echipamente sunt raportate separat. Estimări de ordin de mărime – <a href="metodologie.html">metodologie și surse</a>.</p>
+    <p class="note">Deplasările pe care le-ar produce locuitorii noilor locuințe din PUZ-urile aprobate, estimate în două scenarii de mobilitate: <b>PMUD</b> (rata de mobilitate din ancheta PMUD Iași 2021) și <b>RPL</b> (structural, din ponderea ocupaților și a elevilor/studenților la RPL 2021). Deplasările atrase de comerț, birouri și echipamente sunt raportate separat, în două variante: rate pe suprafață (ITE) sau locuri de muncă pe tip de zonă funcțională (Covăsnianu 2023). Densitatea umană = locuitori + locuri de muncă la hectar; accesul la transportul public = stație în raza de 800 m (10 minute pe jos). Estimări de ordin de mărime – <a href="metodologie.html">metodologie și surse</a>.</p>
     <div class="row">
       <label>Construire
         <select id="scConstr">
@@ -66,6 +66,11 @@
         <select id="scMob">
           <option value="RPL">RPL 2021 (structural)</option>
           <option value="PMUD">PMUD 2021 (anchetă)</option>
+        </select></label>
+      <label>Deplasări atrase
+        <select id="scAtr">
+          <option value="lm">locuri de muncă (Covăsnianu 2023)</option>
+          <option value="ite">rate pe suprafață (ITE)</option>
         </select></label>
     </div>
     <div id="mobSummary"></div>
@@ -98,11 +103,16 @@
           <option value="dep" data-mob>deplasări produse pe zi (scenariu)</option>
           <option value="autoV" data-mob>autoturisme în ora de vârf (scenariu)</option>
           <option value="atr" data-mob>deplasări atrase pe zi (scenariu)</option>
+          <option value="lm" data-mob>locuri de muncă noi</option>
+          <option value="dens" data-mob>densitate umană (locuitori + locuri de muncă / ha)</option>
+          <option value="acc" data-mob>locuitori noi la ≤ 800 m de tramvai / tren (%)</option>
+          <option value="noAcc" data-mob>locuitori noi la peste 800 m de orice stație</option>
         </select></label>
       <label>Tabel
         <select id="tableMode">
           <option value="urb">indicatori urbanistici</option>
           <option value="mob" data-mob>impact asupra mobilității</option>
+          <option value="dens" data-mob>densitate umană și acces la transport public</option>
         </select></label>
     </div>
     <div id="zoneLegend"></div>

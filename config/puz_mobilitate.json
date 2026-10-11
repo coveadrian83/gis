@@ -61,5 +61,23 @@
       "echipamente publice": 10
     },
     "_sursa": "provizoriu, ordine de mărime din literatura internațională (ITE Trip Generation): birouri ~10, comerț ~40, depozitare/industrie ~2 deplasări de persoane pe 100 mp ADC/zi; pentru categoria comerț/servicii/birouri se folosește 20. Acestea sunt deplasări ATRASE de activități și se raportează separat de deplasările PRODUSE de locuitori (nu se adună: o parte sunt aceleași persoane). Atenție: suprafața reglementată de PUZ include uneori construcții existente (extinderi, modificări de PUZ), deci atracția e un plafon."
+  },
+  "locuri_de_munca": {
+    "densitate_pe_ha": {
+      "producție industrială": 40,
+      "logistică și depozitare": 40,
+      "birouri": 200,
+      "activități tehnologice": 120,
+      "unități mari de retail (complexuri comerciale, mall-uri)": 30,
+      "hipermarket-uri alimentare": 250,
+      "comerț (magazine mici)": 20
+    },
+    "deplasari_pe_loc_de_munca_munca": 2,
+    "pondere_munca_in_total": 0.294,
+    "_sursa": "Covăsnianu, A. (2023), Huburile de mobilitate…, disertație de master, UAUIM „Ion Mincu”, Tabelul nr. 4 (după CARENE/ADDRN 2009 și Husson et al. 2012, Grand Roissy; norme medii, aplicate în Zona Metropolitană București): locuri de muncă pe hectar de teren, pe tip de zonă funcțională. Tipul de zonă se deduce din obiectul hotărârii (birouri, hală / producție, depozitare / logistică, centru comercial, supermarket…); funcțiunile fără normă în tabel (echipamente publice, hoteluri, servicii nespecificate) rămân pe varianta ITE. La funcțiunile mixte se ia doar ponderea nerezidențială. Deplasări atrase = locuri de muncă × 2 (dus-întors) ÷ ponderea scopului muncă în totalul deplasărilor (PMUD 2021: 29,4%) – aceeași extindere ca în scenariul RPL; ora de vârf = sosirile angajaților (ponderea plecărilor obligatorii din ora de vârf)."
+  },
+  "acces_transport_public": {
+    "raza_m": 800,
+    "_sursa": "Coridorul de 800 m (izocrona de 10 minute de mers pe jos) din Covăsnianu (2023); distanță în linie dreaptă de la punctul PUZ-ului la cea mai apropiată stație. Stațiile (tren, tramvai, autobuz; OpenStreetMap, sensurile unite) sunt cele ale hărții „15 minute” (public/15min/data/iasi/pois.json). PUZ-urile localizate doar pe zonă sau aflate în afara ariei acelei hărți nu primesc distanță."
   }
 }

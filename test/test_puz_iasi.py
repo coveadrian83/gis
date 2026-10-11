@@ -159,6 +159,38 @@ class PuzMobilitate(unittest.TestCase):
         self.assertEqual(M.built_after({"cadastral": "161244", "data": "2025-12-19"}, parcels), 250.0)
         self.assertIsNone(M.built_after({"cadastral": "999", "data": "2025-12-19"}, parcels))
 
+    def test_jobs_by_functional_zone(self):
+        office = {"hcl": "4/2025", "statut": "aprobat", "functiune": "comerț / servicii / birouri", "suprafata_mp": 5000.0,
+                  "cut_max": 1.0, "scop": "construire cladire de birouri"}
+        r = M.model(office, self.cfg, {})
+        self.assertEqual(r["zona_functionala_lm"], "birouri")
+        self.assertEqual(r["locuri_munca"], 100)                       # 0,5 ha × 200 locuri de muncă/ha
+        self.assertEqual(r["realist_atractie_lm_deplasari_zi"], round(100 * 2 / 0.294))
+        self.assertEqual(r["realist_densitate_umana"], 200.0)
+        self.assertEqual(M.job_zone({"functiune": "industrie / depozitare", "scop": "construire hale depozitare"}),
+                         "logistică și depozitare")
+        self.assertEqual(M.job_zone({"functiune": "comerț / servicii / birouri", "scop": "construire centru comercial"}),
+                         "unități mari de retail (complexuri comerciale, mall-uri)")
+        # fără normă în Tabelul nr. 4 → rămâne varianta ITE
+        hotel = {"hcl": "5/2025", "statut": "aprobat", "functiune": "comerț / servicii / birouri", "suprafata_mp": 5000.0,
+                 "cut_max": 1.0, "scop": "construire aparthotel"}
+        r = M.model(hotel, self.cfg, {})
+        self.assertEqual(r["locuri_munca"], 0)
+        self.assertEqual(r["realist_atractie_lm_deplasari_zi"], r["realist_atractie_deplasari_zi"])
+
+    def test_transit_access(self):
+        stations = ([(27.5815, 47.1653, 2), (27.5815, 47.1743, 3)], (27.5842, 47.1563), 9500)
+        p = {"_lon": 27.5815, "_lat": 47.1698, "precizie": "parcelă"}          # ~500 m de ambele stații
+        a = M.transit_access(p, stations, 800)
+        self.assertTrue(a["acces_tramvai_tren_800m"])
+        self.assertEqual(a["statii_800m"], 2)
+        self.assertAlmostEqual(a["dist_tramvai_tren_m"], 497, delta=5)
+        far = M.transit_access({"_lon": 27.5815, "_lat": 47.1803, "precizie": "parcelă"}, stations, 800)
+        self.assertFalse(far["acces_tramvai_tren_800m"])
+        self.assertTrue(far["acces_tp_800m"])
+        self.assertIsNone(M.transit_access({**p, "precizie": "zonă"}, stations, 800))
+        self.assertIsNone(M.transit_access({"_lon": 27.9, "_lat": 47.1653, "precizie": "număr"}, stations, 800))
+
 
 if __name__ == "__main__":
     unittest.main()
