@@ -4,7 +4,8 @@
   var esc = function (s) { return String(s === null || s === undefined ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var fmt = function (v) { return typeof v === 'number' ? v.toLocaleString('ro-RO', { maximumFractionDigits: 3 }) : esc(Array.isArray(v) ? v.join(', ') : v); };
   var TITLES = { constructie: 'Construire', locuire: 'Locuire (RPL 2021)', mobilitate: 'Mobilitate', modal: 'Distribuție modală și autoturisme',
-    varf_dimineata: 'Ora de vârf a dimineții', nerezidential: 'Activități nerezidențiale' };
+    varf_dimineata: 'Ora de vârf a dimineții', nerezidential: 'Activități nerezidențiale (ITE)',
+    locuri_de_munca: 'Locuri de muncă (Covăsnianu 2023, Tabelul nr. 4)', acces_transport_public: 'Acces la transportul public' };
 
   function rows(obj, prefix) {
     var out = [];
@@ -34,10 +35,16 @@
       ['Autoturisme/zi – PMUD', 'realist_PMUD_auto_zi', 'maxim_PMUD_auto_zi'], ['Autoturisme/zi – RPL', 'realist_RPL_auto_zi', 'maxim_RPL_auto_zi'],
       ['Autoturisme în ora de vârf – PMUD', 'realist_PMUD_auto_varf', 'maxim_PMUD_auto_varf'],
       ['Autoturisme în ora de vârf – RPL', 'realist_RPL_auto_varf', 'maxim_RPL_auto_varf'],
-      ['Deplasări atrase/zi (separat)', 'realist_atractie_deplasari_zi', 'maxim_atractie_deplasari_zi']];
+      ['Deplasări atrase/zi – ITE (separat)', 'realist_atractie_deplasari_zi', 'maxim_atractie_deplasari_zi'],
+      ['Deplasări atrase/zi – locuri de muncă (separat)', 'realist_atractie_lm_deplasari_zi', 'maxim_atractie_lm_deplasari_zi'],
+      ['Locuri de muncă', 'locuri_munca', 'locuri_munca'],
+      ['Densitate umană (persoane/ha)', 'realist_densitate_umana', 'maxim_densitate_umana'],
+      ['Locuitori noi cu tramvai/tren la ≤ 800 m (%)', 'realist_locuitori_acces_tramvai_tren_800m_pct', 'maxim_locuitori_acces_tramvai_tren_800m_pct'],
+      ['Locuitori noi cu orice stație la ≤ 800 m (%)', 'realist_locuitori_acces_tp_800m_pct', 'maxim_locuitori_acces_tp_800m_pct'],
+      ['Locuri de muncă cu tramvai/tren la ≤ 800 m (%)', 'locuri_munca_acces_tramvai_tren_800m_pct', 'locuri_munca_acces_tramvai_tren_800m_pct']];
     document.getElementById('totals').innerHTML = '<table><tr><th></th><th class="n">realist</th><th class="n">maxim</th></tr>' +
       L.map(function (r) { return '<tr><td>' + r[0] + '</td><td class="n">' + fmt(t[r[1]]) + '</td><td class="n">' + fmt(t[r[2]]) + '</td></tr>'; }).join('') +
-      '</table><p class="note">' + fmt(d.metadata.puz_modelate) + ' PUZ-uri aprobate (inclusiv modificări) modelate.</p>';
+      '</table><p class="note">' + fmt(d.metadata.puz_modelate) + ' PUZ-uri aprobate (inclusiv modificări) modelate; accesul la transportul public, calculat pentru ' + fmt(t.puz_cu_acces_calculat) + '.</p>';
   }).catch(function (e) {
     document.getElementById('params').textContent = 'Parametrii nu s-au putut încărca (' + e.message + ').';
     document.getElementById('totals').textContent = '';

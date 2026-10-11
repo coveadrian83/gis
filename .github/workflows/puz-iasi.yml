@@ -15,6 +15,7 @@ on:
       - data/puz_parcele.geojson
       - scripts/puz_mobilitate.py
       - config/puz_mobilitate.json
+      - public/15min/data/iasi/pois.json
       - .github/workflows/puz-iasi.yml
 
 permissions:
