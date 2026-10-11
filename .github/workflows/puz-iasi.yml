@@ -13,6 +13,8 @@ on:
     paths:
       - scripts/puz_iasi.py
       - data/puz_parcele.geojson
+      - scripts/puz_mobilitate.py
+      - config/puz_mobilitate.json
       - .github/workflows/puz-iasi.yml
 
 permissions:
@@ -42,11 +44,13 @@ jobs:
           restore-keys: puz-iasi-
       - name: Colectează, completează și localizează PUZ-urile
         run: python scripts/puz_iasi.py --reimprospateaza
+      - name: Estimează deplasările generate (scenariile PMUD și RPL)
+        run: python scripts/puz_mobilitate.py
       - name: Salvează datele în branch
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898699+github-actions[bot]@users.noreply.github.com"
-          git add public/data/puz_iasi.geojson public/data/puz_iasi.csv public/data/puz_iasi_de_verificat.csv public/data/puz_iasi_parcele.geojson
+          git add public/data/puz_iasi.geojson public/data/puz_iasi.csv public/data/puz_iasi_de_verificat.csv public/data/puz_iasi_parcele.geojson public/data/puz_mobilitate.json public/data/puz_mobilitate.csv
           if git diff --cached --quiet; then echo "Datele nu s-au schimbat."; exit 0; fi
           git commit -m "PUZ Iași: date actualizate"
           git pull --rebase origin "${GITHUB_REF_NAME}"

@@ -8,7 +8,10 @@ numere cadastrale apar în public/data/puz_iasi.geojson (sau în cache-ul hotăr
 WGS84 și simplificate la ~0,5 m, în data/puz_parcele.geojson, pe care îl citește scripts/puz_iasi.py.
 
 Necesită: pip install pyshp pyproj shapely
-Rulare:   python scripts/puz_parcele.py cale/Imobile.shp   (sau .gpkg)
+Rulare:   python scripts/puz_parcele.py cale/Imobile.shp [--constructii cale/Constructii.shp]
+Cu --constructii (stratul de construcții eTerra, câmpul NATIONAL_C de forma „131603-C1”), fiecare parcelă
+primește numărul și amprenta la sol a construcțiilor înscrise la data exportului – indiciu că PUZ-ul era deja
+(parțial) construit.
 """
 import argparse
 import datetime as dt
@@ -69,11 +72,22 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("parcelar", help="Imobile.shp sau .gpkg (export eTerra / OCPI)")
     ap.add_argument("--sursa", default="", help="descrierea sursei (ex. „OCPI Iași, export eTerra 18.05.2023”)")
+    ap.add_argument("--constructii", help="stratul de construcții eTerra (Shapefile), opțional")
     args = ap.parse_args()
     from pyproj import Transformer
     from shapely import transform as shp_transform
 
     want = wanted_cadastral()
+    built = {}
+    if args.constructii:
+        import shapefile
+        r = shapefile.Reader(args.constructii, encoding="utf-8")
+        for rec in r.iterRecords(fields=["NATIONAL_C", "AREA_VALUE", "BEGIN_LIFE"]):
+            cad = str(rec["NATIONAL_C"] or "").split("-C")[0].strip()
+            if cad in want:
+                year = str(rec["BEGIN_LIFE"].year) if rec["BEGIN_LIFE"] else "?"
+                by_year = built.setdefault(cad, {})
+                by_year[year] = round(by_year.get(year, 0.0) + float(rec["AREA_VALUE"] or 0), 1)
     path = Path(args.parcelar)
     reader = read_geopackage if path.suffix.lower() == ".gpkg" else read_shapefile
     feats, total, tr = [], 0, None
@@ -90,13 +104,15 @@ def main():
         gj = json.loads(json.dumps(g.__geo_interface__),
                         parse_float=lambda s: round(float(s), 6))
         feats.append({"type": "Feature", "geometry": gj,
-                      "properties": {"cad": cad, "arie_mp": area, "lon": round(pt.x, 6), "lat": round(pt.y, 6)}})
+                      "properties": {"cad": cad, "arie_mp": area, "lon": round(pt.x, 6), "lat": round(pt.y, 6),
+                                     **({"constructii_mp_pe_an": built.get(cad, {})} if args.constructii else {})}})
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps({
         "type": "FeatureCollection",
         "metadata": {"autor": "Prelucrarea și integrarea datelor: dr. geogr. Adrian Covăsnianu",
                      "sursa": args.sursa or path.name, "extras": dt.date.today().isoformat(),
                      "parcele_in_sursa": total, "parcele_pastrate": len(feats),
+                     **({"constructii": "amprenta la sol a construcțiilor eTerra, pe anul înscrierii (BEGIN_LIFE), la data exportului"} if args.constructii else {}),
                      "nota": "doar parcelele menționate în hotărârile PUZ; parcelarul complet nu se publică"},
         "features": feats}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     print(f"{len(feats)} parcele păstrate din {total} (numere cadastrale căutate: {len(want)}) → {OUT.relative_to(ROOT)}")

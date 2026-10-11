@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Metodologie PUZ – Iași</title>
+  <meta name="author" content="dr. geogr. Adrian Covăsnianu">
+  <meta name="description" content="Metodologia hărții PUZ-urilor din Iași și a estimării deplasărilor generate (scenariile PMUD și RPL).">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <style>
+    :root { --ink: #15171a; --paper: #f7f4ec; --teal: #1f7a99; --line: #ddd8cc; --muted: #555; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+    main { max-width: 860px; margin: 0 auto; padding: 24px 16px 48px; }
+    h1 { font-size: 30px; line-height: 1.1; margin: 0 0 4px; } h1 span { color: var(--teal); }
+    h2 { font-size: 20px; margin: 28px 0 8px; border-top: 1px solid var(--line); padding-top: 16px; }
+    h3 { font-size: 16px; margin: 18px 0 6px; }
+    table { border-collapse: collapse; width: 100%; font-size: 14px; margin: 8px 0; }
+    th, td { border-bottom: 1px solid var(--line); padding: 5px 6px; text-align: left; vertical-align: top; }
+    td.n { text-align: right; white-space: nowrap; }
+    code { font-size: 13px; background: #ece7da; padding: 0 3px; border-radius: 3px; }
+    .formula { background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: 8px 12px; margin: 8px 0; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; overflow-x: auto; }
+    .note { color: var(--muted); font-size: 13px; }
+    .warn { background: #fff7e6; border-left: 3px solid #e8a13a; padding: 8px 12px; margin: 10px 0; }
+    a { color: var(--teal); }
+  </style>
+</head>
+<body>
+<main>
+  <h1>PUZ-uri Iași<br><span>Metodologie</span></h1>
+  <p class="note">Prelucrarea și integrarea datelor: dr. geogr. Adrian Covăsnianu · <a href="./">înapoi la hartă</a></p>
+
+  <h2>1. Inventarul PUZ-urilor</h2>
+  <p>Sursa este textul hotărârilor Consiliului Local Iași din 2016 până azi (registrul <a href="https://hcl.usr.ro/iasi" target="_blank" rel="noopener">hcl.usr.ro</a>, cu legătură la PDF-ul oficial de pe primaria-iasi.ro). Din fiecare hotărâre se extrag automat statutul (aprobat, respins, modificare…), adresa, numărul cadastral, funcțiunea, suprafața reglementată, regimul de înălțime, H max, POT, CUT, spațiile verzi, voturile și avizele comisiilor. Numărul de apartamente și de locuri de parcare, rar prezent în hotărâri, se completează din articolele <a href="https://apix.ro" target="_blank" rel="noopener">apix.ro</a>, cu verificarea plauzibilității față de suprafață și CUT.</p>
+  <p><b>Localizarea</b>: pe parcela cadastrală (parcelarul OCPI Iași, export eTerra 2023, după numărul cadastral din hotărâre, cu verificarea suprafeței), altfel la adresă / pe stradă (OpenStreetMap, Nominatim) sau în centrul zonei MVA–MVI.</p>
+
+  <h2>2. Deplasările generate – principiu</h2>
+  <p>Modelul este unul clasic de <b>generare a deplasărilor</b> (prima etapă a modelului în patru etape): estimează câte deplasări produc noile locuințe și câte atrag noile activități, fără distribuția pe destinații și fără afectarea pe rețea. Rezultatele sunt <b>potențiale</b> – un PUZ aprobat nu înseamnă o construcție autorizată, realizată sau locuită.</p>
+  <ul>
+    <li><b>Producție</b> – deplasările locuitorilor noilor locuințe (indicatorul principal pentru vârful de dimineață, când fluxul dominant pleacă din zonele rezidențiale);</li>
+    <li><b>Atracție</b> – deplasările spre comerț, birouri, echipamente publice; raportate separat și <b>neadunate</b> cu producția (o mare parte sunt aceleași persoane, iar suprafața reglementată poate include construcții existente).</li>
+  </ul>
+
+  <h2>3. Ce se construiește – două scenarii</h2>
+  <div class="formula">ADC = suprafața reglementată × CUT<br>
+apartamente = numărul din proiect (HCL / apix.ro), altfel ADC × pondere locuibilă ÷ mp ADC pe apartament × grad de realizare<br>
+case individuale = suprafață × pondere loturi ÷ mp pe lot × grad de realizare</div>
+  <p><b>Realist</b>: proiectul, unde e cunoscut; altfel o fracțiune din capacitatea CUT (CUT este un maxim, iar suprafața reglementată include adesea străzi și spații verzi). <b>Maxim</b>: capacitatea CUT integrală.</p>
+
+  <h2>4. Locuitori – RPL 2021</h2>
+  <div class="formula">locuitori = apartamente × persoane pe locuință ocupată × rata de ocupare</div>
+  <p>Municipiul Iași la RPL 2021: 271.692 rezidenți, 152.972 locuințe convenționale, din care 99.533 ocupate → 2,73 persoane pe locuință ocupată și o rată de ocupare de 65%. <span class="note">Rata se referă la rezidenții obișnuiți: chiriașii cu reședința obișnuită în altă parte (în special studenții) nu sunt numărați, deci numărul persoanelor efectiv prezente – și al deplasărilor – poate fi mai mare.</span></p>
+
+  <h2>5. Două scenarii de mobilitate</h2>
+  <h3>Scenariul PMUD – comportamental</h3>
+  <div class="formula">deplasări/zi = locuitori × rata de mobilitate (PMUD 2021)<br>
+vârf de dimineață = deplasări/zi × pondere oră de vârf</div>
+  <p>Ancheta la domiciliu din actualizarea PMUD Iași (iunie–iulie 2021, eșantion de circa 1% din populație, zile lucrătoare, metoda „ziua precedentă”) dă 1,61 deplasări/persoană/zi în municipiu și 1,46 în comunele ZMI; distribuția modală: pe jos 41,0%, transport public 30,8%, autoturism 26,4%, bicicletă 1,8%; scopuri: muncă 29,4%, educație 19,1%, cumpărături 17,9%, interes personal și recreere 21,0%, altele 12,5%.</p>
+  <div class="warn"><b>Limite.</b> Rezultatele provin dintr-un eșantion, fără marjă de eroare publicată, iar anchetele de tip „ziua precedentă” tind să omită deplasările scurte (mai ales pe jos). Chestionarul online (267 de respondenți) a privit percepția problemelor de mobilitate, nu ratele de deplasare. Rata de 1,61 este mică față de valorile obișnuite în orașele europene (2,5–3).</div>
+
+  <h3>Scenariul RPL – structural</h3>
+  <div class="formula">deplasări obligatorii/zi = locuitori × 2 × (pondere ocupați + pondere elevi/studenți)<br>
+deplasări/zi = deplasări obligatorii ÷ ponderea muncă + educație în totalul deplasărilor<br>
+vârf de dimineață = locuitori × (pondere ocupați + pondere elevi/studenți) × pondere oră de vârf a plecărilor</div>
+  <p>Din RPL 2021 (municipiul Iași, Tab. 5.29): 119.278 ocupați (43,9%) și 55.837 elevi/studenți (20,6%). Fiecare face o deplasare dus-întors spre muncă sau școală; extinderea la totalul deplasărilor folosește ponderea scopurilor muncă + educație din PMUD (48,5%). Abordarea se sprijină pe un recensământ, nu pe un eșantion, și descrie direct cererea care formează vârful de dimineață. <span class="note">Limite: presupune că toți ocupații și elevii se deplasează în fiecare zi lucrătoare (exclude munca de acasă, concediile); studenții nerezidenți nu sunt incluși.</span></p>
+  <p>Diferența dintre cele două scenarii (≈ 1,61 față de ≈ 2,66 deplasări/persoană/zi) arată incertitudinea reală a estimării și este păstrată intenționat: hartă și tabelele permit compararea lor.</p>
+
+  <h2>6. Autoturisme</h2>
+  <div class="formula">autoturisme = deplasări × pondere autoturism ÷ grad de ocupare</div>
+  <p>Ponderea autoturismului din PMUD (26,4%, media orașului) se aplică PUZ-urilor din oraș; pentru cele aflate departe de centru, unde transportul public e mai slab, se folosește o pondere mai mare (valoare provizorie). Gradul de ocupare al autoturismului nu este publicat în prezentarea PMUD – valoare provizorie.</p>
+
+  <h2>7. Deplasări atrase de activități</h2>
+  <p>Comerț, birouri, echipamente publice, industrie: ADC nerezidențială × rată de deplasări pe 100 mp (ordine de mărime din literatura internațională, ITE Trip Generation – valori provizorii). La funcțiunile mixte se consideră nerezidențial doar parterul comercial. Pentru extinderi și modificări de PUZ, suprafața reglementată include construcțiile existente, deci valoarea este un plafon.</p>
+
+  <h2>8. Ce era deja construit</h2>
+  <p>Pentru PUZ-urile localizate pe parcelă, stratul de construcții eTerra (export 2023) dă amprenta la sol a construcțiilor înscrise în anul aprobării PUZ-ului sau după – un indiciu că PUZ-ul era deja (parțial) realizat. Construcțiile se înscriu în cadastru cu întârziere față de realizare.</p>
+
+  <h2>9. Parametrii folosiți</h2>
+  <p class="note">Valorile de mai jos sunt citite din fișierul de parametri al modelului (<code>config/puz_mobilitate.json</code>), împreună cu sursa fiecăreia; cele marcate „provizoriu” se înlocuiesc cu valori locale (numărători de trafic, studii) fără modificarea codului.</p>
+  <div id="params">Se încarcă…</div>
+  <h3>Totaluri (toate PUZ-urile aprobate)</h3>
+  <div id="totals">Se încarcă…</div>
+
+  <h2>10. Calibrare și pași următori</h2>
+  <ul>
+    <li>ponderea orei de vârf și ocuparea autoturismului – din numărătorile de trafic proprii;</li>
+    <li>gradul de realizare – din locuințele terminate și autorizațiile de construire (INS) pentru municipiul Iași;</li>
+    <li>distribuția deplasărilor pe destinații și pe axele de acces – din matricea origine–destinație a studiului MVA × MVI;</li>
+    <li>pondere modală diferențiată pe zone – din ancheta PMUD sau din studiul O–D.</li>
+  </ul>
+
+  <h2>Surse</h2>
+  <ul>
+    <li>Hotărârile Consiliului Local Iași – <a href="https://hcl.usr.ro/iasi" target="_blank" rel="noopener">hcl.usr.ro</a>, primaria-iasi.ro</li>
+    <li>Actualizarea PMUD pentru Polul de Creștere Iași, prezentare mai 2023 – <a href="https://vision4iasi.ro/wp-content/uploads/2023/05/PREZENTARE-PMUD-mai-2023.pdf" target="_blank" rel="noopener">vision4iasi.ro</a></li>
+    <li>Recensământul Populației și Locuințelor 2021, rezultate definitive (Tab. 1.22, 5.29, 7.12) – <a href="https://www.recensamantromania.ro/rezultate-rpl-2021/rezultate-definitive/" target="_blank" rel="noopener">recensamantromania.ro</a></li>
+    <li>Parcelarul și construcțiile eTerra – OCPI Iași (export 18.05.2023)</li>
+    <li>apix.ro – articole despre PUZ-uri; OpenStreetMap (Nominatim, Overpass)</li>
+  </ul>
+</main>
+<script src="metodologie.js"></script>
+</body>
+</html>
