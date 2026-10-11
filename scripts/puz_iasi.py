@@ -759,6 +759,8 @@ def overpass_streets(path):
                 data = json.loads(r.read())
             out = [(w["tags"]["name"], w["center"]["lon"], w["center"]["lat"])
                    for w in data.get("elements", []) if w.get("center") and w.get("tags", {}).get("name")]
+            print(f"  Overpass ({url}): {len(out)} străzi cu nume"
+                  + (f"; mesaj: {data['remark']}" if data.get("remark") else ""), file=sys.stderr)
             if len(out) > 1000:
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text(json.dumps(out, ensure_ascii=False), encoding="utf-8")
@@ -869,6 +871,8 @@ class Geocoder:
         self.cache = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
         self.blocked = False
         self.streets = OSMStreets()
+        print(f"străzi OSM pentru localizare: {self.streets.source} ({len(self.streets.idx)} denumiri în UAT Iași)",
+              file=sys.stderr)
         self.zones = zone_centroids()
         iasi = [ps for key, ps in load_polys(DATA / "zmi_uat_web.geojson",
                                              lambda p: p.get("canonical_name") or p.get("name")) if key == "Iași"]
