@@ -210,7 +210,7 @@ CTP și titlurile de călătorie vândute în comunele ZMI deservite de CTP, ian
   din traseele care trec la ≤ 30 m, iar dotările – adăpost, bancă, iluminat, accesibilitate – vin din OSM);
   `statii_autobuz_metropolitan.*` – stațiile liniilor metropolitane (646 de puncte, 478 după eliminarea dublurilor –
   stația repetată pentru fiecare traseu; liniile se calculează la fel, din traseele aflate la ≤ 30 m);
-  `statii_tramvai.*` – 111 stații de tramvai (OSM, `railway=tram_stop`); pentru fiecare se calculează legăturile cu
+  `statii_tramvai.*` – 111 stații de tramvai (extrase din OSM pentru Masterplanul metropolitan Iași, `railway=tram_stop`); pentru fiecare se calculează legăturile cu
   autobuzul (liniile de autobuz la ≤ 100 m), iar liniile de tramvai vor apărea când vor exista traseele pe linii;
   `statii_derivate.gpkg` – stațiile aglomerate CTP, capetele de linie locale și metropolitane și stațiile de transfer
   metropolitane (cu numărul de linii). Pe hartă: stațiile de autobuz locale și metropolitane, cu mărimea după numărul de
