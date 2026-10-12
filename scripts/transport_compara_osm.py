@@ -316,9 +316,9 @@ def compare_amtpi(lines, routes):
     listed = {a["linie"] for a in amtpi}
     for ref, p in sorted(ours.items()):
         if p.get("retea") == "metropolitan" and ref not in listed:
-            rows.append({"linie": ref, "comuna": ", ".join(p.get("uat_nume") or []), "statii_amtpi": "",
+            rows.append({"linie": ref, "comuna": ", ".join(p.get("uat_nume") or []), "statii_amtpi": p.get("nume") or "",
                          "statut_amtpi": "nelistat", "in_proiect_date": "da", "in_osm": "da" if ref in osm else "nu",
-                         "observatii": "în datele proiectului, dar nu în lista AMTPI (posibil desființată): " + (p.get("nume") or ""),
+                         "observatii": p.get("nota") or ("în datele proiectului, dar nu în lista AMTPI (posibil desființată): " + (p.get("nume") or "")),
                          "url": ""})
     return rows
 

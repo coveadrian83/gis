@@ -319,9 +319,7 @@ def apply_amtpi(lines):
     """Statutul liniilor metropolitane după lista AMTPI (data/transport/amtpi_trasee.json, scripts/transport_amtpi.py):
     „în proiect” → stare = propus; liniile care lipsesc din listă primesc amtpi = nelistat. Întoarce numerele în proiect."""
     path = ROOT / "data" / "transport" / "amtpi_trasee.json"
-    if not path.exists():
-        return set()
-    amtpi = {x["linie"]: x for x in json.loads(path.read_text(encoding="utf-8"))["linii"]}
+    amtpi = {x["linie"]: x for x in json.loads(path.read_text(encoding="utf-8"))["linii"]} if path.exists() else {}
     proposed = set()
     for f in lines:
         p = f["properties"]
@@ -339,6 +337,17 @@ def apply_amtpi(lines):
         if info["in_proiect"]:
             p["stare"] = "propus"
             proposed.add(p["linie"])
+    # corecturi manuale (data/transport/linii_corecturi.json), ex. 205 – planificată, neoperațională
+    fix = ROOT / "data" / "transport" / "linii_corecturi.json"
+    if fix.exists():
+        corr = json.loads(fix.read_text(encoding="utf-8")).get("linii", {})
+        for f in lines:
+            p = f["properties"]
+            c = corr.get(p.get("linie") or "")
+            if c:
+                p.update({k: v for k, v in c.items() if k in ("stare", "nota")})
+                if c.get("stare") == "propus":
+                    proposed.add(p["linie"])
     return proposed
 
 

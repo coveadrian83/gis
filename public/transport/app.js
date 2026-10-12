@@ -452,7 +452,8 @@
         '</b> (volumul comunei împărțit egal între cele ' + Object.keys(p._served || {}).map(function (s) { return LINES_PER_UAT[s]; }).join(' / ') + ' linii metropolitane care o deservesc – indicativ).</p>' : '') +
       (p.amtpi ? '<p class="note">AMTPI: <b>' + esc(p.amtpi) + '</b>' + (p.amtpi_statii ? ' · ' + esc(p.amtpi_statii) : '') +
         (p.amtpi_url ? ' · <a href="' + esc(p.amtpi_url) + '" target="_blank" rel="noopener">pagina traseului</a>' : '') +
-        (p.amtpi === 'nelistat' ? ' – linia nu apare în lista oficială AMTPI (posibil desființată)' : '') + '</p>' : '') +
+        (p.amtpi === 'nelistat' && p.stare !== 'propus' ? ' – linia nu apare în lista oficială AMTPI (posibil desființată)' : '') + '</p>' : '') +
+      (p.nota ? '<p class="note">' + esc(p.nota) + '</p>' : '') +
       (p.operator ? '<p class="note">Operator: ' + esc(p.operator) + '</p>' : '');
   }
   function renderLineChips() {

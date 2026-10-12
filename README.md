@@ -213,7 +213,8 @@ CTP și titlurile de călătorie vândute în comunele ZMI deservite de CTP, ian
 - **Lista oficială AMTPI** (`python scripts/transport_amtpi.py` → `data/transport/amtpi_trasee.json`, din
   https://www.amtpi.ro/trasee-2/): liniile „în proiect” (402, 504, 506, 507, 508) apar pe hartă ca propuneri, punctat,
   împreună cu stațiile deservite doar de ele; fișa liniei arată statutul AMTPI și legătura la pagina traseului; liniile
-  din date absente din listă (205) sunt marcate „nelistat”. Liniile stațiilor metropolitane = traseele AMTPI din care
+  din date absente din listă sunt marcate „nelistat”. Corecturile manuale ale statutului (ex. 205 – planificată,
+  neoperațională) sunt în `data/transport/linii_corecturi.json`. Liniile stațiilor metropolitane = traseele AMTPI din care
   fac parte + liniile locale care trec la ≤ 30 m. Rețeaua se
   citește din numele fișierului („…_local”, „…_metropolitan”) sau din câmpul `network`; altfel traseele cu peste 25 %
   din lungime în afara municipiului sunt considerate metropolitane. La exporturile OSM, numărul din numele relației
