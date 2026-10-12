@@ -1,0 +1,18 @@
+{
+  "sursa": "CTP Iași – Date solicitate PMI (Masterplan): stații aglomerate și trasee urbane cele mai utilizate",
+  "nota": "Pozițiile sunt aproximative (centrul nodului). Dacă stratul de stații (statii.geojson) conține o stație cu același nume, harta folosește poziția acesteia.",
+  "statii": [
+    { "nume": "Târgu Cucu", "alias": ["tg cucu", "targu cucu", "tg. cucu"], "lat": 47.1652, "lng": 27.5927 },
+    { "nume": "Piața Unirii", "alias": ["piata unirii", "unirii"], "lat": 47.1653, "lng": 27.5800 },
+    { "nume": "Podu Roș", "alias": ["podu ros", "pod ros"], "lat": 47.1547, "lng": 27.5893 },
+    { "nume": "Gara", "alias": ["gara", "gara mare", "gara iasi"], "lat": 47.1651, "lng": 27.5697 },
+    { "nume": "Țesătura", "alias": ["tesatura"], "lat": 47.1583, "lng": 27.6165 },
+    { "nume": "Palatul Culturii", "alias": ["palatul culturii", "palas"], "lat": 47.1580, "lng": 27.5867 },
+    { "nume": "Piața Independenței", "alias": ["piata independentei", "independentei"], "lat": 47.1665, "lng": 27.5870 },
+    { "nume": "Tudor Vladimirescu", "alias": ["tudor vladimirescu", "tudor"], "lat": 47.1600, "lng": 27.6040 }
+  ],
+  "linii_utilizate": {
+    "autobuz": ["20", "36", "30", "46"],
+    "tramvai": ["1", "9"]
+  }
+}

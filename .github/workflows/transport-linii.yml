@@ -1,0 +1,52 @@
+# Convertește traseele liniilor de transport public încărcate în data/transport/linii/ (KML, KMZ, GeoPackage,
+# Shapefile – cu .shp, .shx, .dbf și .prj) în public/data/transport/linii.geojson și statii.geojson, citite de
+# harta /transport/, și le salvează în același branch. Rulează singur la fiecare încărcare de fișiere în acel
+# director; poate fi pornit și manual (Actions → „Trasee transport public” → Run workflow).
+name: Trasee transport public
+
+on:
+  workflow_dispatch:
+    inputs:
+      tramvai:
+        description: "Numerele liniilor de tramvai, separate prin virgulă (gol = liniile 1–15)"
+        default: ""
+  push:
+    paths:
+      - data/transport/linii/**
+      - scripts/transport_linii.py
+      - .github/workflows/transport-linii.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: transport-linii-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pyshp pyproj shapely openpyxl
+      - name: Testele conversiei
+        run: python -m unittest discover -s test -p 'test_transport*.py'
+      - name: Convertește traseele
+        run: |
+          if ! find data/transport/linii -type f \( -iname '*.kml' -o -iname '*.kmz' -o -iname '*.gpkg' -o -iname '*.shp' \) | grep -q .; then
+            echo "Nu există încă fișiere cu trasee în data/transport/linii/."; exit 0
+          fi
+          python scripts/transport_linii.py data/transport/linii --tramvai "${{ github.event.inputs.tramvai || '' }}"
+      - name: Salvează datele în branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898699+github-actions[bot]@users.noreply.github.com"
+          git add public/data/transport
+          if git diff --cached --quiet; then echo "Datele nu s-au schimbat."; exit 0; fi
+          git commit -m "Transport public: trasee actualizate"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

@@ -179,6 +179,35 @@ de Consiliul Local Iași din 2016 până azi, pe hartă, peste cele 17 zone MVA�
   pe jos** la trecerea cu mouse-ul peste un PUZ (cu stațiile din ea; `public/15min/core.js`) și mărimea cercurilor
   după suprafață, deplasări produse, autoturisme în ora de vârf sau deplasări atrase.
 - **Teste**: `python3 -m unittest discover -s test -p 'test_puz*.py'`.
+
+## Transport public – Iași și Zona Metropolitană (`/transport/`)
+
+Hartă în stilul hărților de volum de pasageri (cercuri proporționale, animație lună cu lună): traseele liniilor
+CTP și titlurile de călătorie vândute în comunele ZMI deservite de CTP, ianuarie 2023 – decembrie 2025.
+
+- **Pe comune**: cercul fiecărei comune arată **călătoriile estimate** sau **titlurile vândute** în luna (sau anul)
+  aleasă, pe categorii (bilete, abonamente, elevi și studenți), cu sau fără titlurile **repartizate** de CTP pe comune
+  (vânzările centralizate – aplicație, puncte din Iași). Clasament cu variația față de anul anterior, grafic lunar
+  pe categorii pentru ZMI sau pentru comuna aleasă, buton ▶ pentru animație, export CSV.
+- **Trasee și stații**: liniile de tramvai și autobuz, cu liniile cele mai utilizate (20, 36, 30, 46; tramvai 1 și 9)
+  îngroșate și stațiile cele mai aglomerate (Târgu Cucu, Piața Unirii, Podu Roș, Gara, Țesătura, Palatul Culturii,
+  Piața Independenței, Tudor Vladimirescu) marcate – după datele CTP pentru PMI (Masterplan). Pozițiile stațiilor
+  aglomerate (`public/data/transport/statii_aglomerate.json`) sunt aproximative și se înlocuiesc automat cu cele din
+  stratul de stații când acesta conține o stație cu același nume. Orice fișier GeoJSON / KML se poate
+  **previzualiza** direct din pagină, fără a fi încărcat pe server.
+- **Trasee – încărcare**: fișierele KML / KMZ / GeoPackage / Shapefile se încarcă în GitHub în `data/transport/linii/`
+  (**Add file → Upload files**); acțiunea **Trasee transport public** le convertește automat în
+  `public/data/transport/linii.geojson` și `statii.geojson`. Local: `pip install pyshp pyproj shapely`, apoi
+  `python scripts/transport_linii.py data/transport/linii [--tramvai 1,3,6,7,8,9,11,13]`.
+- **Titluri de călătorie**: `pip install openpyxl`, apoi
+  `python scripts/transport_titluri.py <centralizator 2023>.xlsx <2024>.xlsx <2025>.xlsx` →
+  `public/data/transport/titluri_zm.json` și `.csv`. Fișierele Excel ale CTP nu se publică (conțin și foi contabile;
+  `data/transport/*.xlsx` este ignorat de git) – doar agregatele pe comună, lună și categorie. Călătoriile se estimează
+  cu numărul de călătorii pe titlu folosit de CTP (bilet = 1, bilet 2 călătorii = 2, abonament 30 de zile = 60,
+  ZM + Iași = 135, 6 luni = 360 / 810, 12 luni = 1620, abonament studenți = 120); rândurile în lei, suprataxele și
+  dublurile contabile („(-)”, „Primărie”) nu se numără. Centralizatorul municipiului Iași există doar pentru 2023
+  (secțiunea „Municipiul Iași, 2023”); Țuțora lipsește din centralizatorul 2025, iar Valea Lupului apare din martie 2024.
+- **Teste**: `python3 -m unittest discover -s test -p 'test_transport*.py'`.
 - **Limite**: indicatorii sunt extrași automat din text – verificați hotărârea înainte de a-i cita; un PUZ aprobat nu
   înseamnă o construcție autorizată sau realizată; apartamentele și parcările sunt cunoscute doar pentru o parte din PUZ-uri.
 
@@ -229,9 +258,12 @@ public/shared/              geo-core.js (căutare + point-in-polygon) și domain
 public/data/                fișierele geografice
 public/15min/               harta „15 minute. Pentru cine?” – Iași (core.js = calculul, data/iasi = export OSM)
 public/puz/                 harta PUZ-urilor votate de Consiliul Local Iași (date: public/data/puz_iasi.geojson)
+public/transport/           harta transportului public (date: public/data/transport/)
 scripts/puz_iasi.py         colectarea PUZ-urilor (hcl.usr.ro + apix.ro), extragerea indicatorilor, localizarea
 scripts/puz_parcele.py      extrasul parcelelor PUZ din parcelarul OCPI (data/puz_parcele.geojson)
 scripts/puz_mobilitate.py   deplasările generate de PUZ-uri (scenariile PMUD și RPL; config/puz_mobilitate.json)
+scripts/transport_titluri.py  titlurile de călătorie CTP pe comune ZMI și luni (din centralizatoarele Excel)
+scripts/transport_linii.py  traseele și stațiile din KML / GeoPackage / Shapefile (data/transport/linii/)
 data/puz_iasi_completari.csv  corecturi și completări manuale pentru PUZ-uri
 scripts/export_15min.py     exportul rețelei pietonale și al facilităților din OSM (osmnx)
 scripts/elevatie_15min.py   panta: elevația Copernicus GLO-30 pe fiecare segment (elev.bin)

@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Transport public – Iași și Zona Metropolitană</title>
+  <meta name="author" content="dr. geogr. Adrian Covăsnianu">
+  <meta name="description" content="Liniile de transport public din Iași și Zona Metropolitană și titlurile de călătorie vândute în fiecare comună, lună de lună (CTP Iași, 2023–2025).">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<aside id="panel">
+  <h1>Transport public<br><span>Iași · ZMI</span></h1>
+  <p class="sub">Liniile CTP și călătoriile din comunele Zonei Metropolitane, lună de lună</p>
+  <p class="note">Fiecare cerc este o comună din Zona Metropolitană deservită de CTP Iași; mărimea arată titlurile de călătorie vândute sau călătoriile estimate în perioada aleasă. Apăsați pe un cerc (sau pe un rând din clasament) pentru evoluția comunei. Liniile urbane cele mai utilizate și stațiile cele mai aglomerate sunt evidențiate.</p>
+
+  <div class="time">
+    <div class="timehead">
+      <button id="play" type="button" aria-label="Pornește animația">▶</button>
+      <b id="period">–</b>
+      <label class="inline small"><input type="checkbox" id="yearAgg"> an întreg</label>
+    </div>
+    <input type="range" id="month" min="0" max="0" value="0" aria-label="Luna">
+    <div class="ticks" id="ticks"></div>
+  </div>
+
+  <div class="ctl">
+    <div class="lbl">Indicator</div>
+    <div class="seg" id="metricSeg">
+      <button type="button" data-v="1" class="on">Călătorii estimate</button>
+      <button type="button" data-v="0">Titluri vândute</button>
+    </div>
+  </div>
+  <div class="ctl">
+    <div class="lbl">Categorie</div>
+    <div class="seg" id="catSeg"></div>
+  </div>
+  <div class="ctl toggles">
+    <label><input type="checkbox" id="rep" checked> Include titlurile repartizate pe comune (vânzări centralizate: aplicație, Iași)</label>
+  </div>
+
+  <div id="kpis"></div>
+
+  <section>
+    <h2 id="chartTitle">Zona Metropolitană – pe luni</h2>
+    <div id="legend" class="legend"></div>
+    <div id="chart"></div>
+  </section>
+
+  <section>
+    <h2>Clasament</h2>
+    <div id="rank"></div>
+    <p class="note">% = față de aceeași perioadă a anului anterior. <a href="../data/transport/titluri_zm.csv" download>Descarcă datele (CSV)</a></p>
+  </section>
+
+  <details id="linesBox" open>
+    <summary>Trasee și stații</summary>
+    <div class="ctl toggles">
+      <label><input type="checkbox" id="showLines" checked> Traseele liniilor</label>
+      <label><input type="checkbox" id="showStops"> Toate stațiile</label>
+      <label><input type="checkbox" id="showHot" checked> Stațiile cele mai aglomerate</label>
+      <label><input type="checkbox" id="showUat" checked> Limitele UAT (ZMI)</label>
+    </div>
+    <div id="lineChips" class="chips"></div>
+    <p class="note" id="linesNote"></p>
+    <label class="file">Previzualizează alte trasee (GeoJSON sau KML, rămân doar în browser)
+      <input type="file" id="file" accept=".geojson,.json,.kml" multiple></label>
+  </details>
+
+  <details id="iasiBox">
+    <summary>Municipiul Iași, 2023</summary>
+    <div id="iasi"></div>
+  </details>
+
+  <p class="note" id="dataInfo"></p>
+  <p class="note"><b>Prelucrarea și integrarea datelor:</b> dr. geogr. Adrian Covăsnianu</p>
+  <p class="note">Sursa: Compania de Transport Public Iași – centralizatoarele titlurilor de călătorie vândute în Zona Metropolitană (2023–2025) și datele solicitate pentru Planul de Mobilitate (Masterplan). Călătoriile sunt estimate cu numărul de călătorii pe titlu folosit de CTP (bilet = 1, abonament 30 de zile = 60, ZM + Iași = 135). Fundal: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">contribuitorii OpenStreetMap</a>. <a href="../puz/">Harta PUZ</a> · <a href="../15min/">Harta 15 minute</a> · <a href="../">Studiul O–D</a></p>
+  <p class="note">© 2026 Moldova Vrea Infrastructură și Moldova Vrea Autostradă. Toate drepturile rezervate.</p>
+</aside>
+<div id="map"></div>
+<div id="tip" role="tooltip" hidden></div>
+
+<script src="../vendor/leaflet/leaflet.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
