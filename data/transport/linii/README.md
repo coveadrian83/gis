@@ -10,7 +10,7 @@ Conținut actual:
 | Fișier | Conținut |
 |---|---|
 | `rute_autobuz_local.*` | 18 linii de autobuz locale CTP, ambele sensuri (relații OpenStreetMap, © contribuitorii OSM, ODbL) |
-| `metropolitan_amtpi/*.kmz` | 28 de trasee metropolitane AMTPI (101 … 902), cu stațiile fiecărui traseu |
+| `metropolitan_amtpi/*.kmz, *.kml` | 28 de trasee metropolitane AMTPI (101 … 902), cu stațiile fiecărui traseu; 204 – KML exportat din Google My Maps (Pietrăria – Vișan, complet) |
 | `metropolitan_amtpi_osm.geojson` | liniile AMTPI fără KMZ, preluate din OSM (23) – generat de `scripts/transport_osm.py` |
 | `rute_tramvai_osm.geojson` | traseele tramvaiului pe linii (1, 3, 5, 6, 7, 8, 9, 11, 13), extrase din OSM de `scripts/transport_osm.py` – nu se editează manual |
 | `retea_tramvai.geojson` | rețeaua de tramvai existentă și extinderea propusă (din `Infrastructura_Mobilitate.gpkg`) |
