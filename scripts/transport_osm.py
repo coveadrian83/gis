@@ -45,6 +45,10 @@ out body;""",
     "sine": f"""[out:json][timeout:120];
 way["railway"="tram"]({BBOX});
 out body geom;""",
+    # sensurile giratorii – transport_gtfs.py desenează pe ele întoarcerea autobuzelor la capăt (ex. Agronomie / Copou)
+    "giratorii": f"""[out:json][timeout:120];
+way["junction"~"^(roundabout|circular)$"]["highway"]({BBOX});
+out body geom;""",
 }
 
 

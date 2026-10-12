@@ -58,7 +58,7 @@ class Rails:
     STEP, SNAP, CELL = 80.0, 30.0, 0.0005
 
     def __init__(self, osm_dir):
-        self.adj, self.grid = {}, {}
+        self.adj, self.grid, self.bridges = {}, {}, set()
         geoms = []
         for name in ("sine.json", "rute.json"):
             path = osm_dir / name
@@ -87,6 +87,7 @@ class Rails:
                 d = dist(u, v)
                 if v != u and v not in self.adj[u] and d <= 12:
                     self.adj[u][v] = self.adj[v][u] = d + 20
+                    self.bridges.add(frozenset((u, v)))
 
     def around(self, p):
         cx, cy = int(p[0] / self.CELL), int(p[1] / self.CELL)
@@ -141,7 +142,93 @@ class Rails:
                 out.pop()
             elif not out or out[-1] != u:
                 out.append(u)
-        return [[round(x, 6), round(y, 6)] for x, y in out]
+        return out
+
+    def turn(self, tail, head, limit=1500):
+        """Bucla de întoarcere de la capăt: drumul pe șine dintre finalul unui sens (`tail`, ultimii ~400 m) și începutul
+        unui sens al aceleiași linii (`head`: perechi nod – nodul următor), mergând doar înainte – fără întoarcere pe loc, fără viraje mai strânse de
+        60°, fără salturi între șinele paralele – și cu schimbarea sensului de mers (≥ 120°). Capătul GTFS poate fi
+        după intrarea în buclă (ex. Dacia, Tătărași Nord), de aceea bucla poate porni din oricare nod din `tail`.
+        Ex. buclele de la Spital Elytis, Dacia, Târgu Cucu, Tătărași Nord, Rond Țuțora, Dancu.
+        Întoarce (indicele din tail de unde pleacă bucla, nodurile buclei) sau None."""
+        goals = {}
+        for u, nxt in head:                                  # (nod, nodul următor) la începutul sensurilor
+            goals.setdefault(u, nxt)
+        src = {tail[i]: i for i in range(1, len(tail))}
+        best, prev_of, q = {}, {}, []
+        for u, i in src.items():
+            best[(u, tail[i - 1])] = 0.0
+            q.append((0.0, u, tail[i - 1], u))
+        heapq.heapify(q)
+        while q:
+            d, u, w, s0 = heapq.heappop(q)
+            if d > limit:
+                return None
+            i = src[s0]
+            if d > 20 and u in goals and angle(w, u, goals[u]) <= 60 and \
+                    angle2(tail[i - 1], s0, u, goals[u]) >= 120:
+                out, st = [u], (u, w)
+                while st in prev_of:
+                    st = prev_of[st]
+                    out.append(st[0])
+                return i, out[::-1]
+            if d > best.get((u, w), math.inf):
+                continue
+            for v, c in self.adj[u].items():
+                if v == w or frozenset((u, v)) in self.bridges or angle(w, u, v) > 60:
+                    continue
+                if d + c < best.get((v, u), math.inf):
+                    best[(v, u)], prev_of[(v, u)] = d + c, (u, w)
+                    heapq.heappush(q, (d + c, v, u, s0))
+        return None
+
+
+class Rings:
+    """Sensurile giratorii din OSM (data/transport/osm/giratorii.json), ca graf orientat în sensul de mers (ordinea
+    nodurilor căii OSM). turn() desenează întoarcerea autobuzului la capăt: dacă un sens se termină lângă un sens
+    giratoriu, iar sensul următor al liniei pleacă tot de acolo în direcția opusă, traseul ocolește sensul giratoriu
+    de la intrare până la ieșire (ex. Rond Agronomie / Copou)."""
+    NEAR = 40.0
+
+    def __init__(self, path):
+        self.next, self.nodes = {}, []
+        for e in json.loads(path.read_text(encoding="utf-8")).get("elements", []) if path.exists() else []:
+            g = [(round(p["lon"], 7), round(p["lat"], 7)) for p in e.get("geometry") or []]
+            for a, b in zip(g, g[1:]):
+                self.next[a] = b
+        self.nodes = list(self.next)
+
+    def nearest(self, p):
+        u = min(self.nodes, key=lambda u: dist(p, u), default=None)
+        return u if u and dist(p, u) <= self.NEAR else None
+
+    def turn(self, end, prev, start, nxt):
+        if dist(end, start) > 150 or angle2(prev, end, start, nxt) < 120:
+            return None
+        a, b = self.nearest(end), self.nearest(start)
+        if not a or not b:
+            return None
+        out, acc = [a], 0.0
+        while out[-1] != b:
+            v = self.next.get(out[-1])
+            if v is None or acc > 600:
+                return None
+            acc += dist(out[-1], v)
+            out.append(v)
+        return out if acc > 20 else None
+
+
+def angle2(a, b, c, d):
+    """Unghiul (grade) dintre direcțiile a→b și c→d."""
+    k = math.cos(math.radians(b[1]))
+    x1, y1, x2, y2 = (b[0] - a[0]) * k, b[1] - a[1], (d[0] - c[0]) * k, d[1] - c[1]
+    n = math.hypot(x1, y1) * math.hypot(x2, y2)
+    return 0.0 if not n else math.degrees(math.acos(max(-1.0, min(1.0, (x1 * x2 + y1 * y2) / n))))
+
+
+def angle(a, b, c):
+    """Unghiul de viraj (grade) la b, între direcțiile a→b și b→c."""
+    return angle2(a, b, b, c)
 
 
 def dist(a, b):
@@ -251,6 +338,56 @@ def main():
         shapes[p["shape_id"]].append((int(p["shape_pt_sequence"]), float(p["shape_pt_lon"]), float(p["shape_pt_lat"])))
     feats, seen = [], set()
     rails, snapped = Rails(OSM_DIR), []
+    on_rails, by_line = {}, defaultdict(list)                # tramvaiele pe șine, apoi buclele de la capete
+    for t in trips.values():
+        sid = t.get("shape_id")
+        r = routes[t["route_id"]]
+        if sid in shapes and sid not in on_rails and mode_of(r) == "tramvai":
+            nodes = rails.snap([(x, y) for _, x, y in sorted(shapes[sid])])
+            if nodes and len(nodes) > 3:
+                on_rails[sid] = nodes
+                by_line[ref_of(r)].append(sid)
+    # autobuzele: întoarcerea prin sensul giratoriu de la capăt
+    rings, bus_loop, bus_shapes = Rings(OSM_DIR / "giratorii.json"), {}, defaultdict(list)
+    for t in trips.values():
+        sid = t.get("shape_id")
+        r = routes[t["route_id"]]
+        if sid in shapes and mode_of(r) != "tramvai" and sid not in bus_shapes[ref_of(r)]:
+            bus_shapes[ref_of(r)].append(sid)
+    loops = []
+    for ref, sids in bus_shapes.items():
+        for a in sids:
+            A = [(x, y) for _, x, y in sorted(shapes[a])]
+            for b in sids:
+                B = [(x, y) for _, x, y in sorted(shapes[b])]
+                ring = rings.turn(A[-1], A[-2], B[0], B[1]) if len(A) > 1 and len(B) > 1 else None
+                if ring:
+                    bus_loop[a] = ring
+                    loops.append(f"{ref}:{a} (giratoriu, {round(sum(dist(u, v) for u, v in zip(ring, ring[1:])))} m)")
+                    break
+    for ref, sids in by_line.items():
+        ext = {}
+        for a in sids:
+            A = on_rails[a]
+            k, acc = len(A) - 1, 0.0                         # ultimii ~400 m ai sensului
+            while k > 1 and acc < 400:
+                acc += dist(A[k - 1], A[k])
+                k -= 1
+            heads = []
+            for b in sids:
+                B, j, acc = on_rails[b], 1, 0.0              # primii ~400 m ai sensului următor
+                while j < len(B) - 1 and acc < 400:
+                    acc += dist(B[j - 1], B[j])
+                    j += 1
+                if dist(B[0], A[-1]) <= 300:
+                    heads += list(zip(B[:j], B[1:j + 1]))
+            res = rails.turn(A[k - 1:], heads) if heads else None
+            if res:
+                i, loop = res
+                ext[a] = (k - 1 + i, loop)
+                loops.append(f"{ref}:{a} ({round(sum(dist(u, v) for u, v in zip(loop, loop[1:])))} m)")
+        for a, (i, loop) in ext.items():
+            on_rails[a] = on_rails[a][:i] + loop
     detours = json.loads(FIXES.read_text(encoding="utf-8")).get("gtfs_ocoluri", {}) if FIXES.exists() else {}
     by_name = {s.get("stop_name"): s for s in stops.values()}
     for t in trips.values():
@@ -262,11 +399,11 @@ def main():
         seq = sorted(trip_stops.get(t["trip_id"], []))
         first = stops.get(seq[0][1], {}).get("stop_name") if seq else None
         pts = [[round(x, 6), round(y, 6)] for _, x, y in sorted(shapes[sid])]
-        if mode_of(r) == "tramvai":
-            on_rails = rails.snap(pts)
-            if on_rails:
-                pts = on_rails
-                snapped.append(sid)
+        if sid in on_rails:
+            pts = [[round(x, 6), round(y, 6)] for x, y in on_rails[sid]]
+            snapped.append(sid)
+        elif sid in bus_loop:
+            pts += [[round(x, 6), round(y, 6)] for x, y in bus_loop[sid]]
         key = f"{mode_of(r)}|{ref_of(r)}"
         props = {"linie": ref_of(r), "tip": mode_of(r), "retea": serv.get(key, {}).get("retea", "local"),
                  "name": r.get("route_long_name") or "", "from": first, "to": t.get("trip_headsign") or None,
@@ -301,7 +438,7 @@ def main():
     OUT_SERV.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     top = sorted(stop_out, key=lambda s: -s["plecari_lucru"])[:5]
     trams = sum(f["properties"]["tip"] == "tramvai" for f in feats)
-    print(f"tramvai: {len(snapped)}/{trams} forme aliniate pe șinele OSM")
+    print(f"tramvai: {len(snapped)}/{trams} forme aliniate pe șinele OSM; bucle la capete: {', '.join(loops)}")
     print(f"{len(serv)} linii, {len(feats)} trasee, {len(stop_out)} stații; cele mai multe plecări (zi lucrătoare): "
           + ", ".join(f"{s['nume']} {s['plecari_lucru']}" for s in top))
 
