@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Traseele liniilor de transport public (și stațiile) din fișiere KML / KMZ, GeoPackage sau Shapefile.
 
-Intrare: unul sau mai multe fișiere sau directoare (se caută în ele *.kml, *.kmz, *.gpkg, *.shp), de exemplu
+Intrare: unul sau mai multe fișiere sau directoare (se caută în ele *.kml, *.kmz, *.gpkg, *.shp, *.geojson), de exemplu
 data/transport/linii/ – unde se pot încărca direct din GitHub (Add file → Upload files). Fiecare obiect
 liniar devine un traseu, fiecare punct o stație; poligoanele sunt ignorate. Sistemul de coordonate se citește
 din fișier (.prj, gpkg_spatial_ref_sys; KML este mereu WGS84); fără informație se presupune Stereo 70 (EPSG:3844).
@@ -39,7 +39,7 @@ from xml.etree import ElementTree as ET
 ROOT = Path(__file__).resolve().parent.parent
 OUT_DIR = ROOT / "public" / "data" / "transport"
 LINE_FIELDS = ("linie", "line", "ref", "traseu", "route", "route_short_name", "nr", "numar", "nr_linie", "nume_linie",
-               "name", "nume", "denumire", "den", "descriere", "description")
+               "name", "nume", "denumire", "den", "folders", "layer", "descriere", "description")
 MODE_FIELDS = ("tip", "mod", "mode", "vehicul", "tip_vehicul", "mijloc", "route_type", "categorie", "type")
 STOP_FIELDS = ("nume", "name", "statie", "stație", "denumire", "den", "nume_statie", "stop_name")
 MODES = (("tramvai", ("tramvai", "tram", "tramway")), ("troleibuz", ("troleibuz", "trolleybus")),
@@ -182,13 +182,25 @@ def reproject(g, tr):
     return {"type": g["type"], "coordinates": conv(g["coordinates"])}
 
 
+def geojson_records(path):
+    """GeoJSON în WGS84 (sau cu membrul „crs” al formatului vechi); proprietatea „_folder” = numele fișierului."""
+    d = json.loads(path.read_text(encoding="utf-8"))
+    crs = ((d.get("crs") or {}).get("properties") or {}).get("name")
+    tr = transformer(crs) if crs else None
+    for f in d.get("features", []):
+        props = dict(f.get("properties") or {})
+        props.setdefault("_folder", path.stem)
+        yield props, reproject(f.get("geometry"), tr)
+
+
 def records(paths):
     for p in paths:
         p = Path(p)
         files = sorted(x for x in p.rglob("*") if x.is_file()) if p.is_dir() else [p]
         for f in files:
             ext = f.suffix.lower()
-            reader = {".kml": kml_records, ".kmz": kml_records, ".shp": shp_records, ".gpkg": gpkg_records}.get(ext)
+            reader = {".kml": kml_records, ".kmz": kml_records, ".shp": shp_records, ".gpkg": gpkg_records,
+                      ".geojson": geojson_records}.get(ext)
             if not reader:
                 continue
             n = 0
@@ -217,6 +229,10 @@ def line_ref(props):
     for v in cands:
         m = re.search(r"(?:linia|linie|traseul?|tramvai(?:ul)?|autobuz(?:ul)?|microbuz|line|route|\bl)\s*[:#nr.]*\s*"
                       r"(\d{1,3}[a-z]?)\b", v, re.I) or re.match(r"\s*(\d{1,3}[a-z]?)\b", v, re.I)
+        if m:
+            return m.group(1).upper()
+    for v in cands:                       # nume de straturi / fișiere: „traseu_TP_101”, „trase_TP_202_cu_extensie”
+        m = re.search(r"(?:^|[_\s-])(\d{1,3}[a-z]?)(?=[_\s.-]|$)", v, re.I)
         if m:
             return m.group(1).upper()
     return None
@@ -316,7 +332,9 @@ def main():
         t = g["type"]
         if t in ("LineString", "MultiLineString"):
             ref, oref = line_ref(props), osm_name_ref(props)
-            name = next(field(props, ("name", "nume", "denumire", "den", "traseu", "descriere")), None) or props.get("_folder")
+            name = next(field(props, ("name", "nume", "denumire", "den", "traseu", "descriere")), None)
+            if not name and src.lower().endswith((".kml", ".kmz")):     # la KML, directorul poartă numele liniei
+                name = props.get("_folder")
             if oref and ref and oref != ref:     # ex. ref=6B la „Bus 36: Breazu => Rond Dacia” – eroare în OSM
                 warnings.append(f"„{name}”: ref={ref} diferă de numele relației → linia {oref}")
                 ref = oref
@@ -336,6 +354,9 @@ def main():
             op = next(field(props, ("operator", "operator_", "operat")), None)
             if op:
                 p["operator"] = op
+            stare = next(field(props, ("stare", "status", "state")), None)
+            if stare:
+                p["stare"] = stare
             p["sursa"] = src
             lines.append({"type": "Feature", "properties": p,
                           "geometry": {"type": g["type"], "coordinates": rnd(g["coordinates"])}})
@@ -343,7 +364,11 @@ def main():
             c = g["coordinates"] if t == "Point" else g["coordinates"][0]
             name = next(field(props, STOP_FIELDS), None)
             lr = next(field(props, ("linii", "lines", "routes", "trasee", "route_ref")), None)
-            stops.append({"type": "Feature", "properties": {"nume": name, "linii": lr, "sursa": src},
+            sp = {"nume": name, "linii": lr, "strat": props.get("_folder"), "sursa": src}
+            nr = next(field(props, ("n_routes", "nr_linii")), None)
+            if nr and re.match(r"^\d+$", nr):
+                sp["n_linii"] = int(nr)
+            stops.append({"type": "Feature", "properties": sp,
                           "geometry": {"type": "Point", "coordinates": rnd(c)}})
     if not lines and not stops:
         sys.exit("Nu am găsit trasee sau stații în fișierele date.")
@@ -373,8 +398,8 @@ def main():
         print(f"{k}: {', '.join(sorted(v, key=num))}")
     print(f"{len(lines)} trasee, {len(stops)} stații → {od}")
     if unnamed:
-        print(f"atenție: {unnamed} trasee fără număr de linie recunoscut (vezi câmpurile acceptate în descrierea scriptului)",
-              file=sys.stderr)
+        print(f"{unnamed} trasee fără număr de linie (afișate ca rețea, ex. infrastructura de tramvai); dacă ar trebui "
+              "să aibă număr, vezi câmpurile acceptate în descrierea scriptului", file=sys.stderr)
 
 
 if __name__ == "__main__":

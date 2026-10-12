@@ -1,11 +1,19 @@
 # Traseele liniilor de transport public
 
-Încărcați aici (în GitHub: **Add file → Upload files**) fișierele cu traseele și, opțional, stațiile:
-KML / KMZ (Google Earth, Google My Maps), GeoPackage (`.gpkg`) sau Shapefile – pentru Shapefile încărcați
-împreună `.shp`, `.shx`, `.dbf` și `.prj`.
-
+Încărcați aici (în GitHub: **Add file → Upload files**) fișierele cu traseele și stațiile: KML / KMZ, GeoPackage
+(`.gpkg`), GeoJSON sau Shapefile – pentru Shapefile încărcați împreună `.shp`, `.shx`, `.dbf`, `.prj` (și `.cpg`).
 La fiecare încărcare, acțiunea **Trasee transport public** le convertește în `public/data/transport/linii.geojson`
-și `statii.geojson`, pe care le afișează harta `/transport/`. Numărul liniei este citit din câmpurile
-`linie` / `ref` / `traseu` / `name` / `nume` (ex. „Traseul 20”, „Linia 9”) sau din numele directorului KML;
-tipul (tramvai / autobuz) din câmpurile `tip` / `mod` sau din nume – altfel liniile 1–15 sunt considerate tramvai.
-Detalii: `scripts/transport_linii.py`.
+și `statii.geojson`, pe care le afișează harta `/transport/`. Detalii: `scripts/transport_linii.py`.
+
+Conținut actual:
+
+| Fișier | Conținut |
+|---|---|
+| `rute_autobuz_local.*` | 18 linii de autobuz locale CTP, ambele sensuri (relații OpenStreetMap, © contribuitorii OSM, ODbL) |
+| `trasee_transport_public_metropolitan.gpkg` | 28 de linii de autobuz metropolitane (101 … 902) |
+| `retea_tramvai.geojson` | rețeaua de tramvai existentă și extinderea propusă (din `Infrastructura_Mobilitate.gpkg`) |
+| `statii_derivate.gpkg` | stații aglomerate CTP, capete de linie locale / metropolitane, stații de transfer metropolitane |
+
+Rețeaua (local / metropolitan) se citește din numele fișierului („…_local”, „…_metropolitan”) sau din câmpul
+`network` / `retea`; tipul (tramvai / autobuz) din câmpurile `tip` / `mod` / `route` sau din nume; `stare = propus`
+desenează traseul punctat, ca propunere.

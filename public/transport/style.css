@@ -84,6 +84,8 @@ body.light .leaflet-container { background: #f1efe9; }
 .map-legend { background: rgba(26, 26, 25, .9); border: 1px solid var(--line); border-radius: 6px; padding: 7px 10px; font-size: 12px; line-height: 1.6; color: var(--text-secondary); }
 .map-legend i { display: inline-block; vertical-align: middle; margin-right: 7px; }
 .map-legend .ln { width: 22px; height: 4px; border-radius: 2px; }
+.map-legend .ln.dash { background: repeating-linear-gradient(90deg, currentColor 0 5px, transparent 5px 9px); }
+.map-legend .st { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--metro); background: var(--surface-1); margin: 0 13px 0 6px; }
 .map-legend .ln.halo { height: 4px; background: var(--text-secondary); box-shadow: 0 0 0 4px rgba(242, 193, 78, .45); }
 .map-legend .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--hot); margin: 0 13px 0 6px; }
 .map-legend .bub { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid #f0efec; background: rgba(240, 239, 236, .35); margin: 0 10px 0 3px; }

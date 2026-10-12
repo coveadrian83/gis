@@ -197,10 +197,18 @@ CTP și titlurile de călătorie vândute în comunele ZMI deservite de CTP, ian
   **previzualiza** direct din pagină, fără a fi încărcat pe server.
 - **Simbolizare**: tramvai (roșu), autobuz local (violet), autobuz metropolitan (magenta); liniile cele mai utilizate
   după CTP au un halou galben, iar grosimea liniilor metropolitane urmează titlurile / călătoriile din comunele pe care
-  le străbat (indicativ – CTP raportează vânzările pe comună, nu pe linie). Fundal la alegere: întunecat sau
+  le străbat: volumul fiecărei comune se împarte în mod egal între liniile metropolitane care o deservesc (indicativ –
+  CTP raportează vânzările pe comună, nu pe linie). Extinderea propusă a tramvaiului apare punctat (opțional). Fundal la alegere: întunecat sau
   OpenStreetMap standard. Apăsând pe o linie se deschide fișa ei: sensurile, lungimea, comunele străbătute, relația OSM.
-- **Trasee actuale**: `data/transport/linii/rute_autobuz_local.*` – cele 18 linii de autobuz locale CTP (35 de relații
-  OSM, ambele sensuri; export OSM în Stereo 70). Urmează tramvaiele, liniile metropolitane și stațiile. Rețeaua se
+- **Trasee actuale** (`data/transport/linii/`): `rute_autobuz_local.*` – cele 18 linii de autobuz locale CTP (35 de
+  relații OSM, ambele sensuri, Stereo 70); `trasee_transport_public_metropolitan.gpkg` – cele 28 de linii metropolitane
+  (101–104 Aroneanu, 201–205 Bârnova, 301 Ciurea, 401–402 Holboca, 501–508 Miroslava, 601–603 Popricani, 701–702 Rediu,
+  801–802 Tomești, 901–902 Valea Lupului; numărul din câmpul `name` / `folders` / `layer`, ex. `traseu_TP_101`);
+  `retea_tramvai.geojson` – rețeaua de tramvai existentă (34,5 km de cale) și extinderea propusă (13 km), extrase din
+  `Infrastructura_Mobilitate.gpkg` (straturile `PublicT_Tram_Linii_Existente` / `_Extindere`, fără împărțirea pe linii);
+  `statii_derivate.gpkg` – stațiile aglomerate CTP, capetele de linie locale și metropolitane și stațiile de transfer
+  metropolitane (cu numărul de linii). Urmează stațiile de autobuz și tramvai și, dacă există, traseele pe linii ale
+  tramvaiului (ca să poată fi evidențiate liniile 1 și 9). Rețeaua se
   citește din numele fișierului („…_local”, „…_metropolitan”) sau din câmpul `network`; altfel traseele cu peste 25 %
   din lungime în afara municipiului sunt considerate metropolitane. La exporturile OSM, numărul din numele relației
   („Bus 36: Breazu => Rond Dacia”) are prioritate față de un `ref` care îl contrazice (ex. `6B`).

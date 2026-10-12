@@ -84,7 +84,7 @@
   map.createPane('lines'); map.getPane('lines').style.zIndex = 400;
   map.createPane('bubbles'); map.getPane('bubbles').style.zIndex = 450;
   map.createPane('hot'); map.getPane('hot').style.zIndex = 620;
-  var haloLayer = L.layerGroup().addTo(map), uatLayer = L.layerGroup().addTo(map), lineLayer = L.layerGroup().addTo(map), stopLayer = L.layerGroup(),
+  var haloLayer = L.layerGroup().addTo(map), proposedLayer = L.layerGroup(), uatLayer = L.layerGroup().addTo(map), lineLayer = L.layerGroup().addTo(map), stopLayer = L.layerGroup(),
     hotLayer = L.layerGroup().addTo(map), bubbleLayer = L.layerGroup().addTo(map), extraLayer = L.layerGroup().addTo(map);
   var bubbles = {};
   // etichetele stațiilor aglomerate se suprapun sub zoom 13
@@ -313,7 +313,7 @@
     if (e.key === 'ArrowRight') setMonth(S.mi + (S.year ? 12 : 1));
     else if (e.key === 'ArrowLeft') setMonth(S.mi - (S.year ? 12 : 1));
   });
-  [['showLines', [lineLayer, haloLayer]], ['showStops', [stopLayer]], ['showHot', [hotLayer]], ['showUat', [uatLayer]], ['showBubbles', [bubbleLayer]]].forEach(function (p) {
+  [['showLines', [lineLayer, haloLayer]], ['showProposed', [proposedLayer]], ['showStops', [stopLayer]], ['showHot', [hotLayer]], ['showUat', [uatLayer]], ['showBubbles', [bubbleLayer]]].forEach(function (p) {
     $(p[0]).addEventListener('change', function () { var on = this.checked; p[1].forEach(function (l) { if (on) l.addTo(map); else map.removeLayer(l); }); });
   });
 
@@ -321,22 +321,46 @@
   // tramvai (roșu), autobuz local (violet), autobuz metropolitan (magenta); liniile cele mai utilizate după CTP
   // au un halou galben; grosimea liniilor metropolitane urmează titlurile/călătoriile comunelor pe care le deservesc
   var lineFeatures = [], halos = [];
-  function lineKey(p) { return (p.linie || '') + '|' + (p.tip || '') + '|' + (p.retea || ''); }
+  function lineKey(p) { return (p.linie || '') + '|' + (p.tip || '') + '|' + (p.retea || '') + (p.stare === 'propus' ? '|propus' : ''); }
   function isTop(p) { return !!p.linie && TOP[p.linie] === p.tip; }
   function lineColor(p) { return p.tip === 'tramvai' ? TRAM : p.retea === 'metropolitan' ? METRO : BUS; }
-  // volumul comunelor deservite (perioada curentă) – doar pentru traseele metropolitane
+  // cota liniei din titlurile / călătoriile comunelor deservite (perioada curentă), doar pentru traseele metropolitane:
+  // volumul fiecărei comune se împarte în mod egal între liniile metropolitane care o străbat (CTP raportează pe comună)
+  var LINES_PER_UAT = {};
+  function countLinesPerUat() {
+    var seen = {};
+    LINES_PER_UAT = {};
+    lineFeatures.forEach(function (l) {
+      var p = l._p;
+      if (p.retea !== 'metropolitan' || !p.linie) return;
+      (p.uat || []).forEach(function (s) { var k = s + '|' + p.linie; if (!seen[k]) { seen[k] = 1; LINES_PER_UAT[s] = (LINES_PER_UAT[s] || 0) + 1; } });
+    });
+  }
+  function prepareServed() {   // după ce s-au încărcat toate traseele
+    countLinesPerUat();
+    lineFeatures.forEach(function (l) { l._p._served = servedUats(l._p); });
+    restyleLines();
+  }
+  function servedUats(p) {
+    var out = {};
+    if (p.retea !== 'metropolitan' || !p.linie) return out;
+    lineFeatures.forEach(function (l) { if (l._p.linie === p.linie && l._p.retea === 'metropolitan') (l._p.uat || []).forEach(function (s) { out[s] = 1; }); });
+    return out;
+  }
   function servedVal(p) {
-    if (p.retea !== 'metropolitan' || !p.uat || !T) return null;
-    var t = null;
-    p.uat.forEach(function (s) { var u = T.uat[s]; var v = u ? val(u, S.mi) : null; if (v != null) t = (t || 0) + v; });
+    if (p.retea !== 'metropolitan' || !p.linie || !T) return null;
+    var t = null, us = p._served || {};
+    Object.keys(us).forEach(function (s) { var u = T.uat[s]; var v = u ? val(u, S.mi) : null; if (v != null) t = (t || 0) + v / (LINES_PER_UAT[s] || 1); });
     return t;
   }
   var metroMax = 1;
   function lineStyle(p) {
     var dim = S.line && S.line !== lineKey(p), on = S.line === lineKey(p), w = isTop(p) ? 4 : 1.8;
-    var sv = servedVal(p);
+    var sv = servedVal(p), net = !p.linie && p.tip === 'tramvai';
     if (sv != null) w = 1.5 + 5 * Math.sqrt(sv / metroMax);
-    return { color: lineColor(p), weight: on ? Math.max(5, w) : w, opacity: dim ? 0.08 : on || isTop(p) ? 0.95 : 0.6, lineCap: 'round', lineJoin: 'round' };
+    if (net) w = 3;
+    return { color: lineColor(p), weight: on ? Math.max(5, w) : w, opacity: dim ? 0.08 : on || isTop(p) || net ? 0.95 : 0.6,
+      dashArray: p.stare === 'propus' ? '6 6' : null, lineCap: p.stare === 'propus' ? 'butt' : 'round', lineJoin: 'round' };
   }
   function restyleLines() {
     metroMax = 1;
@@ -346,17 +370,23 @@
   }
   function tipLine(p, src) {
     var sv = servedVal(p);
+    if (!p.linie) return '<b>' + esc(p.nume || 'Traseu fără număr') + '</b>' + (p.km ? '<br><span class="note">' + p.km.toLocaleString('ro-RO') + ' km de cale</span>' : '') +
+      (p.stare === 'propus' ? '<br><span class="note">propunere – nu este în exploatare</span>' : '') + (p.tip === 'tramvai' ? '<br><span class="note">infrastructura, fără împărțirea pe linii</span>' : '');
     return '<b>' + (p.linie ? 'Linia ' + esc(p.linie) : 'Traseu fără număr') + '</b> · ' + esc(p.tip || '') + (p.retea ? ' ' + esc(p.retea) : '') +
       (p.de_la && p.pana_la ? '<br>' + esc(p.de_la) + ' → ' + esc(p.pana_la) : p.nume ? '<br>' + esc(p.nume) : '') +
       (p.km ? '<br><span class="note">' + p.km.toLocaleString('ro-RO') + ' km</span>' : '') +
       (isTop(p) ? '<br><span style="color:' + HOT + '">printre cele mai utilizate linii (CTP)</span>' : '') +
-      (sv != null ? '<br>comunele deservite: ' + fmt(sv) + ' ' + (S.metric ? 'călătorii' : 'titluri') + ' · ' + esc(label(S.mi)) : '') +
+      (sv != null ? '<br>cota din comunele deservite: ' + fmt(sv) + ' ' + (S.metric ? 'călătorii' : 'titluri') + ' · ' + esc(label(S.mi)) : '') +
       (src ? '<br><span class="note">' + esc(src) + '</span>' : '');
   }
   function addLines(geo, layer, src) {
     L.geoJSON(geo, {
       pane: 'lines',
-      filter: function (f) { return f.geometry && /LineString/.test(f.geometry.type); },
+      filter: function (f) {
+        if (!f.geometry || !/LineString/.test(f.geometry.type)) return false;
+        if (f.properties && f.properties.stare === 'propus' && layer === lineLayer) { addLines({ type: 'FeatureCollection', features: [f] }, proposedLayer, src); return false; }
+        return true;
+      },
       style: function (f) { return lineStyle(f.properties); },
       onEachFeature: function (f, l) {
         var p = f.properties;
@@ -391,11 +421,13 @@
     box.innerHTML = '<h3><span class="badge" style="background:' + lineColor(p) + '">' + esc(p.linie || '?') + '</span> ' +
       esc(p.tip || '') + ' ' + esc(p.retea || '') + '</h3>' +
       (isTop(p) ? '<p class="topnote">Printre cele mai utilizate linii ' + (p.tip === 'tramvai' ? 'de tramvai' : 'de autobuz') + ' (răspunsul CTP pentru PMI)</p>' : '') +
-      '<table>' + fs.map(function (x) {
-        return '<tr><td>' + esc(x.de_la && x.pana_la ? x.de_la + ' → ' + x.pana_la : x.nume || '') + '</td><td>' + (x.km ? x.km.toLocaleString('ro-RO') + ' km' : '') + '</td><td>' +
+      '<table>' + fs.map(function (x, i) {
+        return '<tr><td>' + esc(x.de_la && x.pana_la ? x.de_la + ' → ' + x.pana_la : x.nume && x.nume !== x.linie ? x.nume : 'traseu ' + (i + 1)) + '</td><td>' + (x.km ? x.km.toLocaleString('ro-RO') + ' km' : '') + '</td><td>' +
           (x.osm ? '<a href="https://www.openstreetmap.org/' + esc(x.osm) + '" target="_blank" rel="noopener">OSM</a>' : '') + '</td></tr>';
       }).join('') + '</table>' +
-      (Object.keys(uats).length ? '<p class="note">Comune ZMI străbătute: ' + esc(Object.keys(uats).join(', ')) + (sv != null ? ' – ' + fmt(sv) + ' ' + (S.metric ? 'călătorii estimate' : 'titluri') + ' în ' + esc(label(S.mi)) : '') + '</p>' : '') +
+      (Object.keys(uats).length ? '<p class="note">Comune ZMI străbătute: ' + esc(Object.keys(uats).join(', ')) + '</p>' : '') +
+      (sv != null ? '<p class="note">Cota liniei din ' + (S.metric ? 'călătoriile estimate' : 'titlurile vândute') + ' ale comunelor deservite, ' + esc(label(S.mi)) + ': <b>' + fmt(sv) +
+        '</b> (volumul comunei împărțit egal între cele ' + Object.keys(p._served || {}).map(function (s) { return LINES_PER_UAT[s]; }).join(' / ') + ' linii metropolitane care o deservesc – indicativ).</p>' : '') +
       (p.operator ? '<p class="note">Operator: ' + esc(p.operator) + '</p>' : '');
   }
   function renderLineChips() {
@@ -435,8 +467,10 @@
   legend.onAdd = function () {
     var d = L.DomUtil.create('div', 'map-legend');
     d.innerHTML = '<div><i class="ln" style="background:' + TRAM + '"></i>Tramvai</div>' +
+      '<div><i class="ln dash" style="color:' + TRAM + '"></i>Tramvai – extindere propusă</div>' +
       '<div><i class="ln" style="background:' + BUS + '"></i>Autobuz – local</div>' +
-      '<div><i class="ln" style="background:' + METRO + '"></i>Autobuz – metropolitan<small>grosimea: comunele deservite</small></div>' +
+      '<div><i class="ln" style="background:' + METRO + '"></i>Autobuz – metropolitan<small>grosimea: cota din comunele deservite</small></div>' +
+      '<div><i class="st"></i>Stație de transfer / cap de linie</div>' +
       '<div><i class="ln halo"></i>Cele mai utilizate linii (CTP)</div>' +
       '<div><i class="dot"></i>Stații aglomerate (CTP)</div>' +
       '<div><i class="bub"></i>Comună ZMI: titluri / călătorii</div>';
@@ -445,18 +479,31 @@
   };
   legend.addTo(map);
 
+  // stațiile, după stratul din care provin: transfer metropolitan (mărimea = numărul de linii), capete de linie, altele;
+  // stațiile aglomerate CTP sunt desenate separat (drawHots)
+  var STOP_KIND = [
+    [/transfer/i, 'Stație de transfer metropolitană'],
+    [/terminus.*metropol|metropol.*terminus/i, 'Cap de linie metropolitană'],
+    [/terminus|cap.*linie/i, 'Cap de linie locală']
+  ];
   function addStops(geo) {
     geo.features.forEach(function (f) {
       if (!f.geometry || f.geometry.type !== 'Point') return;
-      var c = f.geometry.coordinates, p = f.properties || {};
-      L.circleMarker([c[1], c[0]], { pane: 'lines', radius: 2.5, weight: 1, color: '#c3c2b7', fillColor: '#1a1a19', fillOpacity: 1 })
-        .bindTooltip(esc(p.nume || 'stație') + (p.linii ? '<br>' + esc(p.linii) : '')).addTo(stopLayer);
+      var c = f.geometry.coordinates, p = f.properties || {}, strat = p.strat || '';
+      if (/aglomerat/i.test(strat)) return;
+      var kind = STOP_KIND.filter(function (k) { return k[0].test(strat); })[0], k = kind ? kind[1] : 'Stație';
+      var metro = /metropolit/i.test(k), transfer = /transfer/i.test(k), col = metro ? METRO : /locală/.test(k) ? BUS : '#c3c2b7';
+      var r = transfer ? 3 + 1.4 * Math.min(p.n_linii || 1, 6) : kind ? 4 : 2.5;
+      L.circleMarker([c[1], c[0]], { pane: 'lines', radius: r, weight: transfer ? 2 : 1.5, color: col, fillColor: transfer ? '#1a1a19' : col, fillOpacity: transfer ? 0.85 : 0.9 })
+        .bindTooltip('<b>' + esc(p.nume || 'stație') + '</b><br>' + esc(k) + (p.linii ? '<br>linii: ' + esc(p.linii) : '')).addTo(stopLayer);
     });
   }
 
   function drawHots(stops) {
     var byName = {};
-    if (stops) stops.features.forEach(function (f) { var n = norm(f.properties && f.properties.nume); if (n && f.geometry && f.geometry.type === 'Point') byName[n] = f.geometry.coordinates; });
+    // stratul stațiilor aglomerate (dacă există) are prioritate față de alte stații cu același nume (ex. capătul „Gară”)
+    if (stops) stops.features.slice().sort(function (a, b) { return /aglomerat/i.test(a.properties.strat || '') - /aglomerat/i.test(b.properties.strat || ''); })
+      .forEach(function (f) { var n = norm(f.properties && f.properties.nume); if (n && f.geometry && f.geometry.type === 'Point') byName[n] = f.geometry.coordinates; });
     HOTS.statii.forEach(function (s) {
       var exact = null;
       [s.nume].concat(s.alias || []).some(function (a) { exact = byName[norm(a)]; return !!exact; });
@@ -495,6 +542,7 @@
           if (!p.tip) p.tip = /tram/i.test(JSON.stringify(p)) ? 'tramvai' : p.linie && parseInt(p.linie, 10) <= 15 ? 'tramvai' : 'autobuz';
         });
         addLines(geo, extraLayer, file.name);
+        prepareServed();
         addStops(geo);
         renderLineChips();
         var b = L.geoJSON(geo).getBounds();
@@ -542,8 +590,12 @@
     $('ticks').innerHTML = ys.map(function (y) { return '<span>' + y + '</span>'; }).join('');
     if (r[3]) {
       addLines(r[3], lineLayer);
+      prepareServed();
       renderLineChips();
-      $('linesNote').textContent = r[3].features.length + ' trasee (ambele sensuri), din OpenStreetMap. Apăsați pe o linie, pe hartă sau mai sus, pentru a o izola și a-i vedea fișa; liniile cele mai utilizate după CTP au un halou galben.';
+      var hasTramLines = r[3].features.some(function (f) { return f.properties.tip === 'tramvai' && f.properties.linie; });
+      $('linesNote').innerHTML = 'Apăsați pe o linie, pe hartă sau mai sus, pentru a o izola și a-i vedea fișa. Liniile cele mai utilizate după CTP au un halou galben' +
+        (hasTramLines ? '.' : '; tramvaiul apare deocamdată ca rețea (infrastructură), fără împărțirea pe linii – liniile 1 și 9 vor fi evidențiate când vor exista traseele lor.') +
+        ' Grosimea liniilor metropolitane arată cota lor din titlurile comunelor deservite (volumul comunei împărțit egal între liniile ei) – indicativ, CTP raportează vânzările pe comună, nu pe linie.';
     } else {
       $('linesNote').innerHTML = 'Traseele liniilor nu sunt încă publicate. Se generează cu <code>scripts/transport_linii.py</code> din fișierele KML / GeoPackage / Shapefile (vezi README) – sau le puteți previzualiza mai jos, direct din calculator.';
     }
