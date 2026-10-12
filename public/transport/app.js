@@ -84,7 +84,7 @@
   map.createPane('lines'); map.getPane('lines').style.zIndex = 400;
   map.createPane('bubbles'); map.getPane('bubbles').style.zIndex = 450;
   map.createPane('hot'); map.getPane('hot').style.zIndex = 620;
-  var haloLayer = L.layerGroup().addTo(map), proposedLayer = L.layerGroup(), busStopLayer = L.layerGroup().addTo(map), uatLayer = L.layerGroup().addTo(map), lineLayer = L.layerGroup().addTo(map), stopLayer = L.layerGroup(),
+  var haloLayer = L.layerGroup().addTo(map), proposedLayer = L.layerGroup(), busStopLayer = L.layerGroup().addTo(map), tramStopLayer = L.layerGroup().addTo(map), uatLayer = L.layerGroup().addTo(map), lineLayer = L.layerGroup().addTo(map), stopLayer = L.layerGroup(),
     hotLayer = L.layerGroup().addTo(map), bubbleLayer = L.layerGroup().addTo(map), extraLayer = L.layerGroup().addTo(map);
   var bubbles = {};
   // etichetele stațiilor aglomerate se suprapun sub zoom 13
@@ -313,7 +313,7 @@
     if (e.key === 'ArrowRight') setMonth(S.mi + (S.year ? 12 : 1));
     else if (e.key === 'ArrowLeft') setMonth(S.mi - (S.year ? 12 : 1));
   });
-  [['showLines', [lineLayer, haloLayer]], ['showProposed', [proposedLayer]], ['showStops', [stopLayer]], ['showBusStops', [busStopLayer]], ['showHot', [hotLayer]], ['showUat', [uatLayer]], ['showBubbles', [bubbleLayer]]].forEach(function (p) {
+  [['showLines', [lineLayer, haloLayer]], ['showProposed', [proposedLayer]], ['showStops', [stopLayer]], ['showBusStops', [busStopLayer]], ['showTramStops', [tramStopLayer]], ['showHot', [hotLayer]], ['showUat', [uatLayer]], ['showBubbles', [bubbleLayer]]].forEach(function (p) {
     $(p[0]).addEventListener('change', function () { var on = this.checked; p[1].forEach(function (l) { if (on) l.addTo(map); else map.removeLayer(l); }); });
   });
 
@@ -420,12 +420,15 @@
     if (S.stop) {
       var refs = stopRefs(S.stop);
       box.hidden = false;
-      box.innerHTML = '<h3>' + esc(S.stop.nume || 'Stație') + '</h3><p class="note">' + (refs.length ? refs.length + (refs.length === 1 ? ' linie' : ' linii') + ' ' +
+      var tramStop = S.stop.mod === 'tramvai';
+      box.innerHTML = '<h3>' + esc(S.stop.nume || 'Stație') + (tramStop ? ' <span class="note">stație de tramvai</span>' : '') + '</h3><p class="note">' +
+        (tramStop ? (refs.length ? 'Legături cu autobuzul – ' + refs.length + (refs.length === 1 ? ' linie' : ' linii') + ' la ≤ 100 m:' : 'Nicio linie de autobuz la ≤ 100 m.') :
+        refs.length ? refs.length + (refs.length === 1 ? ' linie' : ' linii') + ' ' +
         (S.stop._peroane > 1 ? 'în cele ' + S.stop._peroane + ' peroane' : 'în stație') + ':' : 'Nicio linie CTP de autobuz la ≤ 30 m.') + '</p>' +
         '<div class="chips">' + refs.map(function (r) {
           var k = lineFeatures.filter(function (l) { return l._p.linie === r.replace(/^T/, ''); })[0];
           return '<button type="button" class="' + (k && k._p.retea === 'metropolitan' ? 'metro' : /^T/.test(r) ? 'tram' : 'bus') + (k && isTop(k._p) ? ' top' : '') + '" data-k="' + (k ? esc(lineKey(k._p)) : '') + '">' + esc(r) + '</button>';
-        }).join('') + '</div><p class="note">Liniile sunt cele ale căror trasee trec la cel mult 30 m de stație. Apăsați din nou pe stație sau pe o linie pentru a ieși.</p>';
+        }).join('') + '</div><p class="note">' + (tramStop ? 'Liniile de tramvai ale stației vor apărea când vor exista traseele pe linii. ' : 'Liniile sunt cele ale căror trasee trec la cel mult 30 m de stație. ') + 'Apăsați din nou pe stație sau pe o linie pentru a ieși.</p>';
       Array.prototype.forEach.call(box.querySelectorAll('button[data-k]'), function (b) {
         b.addEventListener('click', function () { if (b.getAttribute('data-k')) setLine(b.getAttribute('data-k')); });
       });
@@ -490,6 +493,7 @@
       '<div><i class="ln" style="background:' + BUS + '"></i>Autobuz – local</div>' +
       '<div><i class="ln" style="background:' + METRO + '"></i>Autobuz – metropolitan<small>grosimea: cota din comunele deservite</small></div>' +
       '<div><i class="st"></i>Stație de transfer / cap de linie</div>' +
+      '<div><i class="sd" style="border-color:' + TRAM + '"></i>Stație de tramvai</div>' +
       '<div><i class="sd"></i>Stație de autobuz (local / <span style="color:' + METRO + '">metropolitan</span>)<small>mărimea: numărul de linii</small></div>' +
       '<div><i class="ln halo"></i>Cele mai utilizate linii (CTP)</div>' +
       '<div><i class="dot"></i>Stații aglomerate (CTP)</div>' +
@@ -507,11 +511,21 @@
     [/terminus|cap.*linie/i, 'Cap de linie locală']
   ];
   var DOTARI = [['adapost', 'adăpost'], ['banca', 'bancă'], ['iluminat', 'iluminat'], ['accesibil', 'accesibil scaun rulant']];
-  var busStops = [];
-  function stopRefs(p) { return (p.linii || '').split(/\s*,\s*/).filter(Boolean); }
+  var busStops = [], nTramStops = 0;
+  function stopRefs(p) {   // la stațiile de tramvai fără linii de tramvai cunoscute: legăturile cu autobuzul (≤ 100 m)
+    var own = (p.linii || '').split(/\s*,\s*/).filter(Boolean);
+    return p.mod === 'tramvai' ? own.concat((p.autobuz_aproape || '').split(/\s*,\s*/).filter(Boolean)) : own;
+  }
   function tipStop(p, k) {
     var d = DOTARI.filter(function (x) { return p[x[0]]; }).map(function (x) { return x[1] + ': ' + ({ yes: 'da', no: 'nu', limited: 'parțial' }[p[x[0]]] || p[x[0]]); });
     var refs = stopRefs(p);
+    if (p.mod === 'tramvai') {
+      var bus = (p.autobuz_aproape || '').split(/\s*,\s*/).filter(Boolean);
+      return '<b>' + esc(p.nume || 'stație fără nume') + '</b><br>Stație de tramvai' +
+        (p.linii ? '<br>linii de tramvai: ' + esc(p.linii) : '<br><span class="note">liniile de tramvai: încă fără trasee pe linii</span>') +
+        (bus.length ? '<br>legături cu autobuzul (≤ 100 m): ' + esc(bus.join(', ')) : '<br><span class="note">nicio linie de autobuz la ≤ 100 m</span>') +
+        (d.length ? '<br><span class="note">' + esc(d.join(' · ')) + '</span>' : '') + '<br><span class="note">apăsați pentru legături</span>';
+    }
     return '<b>' + esc(p.nume || 'stație fără nume') + '</b><br>' + esc(k) + (p.tramvai === 'yes' ? ' (și tramvai)' : '') +
       (refs.length ? '<br>' + refs.length + (refs.length === 1 ? ' linie' : ' linii') + ': ' + esc(refs.join(', ')) : '<br><span class="note">nicio linie CTP de autobuz la ≤ 30 m</span>') +
       (p.linii_calculate ? '<br><span class="note">liniile: traseele care trec la ≤ 30 m</span>' : '') +
@@ -526,7 +540,11 @@
       var kind = STOP_KIND.filter(function (k) { return k[0].test(strat); })[0];
       var metroStop = !kind && /metropolit/i.test(strat), k = kind ? kind[1] : metroStop ? 'Stație de autobuz metropolitan' : 'Stație de autobuz';
       var m;
-      if (kind) {
+      if (p.mod === 'tramvai') {
+        m = L.circleMarker([c[1], c[0]], { pane: 'lines', className: 'stop-dot', radius: 3.5, weight: 2, color: TRAM, fillColor: '#1a1a19', fillOpacity: 0.9 }).addTo(tramStopLayer);
+        k = 'Stație de tramvai';
+        nTramStops++;
+      } else if (kind) {
         var metro = /metropolit/i.test(k), transfer = /transfer/i.test(k), col = metro ? METRO : BUS;
         m = L.circleMarker([c[1], c[0]], { pane: 'lines', radius: transfer ? 3 + 1.4 * Math.min(p.n_linii || 1, 6) : 4, weight: transfer ? 2 : 1.5,
           color: col, fillColor: transfer ? '#1a1a19' : col, fillOpacity: transfer ? 0.85 : 0.9 }).addTo(stopLayer);
@@ -713,6 +731,7 @@
     }
     if (r[4]) { addStops(r[4]); renderStopRank(); } else { $('showStops').parentNode.hidden = true; $('showBusStops').parentNode.hidden = true; }
     if (!busStops.length) $('showBusStops').parentNode.hidden = true;
+    if (!nTramStops) $('showTramStops').parentNode.hidden = true;
     if (HOTS) drawHots(r[4]);
     iasiBox();
     var missing = UATS.filter(function (u) { return u.years.length < ys.length; }).map(function (u) {

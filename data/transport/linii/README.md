@@ -14,6 +14,7 @@ Conținut actual:
 | `retea_tramvai.geojson` | rețeaua de tramvai existentă și extinderea propusă (din `Infrastructura_Mobilitate.gpkg`) |
 | `statii_autobuz_local.*` | 273 de stații de autobuz (OpenStreetMap); liniile stației se calculează din traseele aflate la ≤ 30 m |
 | `statii_autobuz_metropolitan.*` | stațiile liniilor metropolitane (`statii_TP_ZMI_analiza_2D`); dublurile – aceeași stație pentru fiecare traseu – se elimină |
+| `statii_tramvai.*` | 111 stații de tramvai (OpenStreetMap, `railway=tram_stop`); legăturile cu autobuzul se calculează la ≤ 100 m |
 | `statii_derivate.gpkg` | stații aglomerate CTP, capete de linie locale / metropolitane, stații de transfer metropolitane |
 
 Rețeaua (local / metropolitan) se citește din numele fișierului („…_local”, „…_metropolitan”) sau din câmpul

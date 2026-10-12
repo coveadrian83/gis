@@ -45,6 +45,7 @@ MODES = (("tramvai", ("tramvai", "tram", "tramway")), ("troleibuz", ("troleibuz"
          ("microbuz", ("microbuz", "minibus")), ("autobuz", ("autobuz", "bus", "metropolitan")))
 SIMPLIFY_DEG = 0.00002   # ~2 m
 STOP_RADIUS_M = 30       # o linie „oprește” în stație dacă traseul trece la cel mult atâta de ea
+TRANSFER_RADIUS_M = 100  # liniile de autobuz „de legătură” ale unei stații de tramvai
 AMENITIES = (("adapost", ("shelter", "adapost")), ("banca", ("bench", "banca")), ("accesibil", ("wheelchair", "accesibil")),
              ("iluminat", ("lit", "iluminat")), ("tramvai", ("tram",)))
 
@@ -323,7 +324,9 @@ def dedupe_stops(stops):
 
 
 def lines_at_stops(lines, stops):
-    """Liniile care trec la cel mult STOP_RADIUS_M de fiecare stație fără listă de linii (câmpul „linii” calculat)."""
+    """Liniile care trec la cel mult STOP_RADIUS_M de fiecare stație fără listă de linii (câmpul „linii” calculat):
+    la stațiile de autobuz – liniile de autobuz, la cele de tramvai – liniile de tramvai (dacă există trasee pe linii) și,
+    separat, liniile de autobuz la cel mult TRANSFER_RADIUS_M („autobuz_aproape”, legăturile de transfer)."""
     if not lines or not stops:
         return
     import shapely
@@ -343,15 +346,22 @@ def lines_at_stops(lines, stops):
         if p.get("linii"):
             continue
         pt = proj(st["geometry"])
-        found = set()
-        for i in tree.query(pt.buffer(STOP_RADIUS_M)):
-            if geoms[i].distance(pt) <= STOP_RADIUS_M:
+        tram = p.get("mod") == "tramvai"
+
+        def near(radius, want_tram):
+            found = set()
+            for i in tree.query(pt.buffer(radius)):
                 lp = numbered[i]["properties"]
-                found.add(key.get(lp["tip"], "") + lp["linie"])
-        refs = sorted(found, key=lambda r: (r[0].isalpha(), int(re.search(r"\d+", r).group()), r))
+                if (lp["tip"] == "tramvai") == want_tram and geoms[i].distance(pt) <= radius:
+                    found.add(key.get(lp["tip"], "") + lp["linie"])
+            return sorted(found, key=lambda r: (r[0].isalpha(), int(re.search(r"\d+", r).group()), r))
+        refs = near(STOP_RADIUS_M, tram)
         p["linii"] = ", ".join(refs) or None
         p["n_linii"] = len(refs)
         p["linii_calculate"] = True
+        if tram:
+            bus = near(TRANSFER_RADIUS_M, False)
+            p["autobuz_aproape"] = ", ".join(bus) or None
 
 
 def clean_line(g):
@@ -414,7 +424,9 @@ def main():
             c = g["coordinates"] if t == "Point" else g["coordinates"][0]
             name = next(field(props, STOP_FIELDS), None)
             lr = next(field(props, ("linii", "lines", "routes", "trasee", "route_ref")), None)
-            sp = {"nume": name, "linii": lr, "strat": props.get("_folder") or Path(src).stem, "sursa": src}
+            railway = next(field(props, ("railway",)), "")
+            mod = "tramvai" if railway == "tram_stop" or re.search(r"tramvai|tram_stop", src, re.I) else "autobuz"
+            sp = {"nume": name, "linii": lr, "mod": mod, "strat": props.get("_folder") or Path(src).stem, "sursa": src}
             nr = next(field(props, ("n_routes", "nr_linii")), None)
             if nr and re.match(r"^\d+$", nr):
                 sp["n_linii"] = int(nr)

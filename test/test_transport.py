@@ -155,6 +155,8 @@ class Linii(unittest.TestCase):
             self.assertGreater(p[0]["km"], 1)
             self.assertEqual(lines[1]["geometry"]["type"], "LineString")      # bucățile unite (linemerge)
             self.assertEqual(stops[0]["properties"]["nume"], "Piata Unirii")
+            self.assertEqual(stops[0]["properties"]["mod"], "autobuz")
+            self.assertEqual(stops[0]["properties"]["linii"], "20")       # traseul liniei 20 pleacă din stație
 
     @unittest.skipUnless(HAVE_GEO, "pyshp / pyproj / shapely lipsesc")
     def test_shapefile_stereo70(self):
