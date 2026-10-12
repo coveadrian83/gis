@@ -237,6 +237,8 @@ CTP și titlurile de călătorie vândute în comunele ZMI deservite de CTP, ian
   liniile (prezență, suprapunerea traseelor la ≤ 30 m, porțiunile diferite > 100 m) și stațiile (concordant / nume
   diferit / decalat / lipsă / doar în OSM) și listează problemele de etichetare din OSM (ref ≠ nume, trasee
   discontinue, rețea greșită, stații fără nume) → `public/data/transport/comparatie_osm.*` (JSON, GeoJSON, CSV).
+  Raportul are și **inventarul liniilor** din toate sursele (hartă, OSM, AMTPI, inventarul Moovit din
+  `data/transport/moovit_inventar_2026.csv` – doar numere și descrieri, ca referință) → `inventar_linii.csv`.
   Aceeași acțiune extrage din OSM traseele tramvaiului pe linii (`data/transport/linii/rute_tramvai_osm.geojson`:
   liniile 1, 3, 5, 6, 7, 8, 9, 11, 13) și regenerează traseele hărții și comparația.
 - **Teste**: `python3 -m unittest discover -s test -p 'test_transport*.py'`.

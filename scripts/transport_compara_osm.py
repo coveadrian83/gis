@@ -323,6 +323,57 @@ def compare_amtpi(lines, routes):
     return rows
 
 
+def compare_inventory(routes):
+    """Inventarul tuturor liniilor din cele patru surse: datele proiectului (hartă), OSM, lista AMTPI și inventarul
+    Moovit (data/transport/moovit_inventar_2026.csv – doar numere și descrieri, fără geometrii)."""
+    inv = {}
+
+    def row(mod, ref):
+        key = (mod, ref)
+        return inv.setdefault(key, {"linie": ref, "mod": mod, "proiect": "", "osm": "", "amtpi": "", "moovit": "", "descriere": ""})
+    for f in load(PUB / "linii.geojson")["features"]:
+        p = f["properties"]
+        if p.get("linie"):
+            r = row(p["tip"], p["linie"].upper())
+            r["proiect"] = "propusă" if p.get("stare") == "propus" else "da"
+            r["descriere"] = r["descriere"] or (p.get("nume") or "")
+    for r0 in routes:
+        if r0["ctp"] and r0["ref"]:
+            row(r0["mode"], r0["ref"])["osm"] = "da"
+    amtpi = ROOT / "data" / "transport" / "amtpi_trasee.json"
+    if amtpi.exists():
+        for a in json.loads(amtpi.read_text(encoding="utf-8"))["linii"]:
+            r = row("autobuz", a["linie"])
+            r["amtpi"] = "în proiect" if a["in_proiect"] else "în exploatare"
+            r["descriere"] = r["descriere"] or " – ".join(a["statii"])
+    moov = ROOT / "data" / "transport" / "moovit_inventar_2026.csv"
+    if moov.exists():
+        with open(moov, encoding="utf-8-sig") as fh:
+            for m in csv.DictReader(fh):
+                ref = (m.get("linie") or "").strip().upper()
+                if not ref or not re.match(r"^[A-Z]*\d", ref):      # „LINII ȘCOLARE”, „CS” – nu sunt linii regulate
+                    continue
+                r = row("tramvai" if (m.get("mod") or "").startswith("tram") else "autobuz", ref)
+                d = (m.get("descriere_moovit") or "").strip()
+                r["moovit"] = "; ".join(x for x in [r["moovit"], d] if x) if d not in r["moovit"] else r["moovit"]
+    out = []
+    for (mod, ref), r in inv.items():
+        have = [k for k in ("proiect", "osm", "amtpi", "moovit") if r[k]]
+        if r["proiect"] == "da":
+            st = "pe hartă"
+        elif r["proiect"] == "propusă":
+            st = "pe hartă (propusă)"
+        elif r["amtpi"] == "în proiect":
+            st = "în proiect (AMTPI)"
+        else:
+            st = "lipsește de pe hartă"
+        r["stare"] = st
+        r["surse"] = len(have)
+        out.append(r)
+    out.sort(key=lambda r: (r["mod"] != "tramvai", int(re.search(r"\d+", r["linie"]).group()) if re.search(r"\d+", r["linie"]) else 999, r["linie"]))
+    return out
+
+
 def write_csv(path, rows):
     if not rows:
         return
@@ -350,6 +401,7 @@ def main():
     lines = compare_lines(routes, our_lines(), feats, issues)
     stops = compare_stops(osm_stops(routes), feats, issues)
     amtpi = compare_amtpi(lines, routes)
+    inventory = compare_inventory(routes)
     osm_time = load(OSM / "rute.json").get("osm3s", {}).get("timestamp_osm_base")
     others = sorted({(MODE.get(r["tags"].get("route"), "autobuz"), r["ref"], r["tags"].get("network") or r["tags"].get("operator") or "")
                      for r in routes if not r["ctp"]}, key=lambda x: (x[0], x[1]))
@@ -359,12 +411,14 @@ def main():
         "statii": {m: count([s for s in stops if s["mod"] == m], "stare") for m in ("autobuz", "tramvai")},
         "probleme_osm": len(issues),
         "amtpi": count(amtpi, "statut_amtpi") if amtpi else {},
+        "inventar": count(inventory, "stare"),
         "rute_osm_ctp": sum(1 for r in routes if r["ctp"]),
         "rute_osm_alti_operatori": [{"tip": a, "linie": b, "retea": c} for a, b, c in others],
     }
     PUB.mkdir(parents=True, exist_ok=True)
     (PUB / "comparatie_osm.json").write_text(json.dumps({"sumar": summary, "linii": lines, "probleme": issues,
-                                                          "statii": [s for s in stops if s["stare"] != "concordant"], "amtpi": amtpi},
+                                                          "statii": [s for s in stops if s["stare"] != "concordant"], "amtpi": amtpi,
+                                                          "inventar": inventory},
                                                          ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     (PUB / "comparatie_osm.geojson").write_text(json.dumps({"type": "FeatureCollection", "features": feats},
                                                             ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
@@ -372,6 +426,7 @@ def main():
     write_csv(OUT_CSV / "comparatie_osm_statii.csv", stops)
     write_csv(OUT_CSV / "comparatie_osm_probleme.csv", issues)
     write_csv(OUT_CSV / "comparatie_amtpi.csv", amtpi)
+    write_csv(OUT_CSV / "inventar_linii.csv", inventory)
     print(json.dumps(summary, ensure_ascii=False, indent=1))
 
 

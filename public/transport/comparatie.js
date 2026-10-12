@@ -88,6 +88,16 @@
       ['osm', 'Relații OSM', function (r) { return (r.osm || '').split(' ').filter(Boolean).map(osmLink).join('<br>') + (r.nume_osm ? '<br><span class="note">' + esc(r.nume_osm) + '</span>' : ''); }]
     ], 'stare', LINE_BADGE);
 
+    if (C.inventar && C.inventar.length) {
+      var yes = function (k) { return function (r) { return r[k] ? esc(r[k] === 'da' ? '✓' : r[k]) : '<span class="note">–</span>'; }; };
+      table($('inventar'), $('invFilter'), C.inventar, [
+        ['linie', 'Linia', function (r) { return '<span class="linechip" style="background:' + (r.mod === 'tramvai' ? cssv('--tram') : cssv('--metro')) + (r.stare === 'lipsește de pe hartă' ? ';opacity:.55' : '') + '">' + esc(r.linie) + '</span>'; }],
+        ['mod', 'Mod'], ['stare', 'Stare'], ['proiect', 'Hartă', yes('proiect')], ['osm', 'OSM', yes('osm')],
+        ['amtpi', 'AMTPI', yes('amtpi')], ['moovit', 'Moovit (descriere)', function (r) { return r.moovit ? esc(r.moovit) : '<span class="note">–</span>'; }],
+        ['descriere', 'Descriere (hartă / AMTPI)']
+      ], 'stare', { 'pe hartă': 's-ok', 'pe hartă (propusă)': 's-minor', 'lipsește de pe hartă': 's-major', 'în proiect (AMTPI)': 's-minor' });
+    }
+
     if (C.amtpi && C.amtpi.length) {
       table($('amtpi'), $('amtpiFilter'), C.amtpi, [
         ['linie', 'Linia', function (r) { return '<span class="linechip" style="background:' + cssv('--metro') + (r.statut_amtpi === 'în proiect' ? ';opacity:.6' : '') + '">' + esc(r.linie) + '</span>'; }],
