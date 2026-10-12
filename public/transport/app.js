@@ -367,7 +367,7 @@
     if (g && p.stare !== 'propus') w = 1 + 7 * Math.sqrt((g[S.day] || 0) / gMax);
     if (net) w = 3;
     return { color: lineColor(p), weight: on ? Math.max(5, w) : w, opacity: dim ? 0.08 : on || isTop(p) || net ? 0.95 : 0.6,
-      dashArray: p.stare === 'propus' ? '6 6' : null, lineCap: p.stare === 'propus' ? 'butt' : 'round', lineJoin: 'round' };
+      dashArray: p.stare === 'propus' ? '6 6' : p.stare === 'de verificat' ? '3 5' : null, lineCap: p.stare === 'propus' ? 'butt' : 'round', lineJoin: 'round' };
   }
   function servesStop(p) {
     if (!S.stop || !p.linie) return false;
@@ -393,6 +393,7 @@
     return '<b>' + (p.linie ? 'Linia ' + esc(p.linie) : 'Traseu fără număr') + '</b> · ' + esc(p.tip || '') + (p.retea ? ' ' + esc(p.retea) : '') +
       (p.de_la && p.pana_la ? '<br>' + esc(p.de_la) + ' → ' + esc(p.pana_la) : p.nume ? '<br>' + esc(p.nume) : '') +
       (p.km ? '<br><span class="note">' + p.km.toLocaleString('ro-RO') + ' km</span>' : '') +
+      (p.stare === 'de verificat' ? '<br><span class="note">ocol din orarul GTFS (punctat) – de verificat</span>' : '') +
       (isTop(p) ? '<br><span style="color:' + HOT + '">printre cele mai utilizate linii (CTP)</span>' : '') +
       (g ? '<br>' + esc(svcText(g)) : '') +
       (sv != null ? '<br>cota din comunele deservite: ' + fmt(sv) + ' ' + (S.metric ? 'călătorii' : 'titluri') + ' · ' + esc(label(S.mi)) : '') +

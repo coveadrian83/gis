@@ -31,6 +31,21 @@ FEED = ROOT / "data" / "transport" / "gtfs" / "IASI_GTFS.zip"
 OUT_LINES = ROOT / "data" / "transport" / "linii" / "rute_gtfs.geojson"
 OUT_SERV = ROOT / "public" / "data" / "transport" / "gtfs_servicii.json"
 OSM_DIR = ROOT / "data" / "transport" / "osm"
+FIXES = ROOT / "data" / "transport" / "linii_corecturi.json"
+
+
+def split_detour(coords, stop):
+    """Ocolul dus-întors al formei până la stația `stop` (lon, lat): forma se întoarce pe aceleași puncte. Întoarce
+    (forma fără ocol, ocolul) sau None. Ex. 503B: Primăria Miroslava pe DC8, cu întoarcere pe aceeași stradă."""
+    tips = [i for i in range(1, len(coords) - 1) if coords[i - 1] == coords[i + 1]]
+    if not tips:
+        return None
+    t = min(tips, key=lambda i: dist(coords[i], stop))
+    k = 1
+    while t - k - 1 >= 0 and t + k + 1 < len(coords) and coords[t - k - 1] == coords[t + k + 1]:
+        k += 1
+    a, b = t - k, t + k
+    return coords[:a + 1] + coords[b + 1:], coords[a:t + 1]
 
 
 class Rails:
@@ -236,6 +251,8 @@ def main():
         shapes[p["shape_id"]].append((int(p["shape_pt_sequence"]), float(p["shape_pt_lon"]), float(p["shape_pt_lat"])))
     feats, seen = [], set()
     rails, snapped = Rails(OSM_DIR), []
+    detours = json.loads(FIXES.read_text(encoding="utf-8")).get("gtfs_ocoluri", {}) if FIXES.exists() else {}
+    by_name = {s.get("stop_name"): s for s in stops.values()}
     for t in trips.values():
         sid = t.get("shape_id")
         if not sid or sid in seen or sid not in shapes:
@@ -251,12 +268,21 @@ def main():
                 pts = on_rails
                 snapped.append(sid)
         key = f"{mode_of(r)}|{ref_of(r)}"
-        feats.append({"type": "Feature", "properties": {
-            "linie": ref_of(r), "tip": mode_of(r), "retea": serv.get(key, {}).get("retea", "local"),
-            "name": r.get("route_long_name") or "", "from": first, "to": t.get("trip_headsign") or None,
-            "operator": agency.get("agency_name") or "CTP Iași", "prioritate": "principal", "gtfs_shape": sid,
-            "url": r.get("route_url") or None, "pe_sine": sid in snapped or None},
-            "geometry": {"type": "LineString", "coordinates": pts}})
+        props = {"linie": ref_of(r), "tip": mode_of(r), "retea": serv.get(key, {}).get("retea", "local"),
+                 "name": r.get("route_long_name") or "", "from": first, "to": t.get("trip_headsign") or None,
+                 "operator": agency.get("agency_name") or "CTP Iași", "prioritate": "principal", "gtfs_shape": sid,
+                 "url": r.get("route_url") or None, "pe_sine": sid in snapped or None}
+        d = detours.get(sid)
+        st = by_name.get(d["statie"]) if d else None
+        cut = split_detour(pts, (float(st["stop_lon"]), float(st["stop_lat"]))) if st else None
+        if d and not cut:
+            print(f"atenție: ocolul formei {sid} până la „{d['statie']}” nu s-a găsit", file=sys.stderr)
+        if cut:
+            pts = cut[0]
+            feats.append({"type": "Feature", "properties": dict(props, gtfs_shape=sid + "_ocol", stare="de verificat",
+                                                                 to=d["statie"]),
+                          "geometry": {"type": "LineString", "coordinates": cut[1]}})
+        feats.append({"type": "Feature", "properties": props, "geometry": {"type": "LineString", "coordinates": pts}})
     feats.sort(key=lambda f: (f["properties"]["tip"] != "tramvai", int(re.match(r"\d+", f["properties"]["linie"]).group())
                               if re.match(r"\d+", f["properties"]["linie"]) else 999, f["properties"]["linie"], f["properties"]["gtfs_shape"]))
     OUT_LINES.write_text(json.dumps({"type": "FeatureCollection", "features": feats}, ensure_ascii=False, separators=(",", ":")),
