@@ -128,6 +128,13 @@ class Linii(unittest.TestCase):
         self.assertEqual(L.declared_network("x.shp", {"network": "ZMI"}), "metropolitan")
         self.assertIsNone(L.declared_network("trasee.kml", {"network": "CTP Iași"}))
 
+    def test_dedupe_stops(self):
+        def st(name, x, y, strat="s"):
+            return {"type": "Feature", "properties": {"nume": name, "strat": strat}, "geometry": {"type": "Point", "coordinates": [x, y]}}
+        out = L.dedupe_stops([st("Tg. Cucu", 27.59058, 47.16441), st("Tg. Cucu", 27.59058, 47.16441),
+                              st("Tg. Cucu", 27.5911, 47.1650), st("Tg. Cucu", 27.59058, 47.16441, "alt")])
+        self.assertEqual(len(out), 3)          # dublura exactă dispare; peronul opus și alt strat rămân
+
     def run_script(self, *inputs, out):
         r = subprocess.run([sys.executable, str(ROOT / "scripts" / "transport_linii.py"), *map(str, inputs), "--out", out],
                            capture_output=True, text=True)

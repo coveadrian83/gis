@@ -306,6 +306,22 @@ class Uats:
         return round(g.length / 1000, 2), outside, out
 
 
+def dedupe_stops(stops):
+    """Elimină dublurile: aceeași stație repetată (același strat și nume, la sub ~2 m), ex. câte o dată pentru fiecare traseu."""
+    seen, out, dup = set(), [], 0
+    for st in stops:
+        p, c = st["properties"], st["geometry"]["coordinates"]
+        key = (p.get("strat"), (p.get("nume") or "").strip().lower(), round(c[0] / 0.00003), round(c[1] / 0.00002))
+        if key in seen:
+            dup += 1
+            continue
+        seen.add(key)
+        out.append(st)
+    if dup:
+        print(f"{dup} stații duble eliminate (același nume și loc)", file=sys.stderr)
+    return out
+
+
 def lines_at_stops(lines, stops):
     """Liniile care trec la cel mult STOP_RADIUS_M de fiecare stație fără listă de linii (câmpul „linii” calculat)."""
     if not lines or not stops:
@@ -413,6 +429,7 @@ def main():
                           "geometry": {"type": "Point", "coordinates": rnd(c)}})
     if not lines and not stops:
         sys.exit("Nu am găsit trasee sau stații în fișierele date.")
+    stops = dedupe_stops(stops)
     lines_at_stops(lines, stops)
     od = Path(a.out)
     od.mkdir(parents=True, exist_ok=True)

@@ -208,10 +208,13 @@ CTP și titlurile de călătorie vândute în comunele ZMI deservite de CTP, ian
   `Infrastructura_Mobilitate.gpkg` (straturile `PublicT_Tram_Linii_Existente` / `_Extindere`, fără împărțirea pe linii);
   `statii_autobuz_local.*` – 273 de stații de autobuz (export OSM, Stereo 70; liniile fiecărei stații se calculează
   din traseele care trec la ≤ 30 m, iar dotările – adăpost, bancă, iluminat, accesibilitate – vin din OSM);
+  `statii_autobuz_metropolitan.*` – stațiile liniilor metropolitane (646 de puncte, 478 după eliminarea dublurilor –
+  stația repetată pentru fiecare traseu; liniile se calculează la fel, din traseele aflate la ≤ 30 m);
   `statii_derivate.gpkg` – stațiile aglomerate CTP, capetele de linie locale și metropolitane și stațiile de transfer
-  metropolitane (cu numărul de linii). Pe hartă: stațiile de autobuz, cu mărimea după numărul de linii, clasamentul
-  stațiilor cu cele mai multe linii și, la clic pe o stație, liniile ei. Urmează stațiile metropolitane și de tramvai și,
-  dacă există, traseele pe linii ale tramvaiului (ca să poată fi evidențiate liniile 1 și 9). Rețeaua se
+  metropolitane (cu numărul de linii). Pe hartă: stațiile de autobuz locale și metropolitane, cu mărimea după numărul de
+  linii, clasamentul stațiilor cu cele mai multe linii (peroanele cu același nume la ≤ 600 m sau cu nume compatibile
+  – „Tg. Cucu” / „Târgu Cucu”, „C.U.G. I” / „CUG 1” – la ≤ 250 m se unesc) și, la clic pe o stație, liniile ei.
+  Urmează stațiile de tramvai și, dacă există, traseele pe linii ale tramvaiului (pentru liniile 1 și 9). Rețeaua se
   citește din numele fișierului („…_local”, „…_metropolitan”) sau din câmpul `network`; altfel traseele cu peste 25 %
   din lungime în afara municipiului sunt considerate metropolitane. La exporturile OSM, numărul din numele relației
   („Bus 36: Breazu => Rond Dacia”) are prioritate față de un `ref` care îl contrazice (ex. `6B`).

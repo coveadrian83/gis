@@ -490,7 +490,7 @@
       '<div><i class="ln" style="background:' + BUS + '"></i>Autobuz – local</div>' +
       '<div><i class="ln" style="background:' + METRO + '"></i>Autobuz – metropolitan<small>grosimea: cota din comunele deservite</small></div>' +
       '<div><i class="st"></i>Stație de transfer / cap de linie</div>' +
-      '<div><i class="sd"></i>Stație de autobuz<small>mărimea: numărul de linii</small></div>' +
+      '<div><i class="sd"></i>Stație de autobuz (local / <span style="color:' + METRO + '">metropolitan</span>)<small>mărimea: numărul de linii</small></div>' +
       '<div><i class="ln halo"></i>Cele mai utilizate linii (CTP)</div>' +
       '<div><i class="dot"></i>Stații aglomerate (CTP)</div>' +
       '<div><i class="bub"></i>Comună ZMI: titluri / călătorii</div>';
@@ -523,7 +523,8 @@
       if (!f.geometry || f.geometry.type !== 'Point') return;
       var c = f.geometry.coordinates, p = f.properties || {}, strat = p.strat || '';
       if (/aglomerat/i.test(strat)) return;
-      var kind = STOP_KIND.filter(function (k) { return k[0].test(strat); })[0], k = kind ? kind[1] : 'Stație de autobuz';
+      var kind = STOP_KIND.filter(function (k) { return k[0].test(strat); })[0];
+      var metroStop = !kind && /metropolit/i.test(strat), k = kind ? kind[1] : metroStop ? 'Stație de autobuz metropolitan' : 'Stație de autobuz';
       var m;
       if (kind) {
         var metro = /metropolit/i.test(k), transfer = /transfer/i.test(k), col = metro ? METRO : BUS;
@@ -532,7 +533,7 @@
       } else {
         var n = p.n_linii != null ? p.n_linii : stopRefs(p).length;
         m = L.circleMarker([c[1], c[0]], { pane: 'lines', className: 'stop-dot', radius: n ? 2 + 1.5 * Math.sqrt(n) : 2, weight: 1,
-          color: n ? '#f0efec' : '#8f8e86', fillColor: '#1a1a19', fillOpacity: n ? 0.9 : 0.4, opacity: n ? 0.95 : 0.5 }).addTo(busStopLayer);
+          color: !n ? '#8f8e86' : metroStop ? METRO : '#f0efec', fillColor: '#1a1a19', fillOpacity: n ? 0.9 : 0.4, opacity: n ? 0.95 : 0.5 }).addTo(busStopLayer);
         busStops.push(p); m._stopP = p;
       }
       m.on('mouseover', function (e) { showTip(e.originalEvent, tipStop(p, k)); });
@@ -548,35 +549,63 @@
     Array.prototype.forEach.call($('lineChips').querySelectorAll('button[data-k]'), function (b) { b.classList.remove('on'); });
     renderLineInfo();
   }
-  // cele mai deservite stații (numărul de linii; stațiile cu același nume – peroanele – se unesc)
-  function renderStopRank() {
-    var by = {};
-    busStops.forEach(function (p) {
-      var n = norm(p.nume);
-      if (!n) return;
-      var e = by[n] || (by[n] = { nume: p.nume, refs: {}, p: p });
-      stopRefs(p).forEach(function (r) { e.refs[r] = 1; });
+  // cheia de nume a unei stații, ca peroanele din surse diferite să se unească: „Tg. Cucu” = „Târgu Cucu”,
+  // „C.U.G. I” = „CUG 1”, „Vama II” = „Vama 2”
+  function stopKey(name) {
+    var n = norm(String(name || '').replace(/([A-Za-z])\.(?=[A-Za-z])/g, '$1').replace(/\b([A-Z]{1,4})\.(?=\s|$)/g, '$1')).replace(/\btg\b/g, 'targu');
+    return n.replace(/\b(iii|ii|i|iv)\b/g, function (r) { return { i: '1', ii: '2', iii: '3', iv: '4' }[r]; }).replace(/\s+/g, ' ').trim();
+  }
+  // nodurile de stații (union-find): peroanele cu același nume la cel mult 600 m și cele cu nume compatibile
+  // („Piața Independenței” / „Independentei”, „Pod de Fier” / „Podu de Fier”) la cel mult 250 m; numele afișat e cel mai frecvent
+  function nameTokens(name) {
+    return stopKey(name).replace(/\bpodu\b/g, 'pod').split(' ').filter(function (t) { return t && ['piata', 'str', 'strada', 'statia', 'de', 'la'].indexOf(t) < 0; });
+  }
+  function compatible(a, b) {
+    if (!a.length || !b.length) return false;
+    var small = a.length <= b.length ? a : b, big = small === a ? b : a;
+    return small.every(function (t) { return big.indexOf(t) >= 0; });
+  }
+  function stopNodes() {
+    var pts = [], parent = [];
+    busStopLayer.eachLayer(function (m) { if (m._stopP && m._stopP.nume) { pts.push({ p: m._stopP, ll: m.getLatLng(), tk: nameTokens(m._stopP.nume) }); parent.push(parent.length); } });
+    function find(i) { while (parent[i] !== i) { parent[i] = parent[parent[i]]; i = parent[i]; } return i; }
+    for (var a = 0; a < pts.length; a++) {
+      for (var b = a + 1; b < pts.length; b++) {
+        if (Math.abs(pts[a].ll.lat - pts[b].ll.lat) > 0.006 || Math.abs(pts[a].ll.lng - pts[b].ll.lng) > 0.009) continue;
+        var d = pts[a].ll.distanceTo(pts[b].ll), same = pts[a].tk.join(' ') === pts[b].tk.join(' ');
+        if ((same && d <= 600) || (d <= 250 && compatible(pts[a].tk, pts[b].tk))) parent[find(a)] = find(b);
+      }
+    }
+    var nodes = {};
+    pts.forEach(function (x, i) {
+      var r = find(i), e = nodes[r] || (nodes[r] = { nume: x.p.nume, refs: {}, stops: [], lls: [], cnt: {} });
+      e.cnt[x.p.nume] = (e.cnt[x.p.nume] || 0) + 1;
+      if (e.cnt[x.p.nume] > e.cnt[e.nume] || (e.cnt[x.p.nume] === e.cnt[e.nume] && x.p.nume.length > e.nume.length)) e.nume = x.p.nume;
+      e.stops.push(x.p); e.lls.push(x.ll);
+      stopRefs(x.p).forEach(function (ref) { e.refs[ref] = 1; });
     });
+    return Object.keys(nodes).map(function (k) { return nodes[k]; });
+  }
+  function renderStopRank() {
     var hot = {};
-    if (HOTS) HOTS.statii.forEach(function (h) { [h.nume].concat(h.alias || []).forEach(function (a) { hot[norm(a)] = 1; }); });
-    var rows = Object.keys(by).map(function (k) { return by[k]; }).map(function (e) { e.n = Object.keys(e.refs).length; return e; })
+    if (HOTS) HOTS.statii.forEach(function (h) { [h.nume].concat(h.alias || []).forEach(function (a) { hot[stopKey(a)] = 1; }); });
+    var rows = stopNodes().map(function (e) { e.n = Object.keys(e.refs).length; return e; })
       .sort(function (a, b) { return b.n - a.n; }).slice(0, 12);
     if (!rows.length) { $('stopRankBox').hidden = true; return; }
     $('stopRankBox').hidden = false;
     var mx = rows[0].n || 1;
     $('stopRank').innerHTML = rows.map(function (e, i) {
-      return '<div class="r" data-i="' + i + '"><span>' + esc(e.nume) + (hot[norm(e.nume)] ? ' <i class="hotdot" title="stație aglomerată (CTP)"></i>' : '') + '</span>' +
+      return '<div class="r" data-i="' + i + '"><span>' + esc(e.nume) + (e.stops.some(function (x) { return hot[stopKey(x.nume)]; }) ? ' <i class="hotdot" title="stație aglomerată (CTP)"></i>' : '') + '</span>' +
         '<span class="track"><div class="fill" style="width:' + (e.n / mx * 100) + '%"></div></span><span class="v">' + e.n + '</span><span class="d"></span></div>';
     }).join('');
     Array.prototype.forEach.call($('stopRank').querySelectorAll('.r'), function (el) {
       el.addEventListener('click', function () {
         var e = rows[+el.getAttribute('data-i')];
-        var all = busStops.filter(function (p) { return norm(p.nume) === norm(e.nume); });
+        var all = e.stops;
         var refs = Object.keys(e.refs).sort(function (x, y) { return /^T/.test(y) - /^T/.test(x) || parseInt(x.replace(/^T/, ''), 10) - parseInt(y.replace(/^T/, ''), 10) || x.localeCompare(y); });
         var merged = { nume: e.nume, linii: refs.join(', '), _peroane: all.length };
         setStop(merged);
-        var b = L.latLngBounds([]);
-        busStopLayer.eachLayer(function (m) { if (all.indexOf(m._stopP) >= 0) b.extend(m.getLatLng()); });
+        var b = L.latLngBounds(e.lls);
         if (b.isValid()) map.setView(b.getCenter(), Math.max(map.getZoom(), 15));
       });
     });
