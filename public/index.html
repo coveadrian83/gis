@@ -121,12 +121,12 @@
         <div class="grid-2">
           <div class="field">
             <label for="depTime">Ora plecării</label>
-            <input id="depTime" type="time" required step="60">
+            <input id="depTime" type="text" class="hhmm" inputmode="numeric" autocomplete="off" maxlength="5" placeholder="ex. 07:30" required>
           </div>
           <div class="field">
             <label for="arrTime">Ora sosirii</label>
             <div class="inline">
-              <input id="arrTime" type="time" required step="60">
+              <input id="arrTime" type="text" class="hhmm" inputmode="numeric" autocomplete="off" maxlength="5" placeholder="ex. 08:15" required>
               <button type="button" class="small ghost" id="btnNow" title="Ora curentă">Acum</button>
             </div>
           </div>

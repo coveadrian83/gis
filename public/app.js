@@ -677,6 +677,14 @@
     $('btnStep3').disabled = !!err || d.minutes === null;
   }
 
+  /** „730” → „07:30”, „1945” → „19:45”: doar cifre, cu „:” pus automat. */
+  function maskHHMM(v) {
+    var d = String(v || '').replace(/\D/g, '');
+    if (d && d.charAt(0) > '2') d = '0' + d;
+    d = d.slice(0, 4);
+    return d.length > 2 ? d.slice(0, 2) + ':' + d.slice(2) : d;
+  }
+
   // --- pasul 3 ----------------------------------------------------------------
   function radioChips(containerId, name, items, onChange) {
     var c = $(containerId);
@@ -1104,6 +1112,15 @@
     document.querySelectorAll('[data-date]').forEach(function (b) {
       b.addEventListener('click', function () {
         dateInput.value = addDays(state.cfg.today, parseInt(b.getAttribute('data-date'), 10));
+        validateStep2();
+      });
+    });
+    // orele se scriu ca text (tastatură numerică): selectorul nativ de oră nu deschide tastatura pe unele telefoane
+    ['depTime', 'arrTime'].forEach(function (id) {
+      $(id).addEventListener('input', function () { this.value = maskHHMM(this.value); });
+      $(id).addEventListener('blur', function () {
+        var t = Domain.parseHHMM(this.value);
+        if (t !== null) this.value = pad(Math.floor(t / 60)) + ':' + pad(t % 60);
         validateStep2();
       });
     });
