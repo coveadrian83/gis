@@ -41,6 +41,10 @@ out body;""",
   node["public_transport"~"^(platform|stop_position)$"]({BBOX});
 );
 out body;""",
+    # toate șinele de tramvai (și cele care lipsesc din relațiile de linie) – transport_gtfs.py aliniază pe ele traseele GTFS
+    "sine": f"""[out:json][timeout:120];
+way["railway"="tram"]({BBOX});
+out body geom;""",
 }
 
 

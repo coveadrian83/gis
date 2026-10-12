@@ -367,7 +367,7 @@
     if (g && p.stare !== 'propus') w = 1 + 7 * Math.sqrt((g[S.day] || 0) / gMax);
     if (net) w = 3;
     return { color: lineColor(p), weight: on ? Math.max(5, w) : w, opacity: dim ? 0.08 : on || isTop(p) || net ? 0.95 : 0.6,
-      dashArray: p.stare === 'propus' ? '6 6' : null, lineCap: p.stare === 'propus' ? 'butt' : 'round', lineJoin: 'round' };
+      dashArray: p.stare === 'propus' ? '6 6' : p.stare === 'de verificat' ? '3 5' : null, lineCap: p.stare === 'propus' ? 'butt' : 'round', lineJoin: 'round' };
   }
   function servesStop(p) {
     if (!S.stop || !p.linie) return false;
@@ -393,6 +393,7 @@
     return '<b>' + (p.linie ? 'Linia ' + esc(p.linie) : 'Traseu fără număr') + '</b> · ' + esc(p.tip || '') + (p.retea ? ' ' + esc(p.retea) : '') +
       (p.de_la && p.pana_la ? '<br>' + esc(p.de_la) + ' → ' + esc(p.pana_la) : p.nume ? '<br>' + esc(p.nume) : '') +
       (p.km ? '<br><span class="note">' + p.km.toLocaleString('ro-RO') + ' km</span>' : '') +
+      (p.stare === 'de verificat' ? '<br><span class="note">ocol din orarul GTFS (punctat) – de verificat</span>' : '') +
       (isTop(p) ? '<br><span style="color:' + HOT + '">printre cele mai utilizate linii (CTP)</span>' : '') +
       (g ? '<br>' + esc(svcText(g)) : '') +
       (sv != null ? '<br>cota din comunele deservite: ' + fmt(sv) + ' ' + (S.metric ? 'călătorii' : 'titluri') + ' · ' + esc(label(S.mi)) : '') +
@@ -713,17 +714,12 @@
     });
   }
 
-  function drawHots(stops) {
-    var byName = {};
-    // stratul stațiilor aglomerate (dacă există) are prioritate față de alte stații cu același nume (ex. capătul „Gară”)
-    if (stops) stops.features.slice().sort(function (a, b) { return /aglomerat/i.test(a.properties.strat || '') - /aglomerat/i.test(b.properties.strat || ''); })
-      .forEach(function (f) { var n = norm(f.properties && f.properties.nume); if (n && f.geometry && f.geometry.type === 'Point') byName[n] = f.geometry.coordinates; });
+  // pozițiile din statii_aglomerate.json (stații de tip nod, ex. rondul Târgu Cucu) – nu căutăm stații cu același nume,
+  // care pot fi peroane de pe altă stradă
+  function drawHots() {
     HOTS.statii.forEach(function (s) {
-      var exact = null;
-      [s.nume].concat(s.alias || []).some(function (a) { exact = byName[norm(a)]; return !!exact; });
-      var ll = exact ? [exact[1], exact[0]] : [s.lat, s.lng];
-      L.marker(ll, { pane: 'hot', icon: L.divIcon({ className: '', html: '<div class="hot"></div><div class="hot-label">' + esc(s.nume) + '</div>', iconSize: [14, 14], iconAnchor: [7, 7] }) })
-        .bindPopup('<b>' + esc(s.nume) + '</b><br>stație aglomerată (CTP, Masterplan PMI)<br><span class="note">' + (exact ? 'poziția din stratul de stații' : 'poziție aproximativă') + '</span>')
+      L.marker([s.lat, s.lng], { pane: 'hot', icon: L.divIcon({ className: '', html: '<div class="hot"></div><div class="hot-label">' + esc(s.nume) + '</div>', iconSize: [14, 14], iconAnchor: [7, 7] }) })
+        .bindPopup('<b>' + esc(s.nume) + '</b><br>stație aglomerată (CTP, Masterplan PMI)')
         .addTo(hotLayer);
     });
   }
@@ -828,7 +824,7 @@
       $('gtfsCtl').hidden = true; $('showGtfsStops').parentNode.hidden = true;
       if (S.width === 'gtfs') S.width = 'cota';
     }
-    if (HOTS) drawHots(r[4]);
+    if (HOTS) drawHots();
     iasiBox();
     var missing = UATS.filter(function (u) { return u.years.length < ys.length; }).map(function (u) {
       return u.name + ' (' + ys.filter(function (y) { return u.years.indexOf(+y) < 0; }).join(', ') + ')';

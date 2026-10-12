@@ -1,6 +1,6 @@
 {
   "sursa": "CTP Iași – Date solicitate PMI (Masterplan): stații aglomerate și trasee urbane cele mai utilizate",
-  "nota": "Pozițiile provin din stratul statii_aglomerate_ctp (derived_layers.gpkg). Dacă stratul de stații (statii.geojson) conține o stație aglomerată cu același nume, harta folosește poziția acesteia.",
+  "nota": "Pozițiile provin din stratul statii_aglomerate_ctp (derived_layers.gpkg), corectate: Târgu Cucu în rondul de la vest de Parcul Woodrow Wilson, Țesătura la intersecția Calea Chișinăului – Bd. Tutora. Harta folosește aceste poziții (nu caută stații cu același nume).",
   "statii": [
     {
       "nume": "Târgu Cucu",
@@ -9,8 +9,8 @@
         "targu cucu",
         "tg. cucu"
       ],
-      "lat": 47.16441,
-      "lng": 27.59058
+      "lat": 47.164,
+      "lng": 27.591
     },
     {
       "nume": "Piața Unirii",
@@ -45,8 +45,8 @@
       "alias": [
         "tesatura"
       ],
-      "lat": 47.15027,
-      "lng": 27.59589
+      "lat": 47.14912,
+      "lng": 27.595
     },
     {
       "nume": "Palatul Culturii",
