@@ -213,8 +213,10 @@ CTP și titlurile de călătorie vândute în comunele ZMI deservite de CTP, ian
 - **Orarul GTFS** (`data/transport/gtfs/IASI_GTFS.zip`, CTP Iași publicat de Tranzy – https://tranzy.ai/opendata/;
   `python scripts/transport_gtfs.py`): `public/data/transport/gtfs_servicii.json` – pe linie, cursele pe zi lucrătoare /
   de weekend, prima și ultima plecare, intervalul mediu la vârf (7–9); pe stație, liniile exacte din orar și plecările
-  pe zi; `data/transport/linii/rute_gtfs.geojson` – formele traseelor, folosite doar pentru liniile fără traseu în altă
-  sursă (23B, 48, 54, 501B, 503B, 802B). Pe hartă: grosimea liniilor după curse pe zi (zi lucrătoare / weekend),
+  pe zi; `data/transport/linii/rute_gtfs.geojson` – formele traseelor. **Orarul GTFS (datele CTP) este sursa
+  principală** a traseelor și a stațiilor: înlocuiește traseele aceleiași linii din AMTPI / OSM (52 de linii); sursele
+  alternative rămân doar pentru liniile fără orar (201, 204, 602, 603 – KMZ AMTPI, cu stațiile lor) și pentru liniile în
+  proiect. Pe hartă: grosimea liniilor după curse pe zi (zi lucrătoare / weekend),
   stațiile din orar dimensionate după plecări și clasamentul stațiilor după plecări (Tg. Cucu, Gară, Moara 1 Mai, CUG I,
   Țesătura…). În raport: coloanele „Orar GTFS” și „Traseu = GTFS %” ale inventarului.
 - **Lista oficială AMTPI** (`python scripts/transport_amtpi.py` → `data/transport/amtpi_trasee.json`, din

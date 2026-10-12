@@ -4,9 +4,9 @@
 Intrare: data/transport/gtfs/IASI_GTFS.zip (agency, routes, trips, stop_times, stops, shapes, calendar).
 
 Ieșire:
-  data/transport/linii/rute_gtfs.geojson – traseele GTFS (câte unul pe formă / sens), cu prioritate „suplimentar”:
-      scripts/transport_linii.py le folosește doar pentru liniile care nu au traseu în altă sursă (ex. 23B, 501B,
-      503B, 802B, 48, 54); toate traseele GTFS rămân disponibile pentru comparație.
+  data/transport/linii/rute_gtfs.geojson – traseele GTFS (câte unul pe formă / sens), cu prioritate „principal”:
+      orarul oficial CTP înlocuiește în scripts/transport_linii.py traseele aceleiași linii din celelalte surse
+      (AMTPI, OSM), care rămân doar pentru liniile fără orar GTFS (ex. 201, 204, 602, 603, liniile în proiect).
   public/data/transport/gtfs_servicii.json – serviciul pe linie (curse pe zi lucrătoare / zi de weekend, prima și
       ultima plecare, intervalul mediu la ora de vârf 7–9) și pe stație (liniile exacte din orar, plecări pe zi).
 
@@ -144,7 +144,8 @@ def main():
         feats.append({"type": "Feature", "properties": {
             "linie": ref_of(r), "tip": mode_of(r), "retea": serv.get(key, {}).get("retea", "local"),
             "name": r.get("route_long_name") or "", "from": first, "to": t.get("trip_headsign") or None,
-            "operator": agency.get("agency_name") or "CTP Iași", "prioritate": "suplimentar", "gtfs_shape": sid},
+            "operator": agency.get("agency_name") or "CTP Iași", "prioritate": "principal", "gtfs_shape": sid,
+            "url": r.get("route_url") or None},
             "geometry": {"type": "LineString", "coordinates": pts}})
     feats.sort(key=lambda f: (f["properties"]["tip"] != "tramvai", int(re.match(r"\d+", f["properties"]["linie"]).group())
                               if re.match(r"\d+", f["properties"]["linie"]) else 999, f["properties"]["linie"], f["properties"]["gtfs_shape"]))

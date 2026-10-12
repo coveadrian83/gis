@@ -369,6 +369,23 @@ def split_proposed_stops(stops, proposed):
                 p["linii_traseu"] = False
 
 
+def fallback_stops(stops, gtfs_refs):
+    """Cu orarul GTFS (stațiile lui sunt în public/data/transport/gtfs_servicii.json): din celelalte surse rămân doar
+    stațiile liniilor fără orar (ex. stațiile KMZ AMTPI ale liniilor 201, 204, 602, 603) și straturile de analiză
+    (stații aglomerate, capete de linie, transfer)."""
+    out = []
+    for st in stops:
+        p = st["properties"]
+        if re.search(r"aglomerat|terminus|transfer", p.get("strat") or "", re.I):
+            out.append(st)
+        elif p.get("linii_traseu") and p.get("linii") and any(r not in gtfs_refs for r in p["linii"].split(", ")):
+            p["linii"] = ", ".join(r for r in p["linii"].split(", ") if r not in gtfs_refs)
+            out.append(st)
+    print(f"stații din alte surse păstrate (linii fără orar GTFS + straturi de analiză): {len(out)} din {len(stops)}",
+          file=sys.stderr)
+    return out
+
+
 def ref_key(r):
     m = re.search(r"\d+", r)
     return (r[:1].isalpha(), int(m.group()) if m else 999, r)
@@ -497,8 +514,14 @@ def main():
             stare = next(field(props, ("stare", "status", "state")), None)
             if stare:
                 p["stare"] = stare
-            if next(field(props, ("prioritate",)), None) == "suplimentar":
-                p["_suplimentar"] = True               # ex. GTFS: doar dacă linia nu are traseu din altă sursă
+            prio = next(field(props, ("prioritate",)), None)
+            if prio == "suplimentar":
+                p["_suplimentar"] = True               # doar dacă linia nu are traseu din altă sursă
+            elif prio == "principal":
+                p["_principal"] = True                 # ex. orarul GTFS CTP: înlocuiește celelalte surse ale liniei
+            url = next(field(props, ("url", "route_url")), None)
+            if url:
+                p["url"] = url
             p["sursa"] = src
             lines.append({"type": "Feature", "properties": p,
                           "geometry": {"type": g["type"], "coordinates": rnd(g["coordinates"])}})
@@ -530,6 +553,15 @@ def main():
                           "geometry": {"type": "Point", "coordinates": rnd(c)}})
     if not lines and not stops:
         sys.exit("Nu am găsit trasee sau stații în fișierele date.")
+    # sursa principală (orarul GTFS): traseele aceleiași linii din celelalte surse se elimină
+    main_keys = {(f["properties"]["tip"], f["properties"]["linie"]) for f in lines if f["properties"].get("_principal")}
+    replaced = sorted({f["properties"]["linie"] for f in lines if not f["properties"].get("_principal")
+                       and (f["properties"]["tip"], f["properties"]["linie"]) in main_keys}, key=ref_key)
+    lines = [f for f in lines if f["properties"].get("_principal") or (f["properties"]["tip"], f["properties"]["linie"]) not in main_keys]
+    if main_keys:
+        rest = sorted({f["properties"]["linie"] for f in lines if not f["properties"].get("_principal") and f["properties"]["linie"]}, key=ref_key)
+        print(f"sursa principală (GTFS): {len(main_keys)} linii; înlocuite: {len(replaced)}; din alte surse: {', '.join(rest) or '–'}",
+              file=sys.stderr)
     primary = {(f["properties"]["tip"], f["properties"]["linie"]) for f in lines if not f["properties"].get("_suplimentar")}
     extra = sorted({f["properties"]["linie"] for f in lines if f["properties"].get("_suplimentar")
                     and (f["properties"]["tip"], f["properties"]["linie"]) not in primary and f["properties"]["linie"]},
@@ -537,8 +569,11 @@ def main():
     lines = [f for f in lines if not f["properties"].get("_suplimentar") or (f["properties"]["tip"], f["properties"]["linie"]) not in primary]
     for f in lines:
         f["properties"].pop("_suplimentar", None)
+        f["properties"].pop("_principal", None)
     if extra:
         print(f"din sursele suplimentare (GTFS): {', '.join(extra)}", file=sys.stderr)
+    if main_keys:
+        stops = fallback_stops(stops, {k[1] for k in main_keys})
     stops = dedupe_stops(stops)
     proposed = apply_amtpi(lines)
     split_proposed_stops(stops, proposed)

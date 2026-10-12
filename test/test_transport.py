@@ -173,6 +173,24 @@ class Linii(unittest.TestCase):
             self.assertEqual(len(rond), 1)
             self.assertEqual(rond[0]["linii"], "801, 802")
 
+    @unittest.skipUnless(HAVE_GEO, "pyshp / pyproj / shapely lipsesc")
+    def test_prioritate_gtfs(self):
+        """Traseul cu prioritate „principal” (orarul GTFS) înlocuiește traseele aceleiași linii din alte surse; liniile
+        fără orar rămân din sursele alternative, cu stațiile lor."""
+        def fc(feats):
+            return json.dumps({"type": "FeatureCollection", "features": feats})
+        def line(ref, coords, **kw):
+            return {"type": "Feature", "properties": {"linie": ref, "tip": "autobuz", **kw},
+                    "geometry": {"type": "LineString", "coordinates": coords}}
+        with tempfile.TemporaryDirectory() as d:
+            (Path(d) / "alt.geojson").write_text(fc([line("20", [[27.56, 47.16], [27.57, 47.16]]),
+                                                    line("603", [[27.60, 47.20], [27.61, 47.21]])]), encoding="utf-8")
+            (Path(d) / "gtfs.geojson").write_text(fc([line("20", [[27.56, 47.17], [27.58, 47.17]], prioritate="principal")]),
+                                                  encoding="utf-8")
+            lines, _ = self.run_script(d, out=d)
+            got = sorted((f["properties"]["linie"], f["properties"]["sursa"]) for f in lines)
+            self.assertEqual(got, [("20", "gtfs.geojson"), ("603", "alt.geojson")])
+
     def test_dedupe_stops(self):
         def st(name, x, y, strat="s"):
             return {"type": "Feature", "properties": {"nume": name, "strat": strat}, "geometry": {"type": "Point", "coordinates": [x, y]}}

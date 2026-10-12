@@ -228,6 +228,13 @@ def osm_stops(routes):
 def compare_stops(ostops, feats, issues):
     d = load(PUB / "statii.geojson")
     ours = [f for f in d["features"] if not re.search(r"aglomerat|terminus|transfer", f["properties"].get("strat") or "", re.I)]
+    serv = PUB / "gtfs_servicii.json"
+    if serv.exists():                       # stațiile orarului GTFS (sursa principală a stațiilor)
+        for st in load(serv)["statii"]:
+            modes = {"tramvai" if r.startswith("T") else "autobuz" for r in st["linii"]} or {"autobuz"}
+            for mode in sorted(modes):              # peronul comun tramvai + autobuz se compară pe ambele moduri
+                ours.append({"type": "Feature", "geometry": {"type": "Point", "coordinates": [st["lng"], st["lat"]]},
+                             "properties": {"nume": st["nume"], "strat": "gtfs", "linii": ", ".join(st["linii"]), "mod": mode}})
     rows = []
     for mode in ("autobuz", "tramvai"):
         cand = [s for s in ostops if (s["tram"] if mode == "tramvai" else s["bus"])]

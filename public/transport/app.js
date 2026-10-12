@@ -818,7 +818,8 @@
     if (!nTramStops) $('showTramStops').parentNode.hidden = true;
     if (SERV) {
       // cu orarul GTFS: stațiile din orar (liniile exacte) înlocuiesc implicit straturile de stații din fișiere
-      [['showBusStops', busStopLayer], ['showTramStops', tramStopLayer]].forEach(function (x) { $(x[0]).checked = false; map.removeLayer(x[1]); });
+      // celelalte straturi de stații conțin doar stațiile liniilor fără orar (AMTPI) – rămân vizibile
+      $('showBusStops').parentNode.lastChild.textContent = ' Stațiile liniilor fără orar GTFS (AMTPI; de la zoom 13)';
       drawGtfsStops();
       renderGtfsRank();
       $('gtfsInfo').innerHTML = 'Orar: GTFS CTP Iași (Tranzy, <a href="https://tranzy.ai/opendata/" target="_blank" rel="noopener">tranzy.ai/opendata</a>), valabil ' +
