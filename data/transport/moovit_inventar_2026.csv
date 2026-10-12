@@ -1,0 +1,66 @@
+﻿linie,mod,descriere_moovit,geometrie_extrasa,statii_geocodate,sursa,observatii
+3B,autobuz,Gara ⇆ Piața Independenței,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+9B,autobuz,Copou ⇆ Târgu Cucu,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+18,autobuz,Tătărași Sud ⇆ Cartier Aviației,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+19,autobuz,Canta - Podu Roș - Poitiers - CUG I,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+20,autobuz,Tătărași Sud - Păcurari - Mall Moldova - Metro,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+23,autobuz,Podu Roș - Centru Miroslava,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+23B,autobuz,Podu Roș ⇆ Proselnici via Miroslava,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+27,autobuz,Tătărași Nord - Baza 3 - Poitiers - Blocuri Ciurea,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+27B,autobuz,Tătărași Nord - Baza 3 - Poitiers - Spital Elytis,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+28,autobuz,Triumf - Podu Roș - Mircea - Dacia,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+29,autobuz,Podu Roș ⇆ Tomești,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+30,autobuz,Canta - Gară - N. Iorga - Bucium,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+30B,autobuz,Mall Moldova - Canta - Gară - Bucium,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+36,autobuz,Dacia - Gară - Copou - Breazu,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+41,autobuz,Piața Independenței - Podu Roș - Blocuri Ciurea,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+42,autobuz,Copou - Tudor Vladimirescu - Frigorifer - CUG I,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+43,autobuz,Păcurari - Tudor Vladimirescu - Frigorifer - CUG I,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+43C,autobuz,Mall Moldova - Păcurari - Tudor Vladimirescu - CUG I,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+44,autobuz,Dacia - Mircea - Frumoasa - Blocuri Ciurea,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+44B,autobuz,Dacia - Mircea - Frumoasa - Spital Elytis,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+46,autobuz,Păcurari - Tudor Vladimirescu - Frigorifer - Bucium,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+47,autobuz,Dacia - Mircea - Podu Roș - Tudor Vladimirescu - Tătărași Sud,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+48,autobuz,Rond Târgu Cucu - Complex Roua - Ciric,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+48,autobuz,Rond Târgu Cucu ⇆ Ciric,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+50,autobuz,Gară - Centru - Târgu Cucu - Aeroport,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+52,autobuz,Copou - Octav Băncilă - Zimbru - Piața Alexandru cel Bun,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+54,autobuz,Târgu Cucu - Sărărie - Pod Cacaina - Albineț,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+101,autobuz,Târgu Cucu ⇆ Dorobanț,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+102,autobuz,Târgu Cucu ⇆ Aroneanu,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+103,autobuz,Târgu Cucu ⇆ Șorogari,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+104,autobuz,Aroneanu ⇆ Rediu Aldei,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+201,autobuz,Podu Roș ⇆ Todirel,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+202,autobuz,Podu Roș ⇆ Păun,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+203,autobuz,Podu Roș ⇆ Vișan,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+204,autobuz,Pietrăria ⇆ Vișan,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+301,autobuz,CUG I ⇆ Dumbrava,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+401,autobuz,Tătărași Sud ⇆ Rusenii Noi,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+501,autobuz,Podu Roș ⇆ Vorovești via Miroslava,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+501B,autobuz,Podu Roș ⇆ Ferma Liliac,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+502,autobuz,CUG I ⇆ Ciurbești / Cornești,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+503,autobuz,CUG I ⇆ Valea Adâncă,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+503B,autobuz,CUG I ⇆ Miroslava via Valea Adâncă,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+601,autobuz,Târgu Cucu ⇆ Popricani via Vânători,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+602,autobuz,Târgu Cucu ⇆ Cuza Vodă,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+603,autobuz,Târgu Cucu ⇆ Țipilești,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+701,autobuz,Copou ⇆ Horlești via Breazu,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+702,autobuz,Copou ⇆ Păcurari via Rediu,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+801,autobuz,Podu Roș ⇆ Goruni via Tomești,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+802,autobuz,Chicerea ⇆ Podu Roș via Tomești,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+803,autobuz,Rond Țuțora ⇆ Oprișeni via Tomești,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+901,autobuz,Strada Bacinschi ⇆ Valea Lupului,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+902,autobuz,Canta ⇆ Valea Lupului,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+CS,autobuz,Rocanotherworld,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+CS9,autobuz,Tehnopolis ⇆ Podu Roș,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+LINII ȘCOLARE,autobuz,Curse elevi și studenți,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+1,tramvai,Copou → Podu Roș → Tătărași → Copou,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+3,tramvai,Gară ⇆ Dancu via Tătărași,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+3,tramvai,Târgu Cucu ⇆ Dancu via Tătărași,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+5,tramvai,Dacia ⇆ Țuțora via N. Iorga,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+6,tramvai,Dacia ⇆ Târgu Cucu,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+7,tramvai,Canta ⇆ Țuțora via Podu Roș,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+8,tramvai,Copou ⇆ Țuțora via Tudor Vladimirescu,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+9,tramvai,Copou ⇆ Spital Providența via Podu Roș,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+11,tramvai,Dacia ⇆ Tătărași Nord via N. Iorga,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie
+13,tramvai,Copou → Tătărași → Podu Roș → Copou,NU,NU,https://moovitapp.com/index/ro/transport_public-linesIndex-Ia%C8%99i-1-3564,Index Moovit; NU este fișier de geometrie

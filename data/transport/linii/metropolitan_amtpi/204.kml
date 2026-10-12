@@ -1,0 +1,1192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>kmz_204.kml</name>
+    <Style id="icon-1899-0288D1-normal">
+      <IconStyle>
+        <color>ffd18802</color>
+        <scale>1</scale>
+        <Icon>
+          <href>https://www.gstatic.com/mapspro/images/stock/503-wht-blank_maps.png</href>
+        </Icon>
+        <hotSpot x="32" xunits="pixels" y="64" yunits="insetPixels"/>
+      </IconStyle>
+      <LabelStyle>
+        <scale>0</scale>
+      </LabelStyle>
+    </Style>
+    <Style id="icon-1899-0288D1-highlight">
+      <IconStyle>
+        <color>ffd18802</color>
+        <scale>1</scale>
+        <Icon>
+          <href>https://www.gstatic.com/mapspro/images/stock/503-wht-blank_maps.png</href>
+        </Icon>
+        <hotSpot x="32" xunits="pixels" y="64" yunits="insetPixels"/>
+      </IconStyle>
+      <LabelStyle>
+        <scale>1</scale>
+      </LabelStyle>
+    </Style>
+    <StyleMap id="icon-1899-0288D1">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#icon-1899-0288D1-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#icon-1899-0288D1-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Style id="line-000000-1200-normal">
+      <LineStyle>
+        <color>ff000000</color>
+        <width>1.2</width>
+      </LineStyle>
+    </Style>
+    <Style id="line-000000-1200-highlight">
+      <LineStyle>
+        <color>ff000000</color>
+        <width>1.8</width>
+      </LineStyle>
+    </Style>
+    <StyleMap id="line-000000-1200">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#line-000000-1200-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#line-000000-1200-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Placemark>
+      <name>Rezidential Decoflor - Visan</name>
+      <description><![CDATA[descriere: <br>name: Rezidential Decoflor - Visan<br>style: [object Object]]]></description>
+      <styleUrl>#icon-1899-0288D1</styleUrl>
+      <ExtendedData>
+        <Data name="descriere">
+          <value/>
+        </Data>
+        <Data name="name">
+          <value>Rezidential Decoflor - Visan</value>
+        </Data>
+        <Data name="style">
+          <value>[object Object]</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          27.60299,47.11492,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Biserica Sf. Ilie</name>
+      <description><![CDATA[descriere: <br>name: Biserica Sf. Ilie<br>style: [object Object]]]></description>
+      <styleUrl>#icon-1899-0288D1</styleUrl>
+      <ExtendedData>
+        <Data name="descriere">
+          <value/>
+        </Data>
+        <Data name="name">
+          <value>Biserica Sf. Ilie</value>
+        </Data>
+        <Data name="style">
+          <value>[object Object]</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          27.608936,47.110685,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Intersectie Str. Tudor Arghezi/Str. Eroilor</name>
+      <description><![CDATA[descriere: <br>name: Intersectie Str. Tudor Arghezi/Str. Eroilor<br>style: [object Object]]]></description>
+      <styleUrl>#icon-1899-0288D1</styleUrl>
+      <ExtendedData>
+        <Data name="descriere">
+          <value/>
+        </Data>
+        <Data name="name">
+          <value>Intersectie Str. Tudor Arghezi/Str. Eroilor</value>
+        </Data>
+        <Data name="style">
+          <value>[object Object]</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          27.610524,47.110922,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Intersectie Str. Tudor Arghezi/Str. Dealul Craitelor</name>
+      <description><![CDATA[descriere: <br>name: Intersectie Str. Tudor Arghezi/Str. Dealul Craitelor<br>style: [object Object]]]></description>
+      <styleUrl>#icon-1899-0288D1</styleUrl>
+      <ExtendedData>
+        <Data name="descriere">
+          <value/>
+        </Data>
+        <Data name="name">
+          <value>Intersectie Str. Tudor Arghezi/Str. Dealul Craitelor</value>
+        </Data>
+        <Data name="style">
+          <value>[object Object]</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          27.611731,47.106563,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Solutiera</name>
+      <description><![CDATA[descriere: <br>name: Solutiera<br>style: [object Object]]]></description>
+      <styleUrl>#icon-1899-0288D1</styleUrl>
+      <ExtendedData>
+        <Data name="descriere">
+          <value/>
+        </Data>
+        <Data name="name">
+          <value>Solutiera</value>
+        </Data>
+        <Data name="style">
+          <value>[object Object]</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          27.612498,47.103426,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Str. Dealul Craitelor/Str. Sfintii Voievozi</name>
+      <description><![CDATA[descriere: <br>name: Str. Dealul Craitelor/Str. Sfintii Voievozi<br>style: [object Object]]]></description>
+      <styleUrl>#icon-1899-0288D1</styleUrl>
+      <ExtendedData>
+        <Data name="descriere">
+          <value/>
+        </Data>
+        <Data name="name">
+          <value>Str. Dealul Craitelor/Str. Sfintii Voievozi</value>
+        </Data>
+        <Data name="style">
+          <value>[object Object]</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          27.614059,47.100563,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Phoenix Residence - Str. Dealul Craitelor</name>
+      <description><![CDATA[descriere: <br>name: Phoenix Residence - Str. Dealul Craitelor<br>style: [object Object]]]></description>
+      <styleUrl>#icon-1899-0288D1</styleUrl>
+      <ExtendedData>
+        <Data name="descriere">
+          <value/>
+        </Data>
+        <Data name="name">
+          <value>Phoenix Residence - Str. Dealul Craitelor</value>
+        </Data>
+        <Data name="style">
+          <value>[object Object]</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          27.609993,47.095849,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Meat Concept - Cercu</name>
+      <description><![CDATA[descriere: <br>name: Meat Concept - Cercu<br>style: [object Object]]]></description>
+      <styleUrl>#icon-1899-0288D1</styleUrl>
+      <ExtendedData>
+        <Data name="descriere">
+          <value/>
+        </Data>
+        <Data name="name">
+          <value>Meat Concept - Cercu</value>
+        </Data>
+        <Data name="style">
+          <value>[object Object]</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          27.609032,47.093026,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Magazin Cercu</name>
+      <description><![CDATA[descriere: <br>name: Magazin Cercu<br>style: [object Object]]]></description>
+      <styleUrl>#icon-1899-0288D1</styleUrl>
+      <ExtendedData>
+        <Data name="descriere">
+          <value/>
+        </Data>
+        <Data name="name">
+          <value>Magazin Cercu</value>
+        </Data>
+        <Data name="style">
+          <value>[object Object]</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          27.611361,47.090203,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Intersectie Str. Sf. Maria/Str. Regina Maria</name>
+      <description><![CDATA[descriere: <br>name: Intersectie Str. Sf. Maria/Str. Regina Maria<br>style: [object Object]]]></description>
+      <styleUrl>#icon-1899-0288D1</styleUrl>
+      <ExtendedData>
+        <Data name="descriere">
+          <value/>
+        </Data>
+        <Data name="name">
+          <value>Intersectie Str. Sf. Maria/Str. Regina Maria</value>
+        </Data>
+        <Data name="style">
+          <value>[object Object]</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          27.615904,47.087441,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Intersectie Str. Sf. Maria/Str. Alexandru Badarau</name>
+      <description><![CDATA[descriere: <br>name: Intersectie Str. Sf. Maria/Str. Alexandru Badarau<br>style: [object Object]]]></description>
+      <styleUrl>#icon-1899-0288D1</styleUrl>
+      <ExtendedData>
+        <Data name="descriere">
+          <value/>
+        </Data>
+        <Data name="name">
+          <value>Intersectie Str. Sf. Maria/Str. Alexandru Badarau</value>
+        </Data>
+        <Data name="style">
+          <value>[object Object]</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          27.620067,47.082127,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Politia Barnova</name>
+      <description><![CDATA[descriere: <br>name: Politia Barnova<br>style: [object Object]]]></description>
+      <styleUrl>#icon-1899-0288D1</styleUrl>
+      <ExtendedData>
+        <Data name="descriere">
+          <value/>
+        </Data>
+        <Data name="name">
+          <value>Politia Barnova</value>
+        </Data>
+        <Data name="style">
+          <value>[object Object]</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          27.623962,47.079018,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Str. Traian Vuia</name>
+      <description><![CDATA[descriere: <br>name: Str. Traian Vuia<br>style: [object Object]]]></description>
+      <styleUrl>#icon-1899-0288D1</styleUrl>
+      <ExtendedData>
+        <Data name="descriere">
+          <value/>
+        </Data>
+        <Data name="name">
+          <value>Str. Traian Vuia</value>
+        </Data>
+        <Data name="style">
+          <value>[object Object]</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          27.629396,47.079526,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Troita Str. Traian Vuia</name>
+      <description><![CDATA[descriere: <br>name: Troita Str. Traian Vuia<br>style: [object Object]]]></description>
+      <styleUrl>#icon-1899-0288D1</styleUrl>
+      <ExtendedData>
+        <Data name="descriere">
+          <value/>
+        </Data>
+        <Data name="name">
+          <value>Troita Str. Traian Vuia</value>
+        </Data>
+        <Data name="style">
+          <value>[object Object]</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          27.635559,47.082335,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Izvor Pietrarie</name>
+      <description><![CDATA[descriere: <br>name: Izvor Pietrarie<br>style: [object Object]]]></description>
+      <styleUrl>#icon-1899-0288D1</styleUrl>
+      <ExtendedData>
+        <Data name="descriere">
+          <value/>
+        </Data>
+        <Data name="name">
+          <value>Izvor Pietrarie</value>
+        </Data>
+        <Data name="style">
+          <value>[object Object]</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          27.64021,47.081553,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Izvor Pietrarie</name>
+      <description><![CDATA[descriere: <br>name: Izvor Pietrarie<br>style: [object Object]]]></description>
+      <styleUrl>#icon-1899-0288D1</styleUrl>
+      <ExtendedData>
+        <Data name="descriere">
+          <value/>
+        </Data>
+        <Data name="name">
+          <value>Izvor Pietrarie</value>
+        </Data>
+        <Data name="style">
+          <value>[object Object]</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          27.64035,47.081528,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Izvor Pietrarie</name>
+      <description><![CDATA[descriere: <br>name: Izvor Pietrarie<br>style: [object Object]]]></description>
+      <styleUrl>#icon-1899-0288D1</styleUrl>
+      <ExtendedData>
+        <Data name="descriere">
+          <value/>
+        </Data>
+        <Data name="name">
+          <value>Izvor Pietrarie</value>
+        </Data>
+        <Data name="style">
+          <value>[object Object]</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          27.64035,47.081528,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Troita Str. Traian Vuia</name>
+      <description><![CDATA[descriere: <br>name: Troita Str. Traian Vuia<br>style: [object Object]]]></description>
+      <styleUrl>#icon-1899-0288D1</styleUrl>
+      <ExtendedData>
+        <Data name="descriere">
+          <value/>
+        </Data>
+        <Data name="name">
+          <value>Troita Str. Traian Vuia</value>
+        </Data>
+        <Data name="style">
+          <value>[object Object]</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          27.635506,47.082357,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Str. Traian Vuia</name>
+      <description><![CDATA[descriere: <br>name: Str. Traian Vuia<br>style: [object Object]]]></description>
+      <styleUrl>#icon-1899-0288D1</styleUrl>
+      <ExtendedData>
+        <Data name="descriere">
+          <value/>
+        </Data>
+        <Data name="name">
+          <value>Str. Traian Vuia</value>
+        </Data>
+        <Data name="style">
+          <value>[object Object]</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          27.62938,47.07957,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Politia Barnova</name>
+      <description><![CDATA[descriere: <br>name: Politia Barnova<br>style: [object Object]]]></description>
+      <styleUrl>#icon-1899-0288D1</styleUrl>
+      <ExtendedData>
+        <Data name="descriere">
+          <value/>
+        </Data>
+        <Data name="name">
+          <value>Politia Barnova</value>
+        </Data>
+        <Data name="style">
+          <value>[object Object]</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          27.62408,47.079149,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Intersectie Str. Sf. Maria/Str. Alexandru Badarau</name>
+      <description><![CDATA[descriere: <br>name: Intersectie Str. Sf. Maria/Str. Alexandru Badarau<br>style: [object Object]]]></description>
+      <styleUrl>#icon-1899-0288D1</styleUrl>
+      <ExtendedData>
+        <Data name="descriere">
+          <value/>
+        </Data>
+        <Data name="name">
+          <value>Intersectie Str. Sf. Maria/Str. Alexandru Badarau</value>
+        </Data>
+        <Data name="style">
+          <value>[object Object]</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          27.620228,47.082032,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Intersectie Str. Sf. Maria/Str. Regina Maria</name>
+      <description><![CDATA[descriere: <br>name: Intersectie Str. Sf. Maria/Str. Regina Maria<br>style: [object Object]]]></description>
+      <styleUrl>#icon-1899-0288D1</styleUrl>
+      <ExtendedData>
+        <Data name="descriere">
+          <value/>
+        </Data>
+        <Data name="name">
+          <value>Intersectie Str. Sf. Maria/Str. Regina Maria</value>
+        </Data>
+        <Data name="style">
+          <value>[object Object]</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          27.616049,47.087449,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Magazin Cercu</name>
+      <description><![CDATA[descriere: <br>name: Magazin Cercu<br>style: [object Object]]]></description>
+      <styleUrl>#icon-1899-0288D1</styleUrl>
+      <ExtendedData>
+        <Data name="descriere">
+          <value/>
+        </Data>
+        <Data name="name">
+          <value>Magazin Cercu</value>
+        </Data>
+        <Data name="style">
+          <value>[object Object]</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          27.611414,47.090279,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Meat Concept - Cercu</name>
+      <description><![CDATA[descriere: <br>name: Meat Concept - Cercu<br>style: [object Object]]]></description>
+      <styleUrl>#icon-1899-0288D1</styleUrl>
+      <ExtendedData>
+        <Data name="descriere">
+          <value/>
+        </Data>
+        <Data name="name">
+          <value>Meat Concept - Cercu</value>
+        </Data>
+        <Data name="style">
+          <value>[object Object]</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          27.609177,47.093048,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Phoenix Residence - Str. Dealul Craitelor</name>
+      <description><![CDATA[descriere: <br>name: Phoenix Residence - Str. Dealul Craitelor<br>style: [object Object]]]></description>
+      <styleUrl>#icon-1899-0288D1</styleUrl>
+      <ExtendedData>
+        <Data name="descriere">
+          <value/>
+        </Data>
+        <Data name="name">
+          <value>Phoenix Residence - Str. Dealul Craitelor</value>
+        </Data>
+        <Data name="style">
+          <value>[object Object]</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          27.610068,47.095845,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Str. Dealul Craitelor/Str. Sfintii Voievozi</name>
+      <description><![CDATA[descriere: <br>name: Str. Dealul Craitelor/Str. Sfintii Voievozi<br>style: [object Object]]]></description>
+      <styleUrl>#icon-1899-0288D1</styleUrl>
+      <ExtendedData>
+        <Data name="descriere">
+          <value/>
+        </Data>
+        <Data name="name">
+          <value>Str. Dealul Craitelor/Str. Sfintii Voievozi</value>
+        </Data>
+        <Data name="style">
+          <value>[object Object]</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          27.614129,47.100589,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Solutiera</name>
+      <description><![CDATA[descriere: <br>name: Solutiera<br>style: [object Object]]]></description>
+      <styleUrl>#icon-1899-0288D1</styleUrl>
+      <ExtendedData>
+        <Data name="descriere">
+          <value/>
+        </Data>
+        <Data name="name">
+          <value>Solutiera</value>
+        </Data>
+        <Data name="style">
+          <value>[object Object]</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          27.612584,47.103441,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Intersectie Str. Tudor Arghezi/Str. Dealul Craitelor</name>
+      <description><![CDATA[descriere: <br>name: Intersectie Str. Tudor Arghezi/Str. Dealul Craitelor<br>style: [object Object]]]></description>
+      <styleUrl>#icon-1899-0288D1</styleUrl>
+      <ExtendedData>
+        <Data name="descriere">
+          <value/>
+        </Data>
+        <Data name="name">
+          <value>Intersectie Str. Tudor Arghezi/Str. Dealul Craitelor</value>
+        </Data>
+        <Data name="style">
+          <value>[object Object]</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          27.611795,47.106438,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Intersectie Str. Tudor Arghezi/Str. Eroilor</name>
+      <description><![CDATA[descriere: <br>name: Intersectie Str. Tudor Arghezi/Str. Eroilor<br>style: [object Object]]]></description>
+      <styleUrl>#icon-1899-0288D1</styleUrl>
+      <ExtendedData>
+        <Data name="descriere">
+          <value/>
+        </Data>
+        <Data name="name">
+          <value>Intersectie Str. Tudor Arghezi/Str. Eroilor</value>
+        </Data>
+        <Data name="style">
+          <value>[object Object]</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          27.610534,47.110951,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Biserica Sf. Ilie</name>
+      <description><![CDATA[descriere: <br>name: Biserica Sf. Ilie<br>style: [object Object]]]></description>
+      <styleUrl>#icon-1899-0288D1</styleUrl>
+      <ExtendedData>
+        <Data name="descriere">
+          <value/>
+        </Data>
+        <Data name="name">
+          <value>Biserica Sf. Ilie</value>
+        </Data>
+        <Data name="style">
+          <value>[object Object]</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          27.608995,47.110655,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Rezidential Decoflor - Visan</name>
+      <description><![CDATA[descriere: <br>name: Rezidential Decoflor - Visan<br>style: [object Object]]]></description>
+      <styleUrl>#icon-1899-0288D1</styleUrl>
+      <ExtendedData>
+        <Data name="descriere">
+          <value/>
+        </Data>
+        <Data name="name">
+          <value>Rezidential Decoflor - Visan</value>
+        </Data>
+        <Data name="style">
+          <value>[object Object]</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          27.60317,47.11491,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Rezidential Decoflor - Visan</name>
+      <description><![CDATA[descriere: <br>name: Rezidential Decoflor - Visan<br>style: [object Object]]]></description>
+      <styleUrl>#icon-1899-0288D1</styleUrl>
+      <ExtendedData>
+        <Data name="descriere">
+          <value/>
+        </Data>
+        <Data name="name">
+          <value>Rezidential Decoflor - Visan</value>
+        </Data>
+        <Data name="style">
+          <value>[object Object]</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>
+          27.60299,47.11492,0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name/>
+      <description><![CDATA[descriere: <br>name: <br>style: [object Object]]]></description>
+      <styleUrl>#line-000000-1200</styleUrl>
+      <ExtendedData>
+        <Data name="descriere">
+          <value/>
+        </Data>
+        <Data name="name">
+          <value/>
+        </Data>
+        <Data name="style">
+          <value>[object Object]</value>
+        </Data>
+      </ExtendedData>
+      <LineString>
+        <tessellate>1</tessellate>
+        <coordinates>
+          27.60311,47.11494,0
+          27.60313,47.11485,0
+          27.60324,47.11449,0
+          27.60331,47.11409,0
+          27.60336,47.11377,0
+          27.60359,47.113,0
+          27.60411,47.11303,0
+          27.60429,47.11302,0
+          27.60484,47.11287,0
+          27.60502,47.11284,0
+          27.60537,47.11285,0
+          27.60566,47.11286,0
+          27.60602,47.11284,0
+          27.607125,47.11248,0
+          27.60823,47.11212,0
+          27.60852,47.11191,0
+          27.60864,47.11181,0
+          27.60875,47.1117,0
+          27.60881,47.11158,0
+          27.60888,47.11129,0
+          27.60891,47.11108,0
+          27.60892,47.11095,0
+          27.60888,47.1108,0
+          27.60885,47.1107,0
+          27.60882,47.11061,0
+          27.60907,47.11064,0
+          27.60961,47.11073,0
+          27.61013,47.11081,0
+          27.61054,47.11088,0
+          27.61065,47.11089,0
+          27.61073,47.11042,0
+          27.61086,47.10996,0
+          27.61097,47.10948,0
+          27.611125,47.108935,0
+          27.61128,47.10839,0
+          27.61144,47.10774,0
+          27.61159,47.10715,0
+          27.61174,47.10656,0
+          27.61177,47.10645,0
+          27.61178,47.10633,0
+          27.6118,47.10624,0
+          27.61191,47.10574,0
+          27.61194,47.1056,0
+          27.61201,47.10532,0
+          27.61205,47.10517,0
+          27.6122,47.10457,0
+          27.61224,47.10444,0
+          27.61238,47.103935,0
+          27.61252,47.10343,0
+          27.61258,47.10318,0
+          27.61261,47.10314,0
+          27.61267,47.10311,0
+          27.61293,47.10313,0
+          27.61307,47.10312,0
+          27.61314,47.10303,0
+          27.6136,47.101795,0
+          27.61406,47.10056,0
+          27.61411,47.10043,0
+          27.61421,47.10013,0
+          27.61437,47.09968,0
+          27.61435,47.0996,0
+          27.61409,47.09914,0
+          27.61404,47.09908,0
+          27.61396,47.09904,0
+          27.61386,47.09902,0
+          27.61269,47.09882,0
+          27.61152,47.09862,0
+          27.6104,47.0983,0
+          27.61022,47.09825,0
+          27.61016,47.09814,0
+          27.61008,47.0974,0
+          27.61016,47.09722,0
+          27.61015,47.09709,0
+          27.6101,47.09697,0
+          27.60987,47.09664,0
+          27.6098,47.09645,0
+          27.60986,47.09625,0
+          27.61002,47.09585,0
+          27.61022,47.09537,0
+          27.61025,47.09527,0
+          27.61024,47.0951,0
+          27.61021,47.09503,0
+          27.6101,47.09482,0
+          27.60973,47.09413,0
+          27.6095,47.0937,0
+          27.60927,47.09327,0
+          27.60915,47.09301,0
+          27.60912,47.09293,0
+          27.60913,47.09286,0
+          27.60916,47.09284,0
+          27.60926,47.09277,0
+          27.60987,47.09241,0
+          27.61034,47.09215,0
+          27.61083,47.09188,0
+          27.6109,47.09182,0
+          27.61097,47.09172,0
+          27.61104,47.0914,0
+          27.61114,47.09094,0
+          27.61124,47.09048,0
+          27.61129,47.09034,0
+          27.61137,47.09021,0
+          27.61139,47.09018,0
+          27.61152,47.09001,0
+          27.61195,47.0896,0
+          27.61203,47.0895,0
+          27.61211,47.08936,0
+          27.61222,47.08913,0
+          27.61227,47.08899,0
+          27.61242,47.08865,0
+          27.61254,47.08858,0
+          27.61272,47.08849,0
+          27.61297,47.0884,0
+          27.61335,47.08831,0
+          27.61354,47.08826,0
+          27.61384,47.08816,0
+          27.61438,47.08794,0
+          27.61462,47.08788,0
+          27.61509,47.08779,0
+          27.61583,47.08761,0
+          27.61598,47.08749,0
+          27.61599,47.08748,0
+          27.61624,47.08723,0
+          27.61666,47.08678,0
+          27.61702,47.08636,0
+          27.61713,47.08617,0
+          27.61744,47.08581,0
+          27.6178,47.0855,0
+          27.61812,47.08521,0
+          27.61822,47.08508,0
+          27.61844,47.08469,0
+          27.61866,47.08425,0
+          27.61888,47.08381,0
+          27.61908,47.08345,0
+          27.61923,47.08326,0
+          27.61983,47.0827,0
+          27.61988,47.08262,0
+          27.62019,47.08213,0
+          27.62009,47.08209,0
+          27.62019,47.08213,0
+          27.62041,47.08179,0
+          27.62071,47.0812,0
+          27.62086,47.08098,0
+          27.62128,47.08052,0
+          27.62162,47.08014,0
+          27.6218,47.07989,0
+          27.62192,47.0797,0
+          27.62202,47.07946,0
+          27.62212,47.07931,0
+          27.62228,47.07916,0
+          27.62249,47.07902,0
+          27.6226,47.07896,0
+          27.62269,47.07892,0
+          27.6228,47.07889,0
+          27.62291,47.07888,0
+          27.62317,47.0789,0
+          27.62385,47.07907,0
+          27.62393,47.07908,0
+          27.62412,47.07913,0
+          27.62429,47.07916,0
+          27.62441,47.07917,0
+          27.62454,47.07916,0
+          27.62471,47.07914,0
+          27.62485,47.07911,0
+          27.62513,47.07903,0
+          27.62585,47.07909,0
+          27.62653,47.07914,0
+          27.62709,47.07916,0
+          27.62755,47.07918,0
+          27.62771,47.07917,0
+          27.62784,47.07914,0
+          27.62803,47.07911,0
+          27.62821,47.07909,0
+          27.62846,47.0791,0
+          27.62872,47.07913,0
+          27.62886,47.07915,0
+          27.62896,47.07919,0
+          27.62905,47.07924,0
+          27.62936,47.07947,0
+          27.62942,47.07951,0
+          27.62974,47.07975,0
+          27.62999,47.07992,0
+          27.63029,47.0802,0
+          27.63037,47.08026,0
+          27.63065,47.08037,0
+          27.63103,47.08054,0
+          27.63136,47.08072,0
+          27.63193,47.08096,0
+          27.63246,47.08118,0
+          27.63285,47.08129,0
+          27.6331,47.08134,0
+          27.63348,47.08142,0
+          27.63421,47.08158,0
+          27.6345,47.0817,0
+          27.6347,47.08182,0
+          27.63501,47.08205,0
+          27.63512,47.08216,0
+          27.63527,47.08223,0
+          27.63543,47.08228,0
+          27.63557,47.0823,0
+          27.63613,47.08231,0
+          27.6365,47.08234,0
+          27.63676,47.08239,0
+          27.63698,47.08245,0
+          27.6371,47.0825,0
+          27.63817,47.08298,0
+          27.63839,47.08303,0
+          27.63854,47.08304,0
+          27.63877,47.08303,0
+          27.63904,47.08297,0
+          27.63929,47.0829,0
+          27.63937,47.08289,0
+          27.63952,47.08265,0
+          27.63959,47.08249,0
+          27.63966,47.08232,0
+          27.64005,47.08167,0
+          27.64018,47.08154,0
+          27.64022,47.08151,0
+          27.64034,47.0815,0
+          27.64022,47.08151,0
+          27.64005,47.08167,0
+          27.63966,47.08232,0
+          27.63959,47.08249,0
+          27.63952,47.08265,0
+          27.63951,47.08289,0
+          27.63929,47.0829,0
+          27.63904,47.08297,0
+          27.63877,47.08303,0
+          27.63854,47.08304,0
+          27.63839,47.08303,0
+          27.63817,47.08298,0
+          27.6371,47.0825,0
+          27.63698,47.08245,0
+          27.63676,47.08239,0
+          27.6365,47.08234,0
+          27.63613,47.08231,0
+          27.63557,47.0823,0
+          27.63552,47.08229,0
+          27.63543,47.08228,0
+          27.63527,47.08223,0
+          27.63512,47.08216,0
+          27.63501,47.08205,0
+          27.6347,47.08182,0
+          27.6345,47.0817,0
+          27.63421,47.08158,0
+          27.63348,47.08142,0
+          27.6331,47.08134,0
+          27.63285,47.08129,0
+          27.63246,47.08118,0
+          27.63193,47.08096,0
+          27.63136,47.08072,0
+          27.63103,47.08054,0
+          27.63065,47.08037,0
+          27.63037,47.08026,0
+          27.63029,47.0802,0
+          27.62999,47.07992,0
+          27.62974,47.07975,0
+          27.62944,47.07953,0
+          27.62936,47.07947,0
+          27.62905,47.07924,0
+          27.62896,47.07919,0
+          27.62886,47.07915,0
+          27.62872,47.07913,0
+          27.62846,47.0791,0
+          27.6283,47.07909,0
+          27.62803,47.07911,0
+          27.62784,47.07914,0
+          27.62771,47.07917,0
+          27.62755,47.07918,0
+          27.62709,47.07916,0
+          27.62653,47.07914,0
+          27.62585,47.07909,0
+          27.62524,47.07903,0
+          27.62485,47.07911,0
+          27.62471,47.07914,0
+          27.62454,47.07916,0
+          27.62441,47.07917,0
+          27.62429,47.07916,0
+          27.62412,47.07913,0
+          27.62409,47.07912,0
+          27.62385,47.07907,0
+          27.62317,47.0789,0
+          27.62302,47.07888,0
+          27.6228,47.07889,0
+          27.62269,47.07892,0
+          27.6226,47.07896,0
+          27.62249,47.07902,0
+          27.62228,47.07916,0
+          27.62212,47.07931,0
+          27.62202,47.07946,0
+          27.62192,47.0797,0
+          27.6218,47.07989,0
+          27.62162,47.08014,0
+          27.62128,47.08052,0
+          27.62086,47.08098,0
+          27.62071,47.0812,0
+          27.62041,47.08179,0
+          27.62025,47.08204,0
+          27.62019,47.08213,0
+          27.61988,47.08262,0
+          27.61983,47.0827,0
+          27.61923,47.08326,0
+          27.61908,47.08345,0
+          27.61888,47.08381,0
+          27.61866,47.08425,0
+          27.61844,47.08469,0
+          27.61822,47.08508,0
+          27.61812,47.08521,0
+          27.6178,47.0855,0
+          27.61744,47.08581,0
+          27.61713,47.08617,0
+          27.61702,47.08636,0
+          27.61666,47.08678,0
+          27.61624,47.08723,0
+          27.61603,47.08744,0
+          27.61598,47.08749,0
+          27.61583,47.08761,0
+          27.61509,47.08779,0
+          27.61462,47.08788,0
+          27.61438,47.08794,0
+          27.61384,47.08816,0
+          27.61354,47.08826,0
+          27.61335,47.08831,0
+          27.61297,47.0884,0
+          27.61272,47.08849,0
+          27.61254,47.08858,0
+          27.61242,47.08865,0
+          27.61227,47.08899,0
+          27.61222,47.08913,0
+          27.61211,47.08936,0
+          27.61203,47.0895,0
+          27.61195,47.0896,0
+          27.61152,47.09001,0
+          27.61139,47.09018,0
+          27.61134,47.09026,0
+          27.61129,47.09034,0
+          27.61124,47.09048,0
+          27.61114,47.09094,0
+          27.61104,47.0914,0
+          27.61097,47.09172,0
+          27.6109,47.09182,0
+          27.61083,47.09188,0
+          27.61034,47.09215,0
+          27.60987,47.09241,0
+          27.60926,47.09277,0
+          27.60916,47.09284,0
+          27.60913,47.09286,0
+          27.60912,47.09289,0
+          27.60915,47.09301,0
+          27.60917,47.09305,0
+          27.60927,47.09327,0
+          27.6095,47.0937,0
+          27.60973,47.09413,0
+          27.6101,47.09482,0
+          27.61021,47.09503,0
+          27.61024,47.0951,0
+          27.61025,47.09518,0
+          27.61022,47.09537,0
+          27.61003,47.09584,0
+          27.60986,47.09625,0
+          27.6098,47.09645,0
+          27.60987,47.09664,0
+          27.6101,47.09697,0
+          27.61015,47.09709,0
+          27.61016,47.09722,0
+          27.61008,47.0974,0
+          27.61016,47.09814,0
+          27.61022,47.09825,0
+          27.6104,47.0983,0
+          27.61152,47.09862,0
+          27.61269,47.09882,0
+          27.61386,47.09902,0
+          27.61396,47.09904,0
+          27.61404,47.09908,0
+          27.61409,47.09914,0
+          27.61435,47.0996,0
+          27.61437,47.09968,0
+          27.61421,47.10013,0
+          27.61411,47.10043,0
+          27.61405,47.10058,0
+          27.613595,47.101805,0
+          27.61314,47.10303,0
+          27.61307,47.10312,0
+          27.61293,47.10313,0
+          27.61267,47.10311,0
+          27.61261,47.10314,0
+          27.61258,47.10318,0
+          27.61251,47.10343,0
+          27.612375,47.103935,0
+          27.61224,47.10444,0
+          27.6122,47.10457,0
+          27.61205,47.10517,0
+          27.61201,47.10532,0
+          27.61194,47.1056,0
+          27.61191,47.10574,0
+          27.6118,47.10624,0
+          27.61178,47.10633,0
+          27.61177,47.10642,0
+          27.611605,47.10708,0
+          27.61144,47.10774,0
+          27.61128,47.10839,0
+          27.611125,47.108935,0
+          27.61097,47.10948,0
+          27.61086,47.10996,0
+          27.61073,47.11042,0
+          27.61065,47.11089,0
+          27.61056,47.11088,0
+          27.61013,47.11081,0
+          27.60961,47.11073,0
+          27.60907,47.11064,0
+          27.609,47.11063,0
+          27.60882,47.11061,0
+          27.60888,47.1108,0
+          27.60892,47.11095,0
+          27.60891,47.11108,0
+          27.60888,47.11129,0
+          27.60881,47.11158,0
+          27.60875,47.1117,0
+          27.60864,47.11181,0
+          27.60852,47.11191,0
+          27.60823,47.11212,0
+          27.607125,47.11248,0
+          27.60602,47.11284,0
+          27.60583,47.11286,0
+          27.60537,47.11285,0
+          27.60518,47.11284,0
+          27.60484,47.11287,0
+          27.60429,47.11302,0
+          27.6042,47.11303,0
+          27.60359,47.113,0
+          27.60336,47.11377,0
+          27.60331,47.11409,0
+          27.60324,47.11449,0
+          27.60313,47.11485,0
+          27.60312,47.1149,0
+          27.60311,47.11494,0
+        </coordinates>
+      </LineString>
+    </Placemark>
+  </Document>
+</kml>

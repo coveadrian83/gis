@@ -1,0 +1,9 @@
+{
+  "_descriere": "Corecturi manuale ale statutului liniilor, aplicate de scripts/transport_linii.py după lista AMTPI. stare = propus: linia apare pe hartă ca propunere (punctat, stratul „Proiecte”), stațiile deservite doar de ea la fel.",
+  "linii": {
+    "205": {
+      "stare": "propus",
+      "nota": "Traseu planificat, neoperațional la 12.10.2026: pagina AMTPI îl marchează „indisponibil” (în proiect), lipsește din listele CTP și AMTPI; studiul de oportunitate AMTPI (oct. 2024, anexă la HCL Tomești 231/19.12.2024) îl include la „trasee ce urmează a fi înființate”."
+    }
+  }
+}

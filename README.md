@@ -179,6 +179,78 @@ de Consiliul Local Iași din 2016 până azi, pe hartă, peste cele 17 zone MVA�
   pe jos** la trecerea cu mouse-ul peste un PUZ (cu stațiile din ea; `public/15min/core.js`) și mărimea cercurilor
   după suprafață, deplasări produse, autoturisme în ora de vârf sau deplasări atrase.
 - **Teste**: `python3 -m unittest discover -s test -p 'test_puz*.py'`.
+
+## Transport public – Iași și Zona Metropolitană (`/transport/`)
+
+Hartă în stilul hărților de volum de pasageri (cercuri proporționale, animație lună cu lună): traseele liniilor
+CTP și titlurile de călătorie vândute în comunele ZMI deservite de CTP, ianuarie 2023 – decembrie 2025.
+
+- **Pe comune**: cercul fiecărei comune arată **călătoriile estimate** sau **titlurile vândute** în luna (sau anul)
+  aleasă, pe categorii (bilete, abonamente, elevi și studenți), cu sau fără titlurile **repartizate** de CTP pe comune
+  (vânzările centralizate – aplicație, puncte din Iași). Clasament cu variația față de anul anterior, grafic lunar
+  pe categorii pentru ZMI sau pentru comuna aleasă, buton ▶ pentru animație, export CSV.
+- **Trasee și stații**: liniile de tramvai și autobuz, cu liniile cele mai utilizate (20, 36, 30, 46; tramvai 1 și 9)
+  îngroșate și stațiile cele mai aglomerate (Târgu Cucu, Piața Unirii, Podu Roș, Gara, Țesătura, Palatul Culturii,
+  Piața Independenței, Tudor Vladimirescu) marcate – după datele CTP pentru PMI (Masterplan). Pozițiile stațiilor
+  aglomerate (`public/data/transport/statii_aglomerate.json`) sunt aproximative și se înlocuiesc automat cu cele din
+  stratul de stații când acesta conține o stație cu același nume. Orice fișier GeoJSON / KML se poate
+  **previzualiza** direct din pagină, fără a fi încărcat pe server.
+- **Simbolizare**: tramvai (roșu), autobuz local (violet), autobuz metropolitan (magenta); liniile cele mai utilizate
+  după CTP au un halou galben, iar grosimea liniilor metropolitane urmează titlurile / călătoriile din comunele pe care
+  le străbat: volumul fiecărei comune se împarte în mod egal între liniile metropolitane care o deservesc (indicativ –
+  CTP raportează vânzările pe comună, nu pe linie). Extinderea propusă a tramvaiului apare punctat (opțional). Fundal la alegere: întunecat sau
+  OpenStreetMap standard. Apăsând pe o linie se deschide fișa ei: sensurile, lungimea, comunele străbătute, relația OSM.
+- **Trasee actuale** (`data/transport/linii/`): `rute_autobuz_local.*` – cele 18 linii de autobuz locale CTP (35 de
+  relații OSM, ambele sensuri, Stereo 70); `metropolitan_amtpi/*.kmz` – cele 28 de trasee metropolitane AMTPI (KMZ din
+  aprilie 2025, cu stațiile fiecărui traseu: numărul liniei din numele documentului, capetele din descriere);
+  `metropolitan_amtpi_osm.geojson` – liniile AMTPI fără KMZ preluate din OSM (23); `rute_tramvai_osm.geojson` –
+  tramvaiul pe linii (1, 3, 5, 6, 7, 8, 9, 11, 13, din OSM); `retea_tramvai.geojson` – rețeaua de tramvai existentă
+  (34,5 km de cale) și extinderea propusă (13 km), din `Infrastructura_Mobilitate.gpkg`; `statii_autobuz_local.*` –
+  273 de stații de autobuz (OSM); `statii_tramvai.*` – 111 stații de tramvai (extrase din OSM pentru Masterplanul
+  metropolitan Iași); `statii_derivate.gpkg` – stațiile aglomerate CTP, capetele de linie și stațiile de transfer.
+  Versiunile anterioare ale rețelei metropolitane (`trasee_transport_public_metropolitan.gpkg`,
+  `statii_TP_ZMI_analiza_2D`) sunt păstrate în `data/transport/arhiva/` și nu mai sunt folosite.
+- **Orarul GTFS** (`data/transport/gtfs/IASI_GTFS.zip`, CTP Iași publicat de Tranzy – https://tranzy.ai/opendata/;
+  `python scripts/transport_gtfs.py`): `public/data/transport/gtfs_servicii.json` – pe linie, cursele pe zi lucrătoare /
+  de weekend, prima și ultima plecare, intervalul mediu la vârf (7–9); pe stație, liniile exacte din orar și plecările
+  pe zi; `data/transport/linii/rute_gtfs.geojson` – formele traseelor. **Orarul GTFS (datele CTP) este sursa
+  principală** a traseelor și a stațiilor: înlocuiește traseele aceleiași linii din AMTPI / OSM (52 de linii); sursele
+  alternative rămân doar pentru liniile fără orar (201, 204, 602, 603 – KMZ AMTPI, cu stațiile lor) și pentru liniile în
+  proiect. Pe hartă: grosimea liniilor după curse pe zi (zi lucrătoare / weekend),
+  stațiile din orar dimensionate după plecări și clasamentul stațiilor după plecări (Tg. Cucu, Gară, Moara 1 Mai, CUG I,
+  Țesătura…). În raport: coloanele „Orar GTFS” și „Traseu = GTFS %” ale inventarului.
+- **Lista oficială AMTPI** (`python scripts/transport_amtpi.py` → `data/transport/amtpi_trasee.json`, din
+  https://www.amtpi.ro/trasee-2/): liniile „în proiect” (402, 504, 506, 507, 508) apar pe hartă ca propuneri, punctat,
+  împreună cu stațiile deservite doar de ele; fișa liniei arată statutul AMTPI și legătura la pagina traseului; liniile
+  din date absente din listă sunt marcate „nelistat”. Corecturile manuale ale statutului (ex. 205 – planificată,
+  neoperațională) sunt în `data/transport/linii_corecturi.json`. Liniile stațiilor metropolitane = traseele AMTPI din care
+  fac parte + liniile locale care trec la ≤ 30 m. Rețeaua se
+  citește din numele fișierului („…_local”, „…_metropolitan”) sau din câmpul `network`; altfel traseele cu peste 25 %
+  din lungime în afara municipiului sunt considerate metropolitane. La exporturile OSM, numărul din numele relației
+  („Bus 36: Breazu => Rond Dacia”) are prioritate față de un `ref` care îl contrazice (ex. `6B`).
+- **Trasee – încărcare**: fișierele KML / KMZ / GeoPackage / Shapefile se încarcă în GitHub în `data/transport/linii/`
+  (**Add file → Upload files**); acțiunea **Trasee transport public** le convertește automat în
+  `public/data/transport/linii.geojson` și `statii.geojson`. Local: `pip install pyshp pyproj shapely`, apoi
+  `python scripts/transport_linii.py data/transport/linii [--tramvai 1,3,6,7,8,9,11,13]`.
+- **Titluri de călătorie**: `pip install openpyxl`, apoi
+  `python scripts/transport_titluri.py <centralizator 2023>.xlsx <2024>.xlsx <2025>.xlsx` →
+  `public/data/transport/titluri_zm.json` și `.csv`. Fișierele Excel ale CTP nu se publică (conțin și foi contabile;
+  `data/transport/*.xlsx` este ignorat de git) – doar agregatele pe comună, lună și categorie. Călătoriile se estimează
+  cu numărul de călătorii pe titlu folosit de CTP (bilet = 1, bilet 2 călătorii = 2, abonament 30 de zile = 60,
+  ZM + Iași = 135, 6 luni = 360 / 810, 12 luni = 1620, abonament studenți = 120); rândurile în lei, suprataxele și
+  dublurile contabile („(-)”, „Primărie”) nu se numără. Centralizatorul municipiului Iași există doar pentru 2023
+  (secțiunea „Municipiul Iași, 2023”); Țuțora lipsește din centralizatorul 2025, iar Valea Lupului apare din martie 2024.
+- **Comparația cu OpenStreetMap** (`/transport/comparatie.html`): acțiunea **Date OSM transport public**
+  (`scripts/transport_osm.py`, Overpass – rulează în GitHub Actions, Overpass nu e accesibil din mediul cloud)
+  descarcă rutele și stațiile din OSM în `data/transport/osm/`; `python scripts/transport_compara_osm.py` compară
+  liniile (prezență, suprapunerea traseelor la ≤ 30 m, porțiunile diferite > 100 m) și stațiile (concordant / nume
+  diferit / decalat / lipsă / doar în OSM) și listează problemele de etichetare din OSM (ref ≠ nume, trasee
+  discontinue, rețea greșită, stații fără nume) → `public/data/transport/comparatie_osm.*` (JSON, GeoJSON, CSV).
+  Raportul are și **inventarul liniilor** din toate sursele (hartă, OSM, AMTPI, inventarul Moovit din
+  `data/transport/moovit_inventar_2026.csv` – doar numere și descrieri, ca referință) → `inventar_linii.csv`.
+  Aceeași acțiune extrage din OSM traseele tramvaiului pe linii (`data/transport/linii/rute_tramvai_osm.geojson`:
+  liniile 1, 3, 5, 6, 7, 8, 9, 11, 13) și regenerează traseele hărții și comparația.
+- **Teste**: `python3 -m unittest discover -s test -p 'test_transport*.py'`.
 - **Limite**: indicatorii sunt extrași automat din text – verificați hotărârea înainte de a-i cita; un PUZ aprobat nu
   înseamnă o construcție autorizată sau realizată; apartamentele și parcările sunt cunoscute doar pentru o parte din PUZ-uri.
 
@@ -229,9 +301,12 @@ public/shared/              geo-core.js (căutare + point-in-polygon) și domain
 public/data/                fișierele geografice
 public/15min/               harta „15 minute. Pentru cine?” – Iași (core.js = calculul, data/iasi = export OSM)
 public/puz/                 harta PUZ-urilor votate de Consiliul Local Iași (date: public/data/puz_iasi.geojson)
+public/transport/           harta transportului public (date: public/data/transport/)
 scripts/puz_iasi.py         colectarea PUZ-urilor (hcl.usr.ro + apix.ro), extragerea indicatorilor, localizarea
 scripts/puz_parcele.py      extrasul parcelelor PUZ din parcelarul OCPI (data/puz_parcele.geojson)
 scripts/puz_mobilitate.py   deplasările generate de PUZ-uri (scenariile PMUD și RPL; config/puz_mobilitate.json)
+scripts/transport_titluri.py  titlurile de călătorie CTP pe comune ZMI și luni (din centralizatoarele Excel)
+scripts/transport_linii.py  traseele și stațiile din KML / GeoPackage / Shapefile (data/transport/linii/)
 data/puz_iasi_completari.csv  corecturi și completări manuale pentru PUZ-uri
 scripts/export_15min.py     exportul rețelei pietonale și al facilităților din OSM (osmnx)
 scripts/elevatie_15min.py   panta: elevația Copernicus GLO-30 pe fiecare segment (elev.bin)

@@ -1,0 +1,418 @@
+{
+ "sursa": "https://www.amtpi.ro/trasee-2/",
+ "linii": [
+  {
+   "linie": "101",
+   "nr_afisat": "101",
+   "comuna": "Aroneanu",
+   "statii": [
+    "Tg. Cucu",
+    "Șos. Moara de Vânt",
+    "Complex Roua",
+    "Dorobanț"
+   ],
+   "in_proiect": false,
+   "url": "https://www.amtpi.ro/101-tg-cucu-sos-moara-de-vant-complex-roua-dorobant/"
+  },
+  {
+   "linie": "102",
+   "nr_afisat": "102",
+   "comuna": "Aroneanu",
+   "statii": [
+    "Tg. Cucu",
+    "Șos. Moara de Vânt",
+    "Complex Roua",
+    "Primăria Aroneanu"
+   ],
+   "in_proiect": false,
+   "url": "https://www.amtpi.ro/102-tg-cucu-sos-moara-de-vant-complex-roua-primaria-aroneanu/"
+  },
+  {
+   "linie": "103",
+   "nr_afisat": "103",
+   "comuna": "Aroneanu",
+   "statii": [
+    "Tg. Cucu",
+    "Șos. Moara de Vânt",
+    "Complex Roua",
+    "Șorogari"
+   ],
+   "in_proiect": false,
+   "url": "https://www.amtpi.ro/103-complex-roua-sorogari/"
+  },
+  {
+   "linie": "104",
+   "nr_afisat": "104",
+   "comuna": "Aroneanu",
+   "statii": [
+    "Primăria Aroneanu",
+    "Rediu Aldei"
+   ],
+   "in_proiect": false,
+   "url": "https://www.amtpi.ro/104-primaria-aroneanu-rediu-aldei/"
+  },
+  {
+   "linie": "201",
+   "nr_afisat": "201",
+   "comuna": "Bârnova",
+   "statii": [
+    "Podu Roș",
+    "Bârnova",
+    "sat Todirel"
+   ],
+   "in_proiect": false,
+   "url": "https://www.amtpi.ro/201-casa-sindicatelor-barnova-sat-todirel/"
+  },
+  {
+   "linie": "202",
+   "nr_afisat": "202",
+   "comuna": "Bârnova",
+   "statii": [
+    "Podu Roș",
+    "Păun"
+   ],
+   "in_proiect": false,
+   "url": "https://www.amtpi.ro/202-casa-sindicatelor-paun/"
+  },
+  {
+   "linie": "203",
+   "nr_afisat": "203",
+   "comuna": "Bârnova",
+   "statii": [
+    "Podu Roș",
+    "Vișan"
+   ],
+   "in_proiect": false,
+   "url": "https://www.amtpi.ro/203-podu-ros-visan/"
+  },
+  {
+   "linie": "204",
+   "nr_afisat": "204",
+   "comuna": "Bârnova",
+   "statii": [
+    "Pietrăria",
+    "Vișan"
+   ],
+   "in_proiect": false,
+   "url": "https://www.amtpi.ro/204-sat-visan-str-sf-ilie-str-eroilor-str-craitelor/"
+  },
+  {
+   "linie": "301",
+   "nr_afisat": "301",
+   "comuna": "Ciurea",
+   "statii": [
+    "C.U.G. I (Selgros)",
+    "Tehnopolis",
+    "Dumbrava"
+   ],
+   "in_proiect": false,
+   "url": "https://www.amtpi.ro/301-cug-1-tehnopolis-dumbrava/"
+  },
+  {
+   "linie": "401",
+   "nr_afisat": "401",
+   "comuna": "Holboca",
+   "statii": [
+    "Tătărași Sud",
+    "Rond Dancu",
+    "Primăria Holboca",
+    "Rusenii Vechi",
+    "Rusenii Noi"
+   ],
+   "in_proiect": false,
+   "url": "https://www.amtpi.ro/401-tatarasi-sud-rond-dancu-primaria-holboca-rusenii-vechi-rusenii-noi/"
+  },
+  {
+   "linie": "402",
+   "nr_afisat": "402",
+   "comuna": "Holboca",
+   "statii": [
+    "Tătărași Sud",
+    "Str. Aeroportului",
+    "sat Valea Lungă"
+   ],
+   "in_proiect": true,
+   "url": "https://www.amtpi.ro/402-tatarasi-sud-str-aeroportului-sat-valea-lunga/"
+  },
+  {
+   "linie": "23",
+   "nr_afisat": "23 / 23B",
+   "comuna": "Miroslava",
+   "statii": [
+    "Podu Roș",
+    "Primăria Miroslava",
+    "Balciu",
+    "Cornești",
+    "Proselnici"
+   ],
+   "in_proiect": false,
+   "url": "https://www.amtpi.ro/23-23b-podu-ros-primaria-miroslava-balciu-cornesti-proselnici/"
+  },
+  {
+   "linie": "23B",
+   "nr_afisat": "23 / 23B",
+   "comuna": "Miroslava",
+   "statii": [
+    "Podu Roș",
+    "Primăria Miroslava",
+    "Balciu",
+    "Cornești",
+    "Proselnici"
+   ],
+   "in_proiect": false,
+   "url": "https://www.amtpi.ro/23-23b-podu-ros-primaria-miroslava-balciu-cornesti-proselnici/"
+  },
+  {
+   "linie": "501",
+   "nr_afisat": "501 / 501B",
+   "comuna": "Miroslava",
+   "statii": [
+    "Podu Roș 4",
+    "Sun City",
+    "Miroslava",
+    "Vorovești",
+    "Ferma Liliac"
+   ],
+   "in_proiect": false,
+   "url": "https://www.amtpi.ro/501-podu-ros-sun-city-miroslava-vorovesti/"
+  },
+  {
+   "linie": "501B",
+   "nr_afisat": "501 / 501B",
+   "comuna": "Miroslava",
+   "statii": [
+    "Podu Roș 4",
+    "Sun City",
+    "Miroslava",
+    "Vorovești",
+    "Ferma Liliac"
+   ],
+   "in_proiect": false,
+   "url": "https://www.amtpi.ro/501-podu-ros-sun-city-miroslava-vorovesti/"
+  },
+  {
+   "linie": "502",
+   "nr_afisat": "502",
+   "comuna": "Miroslava",
+   "statii": [
+    "C.U.G. I (Selgros)",
+    "Tehnopolis",
+    "Horpaz",
+    "Ciurbești"
+   ],
+   "in_proiect": false,
+   "url": "https://www.amtpi.ro/502-tehnopolis-horpaz-str-noua-ciurbesti-strprincipala-horpaz-strnoua-tehnopolis/"
+  },
+  {
+   "linie": "503",
+   "nr_afisat": "503 / 503B",
+   "comuna": "Miroslava",
+   "statii": [
+    "Selgros",
+    "Valea Adâncă / Miroslava"
+   ],
+   "in_proiect": false,
+   "url": "https://www.amtpi.ro/503-selgros-valea-adanca-503b-selgros-miroslava/"
+  },
+  {
+   "linie": "503B",
+   "nr_afisat": "503 / 503B",
+   "comuna": "Miroslava",
+   "statii": [
+    "Selgros",
+    "Valea Adâncă / Miroslava"
+   ],
+   "in_proiect": false,
+   "url": "https://www.amtpi.ro/503-selgros-valea-adanca-503b-selgros-miroslava/"
+  },
+  {
+   "linie": "504",
+   "nr_afisat": "504",
+   "comuna": "Miroslava",
+   "statii": [
+    "Metro",
+    "Brătuleni (Parc Industrial)",
+    "Vorovești",
+    "Brătuleni",
+    "Valea Ursului"
+   ],
+   "in_proiect": true,
+   "url": "https://www.amtpi.ro/504-metro-bratuleni-parc-industrial-vorovesti-bratuleni-valea-ursului-uricani-metro/"
+  },
+  {
+   "linie": "506",
+   "nr_afisat": "506",
+   "comuna": "Miroslava",
+   "statii": [
+    "Tehnopolis",
+    "Horpaz",
+    "Str. Principală",
+    "Str. Bisericii",
+    "Dancaș",
+    "Str. Principală"
+   ],
+   "in_proiect": true,
+   "url": "https://www.amtpi.ro/506-tehnopolis-horpaz-str-principala-str-bisericii-dancas-str-principala/"
+  },
+  {
+   "linie": "507",
+   "nr_afisat": "507",
+   "comuna": "Miroslava",
+   "statii": [
+    "Bis. Înălțarea Domnului",
+    "Valea Adâncă",
+    "Balciu",
+    "Bis. Înălțarea Domnului"
+   ],
+   "in_proiect": true,
+   "url": "https://www.amtpi.ro/507-bis-inaltarea-domnului-valea-adanca-balciu-bis-inaltarea-domnului/"
+  },
+  {
+   "linie": "508",
+   "nr_afisat": "508",
+   "comuna": "Miroslava",
+   "statii": [
+    "Metro",
+    "Uricani"
+   ],
+   "in_proiect": true,
+   "url": "https://www.amtpi.ro/508-metro-uricani/"
+  },
+  {
+   "linie": "601",
+   "nr_afisat": "601",
+   "comuna": "Popricani",
+   "statii": [
+    "Târgu Cucu",
+    "Podu de Fier",
+    "Vânători",
+    "Popricani"
+   ],
+   "in_proiect": false,
+   "url": "https://www.amtpi.ro/601-rond-agronomie-sos-stefan-cel-mare-si-sfant-carlig-vanatori-popricani/"
+  },
+  {
+   "linie": "602",
+   "nr_afisat": "602",
+   "comuna": "Popricani",
+   "statii": [
+    "Târgu Cucu",
+    "C.A. Rosetti",
+    "Cârlig",
+    "Cuza Vodă"
+   ],
+   "in_proiect": false,
+   "url": "https://www.amtpi.ro/602-targu-cucu-c-a-rosetti-carlig-cuzavoda/"
+  },
+  {
+   "linie": "603",
+   "nr_afisat": "603",
+   "comuna": "Popricani",
+   "statii": [
+    "Popricani",
+    "Țipilești"
+   ],
+   "in_proiect": false,
+   "url": "https://www.amtpi.ro/603-popricani-tipilesti/"
+  },
+  {
+   "linie": "701",
+   "nr_afisat": "701",
+   "comuna": "Rediu",
+   "statii": [
+    "Rond Copou",
+    "Breazu",
+    "Horlești"
+   ],
+   "in_proiect": false,
+   "url": "https://www.amtpi.ro/701-rond-copou-breazu-horlesti/"
+  },
+  {
+   "linie": "701E",
+   "nr_afisat": "701 E",
+   "comuna": "Rediu",
+   "statii": [
+    "Rond Agronomie (Rond Copou)",
+    "Complex Paradisul Verde"
+   ],
+   "in_proiect": false,
+   "url": "https://www.amtpi.ro/701e/"
+  },
+  {
+   "linie": "702",
+   "nr_afisat": "702",
+   "comuna": "Rediu",
+   "statii": [
+    "Rond Păcurari",
+    "Rediu",
+    "Breazu",
+    "Copou"
+   ],
+   "in_proiect": false,
+   "url": "https://www.amtpi.ro/702-gara-rond-pacurari-primaria-rediu/"
+  },
+  {
+   "linie": "801",
+   "nr_afisat": "801",
+   "comuna": "Tomești",
+   "statii": [
+    "Podu Roș",
+    "Tomești",
+    "Goruni"
+   ],
+   "in_proiect": false,
+   "url": "https://www.amtpi.ro/801-podu-ros-tomesti-goruni/"
+  },
+  {
+   "linie": "802",
+   "nr_afisat": "802",
+   "comuna": "Tomești",
+   "statii": [
+    "Podu Roș",
+    "Tomești",
+    "Chicerea"
+   ],
+   "in_proiect": false,
+   "url": "https://www.amtpi.ro/802-podu-ros-tomesti-chicerea/"
+  },
+  {
+   "linie": "29",
+   "nr_afisat": "29",
+   "comuna": "Tomești",
+   "statii": [
+    "Podu Roș",
+    "Baza 3",
+    "Tomești"
+   ],
+   "in_proiect": false,
+   "url": "https://www.amtpi.ro/29-podu-ros-baza-3-tomesti/"
+  },
+  {
+   "linie": "901",
+   "nr_afisat": "901",
+   "comuna": "Valea Lupului",
+   "statii": [
+    "Str. Bacinschi",
+    "Canta",
+    "Valea Lupului"
+   ],
+   "in_proiect": false,
+   "url": "https://www.amtpi.ro/901-str-bacinschi-canta-valea-lupului/"
+  },
+  {
+   "linie": "902",
+   "nr_afisat": "902",
+   "comuna": "Valea Lupului",
+   "statii": [
+    "Canta",
+    "Păcurari",
+    "Valea Lupului"
+   ],
+   "in_proiect": false,
+   "url": "https://www.amtpi.ro/902-canta-pacurari-valea-lupului/"
+  }
+ ],
+ "note": [
+  "Traseele 27, 41 și 44 sunt administrate de CTP."
+ ]
+}

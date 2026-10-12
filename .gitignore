@@ -6,3 +6,5 @@ var/
 .env
 cache/
 __pycache__/
+# centralizatoarele CTP (conțin și foi contabile) – se publică doar agregatele din public/data/transport
+data/transport/*.xlsx

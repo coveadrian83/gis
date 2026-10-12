@@ -1,0 +1,72 @@
+﻿linie,mod,proiect,osm,amtpi,gtfs,moovit,descriere,acoperire_gtfs,stare,surse
+1,tramvai,da,da,,93 curse/zi,Copou → Podu Roș → Tătărași → Copou,Canta - Targu Cucu - Podu Ros - Tatarasi - Canta,,pe hartă,4
+3,tramvai,da,da,,251 curse/zi,Gară ⇆ Dancu via Tătărași; Târgu Cucu ⇆ Dancu via Tătărași,Dancu-Tatarasi-Tg.Cucu-Gara,,pe hartă,4
+5,tramvai,da,da,,173 curse/zi,Dacia ⇆ Țuțora via N. Iorga,Dacia - N. Iorga - Baza 3 - Tutora,,pe hartă,4
+6,tramvai,da,da,,142 curse/zi,Dacia ⇆ Târgu Cucu,Dacia - Gara - Targu Cucu,,pe hartă,4
+7,tramvai,da,da,,174 curse/zi,Canta ⇆ Țuțora via Podu Roș,Canta-Tg. Cucu - Podu Ros - Baza 3-Rond Tutora,,pe hartă,4
+8,tramvai,da,da,,168 curse/zi,Copou ⇆ Țuțora via Tudor Vladimirescu,Gara - Targu Cucu - Tudor Vladimirescu - Tutora,,pe hartă,4
+9,tramvai,da,da,,297 curse/zi,Copou ⇆ Spital Providența via Podu Roș,Gara - Targu Cucu - Podu Ros - Spital Elytis,,pe hartă,4
+11,tramvai,da,da,,268 curse/zi,Dacia ⇆ Tătărași Nord via N. Iorga,Dacia - N. Iorga - Baza 3 - Tatarasi Nord,,pe hartă,4
+13,tramvai,da,da,,93 curse/zi,Copou → Tătărași → Podu Roș → Copou,Canta - Targu Cucu - Tatarasi - Podu Ros - Canta,,pe hartă,4
+3B,autobuz,,,,,Gara ⇆ Piața Independenței,,,lipsește de pe hartă,1
+9B,autobuz,,,,,Copou ⇆ Târgu Cucu,,,lipsește de pe hartă,1
+CS9,autobuz,,,,,Tehnopolis ⇆ Podu Roș,,,lipsește de pe hartă,1
+14B,autobuz,,da,,,,,,lipsește de pe hartă,1
+18,autobuz,da,da,,32 curse/zi,Tătărași Sud ⇆ Cartier Aviației,Tatarasi Sud - Aviatiei,,pe hartă,4
+19,autobuz,da,da,,206 curse/zi,Canta - Podu Roș - Poitiers - CUG I,Canta - Gara - Podu Ros - CUG I,,pe hartă,4
+20,autobuz,da,da,,190 curse/zi,Tătărași Sud - Păcurari - Mall Moldova - Metro,Tatarasi Sud - Targu Cucu - Pacurari - Mall Moldova - Metro,,pe hartă,4
+23,autobuz,da,da,în exploatare,20 curse/zi,Podu Roș - Centru Miroslava,Podu Ros - Centru Miroslava,,pe hartă,5
+23B,autobuz,da,,în exploatare,20 curse/zi,Podu Roș ⇆ Proselnici via Miroslava,Podu Ros - Miroslava - Proselnici,,pe hartă,4
+27,autobuz,da,da,,123 curse/zi,Tătărași Nord - Baza 3 - Poitiers - Blocuri Ciurea,Tatarasi Nord - Baza 3 - Poitiers - Ciurea,,pe hartă,4
+27B,autobuz,,,,,Tătărași Nord - Baza 3 - Poitiers - Spital Elytis,,,lipsește de pe hartă,1
+28,autobuz,da,da,,172 curse/zi,Triumf - Podu Roș - Mircea - Dacia,Dacia - Mircea - Podu Ros - Targu Cucu - Copou,,pe hartă,4
+29,autobuz,da,da,în exploatare,177 curse/zi,Podu Roș ⇆ Tomești,Podu Ros - Baza 3 - Tomesti,,pe hartă,5
+30,autobuz,da,da,,232 curse/zi,Canta - Gară - N. Iorga - Bucium,Bucium - N. Iorga - Gara - Canta,,pe hartă,4
+30B,autobuz,da,da,,68 curse/zi,Mall Moldova - Canta - Gară - Bucium,Bucium - Gara - Canta - Mall Moldova,,pe hartă,4
+36,autobuz,da,da,,168 curse/zi,Dacia - Gară - Copou - Breazu,Dacia - Gara - Copou - Breazu,,pe hartă,4
+M 36,autobuz,,da,,,,,,lipsește de pe hartă,1
+41,autobuz,da,da,,150 curse/zi,Piața Independenței - Podu Roș - Blocuri Ciurea,Piata Independentei - Podu Ros - Ciurea,,pe hartă,4
+42,autobuz,da,da,,154 curse/zi,Copou - Tudor Vladimirescu - Frigorifer - CUG I,Copou - Tudor Vladimirescu - Potiers - CUG I,,pe hartă,4
+43,autobuz,da,da,,161 curse/zi,Păcurari - Tudor Vladimirescu - Frigorifer - CUG I,CUG I - Poitiers - Tudor Vladimirescu - Pacurari,,pe hartă,4
+43C,autobuz,da,da,,54 curse/zi,Mall Moldova - Păcurari - Tudor Vladimirescu - CUG I,CUG I - Poitiers - T. Vladimirescu - Pacurari - Mall Moldova,,pe hartă,4
+44,autobuz,da,da,,146 curse/zi,Dacia - Mircea - Frumoasa - Blocuri Ciurea,Dacia - Mircea - Frumoasa - Ciurea,,pe hartă,4
+44B,autobuz,,,,,Dacia - Mircea - Frumoasa - Spital Elytis,,,lipsește de pe hartă,1
+46,autobuz,da,da,,172 curse/zi,Păcurari - Tudor Vladimirescu - Frigorifer - Bucium,Bucium - Tudor Vladimirescu - Targu Cucu - Pacurari,,pe hartă,4
+47,autobuz,da,da,,128 curse/zi,Dacia - Mircea - Podu Roș - Tudor Vladimirescu - Tătărași Sud,Dacia - Mircea - Podu Ros - T. Vladimirescu - Tatarasi Sud,,pe hartă,4
+48,autobuz,da,,,49 curse/zi,Rond Târgu Cucu - Complex Roua - Ciric; Rond Târgu Cucu ⇆ Ciric,Targu Cucu - Complex Roua Residence - Ciric,,pe hartă,3
+50,autobuz,da,da,,96 curse/zi,Gară - Centru - Târgu Cucu - Aeroport,Gara - Piata Unirii - Targu Cucu - Aeroport,,pe hartă,4
+52,autobuz,da,da,,225 curse/zi,Copou - Octav Băncilă - Zimbru - Piața Alexandru cel Bun,Piata A.C.B. - Zimbru - O. Bancila - Copou,,pe hartă,4
+54,autobuz,da,,,62 curse/zi,Târgu Cucu - Sărărie - Pod Cacaina - Albineț,Targu Cucu - Sararie - Pod Cacaina - Albinet,,pe hartă,3
+101,autobuz,da,,în exploatare,32 curse/zi,Târgu Cucu ⇆ Dorobanț,Targu Cucu - Roua Residence - Dorobant,,pe hartă,4
+102,autobuz,da,,în exploatare,32 curse/zi,Târgu Cucu ⇆ Aroneanu,Targu Cucu - Roua Residence - Rond Aroneanu,,pe hartă,4
+103,autobuz,da,,în exploatare,32 curse/zi,Târgu Cucu ⇆ Șorogari,Targu Cucu - Roua Residence - Sorogari,,pe hartă,4
+104,autobuz,da,,în exploatare,32 curse/zi,Aroneanu ⇆ Rediu Aldei,Rond Aroneanu - Rediu Aldei,,pe hartă,4
+201,autobuz,da,,în exploatare,,Podu Roș ⇆ Todirel,Casa Sindicatelor – Barnova – sat Todirel,,pe hartă,3
+202,autobuz,da,,în exploatare,39 curse/zi,Podu Roș ⇆ Păun,Podu Ros - Bucium - Paun,,pe hartă,4
+203,autobuz,da,,în exploatare,52 curse/zi,Podu Roș ⇆ Vișan,Podu Ros-Frigorifer–Visan,,pe hartă,4
+204,autobuz,da,,în exploatare,,Pietrăria ⇆ Vișan,Pietrăria – Vișan,,pe hartă,3
+205,autobuz,propusă,,,,,Sat Barnova – Str Sf Maria – Str Traian Vuia intersectie cu str Sf Ap Petru – Pietrarie,,pe hartă (propusă),1
+301,autobuz,da,,în exploatare,28 curse/zi,CUG I ⇆ Dumbrava,CUG I - Dumbrava,,pe hartă,4
+401,autobuz,da,,în exploatare,39 curse/zi,Tătărași Sud ⇆ Rusenii Noi,Tatarasi Sud - Dancu - Rusenii Vechi - Rusenii Noi,,pe hartă,4
+402,autobuz,propusă,,în proiect,,,Tatarasi Sud – Str Aeroportului – sat Valea Lunga,,pe hartă (propusă),2
+501,autobuz,da,da,în exploatare,32 curse/zi,Podu Roș ⇆ Vorovești via Miroslava,Podu Ros - Primaria Miroslava - Vorovesti,,pe hartă,5
+501B,autobuz,da,,în exploatare,23 curse/zi,Podu Roș ⇆ Ferma Liliac,Podu Ros - Miroslava - Ferma Liliac,,pe hartă,4
+502,autobuz,da,,în exploatare,32 curse/zi,CUG I ⇆ Ciurbești / Cornești,C.U.G. I - Ciurbesti,,pe hartă,4
+503,autobuz,da,da,în exploatare,25 curse/zi,CUG I ⇆ Valea Adâncă,C.U.G. I-Valea Adanca,,pe hartă,5
+503B,autobuz,da,,în exploatare,6 curse/zi,CUG I ⇆ Miroslava via Valea Adâncă,C.U.G. I - Valea Adanca - Miroslava,,pe hartă,4
+504,autobuz,propusă,,în proiect,,,Metro – Bratuleni (Parc Industrial) - Vorovesti – Bratuleni – Valea Ursului – Uricani – Metro,,pe hartă (propusă),2
+506,autobuz,propusă,,în proiect,,,Tehnopolis – Horpaz – Str Principală – Str Bisericii - DANCAȘ – Str Principală,,pe hartă (propusă),2
+507,autobuz,propusă,,în proiect,,,Bis. Inaltarea Domnului – Valea Adanca – Balciu – Bis. Inaltarea Domnului,,pe hartă (propusă),2
+508,autobuz,propusă,,în proiect,,,Metro - Uricani,,pe hartă (propusă),2
+601,autobuz,da,,în exploatare,34 curse/zi,Târgu Cucu ⇆ Popricani via Vânători,Tg. Cucu - C.A.Rosetti - Carlig - Popricani-Carlig-Sararie-Tg.Cucu,,pe hartă,4
+602,autobuz,da,,în exploatare,,Târgu Cucu ⇆ Cuza Vodă,Targu Cucu – C.A. Rosetti – Carlig – CuzaVoda,,pe hartă,3
+603,autobuz,da,,în exploatare,,Târgu Cucu ⇆ Țipilești,Popricani – Tipilesti,,pe hartă,3
+701,autobuz,da,,în exploatare,26 curse/zi,Copou ⇆ Horlești via Breazu,Rond Copou - Breazu - Horlesti,,pe hartă,4
+701E,autobuz,,,în exploatare,,,Rond Agronomie (Rond Copou) – Complex Paradisul Verde,,lipsește de pe hartă,1
+702,autobuz,da,,în exploatare,22 curse/zi,Copou ⇆ Păcurari via Rediu,Pacurari - Rediu - Breazu - Rond Copou,,pe hartă,4
+801,autobuz,da,,în exploatare,4 curse/zi,Podu Roș ⇆ Goruni via Tomești,Podu Ros (2) - Rond Tutora - Tomesti - Goruni,,pe hartă,4
+802,autobuz,da,,în exploatare,5 curse/zi,Chicerea ⇆ Podu Roș via Tomești,Podu Ros (2) - Rond Tutora - Chicerea,,pe hartă,4
+802B,autobuz,da,,,21 curse/zi,,Podu Ros (2) - Rond Tutora-Tomesti-Goruni-Chicerea,,pe hartă,2
+803,autobuz,,,,,Rond Țuțora ⇆ Oprișeni via Tomești,,,lipsește de pe hartă,1
+901,autobuz,da,,în exploatare,34 curse/zi,Strada Bacinschi ⇆ Valea Lupului,Valea Lupului - Str. Bacinschi,,pe hartă,4
+902,autobuz,da,,în exploatare,27 curse/zi,Canta ⇆ Valea Lupului,Valea Lupului - Canta,,pe hartă,4

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Comparație OSM – transport public Iași</title>
+  <meta name="author" content="dr. geogr. Adrian Covăsnianu">
+  <meta name="description" content="Comparația traseelor și stațiilor de transport public CTP Iași (date proiect) cu OpenStreetMap: ce e corect și ce trebuie corectat.">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="comparatie.css">
+</head>
+<body class="report">
+<main id="report">
+  <p class="back"><a href="./">← Harta transportului public</a></p>
+  <h1>Comparație cu <span>OpenStreetMap</span></h1>
+  <p class="sub">Traseele și stațiile CTP din datele proiectului, față de OpenStreetMap – ce e corect și ce trebuie corectat</p>
+  <p class="note" id="meta"></p>
+
+  <section id="kpis"></section>
+
+  <section>
+    <h2>Harta diferențelor</h2>
+    <div class="legend" id="mapLegend"></div>
+    <div id="map"></div>
+    <p class="note">Liniile colorate sunt porțiunile de traseu de peste 100 m care nu au corespondent în cealaltă sursă la mai puțin de 30 m; punctele sunt stațiile care diferă. Apăsați pe un element pentru detalii.</p>
+  </section>
+
+  <section>
+    <h2>Linii</h2>
+    <div class="filters" id="lineFilter"></div>
+    <div class="tablewrap"><table id="lines"></table></div>
+    <p class="note">„Acoperire” = ponderea din lungimea traseului care are corespondent la ≤ 30 m în cealaltă sursă (toate sensurile împreună). Concordant: ambele ≥ 95 %; diferențe minore: ≥ 80 %.</p>
+  </section>
+
+  <section>
+    <h2>Inventarul liniilor (toate sursele)</h2>
+    <p class="note">Fiecare linie care apare în cel puțin o sursă: datele proiectului (harta), OSM, lista AMTPI, orarul GTFS (CTP, prin Tranzy) și inventarul Moovit (doar numere și descrieri, folosit ca referință – fără geometrii). „Traseu = GTFS” = ponderea comună (la ≤ 30 m, minimul celor două sensuri ale comparației) dintre traseul de pe hartă și formele din orar. „Lipsește de pe hartă” = linie fără traseu în datele proiectului.</p>
+    <div class="filters" id="invFilter"></div>
+    <div class="tablewrap"><table id="inventar"></table></div>
+  </section>
+
+  <section>
+    <h2>Lista oficială AMTPI</h2>
+    <p class="note">Traseele metropolitane publicate de AMTPI (<a href="https://www.amtpi.ro/trasee-2/" target="_blank" rel="noopener">amtpi.ro/trasee-2</a>), față de datele proiectului (fișierele KMZ ale traseelor) și de OSM.</p>
+    <div class="filters" id="amtpiFilter"></div>
+    <div class="tablewrap"><table id="amtpi"></table></div>
+  </section>
+
+  <section>
+    <h2>Probleme de etichetare în OSM</h2>
+    <div class="tablewrap"><table id="issues"></table></div>
+  </section>
+
+  <section>
+    <h2>Stații care diferă</h2>
+    <div class="filters" id="stopFilter"></div>
+    <div class="tablewrap"><table id="stops"></table></div>
+    <p class="note">Concordant: stație OSM de același mod (autobuz / tramvai) cu nume compatibil la ≤ 30 m. Nume diferit: o stație OSM la ≤ 30 m, dar cu alt nume. Decalat: stația cu același nume e la 30–150 m. Lipsă în OSM: nimic compatibil la ≤ 150 m. Doar în OSM: stație a unei linii CTP din OSM fără stație în datele proiectului la ≤ 40 m.</p>
+  </section>
+
+  <section>
+    <h2>Alte rute din OSM în zonă (alți operatori)</h2>
+    <p class="note" id="others"></p>
+  </section>
+
+  <p class="note">Descărcați tabelele complete (CSV): <a href="../data/transport/comparatie_osm_linii.csv" download>linii</a> · <a href="../data/transport/comparatie_osm_statii.csv" download>stații</a> · <a href="../data/transport/comparatie_osm_probleme.csv" download>probleme OSM</a> · <a href="../data/transport/comparatie_amtpi.csv" download>AMTPI</a> · <a href="../data/transport/inventar_linii.csv" download>inventar</a> · <a href="../data/transport/comparatie_osm.geojson" download>diferențe (GeoJSON, pentru QGIS)</a>. Date OSM © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">contribuitorii OpenStreetMap</a> (ODbL). Generat cu <code>scripts/transport_compara_osm.py</code>.</p>
+  <p class="note">© 2026 Moldova Vrea Infrastructură și Moldova Vrea Autostradă. Toate drepturile rezervate.</p>
+</main>
+<div id="tip" role="tooltip" hidden></div>
+<script src="../vendor/leaflet/leaflet.js"></script>
+<script src="comparatie.js"></script>
+</body>
+</html>

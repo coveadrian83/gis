@@ -1,0 +1,34 @@
+﻿obiect,osm,nume,problema
+relație,relation/452129,Bus 19: Canta => CUG 1,traseu întrerupt: 3 goluri (capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)
+relație,relation/2801211,M 36,lipsesc from / to
+relație,relation/4492699,Bus 19: CUG 1 => Canta,traseu întrerupt: 2 goluri (capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)
+relație,relation/4524008,Bus 36: Rond Dacia => Breazu,traseu întrerupt: 1 gol (capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)
+relație,relation/4524217,Bus 36: Breazu => Rond Dacia,ref=6B diferă de numărul din nume (36); comparat ca linia 36
+relație,relation/4524217,Bus 36: Breazu => Rond Dacia,traseu întrerupt: 1 gol (capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)
+relație,relation/4525523,Bus 28: Rond Dacia => Triumf,traseu întrerupt: 2 goluri (capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)
+relație,relation/4525694,Bus 28: Triumf => Rond Dacia,traseu întrerupt: 2 goluri (capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)
+relație,relation/4536462,Bus 30: Canta => Bucium,traseu întrerupt: 1 gol (capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)
+relație,relation/4536678,Bus 30B: Carrefour ERA => Bucium,traseu întrerupt: 2 goluri (capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)
+relație,relation/4536929,Bus 42: CUG 1 => Rond Copou,traseu întrerupt: 2 goluri (capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)
+relație,relation/4536930,Bus 42: Rond Copou => CUG 1,traseu întrerupt: 1 gol (capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)
+relație,relation/4536969,Bus 43: CUG 1 => Rond Păcurari,traseu întrerupt: 2 goluri (capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)
+relație,relation/4537027,Bus 43: Rond Păcurari => CUG 1,traseu întrerupt: 1 gol (capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)
+relație,relation/4537140,Bus 43C: CUG 1 => Carrefour ERA,traseu întrerupt: 2 goluri (capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)
+relație,relation/4537141,Bus 43C: Carrefour ERA => CUG 1,traseu întrerupt: 3 goluri (capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)
+relație,relation/4538335,Bus 27: Blocuri Ciurea => Tătărași Nord,traseu întrerupt: 2 goluri (capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)
+relație,relation/4538336,Bus 27: Tătărași Nord => Blocuri Ciurea,traseu întrerupt: 3 goluri (capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)
+relație,relation/4538386,Bus 29: Tomești => Podu Roș,traseu întrerupt: 2 goluri (capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)
+relație,relation/4538699,Bus 47: Rond Dacia => Tatarași Sud,traseu întrerupt: 2 goluri (capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)
+relație,relation/4538700,Bus 47: Tatarași Sud => Rond Dacia,traseu întrerupt: 2 goluri (capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)
+relație,relation/4538701,Bus 44: Dacia => Blocuri Ciurea,traseu întrerupt: 2 goluri (capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)
+relație,relation/4538702,Bus 44: Blocuri Ciurea => Dacia,traseu întrerupt: 1 gol (capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)
+relație,relation/4539326,Bus 20: Tătărași Sud => METRO,traseu întrerupt: 3 goluri (capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)
+relație,relation/4540058,Bus 20: METRO => Tătărași Sud,traseu întrerupt: 3 goluri (capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)
+relație,relation/4633529,Tram 13: Copou => Tătărași => Podu Roș => Copou,lipsește ref (numărul liniei)
+relație,relation/15259074,Bus 503: Tehnopolis => Valea Adâncă => Miroslava,network neobișnuit: AMTPI
+relație,relation/15259075,Bus 503: Miroslava => Valea Adâncă => Tehnopolis,network neobișnuit: AMTPI
+relație,relation/15259223,Bus 501: Podu Roș => Miroslava => Vorovești,traseu întrerupt: 1 gol (capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)
+relație,relation/15268962,Bus 52: Piața ACB => Pasaj Octav Băncilă => Copou,traseu întrerupt: 2 goluri (capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)
+relație,relation/15268963,Bus 52: Copou => Pasaj Octav Băncilă => Piața ACB,traseu întrerupt: 1 gol (capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)
+stație,node/2159843869,,stație a unei linii CTP fără nume
+stație,node/3317199368,Rond Poliție,network greșit: Compania de Transport Public Cluj-Napoca
