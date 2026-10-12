@@ -1,0 +1,26 @@
+body.report { display: block; overflow-y: auto; }
+#report { max-width: 1100px; margin: 0 auto; padding: 20px 16px 40px; font-size: 14px; }
+#report h1 { font-size: 30px; }
+#report h2 { font-size: 17px; margin: 28px 0 8px; }
+.back { margin: 0 0 12px; }
+#kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; margin: 16px 0; }
+#kpis div { background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; }
+#kpis b { display: block; font-size: 22px; }
+#kpis small { color: var(--text-muted); font-size: 12px; }
+#report #map { height: 520px; border: 1px solid var(--line); border-radius: 6px; flex: none; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--text-secondary); margin: 6px 0; }
+.legend i { display: inline-block; width: 18px; height: 4px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+.legend i.dot { width: 10px; height: 10px; border-radius: 50%; }
+.tablewrap { max-height: 480px; overflow: auto; border: 1px solid var(--line); border-radius: 6px; }
+#report table { width: 100%; border-collapse: collapse; font-size: 13px; }
+#report th, #report td { padding: 5px 8px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+#report th { position: sticky; top: 0; background: var(--surface-2); font-size: 12px; color: var(--text-secondary); cursor: pointer; white-space: nowrap; }
+#report td.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+#report tr:hover td { background: #262624; }
+.badge { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 11px; font-weight: 700; color: #1a1a19; white-space: nowrap; }
+.s-ok { background: #6fcf97; } .s-minor { background: #f2c14e; } .s-major { background: #f28b82; } .s-only { background: #9085e9; color: #fff; } .s-osm { background: #3987e5; color: #fff; }
+.filters { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0; }
+.filters button { padding: 3px 10px; border: 1px solid var(--line); background: var(--surface-2); border-radius: 14px; font-size: 12px; cursor: pointer; color: var(--text-secondary); }
+.filters button.on { background: var(--text-primary); color: var(--surface-1); }
+.linechip { display: inline-block; min-width: 30px; text-align: center; padding: 0 5px; border-radius: 4px; font-weight: 800; color: #fff; }
+@media (max-width: 760px) { #report #map { height: 360px; } #report h1 { font-size: 24px; } }

@@ -232,6 +232,12 @@ CTP și titlurile de călătorie vândute în comunele ZMI deservite de CTP, ian
   ZM + Iași = 135, 6 luni = 360 / 810, 12 luni = 1620, abonament studenți = 120); rândurile în lei, suprataxele și
   dublurile contabile („(-)”, „Primărie”) nu se numără. Centralizatorul municipiului Iași există doar pentru 2023
   (secțiunea „Municipiul Iași, 2023”); Țuțora lipsește din centralizatorul 2025, iar Valea Lupului apare din martie 2024.
+- **Comparația cu OpenStreetMap** (`/transport/comparatie.html`): acțiunea **Date OSM transport public**
+  (`scripts/transport_osm.py`, Overpass – rulează în GitHub Actions, Overpass nu e accesibil din mediul cloud)
+  descarcă rutele și stațiile din OSM în `data/transport/osm/`; `python scripts/transport_compara_osm.py` compară
+  liniile (prezență, suprapunerea traseelor la ≤ 30 m, porțiunile diferite > 100 m) și stațiile (concordant / nume
+  diferit / decalat / lipsă / doar în OSM) și listează problemele de etichetare din OSM (ref ≠ nume, trasee
+  discontinue, rețea greșită, stații fără nume) → `public/data/transport/comparatie_osm.*` (JSON, GeoJSON, CSV).
 - **Teste**: `python3 -m unittest discover -s test -p 'test_transport*.py'`.
 - **Limite**: indicatorii sunt extrași automat din text – verificați hotărârea înainte de a-i cita; un PUZ aprobat nu
   înseamnă o construcție autorizată sau realizată; apartamentele și parcările sunt cunoscute doar pentru o parte din PUZ-uri.
