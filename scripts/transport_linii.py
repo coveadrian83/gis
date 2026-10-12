@@ -44,6 +44,9 @@ STOP_FIELDS = ("nume", "name", "statie", "stație", "denumire", "den", "nume_sta
 MODES = (("tramvai", ("tramvai", "tram", "tramway")), ("troleibuz", ("troleibuz", "trolleybus")),
          ("microbuz", ("microbuz", "minibus")), ("autobuz", ("autobuz", "bus", "metropolitan")))
 SIMPLIFY_DEG = 0.00002   # ~2 m
+STOP_RADIUS_M = 30       # o linie „oprește” în stație dacă traseul trece la cel mult atâta de ea
+AMENITIES = (("adapost", ("shelter", "adapost")), ("banca", ("bench", "banca")), ("accesibil", ("wheelchair", "accesibil")),
+             ("iluminat", ("lit", "iluminat")), ("tramvai", ("tram",)))
 
 
 def parse_args():
@@ -303,6 +306,38 @@ class Uats:
         return round(g.length / 1000, 2), outside, out
 
 
+def lines_at_stops(lines, stops):
+    """Liniile care trec la cel mult STOP_RADIUS_M de fiecare stație fără listă de linii (câmpul „linii” calculat)."""
+    if not lines or not stops:
+        return
+    import shapely
+    from pyproj import Transformer
+    from shapely import STRtree
+    from shapely.geometry import shape
+    tr = Transformer.from_crs("EPSG:4326", "EPSG:3844", always_xy=True)
+
+    def proj(g):
+        return shapely.transform(shape(g), lambda x, y: tr.transform(x, y), interleaved=False)
+    numbered = [f for f in lines if f["properties"]["linie"]]
+    geoms = [proj(f["geometry"]) for f in numbered]
+    tree = STRtree(geoms)
+    key = {"tramvai": "T", "troleibuz": "TB"}
+    for st in stops:
+        p = st["properties"]
+        if p.get("linii"):
+            continue
+        pt = proj(st["geometry"])
+        found = set()
+        for i in tree.query(pt.buffer(STOP_RADIUS_M)):
+            if geoms[i].distance(pt) <= STOP_RADIUS_M:
+                lp = numbered[i]["properties"]
+                found.add(key.get(lp["tip"], "") + lp["linie"])
+        refs = sorted(found, key=lambda r: (r[0].isalpha(), int(re.search(r"\d+", r).group()), r))
+        p["linii"] = ", ".join(refs) or None
+        p["n_linii"] = len(refs)
+        p["linii_calculate"] = True
+
+
 def clean_line(g):
     """Unește bucățile (căile OSM ale relației) și simplifică la ~2 m."""
     from shapely.geometry import shape, mapping
@@ -363,14 +398,22 @@ def main():
             c = g["coordinates"] if t == "Point" else g["coordinates"][0]
             name = next(field(props, STOP_FIELDS), None)
             lr = next(field(props, ("linii", "lines", "routes", "trasee", "route_ref")), None)
-            sp = {"nume": name, "linii": lr, "strat": props.get("_folder"), "sursa": src}
+            sp = {"nume": name, "linii": lr, "strat": props.get("_folder") or Path(src).stem, "sursa": src}
             nr = next(field(props, ("n_routes", "nr_linii")), None)
             if nr and re.match(r"^\d+$", nr):
                 sp["n_linii"] = int(nr)
+            for key, names in AMENITIES:                     # dotările stației (export OSM: shelter, bench …)
+                v = next(field(props, names), None)
+                if v in ("yes", "no", "limited", "da", "nu"):
+                    sp[key] = {"da": "yes", "nu": "no"}.get(v, v)
+            osm = next(field(props, ("full_id", "osm_id")), None)
+            if osm and re.match(r"^n?\d+$", osm):
+                sp["osm"] = "node/" + re.sub(r"\D", "", osm)
             stops.append({"type": "Feature", "properties": sp,
                           "geometry": {"type": "Point", "coordinates": rnd(c)}})
     if not lines and not stops:
         sys.exit("Nu am găsit trasee sau stații în fișierele date.")
+    lines_at_stops(lines, stops)
     od = Path(a.out)
     od.mkdir(parents=True, exist_ok=True)
 

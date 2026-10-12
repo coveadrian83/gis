@@ -60,7 +60,8 @@
     <div class="ctl toggles">
       <label><input type="checkbox" id="showLines" checked> Traseele liniilor</label>
       <label><input type="checkbox" id="showProposed"> Extinderea propusă a rețelei de tramvai</label>
-      <label><input type="checkbox" id="showStops"> Stații de transfer și capete de linie</label>
+      <label><input type="checkbox" id="showBusStops" checked> Stațiile de autobuz (de la zoom 13)</label>
+      <label><input type="checkbox" id="showStops"> Stații de transfer și capete de linie metropolitane</label>
       <label><input type="checkbox" id="showHot" checked> Stațiile cele mai aglomerate</label>
       <label><input type="checkbox" id="showBubbles" checked> Cercurile comunelor (titluri / călătorii)</label>
       <label><input type="checkbox" id="showUat" checked> Limitele UAT (ZMI)</label>
@@ -70,6 +71,12 @@
     <p class="note" id="linesNote"></p>
     <label class="file">Previzualizează alte trasee (GeoJSON sau KML, rămân doar în browser)
       <input type="file" id="file" accept=".geojson,.json,.kml" multiple></label>
+  </details>
+
+  <details id="stopRankBox" hidden>
+    <summary>Stațiile cu cele mai multe linii</summary>
+    <div id="stopRank" class="rank"></div>
+    <p class="note">Numărul de linii de autobuz (locale și metropolitane) care trec prin stație, cu toate peroanele ei; <i class="hotdot"></i> = stație aglomerată după CTP. Apăsați pe o stație pentru a-i vedea liniile.</p>
   </details>
 
   <details id="iasiBox">

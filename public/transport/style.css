@@ -50,12 +50,12 @@ label.inline { display: inline-flex; gap: 6px; align-items: center; }
 #chart .bar { transition: opacity .15s; }
 #chart .hit { fill: transparent; cursor: pointer; }
 
-#rank .r { display: grid; grid-template-columns: 104px 1fr 58px 58px; gap: 6px; align-items: center; padding: 3px 4px; border-radius: 4px; cursor: pointer; font-size: 13px; }
-#rank .r:hover, #rank .r.sel { background: var(--surface-2); }
-#rank .r .track { height: 8px; background: transparent; }
-#rank .r .fill { height: 8px; border-radius: 0 4px 4px 0; background: var(--text-secondary); }
+#rank .r, .rank .r { display: grid; grid-template-columns: 104px 1fr 58px 58px; gap: 6px; align-items: center; padding: 3px 4px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+#rank .r:hover, #rank .r.sel, .rank .r:hover { background: var(--surface-2); }
+#rank .r .track, .rank .r .track { height: 8px; background: transparent; }
+#rank .r .fill, .rank .r .fill { height: 8px; border-radius: 0 4px 4px 0; background: var(--text-secondary); }
 #rank .r.sel .fill { background: var(--accent); }
-#rank .r .v, #rank .r .d { text-align: right; font-variant-numeric: tabular-nums; font-size: 12px; }
+#rank .r .v, #rank .r .d, .rank .r .v { text-align: right; font-variant-numeric: tabular-nums; font-size: 12px; }
 #rank .r .d { color: var(--text-muted); white-space: nowrap; }
 #rank .r.na { opacity: .45; }
 
@@ -104,7 +104,10 @@ body.light .leaflet-container { background: #f1efe9; }
 .hot::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; border: 2px solid var(--hot); animation: pulse 2s ease-out infinite; }
 @keyframes pulse { from { transform: scale(.6); opacity: 1; } to { transform: scale(1.8); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .hot::after { animation: none; } .bubble { transition: none; } }
-.z-lo .hot-label { display: none; }
+.z-lo .hot-label, .z-lo .stop-dot { display: none; }
+.hotdot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--hot); vertical-align: middle; }
+.rank .r { grid-template-columns: 1.4fr 1fr 30px 0; }
+.map-legend .sd { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid #f0efec; background: var(--surface-1); margin: 0 13px 0 6px; }
 .hot-label { color: var(--hot); font-size: 11px; font-weight: 700; white-space: nowrap; text-shadow: 0 0 3px #000, 0 0 3px #000; margin: -4px 0 0 14px; }
 .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: var(--surface-2); color: var(--text-primary); }
 .leaflet-popup-content { font-size: 13px; }
