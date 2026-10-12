@@ -209,7 +209,7 @@ class Rings:
         if not a or not b:
             return None
         out, acc = [a], 0.0
-        while out[-1] != b:
+        while out[-1] != b or len(out) == 1:                # același nod la intrare și ieșire: un tur complet
             v = self.next.get(out[-1])
             if v is None or acc > 600:
                 return None
