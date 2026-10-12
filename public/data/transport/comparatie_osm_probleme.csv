@@ -5,8 +5,8 @@ relație,relation/4492699,Bus 19: CUG 1 => Canta,traseu întrerupt: 2 goluri (ca
 relație,relation/4524008,Bus 36: Rond Dacia => Breazu,traseu întrerupt: 1 gol (capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)
 relație,relation/4524217,Bus 36: Breazu => Rond Dacia,ref=6B diferă de numărul din nume (36); comparat ca linia 36
 relație,relation/4524217,Bus 36: Breazu => Rond Dacia,traseu întrerupt: 1 gol (capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)
-relație,relation/4525523,Bus 28: Rond Dacia => Triumf,traseu întrerupt: 2 goluri (capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)
-relație,relation/4525694,Bus 28: Triumf => Rond Dacia,traseu întrerupt: 2 goluri (capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)
+relație,relation/4525523,Bus 28: Dacia => Copou,traseu întrerupt: 2 goluri (capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)
+relație,relation/4525694,Bus 28: Copou => Dacia,traseu întrerupt: 2 goluri (capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)
 relație,relation/4536462,Bus 30: Canta => Bucium,traseu întrerupt: 1 gol (capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)
 relație,relation/4536678,Bus 30B: Carrefour ERA => Bucium,traseu întrerupt: 2 goluri (capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)
 relație,relation/4536929,Bus 42: CUG 1 => Rond Copou,traseu întrerupt: 2 goluri (capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)
