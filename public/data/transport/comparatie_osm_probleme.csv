@@ -25,6 +25,8 @@ relație,relation/4538702,Bus 44: Blocuri Ciurea => Dacia,traseu întrerupt: 1 g
 relație,relation/4539326,Bus 20: Tătărași Sud => METRO,traseu întrerupt: 3 goluri (capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)
 relație,relation/4540058,Bus 20: METRO => Tătărași Sud,traseu întrerupt: 3 goluri (capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)
 relație,relation/4633529,Tram 13: Copou => Tătărași => Podu Roș => Copou,lipsește ref (numărul liniei)
+relație,relation/15259074,Bus 503: Tehnopolis => Valea Adâncă => Miroslava,network neobișnuit: AMTPI
+relație,relation/15259075,Bus 503: Miroslava => Valea Adâncă => Tehnopolis,network neobișnuit: AMTPI
 relație,relation/15259223,Bus 501: Podu Roș => Miroslava => Vorovești,traseu întrerupt: 1 gol (capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)
 relație,relation/15268962,Bus 52: Piața ACB => Pasaj Octav Băncilă => Copou,traseu întrerupt: 2 goluri (capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)
 relație,relation/15268963,Bus 52: Copou => Pasaj Octav Băncilă => Piața ACB,traseu întrerupt: 1 gol (capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)

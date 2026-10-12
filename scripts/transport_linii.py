@@ -94,14 +94,19 @@ def kml_records(path):
                     points.append(coords(c)[0])
         return lines, points
 
+    doc = {}
+
     def walk(el, folder):
         for ch in el:
             t = local(ch.tag)
             if t in ("Folder", "Document"):
                 nm = next((x.text for x in ch if local(x.tag) == "name"), None)
+                if t == "Document" and not doc:      # numele și descrierea documentului (ex. „101”, capetele traseului)
+                    doc["_doc"] = (nm or "").strip()
+                    doc["_desc"] = re.sub(r"<[^>]+>", " ", next((x.text for x in ch if local(x.tag) == "description"), "") or "").strip()
                 yield from walk(ch, (nm or folder) if t == "Folder" else folder)
             elif t == "Placemark":
-                props = {"_folder": folder}
+                props = {"_folder": folder, **doc}
                 for x in ch:
                     lt = local(x.tag)
                     if lt in ("name", "description") and x.text:
@@ -201,6 +206,7 @@ def records(paths):
         p = Path(p)
         files = sorted(x for x in p.rglob("*") if x.is_file()) if p.is_dir() else [p]
         for f in files:
+            sub = f.parent.name if p.is_dir() and f.parent != p else ""    # subdirector, ex. metropolitan_amtpi/
             ext = f.suffix.lower()
             reader = {".kml": kml_records, ".kmz": kml_records, ".shp": shp_records, ".gpkg": gpkg_records,
                       ".geojson": geojson_records}.get(ext)
@@ -209,7 +215,9 @@ def records(paths):
             n = 0
             for props, g in reader(f):
                 n += 1
-                yield f.name, props, g
+                props["_file"] = f.stem
+                props["_dir"] = sub
+                yield (f"{sub}/{f.name}" if sub else f.name), props, g
             print(f"{f.name}: {n} obiecte", file=sys.stderr)
 
 
@@ -228,7 +236,7 @@ OSM_NAME = re.compile(r"^\s*(bus|tram|trolleybus|minibus|share_taxi|autobuz|tram
 
 def line_ref(props):
     """Numărul liniei (ex. „20”, „1”, „42B”) din câmpurile cunoscute, apoi din numele directorului KML."""
-    cands = list(field(props, LINE_FIELDS)) + ([props["_folder"]] if props.get("_folder") else [])
+    cands = list(field(props, LINE_FIELDS)) + [props[k] for k in ("_doc", "_folder", "_file") if props.get(k)]
     for v in cands:
         m = re.search(r"(?:linia|linie|traseul?|tramvai(?:ul)?|autobuz(?:ul)?|microbuz|line|route|\bl)\s*[:#nr.]*\s*"
                       r"(\d{1,3}[a-z]?)\b", v, re.I) or re.match(r"\s*(\d{1,3}[a-z]?)\b", v, re.I)
@@ -307,16 +315,69 @@ class Uats:
         return round(g.length / 1000, 2), outside, out
 
 
+def apply_amtpi(lines):
+    """Statutul liniilor metropolitane după lista AMTPI (data/transport/amtpi_trasee.json, scripts/transport_amtpi.py):
+    „în proiect” → stare = propus; liniile care lipsesc din listă primesc amtpi = nelistat. Întoarce numerele în proiect."""
+    path = ROOT / "data" / "transport" / "amtpi_trasee.json"
+    if not path.exists():
+        return set()
+    amtpi = {x["linie"]: x for x in json.loads(path.read_text(encoding="utf-8"))["linii"]}
+    proposed = set()
+    for f in lines:
+        p = f["properties"]
+        if p.get("retea") != "metropolitan" or not p.get("linie"):
+            continue
+        info = amtpi.get(p["linie"])
+        if not info:
+            p["amtpi"] = "nelistat"
+            continue
+        p["amtpi"] = "în proiect" if info["in_proiect"] else "în exploatare"
+        if not p.get("nume") or p["nume"].upper() == p["linie"] or p["nume"].lower().startswith("kmz"):
+            p["nume"] = " – ".join(info["statii"])
+        p["amtpi_url"] = info["url"]
+        p["amtpi_statii"] = " – ".join(info["statii"])
+        if info["in_proiect"]:
+            p["stare"] = "propus"
+            proposed.add(p["linie"])
+    return proposed
+
+
+def split_proposed_stops(stops, proposed):
+    """La stațiile din fișierele traseelor: liniile în proiect trec în „linii_proiect”; stația deservită doar de linii
+    în proiect devine stare = propus."""
+    for st in stops:
+        p = st["properties"]
+        if not p.get("linii_traseu") or not p.get("linii"):
+            continue
+        refs = p["linii"].split(", ")
+        prop = [r for r in refs if r in proposed]
+        if prop:
+            p["linii_proiect"] = ", ".join(prop)
+            act = [r for r in refs if r not in proposed]
+            p["linii"] = ", ".join(act) or None
+            if not act:
+                p["stare"] = "propus"
+                p["linii_traseu"] = False
+
+
+def ref_key(r):
+    m = re.search(r"\d+", r)
+    return (r[:1].isalpha(), int(m.group()) if m else 999, r)
+
+
 def dedupe_stops(stops):
     """Elimină dublurile: aceeași stație repetată (același strat și nume, la sub ~2 m), ex. câte o dată pentru fiecare traseu."""
-    seen, out, dup = set(), [], 0
+    seen, out, dup = {}, [], 0
     for st in stops:
         p, c = st["properties"], st["geometry"]["coordinates"]
         key = (p.get("strat"), (p.get("nume") or "").strip().lower(), round(c[0] / 0.00003), round(c[1] / 0.00002))
-        if key in seen:
+        if key in seen:                                    # aceeași stație din alt traseu: se adună liniile
             dup += 1
+            q = seen[key]["properties"]
+            if p.get("linii") and q.get("linii_traseu"):
+                q["linii"] = ", ".join(sorted(set(q["linii"].split(", ")) | set(p["linii"].split(", ")), key=ref_key))
             continue
-        seen.add(key)
+        seen[key] = st
         out.append(st)
     if dup:
         print(f"{dup} stații duble eliminate (același nume și loc)", file=sys.stderr)
@@ -337,24 +398,32 @@ def lines_at_stops(lines, stops):
 
     def proj(g):
         return shapely.transform(shape(g), lambda x, y: tr.transform(x, y), interleaved=False)
-    numbered = [f for f in lines if f["properties"]["linie"]]
+    numbered = [f for f in lines if f["properties"]["linie"] and f["properties"].get("stare") != "propus"]
     geoms = [proj(f["geometry"]) for f in numbered]
     tree = STRtree(geoms)
     key = {"tramvai": "T", "troleibuz": "TB"}
     for st in stops:
         p = st["properties"]
-        if p.get("linii"):
+        if p.get("linii") and not p.get("linii_traseu"):
             continue
         pt = proj(st["geometry"])
         tram = p.get("mod") == "tramvai"
 
-        def near(radius, want_tram):
+        def near(radius, want_tram, local_only=False):
             found = set()
             for i in tree.query(pt.buffer(radius)):
                 lp = numbered[i]["properties"]
+                if local_only and lp.get("retea") == "metropolitan":
+                    continue
                 if (lp["tip"] == "tramvai") == want_tram and geoms[i].distance(pt) <= radius:
                     found.add(key.get(lp["tip"], "") + lp["linie"])
-            return sorted(found, key=lambda r: (r[0].isalpha(), int(re.search(r"\d+", r).group()), r))
+            return sorted(found, key=ref_key)
+        if p.get("linii_traseu"):            # stație a unui traseu (KMZ): liniile ei + liniile locale care trec pe lângă
+            own = set(p["linii"].split(", "))
+            refs = sorted(own | set(near(STOP_RADIUS_M, False, local_only=True)), key=ref_key)
+            p["linii"] = ", ".join(refs)
+            p["n_linii"] = len(refs)
+            continue
         refs = near(STOP_RADIUS_M, tram)
         p["linii"] = ", ".join(refs) or None
         p["n_linii"] = len(refs)
@@ -393,6 +462,8 @@ def main():
         if t in ("LineString", "MultiLineString"):
             ref, oref = line_ref(props), osm_name_ref(props)
             name = next(field(props, ("name", "nume", "denumire", "den", "traseu", "descriere")), None)
+            if props.get("_desc") and (not name or name.upper().startswith(str(line_ref(props) or "?"))):
+                name = props["_desc"]                    # KMZ AMTPI: descrierea documentului = capetele traseului
             if not name and src.lower().endswith((".kml", ".kmz")):     # la KML, directorul poartă numele liniei
                 name = props.get("_folder")
             if oref and ref and oref != ref:     # ex. ref=6B la „Bus 36: Breazu => Rond Dacia” – eroare în OSM
@@ -424,9 +495,16 @@ def main():
             c = g["coordinates"] if t == "Point" else g["coordinates"][0]
             name = next(field(props, STOP_FIELDS), None)
             lr = next(field(props, ("linii", "lines", "routes", "trasee", "route_ref")), None)
+            route = None
+            if not lr and src.lower().endswith((".kml", ".kmz")):   # stațiile dintr-un KML al unui traseu (ex. 101.kmz)
+                route = line_ref({k: props[k] for k in ("_doc", "_file") if props.get(k)})
+                lr = route
             railway = next(field(props, ("railway",)), "")
             mod = "tramvai" if railway == "tram_stop" or re.search(r"tramvai|tram_stop", src, re.I) else "autobuz"
-            sp = {"nume": name, "linii": lr, "mod": mod, "strat": props.get("_folder") or Path(src).stem, "sursa": src}
+            strat = props.get("_dir") or (props.get("_folder") if src.lower().endswith(".gpkg") else None) or props.get("_file") or Path(src).stem
+            sp = {"nume": name, "linii": lr, "mod": mod, "strat": strat, "sursa": src}
+            if route:
+                sp["linii_traseu"] = True                  # liniile vin din fișierul traseului, nu din apropiere
             nr = next(field(props, ("n_routes", "nr_linii")), None)
             if nr and re.match(r"^\d+$", nr):
                 sp["n_linii"] = int(nr)
@@ -442,6 +520,8 @@ def main():
     if not lines and not stops:
         sys.exit("Nu am găsit trasee sau stații în fișierele date.")
     stops = dedupe_stops(stops)
+    proposed = apply_amtpi(lines)
+    split_proposed_stops(stops, proposed)
     lines_at_stops(lines, stops)
     od = Path(a.out)
     od.mkdir(parents=True, exist_ok=True)

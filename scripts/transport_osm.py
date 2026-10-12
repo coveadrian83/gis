@@ -10,7 +10,8 @@ Din rutele descărcate se extrag și traseele tramvaiului pe linii (relațiile r
 data/transport/linii/rute_tramvai_osm.geojson, preluat de scripts/transport_linii.py (harta /transport/).
 
 Doar biblioteca standard. Rulare: python scripts/transport_osm.py  (în GitHub Actions: „Date OSM transport public”)
-          python scripts/transport_osm.py --doar-tramvai   (doar extragerea tramvaiului din rute.json existent)
+          python scripts/transport_osm.py --doar-tramvai   (doar extragerile, din rute.json existent)
+Se extrag și liniile AMTPI care nu au fișier KMZ (ex. 23 / 23B), dacă există în OSM.
 """
 import json
 import re
@@ -59,6 +60,39 @@ def fetch(query):
     raise SystemExit(f"Overpass indisponibil: {last}")
 
 
+def export_amtpi_missing():
+    """Liniile AMTPI fără fișier de traseu în data/transport/linii/metropolitan_amtpi/ (variante precum 23 / 23B, 501B,
+    503B, 701E) care există în OSM → data/transport/linii/metropolitan_amtpi_osm.geojson."""
+    amtpi = ROOT / "data" / "transport" / "amtpi_trasee.json"
+    kmz_dir = ROOT / "data" / "transport" / "linii" / "metropolitan_amtpi"
+    if not amtpi.exists():
+        return
+    have = {m.group(1).upper() for f in kmz_dir.glob("*.km*") for m in [re.match(r"(\d{1,3}[a-z]?)", f.stem, re.I)] if m}
+    want = {x["linie"]: x for x in json.loads(amtpi.read_text(encoding="utf-8"))["linii"] if x["linie"] not in have and x["linie"] != "29"}
+    d = json.loads((OUT / "rute.json").read_text(encoding="utf-8"))
+    feats = []
+    for el in d.get("elements", []):
+        t = el.get("tags", {})
+        if el.get("type") != "relation" or t.get("route") != "bus":
+            continue
+        m = re.match(r"^\s*bus\s+([0-9]{1,3}[a-z]?)\s*:", t.get("name", ""), re.I)
+        ref = (m.group(1) if m else t.get("ref", "")).replace(" ", "").upper()
+        if ref not in want:
+            continue
+        lines = [[[round(p["lon"], 6), round(p["lat"], 6)] for p in mb["geometry"]]
+                 for mb in el.get("members", []) if mb.get("type") == "way" and len(mb.get("geometry") or []) > 1]
+        if lines:
+            feats.append({"type": "Feature", "properties": {
+                "linie": ref, "tip": "autobuz", "retea": "metropolitan", "name": t.get("name"), "from": t.get("from"),
+                "to": t.get("to"), "operator": t.get("operator"), "full_id": f"r{el['id']}", "osm_type": "relation"},
+                "geometry": {"type": "MultiLineString", "coordinates": lines}})
+    dest = ROOT / "data" / "transport" / "linii" / "metropolitan_amtpi_osm.geojson"
+    dest.write_text(json.dumps({"type": "FeatureCollection", "features": feats}, ensure_ascii=False, separators=(",", ":")),
+                    encoding="utf-8")
+    found = sorted({f["properties"]["linie"] for f in feats})
+    print(f"AMTPI fără KMZ: {', '.join(sorted(want))}; găsite în OSM: {', '.join(found) or '–'} → {dest}")
+
+
 def export_trams():
     """Relațiile route=tram ale CTP din rute.json → GeoJSON cu linie, tip, rețea, de_la / pana_la și relația OSM."""
     d = json.loads((OUT / "rute.json").read_text(encoding="utf-8"))
@@ -90,6 +124,7 @@ def export_trams():
 def main():
     if "--doar-tramvai" in sys.argv:
         export_trams()
+        export_amtpi_missing()
         return
     OUT.mkdir(parents=True, exist_ok=True)
     for name, q in QUERIES.items():
@@ -100,6 +135,7 @@ def main():
         print(f"{name}: {n} elemente (OSM la {d.get('osm3s', {}).get('timestamp_osm_base')})")
         time.sleep(5)
     export_trams()
+    export_amtpi_missing()
 
 
 if __name__ == "__main__":

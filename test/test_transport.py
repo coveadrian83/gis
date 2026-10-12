@@ -71,6 +71,22 @@ def make_workbook(path):
     wb.save(path)
 
 
+class Amtpi(unittest.TestCase):
+    def test_parse(self):
+        import transport_amtpi as A
+        html = """<script>var ZONES = [ { id:"rediu", nr:7, name:"Rediu", color:"#C2185B" } ];
+  var ROUTES = [
+    // 7. Rediu
+    { z:"rediu", nr:"701", stops:["Rond Copou","Breazu"], url:"https://www.amtpi.ro/701/" },
+    { z:"rediu", nr:"23 / 23B", stops:["Podu Roș","Proselnici"], url:"https://www.amtpi.ro/23/", proj:true },
+  ];</script>"""
+        d = A.parse(html)
+        self.assertEqual([x["linie"] for x in d["linii"]], ["701", "23", "23B"])
+        self.assertTrue(d["linii"][2]["in_proiect"])
+        self.assertEqual(d["linii"][0]["url"], "https://www.amtpi.ro/701/")
+        self.assertEqual(d["linii"][0]["comuna"], "Rediu")
+
+
 class Titluri(unittest.TestCase):
     def test_workbook(self):
         with tempfile.TemporaryDirectory() as d:
@@ -129,6 +145,33 @@ class Linii(unittest.TestCase):
         self.assertEqual(L.declared_network("trasee.kml", {"_folder": "Linii metropolitane"}), "metropolitan")
         self.assertEqual(L.declared_network("x.shp", {"network": "ZMI"}), "metropolitan")
         self.assertIsNone(L.declared_network("trasee.kml", {"network": "CTP Iași"}))
+
+    @unittest.skipUnless(HAVE_GEO, "pyshp / pyproj / shapely lipsesc")
+    def test_kmz_traseu_cu_statii(self):
+        """KMZ în stilul AMTPI: numărul liniei din numele documentului, capetele din descriere, stațiile primesc linia
+        fișierului; aceeași stație din două trasee adună liniile."""
+        import zipfile
+        def kmz(path, nr, desc, line, stops):
+            pts = "".join(f"<Placemark><name>{n}</name><Point><coordinates>{x},{y},0</coordinates></Point></Placemark>" for n, x, y in stops)
+            kml = (f'<?xml version="1.0"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>{nr}</name><description>{desc}</description>'
+                   f'<Folder><name>Sens 1</name><Placemark><LineString><coordinates>{line}</coordinates></LineString></Placemark>{pts}</Folder></Document></kml>')
+            with zipfile.ZipFile(path, "w") as z:
+                z.writestr("doc.kml", kml)
+        with tempfile.TemporaryDirectory() as d:
+            sub = Path(d) / "metropolitan_amtpi"
+            sub.mkdir()
+            kmz(sub / "801.kmz", "801", "Rond Tutora – Tomesti – Goruni", "27.62,47.16 27.66,47.17 27.70,47.18",
+                [("Rond Tutora", 27.62, 47.16), ("Tomesti", 27.70, 47.18)])
+            kmz(sub / "802.kmz", "802", "Rond Tutora – Tomesti – Chicerea", "27.62,47.16 27.66,47.15",
+                [("Rond Tutora", 27.62, 47.16)])
+            lines, stops = self.run_script(d, out=d)
+            p = {f["properties"]["linie"]: f["properties"] for f in lines}
+            self.assertEqual(set(p), {"801", "802"})
+            self.assertEqual(p["801"]["retea"], "metropolitan")                  # din numele subdirectorului
+            self.assertEqual(p["801"]["nume"], "Rond Tutora – Tomesti – Goruni")
+            rond = [s["properties"] for s in stops if s["properties"]["nume"] == "Rond Tutora"]
+            self.assertEqual(len(rond), 1)
+            self.assertEqual(rond[0]["linii"], "801, 802")
 
     def test_dedupe_stops(self):
         def st(name, x, y, strat="s"):

@@ -332,7 +332,7 @@
     LINES_PER_UAT = {};
     lineFeatures.forEach(function (l) {
       var p = l._p;
-      if (p.retea !== 'metropolitan' || !p.linie) return;
+      if (p.retea !== 'metropolitan' || !p.linie || p.stare === 'propus') return;
       (p.uat || []).forEach(function (s) { var k = s + '|' + p.linie; if (!seen[k]) { seen[k] = 1; LINES_PER_UAT[s] = (LINES_PER_UAT[s] || 0) + 1; } });
     });
   }
@@ -343,12 +343,12 @@
   }
   function servedUats(p) {
     var out = {};
-    if (p.retea !== 'metropolitan' || !p.linie) return out;
-    lineFeatures.forEach(function (l) { if (l._p.linie === p.linie && l._p.retea === 'metropolitan') (l._p.uat || []).forEach(function (s) { out[s] = 1; }); });
+    if (p.retea !== 'metropolitan' || !p.linie || p.stare === 'propus') return out;
+    lineFeatures.forEach(function (l) { if (l._p.linie === p.linie && l._p.retea === 'metropolitan' && l._p.stare !== 'propus') (l._p.uat || []).forEach(function (s) { out[s] = 1; }); });
     return out;
   }
   function servedVal(p) {
-    if (p.retea !== 'metropolitan' || !p.linie || !T) return null;
+    if (p.retea !== 'metropolitan' || !p.linie || p.stare === 'propus' || !T) return null;
     var t = null, us = p._served || {};
     Object.keys(us).forEach(function (s) { var u = T.uat[s]; var v = u ? val(u, S.mi) : null; if (v != null) t = (t || 0) + v / (LINES_PER_UAT[s] || 1); });
     return t;
@@ -441,7 +441,7 @@
     var sv = servedVal(p);
     box.hidden = false;
     box.innerHTML = '<h3><span class="badge" style="background:' + lineColor(p) + '">' + esc(p.linie || '?') + '</span> ' +
-      esc(p.tip || '') + ' ' + esc(p.retea || '') + '</h3>' +
+      esc(p.tip || '') + ' ' + esc(p.retea || '') + (p.stare === 'propus' ? ' <span class="note">· în proiect</span>' : '') + '</h3>' +
       (isTop(p) ? '<p class="topnote">Printre cele mai utilizate linii ' + (p.tip === 'tramvai' ? 'de tramvai' : 'de autobuz') + ' (răspunsul CTP pentru PMI)</p>' : '') +
       '<table>' + fs.map(function (x, i) {
         return '<tr><td>' + esc(x.de_la && x.pana_la ? x.de_la + ' → ' + x.pana_la : x.nume && x.nume !== x.linie ? x.nume : 'traseu ' + (i + 1)) + '</td><td>' + (x.km ? x.km.toLocaleString('ro-RO') + ' km' : '') + '</td><td>' +
@@ -450,6 +450,9 @@
       (Object.keys(uats).length ? '<p class="note">Comune ZMI străbătute: ' + esc(Object.keys(uats).join(', ')) + '</p>' : '') +
       (sv != null ? '<p class="note">Cota liniei din ' + (S.metric ? 'călătoriile estimate' : 'titlurile vândute') + ' ale comunelor deservite, ' + esc(label(S.mi)) + ': <b>' + fmt(sv) +
         '</b> (volumul comunei împărțit egal între cele ' + Object.keys(p._served || {}).map(function (s) { return LINES_PER_UAT[s]; }).join(' / ') + ' linii metropolitane care o deservesc – indicativ).</p>' : '') +
+      (p.amtpi ? '<p class="note">AMTPI: <b>' + esc(p.amtpi) + '</b>' + (p.amtpi_statii ? ' · ' + esc(p.amtpi_statii) : '') +
+        (p.amtpi_url ? ' · <a href="' + esc(p.amtpi_url) + '" target="_blank" rel="noopener">pagina traseului</a>' : '') +
+        (p.amtpi === 'nelistat' ? ' – linia nu apare în lista oficială AMTPI (posibil desființată)' : '') + '</p>' : '') +
       (p.operator ? '<p class="note">Operator: ' + esc(p.operator) + '</p>' : '');
   }
   function renderLineChips() {
@@ -467,13 +470,14 @@
       var a = (groups[g[0]] || []).sort(function (x, y) { return num(x) - num(y) || String(x.linie).localeCompare(y.linie); });
       if (!a.length) return;
       html += '<div class="grp">' + g[1] + ' (' + a.length + ')</div>' + a.map(function (p) {
-        return '<button type="button" class="' + g[2] + (isTop(p) ? ' top' : '') + '" data-k="' + esc(lineKey(p)) + '" title="' + esc(p.de_la && p.pana_la ? p.de_la + ' – ' + p.pana_la : p.nume || '') + '">' + esc(p.linie) + '</button>';
+        return '<button type="button" class="' + g[2] + (isTop(p) ? ' top' : '') + (p.stare === 'propus' ? ' proj' : '') + '" data-k="' + esc(lineKey(p)) + '" title="' + esc((p.de_la && p.pana_la ? p.de_la + ' – ' + p.pana_la : p.nume || '') + (p.stare === 'propus' ? ' (în proiect)' : '')) + '">' + esc(p.linie) + '</button>';
       }).join('');
     });
     $('lineChips').innerHTML = html;
     Array.prototype.forEach.call($('lineChips').querySelectorAll('button[data-k]'), function (b) {
       b.addEventListener('click', function () {
         var k = b.getAttribute('data-k');
+        if (/\|propus$/.test(k) && !map.hasLayer(proposedLayer)) { $('showProposed').checked = true; proposedLayer.addTo(map); }
         setLine(S.line === k ? null : k);
         if (S.line) {
           var bb = L.latLngBounds([]);
@@ -528,7 +532,8 @@
     }
     return '<b>' + esc(p.nume || 'stație fără nume') + '</b><br>' + esc(k) + (p.tramvai === 'yes' ? ' (și tramvai)' : '') +
       (refs.length ? '<br>' + refs.length + (refs.length === 1 ? ' linie' : ' linii') + ': ' + esc(refs.join(', ')) : '<br><span class="note">nicio linie CTP de autobuz la ≤ 30 m</span>') +
-      (p.linii_calculate ? '<br><span class="note">liniile: traseele care trec la ≤ 30 m</span>' : '') +
+      (p.linii_proiect ? '<br>linii în proiect: ' + esc(p.linii_proiect) : '') +
+      (p.linii_calculate ? '<br><span class="note">liniile: traseele care trec la ≤ 30 m</span>' : p.linii_traseu ? '<br><span class="note">liniile: fișierele traseelor AMTPI + liniile locale la ≤ 30 m</span>' : '') +
       (d.length ? '<br><span class="note">' + esc(d.join(' · ')) + '</span>' : '') +
       (p.osm ? '<br><span class="note">apăsați pentru liniile stației</span>' : '');
   }
@@ -550,8 +555,11 @@
           color: col, fillColor: transfer ? '#1a1a19' : col, fillOpacity: transfer ? 0.85 : 0.9 }).addTo(stopLayer);
       } else {
         var n = p.n_linii != null ? p.n_linii : stopRefs(p).length;
-        m = L.circleMarker([c[1], c[0]], { pane: 'lines', className: 'stop-dot', radius: n ? 2 + 1.5 * Math.sqrt(n) : 2, weight: 1,
-          color: !n ? '#8f8e86' : metroStop ? METRO : '#f0efec', fillColor: '#1a1a19', fillOpacity: n ? 0.9 : 0.4, opacity: n ? 0.95 : 0.5 }).addTo(busStopLayer);
+        var prop = p.stare === 'propus';
+        m = L.circleMarker([c[1], c[0]], { pane: 'lines', className: 'stop-dot', radius: n ? 2 + 1.5 * Math.sqrt(n) : 2.5, weight: 1, dashArray: prop ? '2 2' : null,
+          color: prop ? METRO : !n ? '#8f8e86' : metroStop ? METRO : '#f0efec', fillColor: '#1a1a19', fillOpacity: n || prop ? 0.9 : 0.4, opacity: n || prop ? 0.95 : 0.5 })
+          .addTo(prop ? proposedLayer : busStopLayer);
+        if (prop) { m._stopP = p; m.on('mouseover', function (e) { showTip(e.originalEvent, tipStop(p, 'Stație a unei linii în proiect')); }); m.on('mousemove', function (e) { moveTip(e.originalEvent); }); m.on('mouseout', hideTip); return; }
         busStops.push(p); m._stopP = p;
       }
       m.on('mouseover', function (e) { showTip(e.originalEvent, tipStop(p, k)); });

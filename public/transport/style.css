@@ -66,6 +66,7 @@ details summary { cursor: pointer; font-size: 14px; font-weight: 700; margin-bot
 .chips button.tram { border-left: 3px solid var(--tram); }
 .chips button.bus { border-left: 3px solid var(--bus); }
 .chips button.metro { border-left: 3px solid var(--metro); }
+.chips button.proj { border-style: dashed; opacity: .75; }
 .chips button.top { background: #3a3424; border-color: var(--accent); }
 .chips button.on { background: var(--text-primary); color: var(--surface-1); }
 .chips .grp { width: 100%; font-size: 11px; color: var(--text-muted); margin-top: 4px; }

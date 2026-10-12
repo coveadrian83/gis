@@ -88,6 +88,15 @@
       ['osm', 'Relații OSM', function (r) { return (r.osm || '').split(' ').filter(Boolean).map(osmLink).join('<br>') + (r.nume_osm ? '<br><span class="note">' + esc(r.nume_osm) + '</span>' : ''); }]
     ], 'stare', LINE_BADGE);
 
+    if (C.amtpi && C.amtpi.length) {
+      table($('amtpi'), $('amtpiFilter'), C.amtpi, [
+        ['linie', 'Linia', function (r) { return '<span class="linechip" style="background:' + cssv('--metro') + (r.statut_amtpi === 'în proiect' ? ';opacity:.6' : '') + '">' + esc(r.linie) + '</span>'; }],
+        ['comuna', 'Comuna'], ['statut_amtpi', 'Statut AMTPI'], ['statii_amtpi', 'Stații principale (AMTPI)'],
+        ['in_proiect_date', 'În datele proiectului'], ['in_osm', 'În OSM'], ['observatii', 'Observații'],
+        ['url', 'Pagina', function (r) { return r.url ? '<a href="' + esc(r.url) + '" target="_blank" rel="noopener">AMTPI</a>' : ''; }]
+      ], 'statut_amtpi', { 'în exploatare': 's-ok', 'în proiect': 's-minor', 'nelistat': 's-major' });
+    }
+
     table($('issues'), null, C.probleme, [
       ['obiect', 'Obiect'], ['nume', 'Nume'], ['problema', 'Problema'], ['osm', 'În OSM', function (r) { return osmLink(r.osm); }]
     ], 'obiect', null);

@@ -10,6 +10,7 @@ on:
     paths:
       - scripts/transport_osm.py
       - scripts/transport_compara_osm.py
+      - scripts/transport_amtpi.py
       - .github/workflows/transport-osm.yml
 
 permissions:
@@ -29,7 +30,9 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install pyshp pyproj shapely
-      - name: Descarcă din Overpass (și extrage traseele tramvaiului)
+      - name: Lista oficială a traseelor AMTPI
+        run: python scripts/transport_amtpi.py || echo "amtpi.ro indisponibil – se păstrează lista existentă"
+      - name: Descarcă din Overpass (și extrage traseele tramvaiului și liniile AMTPI fără KMZ)
         run: python scripts/transport_osm.py
       - name: Regenerează traseele hărții și comparația cu OSM
         run: |
@@ -39,7 +42,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898699+github-actions[bot]@users.noreply.github.com"
-          git add data/transport/osm data/transport/linii public/data/transport
+          git add data/transport/osm data/transport/linii data/transport/amtpi_trasee.json public/data/transport
           if git diff --cached --quiet; then echo "Datele nu s-au schimbat."; exit 0; fi
           git commit -m "Transport public: date OSM descărcate"
           git pull --rebase origin "${GITHUB_REF_NAME}"

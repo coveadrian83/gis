@@ -201,22 +201,20 @@ CTP și titlurile de călătorie vândute în comunele ZMI deservite de CTP, ian
   CTP raportează vânzările pe comună, nu pe linie). Extinderea propusă a tramvaiului apare punctat (opțional). Fundal la alegere: întunecat sau
   OpenStreetMap standard. Apăsând pe o linie se deschide fișa ei: sensurile, lungimea, comunele străbătute, relația OSM.
 - **Trasee actuale** (`data/transport/linii/`): `rute_autobuz_local.*` – cele 18 linii de autobuz locale CTP (35 de
-  relații OSM, ambele sensuri, Stereo 70); `trasee_transport_public_metropolitan.gpkg` – cele 28 de linii metropolitane
-  (101–104 Aroneanu, 201–205 Bârnova, 301 Ciurea, 401–402 Holboca, 501–508 Miroslava, 601–603 Popricani, 701–702 Rediu,
-  801–802 Tomești, 901–902 Valea Lupului; numărul din câmpul `name` / `folders` / `layer`, ex. `traseu_TP_101`);
-  `retea_tramvai.geojson` – rețeaua de tramvai existentă (34,5 km de cale) și extinderea propusă (13 km), extrase din
-  `Infrastructura_Mobilitate.gpkg` (straturile `PublicT_Tram_Linii_Existente` / `_Extindere`, fără împărțirea pe linii);
-  `statii_autobuz_local.*` – 273 de stații de autobuz (export OSM, Stereo 70; liniile fiecărei stații se calculează
-  din traseele care trec la ≤ 30 m, iar dotările – adăpost, bancă, iluminat, accesibilitate – vin din OSM);
-  `statii_autobuz_metropolitan.*` – stațiile liniilor metropolitane (646 de puncte, 478 după eliminarea dublurilor –
-  stația repetată pentru fiecare traseu; liniile se calculează la fel, din traseele aflate la ≤ 30 m);
-  `statii_tramvai.*` – 111 stații de tramvai (extrase din OSM pentru Masterplanul metropolitan Iași, `railway=tram_stop`); pentru fiecare se calculează legăturile cu
-  autobuzul (liniile de autobuz la ≤ 100 m), iar liniile de tramvai vor apărea când vor exista traseele pe linii;
-  `statii_derivate.gpkg` – stațiile aglomerate CTP, capetele de linie locale și metropolitane și stațiile de transfer
-  metropolitane (cu numărul de linii). Pe hartă: stațiile de autobuz locale și metropolitane, cu mărimea după numărul de
-  linii, clasamentul stațiilor cu cele mai multe linii (peroanele cu același nume la ≤ 600 m sau cu nume compatibile
-  – „Tg. Cucu” / „Târgu Cucu”, „C.U.G. I” / „CUG 1” – la ≤ 250 m se unesc) și, la clic pe o stație, liniile ei.
-  Mai lipsesc traseele pe linii ale tramvaiului (pentru liniile de tramvai ale stațiilor și pentru liniile 1 și 9). Rețeaua se
+  relații OSM, ambele sensuri, Stereo 70); `metropolitan_amtpi/*.kmz` – cele 28 de trasee metropolitane AMTPI (KMZ din
+  aprilie 2025, cu stațiile fiecărui traseu: numărul liniei din numele documentului, capetele din descriere);
+  `metropolitan_amtpi_osm.geojson` – liniile AMTPI fără KMZ preluate din OSM (23); `rute_tramvai_osm.geojson` –
+  tramvaiul pe linii (1, 3, 5, 6, 7, 8, 9, 11, 13, din OSM); `retea_tramvai.geojson` – rețeaua de tramvai existentă
+  (34,5 km de cale) și extinderea propusă (13 km), din `Infrastructura_Mobilitate.gpkg`; `statii_autobuz_local.*` –
+  273 de stații de autobuz (OSM); `statii_tramvai.*` – 111 stații de tramvai (extrase din OSM pentru Masterplanul
+  metropolitan Iași); `statii_derivate.gpkg` – stațiile aglomerate CTP, capetele de linie și stațiile de transfer.
+  Versiunile anterioare ale rețelei metropolitane (`trasee_transport_public_metropolitan.gpkg`,
+  `statii_TP_ZMI_analiza_2D`) sunt păstrate în `data/transport/arhiva/` și nu mai sunt folosite.
+- **Lista oficială AMTPI** (`python scripts/transport_amtpi.py` → `data/transport/amtpi_trasee.json`, din
+  https://www.amtpi.ro/trasee-2/): liniile „în proiect” (402, 504, 506, 507, 508) apar pe hartă ca propuneri, punctat,
+  împreună cu stațiile deservite doar de ele; fișa liniei arată statutul AMTPI și legătura la pagina traseului; liniile
+  din date absente din listă (205) sunt marcate „nelistat”. Liniile stațiilor metropolitane = traseele AMTPI din care
+  fac parte + liniile locale care trec la ≤ 30 m. Rețeaua se
   citește din numele fișierului („…_local”, „…_metropolitan”) sau din câmpul `network`; altfel traseele cu peste 25 %
   din lungime în afara municipiului sunt considerate metropolitane. La exporturile OSM, numărul din numele relației
   („Bus 36: Breazu => Rond Dacia”) are prioritate față de un `ref` care îl contrazice (ex. `6B`).

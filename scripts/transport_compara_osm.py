@@ -75,7 +75,7 @@ def same_name(a, b):
 
 def is_ctp(tags):
     t = norm(" ".join(tags.get(k, "") for k in ("network", "operator", "network:short")))
-    return "ctp" in t or "transport public iasi" in t or tags.get("network:wikidata") == "Q7275888"
+    return "ctp" in t or "amtpi" in t or "transport public iasi" in t or tags.get("network:wikidata") == "Q7275888"
 
 
 def load(path):
@@ -282,6 +282,47 @@ def compare_stops(ostops, feats, issues):
     return rows
 
 
+def compare_amtpi(lines, routes):
+    """Lista oficială AMTPI față de datele proiectului și OSM: linie, comună, statut, prezență, observații."""
+    path = ROOT / "data" / "transport" / "amtpi_trasee.json"
+    if not path.exists():
+        return []
+    amtpi = json.loads(path.read_text(encoding="utf-8"))["linii"]
+    ours = {}
+    for f in load(PUB / "linii.geojson")["features"]:
+        p = f["properties"]
+        if p.get("linie") and p.get("tip") == "autobuz":
+            ours.setdefault(p["linie"].upper(), p)
+    osm = {r["ref"] for r in routes if r["mode"] == "autobuz" and r["ref"]}
+    by_line = {r["linie"]: r for r in lines}
+    rows = []
+    for a in amtpi:
+        o = ours.get(a["linie"])
+        src = (o or {}).get("sursa") or ""
+        obs = []
+        if a["in_proiect"]:
+            obs.append("în proiect – pe hartă ca propunere" if o else "în proiect")
+        if not o:
+            obs.append("lipsește din datele proiectului" + (" (există în OSM)" if a["linie"] in osm else ""))
+        elif "osm" in src.lower():
+            obs.append("preluată din OSM (fără fișier KMZ)")
+        st = by_line.get(a["linie"], {}).get("stare")
+        if st and st not in ("concordant",) and o and a["linie"] in osm:
+            obs.append(f"față de OSM: {st}")
+        rows.append({"linie": a["linie"], "comuna": a["comuna"], "statii_amtpi": " – ".join(a["statii"]),
+                     "statut_amtpi": "în proiect" if a["in_proiect"] else "în exploatare",
+                     "in_proiect_date": "da" if o else "nu", "in_osm": "da" if a["linie"] in osm else "nu",
+                     "observatii": "; ".join(obs), "url": a["url"]})
+    listed = {a["linie"] for a in amtpi}
+    for ref, p in sorted(ours.items()):
+        if p.get("retea") == "metropolitan" and ref not in listed:
+            rows.append({"linie": ref, "comuna": ", ".join(p.get("uat_nume") or []), "statii_amtpi": "",
+                         "statut_amtpi": "nelistat", "in_proiect_date": "da", "in_osm": "da" if ref in osm else "nu",
+                         "observatii": "în datele proiectului, dar nu în lista AMTPI (posibil desființată): " + (p.get("nume") or ""),
+                         "url": ""})
+    return rows
+
+
 def write_csv(path, rows):
     if not rows:
         return
@@ -308,6 +349,7 @@ def main():
     feats, issues = [], []
     lines = compare_lines(routes, our_lines(), feats, issues)
     stops = compare_stops(osm_stops(routes), feats, issues)
+    amtpi = compare_amtpi(lines, routes)
     osm_time = load(OSM / "rute.json").get("osm3s", {}).get("timestamp_osm_base")
     others = sorted({(MODE.get(r["tags"].get("route"), "autobuz"), r["ref"], r["tags"].get("network") or r["tags"].get("operator") or "")
                      for r in routes if not r["ctp"]}, key=lambda x: (x[0], x[1]))
@@ -316,18 +358,20 @@ def main():
         "linii": {"total": len(lines), **count(lines, "stare")},
         "statii": {m: count([s for s in stops if s["mod"] == m], "stare") for m in ("autobuz", "tramvai")},
         "probleme_osm": len(issues),
+        "amtpi": count(amtpi, "statut_amtpi") if amtpi else {},
         "rute_osm_ctp": sum(1 for r in routes if r["ctp"]),
         "rute_osm_alti_operatori": [{"tip": a, "linie": b, "retea": c} for a, b, c in others],
     }
     PUB.mkdir(parents=True, exist_ok=True)
     (PUB / "comparatie_osm.json").write_text(json.dumps({"sumar": summary, "linii": lines, "probleme": issues,
-                                                          "statii": [s for s in stops if s["stare"] != "concordant"]},
+                                                          "statii": [s for s in stops if s["stare"] != "concordant"], "amtpi": amtpi},
                                                          ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     (PUB / "comparatie_osm.geojson").write_text(json.dumps({"type": "FeatureCollection", "features": feats},
                                                             ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     write_csv(OUT_CSV / "comparatie_osm_linii.csv", lines)
     write_csv(OUT_CSV / "comparatie_osm_statii.csv", stops)
     write_csv(OUT_CSV / "comparatie_osm_probleme.csv", issues)
+    write_csv(OUT_CSV / "comparatie_amtpi.csv", amtpi)
     print(json.dumps(summary, ensure_ascii=False, indent=1))
 
 
