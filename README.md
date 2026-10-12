@@ -192,8 +192,8 @@ CTP și titlurile de călătorie vândute în comunele ZMI deservite de CTP, ian
 - **Trasee și stații**: liniile de tramvai și autobuz, cu liniile cele mai utilizate (20, 36, 30, 46; tramvai 1 și 9)
   îngroșate și stațiile cele mai aglomerate (Târgu Cucu, Piața Unirii, Podu Roș, Gara, Țesătura, Palatul Culturii,
   Piața Independenței, Tudor Vladimirescu) marcate – după datele CTP pentru PMI (Masterplan). Pozițiile stațiilor
-  aglomerate (`public/data/transport/statii_aglomerate.json`) sunt aproximative și se înlocuiesc automat cu cele din
-  stratul de stații când acesta conține o stație cu același nume. Orice fișier GeoJSON / KML se poate
+  aglomerate (`public/data/transport/statii_aglomerate.json`) sunt nodurile de transfer (ex. Târgu Cucu – rondul de la
+  vest de Parcul Woodrow Wilson; Țesătura – intersecția Calea Chișinăului – Bd. Tutora) și se folosesc ca atare. Orice fișier GeoJSON / KML se poate
   **previzualiza** direct din pagină, fără a fi încărcat pe server.
 - **Simbolizare**: tramvai (roșu), autobuz local (violet), autobuz metropolitan (magenta); liniile cele mai utilizate
   după CTP au un halou galben, iar grosimea liniilor metropolitane urmează titlurile / călătoriile din comunele pe care
@@ -213,7 +213,8 @@ CTP și titlurile de călătorie vândute în comunele ZMI deservite de CTP, ian
 - **Orarul GTFS** (`data/transport/gtfs/IASI_GTFS.zip`, CTP Iași publicat de Tranzy – https://tranzy.ai/opendata/;
   `python scripts/transport_gtfs.py`): `public/data/transport/gtfs_servicii.json` – pe linie, cursele pe zi lucrătoare /
   de weekend, prima și ultima plecare, intervalul mediu la vârf (7–9); pe stație, liniile exacte din orar și plecările
-  pe zi; `data/transport/linii/rute_gtfs.geojson` – formele traseelor. **Orarul GTFS (datele CTP) este sursa
+  pe zi; `data/transport/linii/rute_gtfs.geojson` – formele traseelor (formele tramvaielor sunt aliniate pe șinele din
+  OSM – `data/transport/osm/sine.json` și relațiile de tramvai –, fără abaterile și „cârligele” până la stații din GTFS). **Orarul GTFS (datele CTP) este sursa
   principală** a traseelor și a stațiilor: înlocuiește traseele aceleiași linii din AMTPI / OSM (52 de linii); sursele
   alternative rămân doar pentru liniile fără orar (201, 204, 602, 603 – KMZ AMTPI, cu stațiile lor) și pentru liniile în
   proiect. Pe hartă: grosimea liniilor după curse pe zi (zi lucrătoare / weekend),
