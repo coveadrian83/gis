@@ -1,0 +1,39 @@
+# Descarcă din OpenStreetMap (Overpass) liniile și stațiile de transport public din Iași și ZMI
+# (scripts/transport_osm.py) în data/transport/osm/, pentru comparația cu traseele CTP din data/transport/linii/.
+# Rulează singur când se modifică scriptul sau acest fișier; manual: Actions → „Date OSM transport public” → Run workflow.
+name: Date OSM transport public
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - scripts/transport_osm.py
+      - .github/workflows/transport-osm.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: transport-osm-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  osm:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Descarcă din Overpass
+        run: python scripts/transport_osm.py
+      - name: Salvează datele în branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898699+github-actions[bot]@users.noreply.github.com"
+          git add data/transport/osm
+          if git diff --cached --quiet; then echo "Datele nu s-au schimbat."; exit 0; fi
+          git commit -m "Transport public: date OSM descărcate"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
