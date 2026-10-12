@@ -1,5 +1,5 @@
 {
-  "_descriere": "Corecturi manuale ale statutului liniilor, aplicate de scripts/transport_linii.py după lista AMTPI. stare = propus: linia apare pe hartă ca propunere (punctat, stratul „Proiecte”), stațiile deservite doar de ea la fel. gtfs_ocoluri: forme GTFS (shape_id) cu un ocol dus-întors până la o stație, aplicate de scripts/transport_gtfs.py: ocolul se scoate din traseu și apare separat, punctat, cu stare = „de verificat”.",
+  "_descriere": "Corecturi manuale ale statutului liniilor, aplicate de scripts/transport_linii.py după lista AMTPI. stare = propus: linia apare pe hartă ca propunere (punctat, stratul „Proiecte”), stațiile deservite doar de ea la fel. gtfs_ocoluri: forme GTFS (shape_id) cu un ocol dus-întors până la o stație, aplicate de scripts/transport_gtfs.py: ocolul se scoate din traseu și apare separat, punctat, cu stare = „de verificat”. intoarceri: cum se întoarce la capăt un autobuz (după CTP / observații din teren), aplicate de scripts/transport_gtfs.py sensului care se termină la „capat”: prin = bucla_tramvai (bucla de șine de la capăt), giratoriu (sensul giratoriu din OSM, un tur până la plecare) sau legatura (direct până la începutul sensului următor).",
   "linii": {
     "205": {
       "stare": "propus",
@@ -14,5 +14,37 @@
       "linie": "503B",
       "statie": "Primaria Miroslava"
     }
-  }
+  },
+  "intoarceri": [
+    {
+      "linie": "44",
+      "capat": "Spital Elytis",
+      "prin": "bucla_tramvai",
+      "nota": "întoarce în rondul Spital Elytis"
+    },
+    {
+      "linie": "28",
+      "capat": "Dacia",
+      "prin": "bucla_tramvai",
+      "nota": "întoarce în rondul Dacia"
+    },
+    {
+      "linie": "47",
+      "capat": "Dacia",
+      "prin": "legatura",
+      "nota": "vine pe str. Tabacului și continuă pe Bd. Dacia"
+    },
+    {
+      "linie": "701",
+      "capat": "Copou",
+      "prin": "giratoriu",
+      "nota": "întoarce în rondul Agronomie"
+    },
+    {
+      "linie": "702",
+      "capat": "Copou",
+      "prin": "giratoriu",
+      "nota": "întoarce în rondul Agronomie"
+    }
+  ]
 }
