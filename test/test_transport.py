@@ -109,7 +109,7 @@ class Linii(unittest.TestCase):
     def test_refs_and_modes(self):
         self.assertEqual(L.line_ref({"name": "Traseul 20"}), "20")
         self.assertEqual(L.line_ref({"Name": "1 - Copou – Tg. Cucu"}), "1")
-        self.assertEqual(L.line_ref({"nume": "L42b"}), "42b")
+        self.assertEqual(L.line_ref({"nume": "L42b"}), "42B")
         self.assertEqual(L.line_ref({"name": "dus", "_folder": "Linia 36"}), "36")
         self.assertIsNone(L.line_ref({"name": "Copou"}))
         self.assertEqual(L.line_mode({"tip": "Tramvai"}, "20", set()), "tramvai")
@@ -117,6 +117,13 @@ class Linii(unittest.TestCase):
         self.assertEqual(L.line_mode({}, "9", {"1", "3"}), "autobuz")
         self.assertEqual(L.line_mode({}, "46", set()), "autobuz")
         self.assertEqual(L.line_mode({"route_type": "0"}, "46", set()), "tramvai")
+        self.assertEqual(L.line_mode({"route": "bus", "ref": "1"}, "1", set()), "autobuz")
+        self.assertEqual(L.osm_name_ref({"name": "Bus 36: Breazu => Rond Dacia", "ref": "6B"}), "36")
+        self.assertIsNone(L.osm_name_ref({"name": "Copou – Dacia"}))
+        self.assertEqual(L.declared_network("rute_autobuz_local.shp", {}), "local")
+        self.assertEqual(L.declared_network("trasee.kml", {"_folder": "Linii metropolitane"}), "metropolitan")
+        self.assertEqual(L.declared_network("x.shp", {"network": "ZMI"}), "metropolitan")
+        self.assertIsNone(L.declared_network("trasee.kml", {"network": "CTP Iași"}))
 
     def run_script(self, *inputs, out):
         r = subprocess.run([sys.executable, str(ROOT / "scripts" / "transport_linii.py"), *map(str, inputs), "--out", out],
@@ -134,7 +141,9 @@ class Linii(unittest.TestCase):
             lines, stops = self.run_script(d, out=d)
             p = [f["properties"] for f in lines]
             self.assertEqual([(x["linie"], x["tip"]) for x in p], [("9", "tramvai"), ("20", "autobuz")])
-            self.assertEqual(lines[1]["geometry"]["type"], "MultiLineString")
+            self.assertEqual({x["retea"] for x in p}, {"local"})          # în întregime în municipiul Iași
+            self.assertGreater(p[0]["km"], 1)
+            self.assertEqual(lines[1]["geometry"]["type"], "LineString")      # bucățile unite (linemerge)
             self.assertEqual(stops[0]["properties"]["nume"], "Piata Unirii")
 
     @unittest.skipUnless(HAVE_GEO, "pyshp / pyproj / shapely lipsesc")

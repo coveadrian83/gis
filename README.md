@@ -195,6 +195,15 @@ CTP și titlurile de călătorie vândute în comunele ZMI deservite de CTP, ian
   aglomerate (`public/data/transport/statii_aglomerate.json`) sunt aproximative și se înlocuiesc automat cu cele din
   stratul de stații când acesta conține o stație cu același nume. Orice fișier GeoJSON / KML se poate
   **previzualiza** direct din pagină, fără a fi încărcat pe server.
+- **Simbolizare**: tramvai (roșu), autobuz local (violet), autobuz metropolitan (magenta); liniile cele mai utilizate
+  după CTP au un halou galben, iar grosimea liniilor metropolitane urmează titlurile / călătoriile din comunele pe care
+  le străbat (indicativ – CTP raportează vânzările pe comună, nu pe linie). Fundal la alegere: întunecat sau
+  OpenStreetMap standard. Apăsând pe o linie se deschide fișa ei: sensurile, lungimea, comunele străbătute, relația OSM.
+- **Trasee actuale**: `data/transport/linii/rute_autobuz_local.*` – cele 18 linii de autobuz locale CTP (35 de relații
+  OSM, ambele sensuri; export OSM în Stereo 70). Urmează tramvaiele, liniile metropolitane și stațiile. Rețeaua se
+  citește din numele fișierului („…_local”, „…_metropolitan”) sau din câmpul `network`; altfel traseele cu peste 25 %
+  din lungime în afara municipiului sunt considerate metropolitane. La exporturile OSM, numărul din numele relației
+  („Bus 36: Breazu => Rond Dacia”) are prioritate față de un `ref` care îl contrazice (ex. `6B`).
 - **Trasee – încărcare**: fișierele KML / KMZ / GeoPackage / Shapefile se încarcă în GitHub în `data/transport/linii/`
   (**Add file → Upload files**); acțiunea **Trasee transport public** le convertește automat în
   `public/data/transport/linii.geojson` și `statii.geojson`. Local: `pip install pyshp pyproj shapely`, apoi

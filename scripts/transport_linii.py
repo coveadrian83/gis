@@ -12,8 +12,15 @@ Numărul liniei se caută în câmpurile linie / line / ref / traseu / route / n
 se caută în câmpurile tip / mod / mode / vehicul / route_type și în nume; dacă lipsește, liniile 1–15 sunt
 considerate tramvai (numerotarea CTP Iași), restul autobuz – se poate corecta cu --tramvai 1,3,6,7,8,9,11,13.
 
-Ieșire (WGS84, coordonate cu 5 zecimale, trasee simplificate la ~2 m):
-  public/data/transport/linii.geojson   – {linie, tip, nume, sursa} pentru fiecare traseu
+Rețeaua (local / metropolitan) se citește din numele fișierului sau al directorului („rute_autobuz_local”,
+„trasee_metropolitane.kml”) ori din câmpul network / retea; altfel, traseele cu peste 25 % din lungime în afara
+municipiului Iași sunt considerate metropolitane. Pentru fiecare traseu se calculează lungimea și comunele ZMI
+străbătute (≥ 300 m), folosite de hartă pentru a lega traseele metropolitane de titlurile vândute în comune.
+La exporturile din OpenStreetMap, numărul din numele relației („Bus 36: Breazu => Rond Dacia”) are prioritate
+față de un câmp ref care îl contrazice.
+
+Ieșire (WGS84, coordonate cu 5 zecimale, căile unite și simplificate la ~2 m):
+  public/data/transport/linii.geojson   – {linie, tip, retea, nume, de_la, pana_la, km, uat, osm, sursa} pe traseu
   public/data/transport/statii.geojson  – {nume, linii, sursa} pentru fiecare stație (dacă există puncte)
 
 Necesită: pip install pyshp pyproj shapely  (KML/KMZ se citesc doar cu biblioteca standard)
@@ -201,15 +208,24 @@ def field(props, names):
             yield str(v)
 
 
+OSM_NAME = re.compile(r"^\s*(bus|tram|trolleybus|minibus|share_taxi|autobuz|tramvai|troleibuz|microbuz)\s+([0-9]{1,3}[a-z]?)\s*:", re.I)
+
+
 def line_ref(props):
-    """Numărul liniei (ex. „20”, „1”, „42b”) din câmpurile cunoscute, apoi din numele directorului KML."""
+    """Numărul liniei (ex. „20”, „1”, „42B”) din câmpurile cunoscute, apoi din numele directorului KML."""
     cands = list(field(props, LINE_FIELDS)) + ([props["_folder"]] if props.get("_folder") else [])
     for v in cands:
         m = re.search(r"(?:linia|linie|traseul?|tramvai(?:ul)?|autobuz(?:ul)?|microbuz|line|route|\bl)\s*[:#nr.]*\s*"
                       r"(\d{1,3}[a-z]?)\b", v, re.I) or re.match(r"\s*(\d{1,3}[a-z]?)\b", v, re.I)
         if m:
-            return m.group(1).lower()
+            return m.group(1).upper()
     return None
+
+
+def osm_name_ref(props):
+    """Numărul din numele unei relații OSM („Bus 36: Breazu => Rond Dacia” → „36”) sau None."""
+    m = OSM_NAME.match(next(field(props, ("name", "nume")), "") or "")
+    return m.group(2).upper() if m else None
 
 
 def line_mode(props, ref, trams):
@@ -226,15 +242,61 @@ def line_mode(props, ref, trams):
     if ref:
         n = int(re.match(r"\d+", ref).group())
         if trams:
-            return "tramvai" if ref in trams or str(n) in trams else "autobuz"
+            return "tramvai" if ref.lower() in trams or str(n) in trams else "autobuz"
         return "tramvai" if n <= 15 else "autobuz"
     return "autobuz"
 
 
-def simplify(g):
+def declared_network(src, props):
+    """„metropolitan” / „local” după numele fișierului, directorul KML sau câmpurile rețea / network; altfel None."""
+    text = " ".join([src, props.get("_folder") or ""] + list(field(props, ("retea", "rețea", "network", "network__1",
+                                                                             "tip_retea", "zona"))))
+    t = text.lower().replace("_", " ").replace("-", " ")
+    if re.search(r"metropolit|\bzmi?\b|\bperiurban|interurban", t):
+        return "metropolitan"
+    if re.search(r"\blocal|\burban", t):
+        return "local"
+    return None
+
+
+class Uats:
+    """Limitele UAT-urilor ZMI (public/data/zmi_uat_web.geojson), în Stereo 70, pentru comunele străbătute."""
+    def __init__(self):
+        import shapely
+        from pyproj import Transformer
+        from shapely.geometry import shape
+        tr = Transformer.from_crs("EPSG:4326", "EPSG:3844", always_xy=True)
+        self.fwd = lambda g: shapely.transform(g, lambda x, y: tr.transform(x, y), interleaved=False)
+        self.items, self.iasi = [], None
+        path = ROOT / "public" / "data" / "zmi_uat_web.geojson"
+        if not path.exists():
+            return
+        for f in json.loads(path.read_text(encoding="utf-8"))["features"]:
+            p = f["properties"]
+            g = self.fwd(shape(f["geometry"])).buffer(0)
+            if p.get("zmi_role") == "municipiu_pol":
+                self.iasi = g
+            else:
+                self.items.append((str(p.get("siruta_uat")), p.get("canonical_name") or p.get("name"), g))
+
+    def measure(self, geom):
+        """(lungimea în km, ponderea din afara municipiului Iași, [(siruta, nume)] comunele străbătute ≥ 300 m)."""
+        g = self.fwd(geom)
+        length = g.length or 1
+        out = [(s, n) for s, n, poly in self.items if g.intersection(poly).length >= 300]
+        outside = 1 - (g.intersection(self.iasi).length / length if self.iasi is not None else 1)
+        return round(g.length / 1000, 2), outside, out
+
+
+def clean_line(g):
+    """Unește bucățile (căile OSM ale relației) și simplifică la ~2 m."""
     from shapely.geometry import shape, mapping
-    s = shape(g).simplify(SIMPLIFY_DEG, preserve_topology=False)
-    return json.loads(json.dumps(mapping(s)))
+    from shapely.ops import linemerge
+    s = shape(g)
+    if s.geom_type == "MultiLineString":
+        s = linemerge(s)
+    s = s.simplify(SIMPLIFY_DEG, preserve_topology=False)
+    return s, json.loads(json.dumps(mapping(s)))
 
 
 def rnd(c):
@@ -246,27 +308,41 @@ def rnd(c):
 def main():
     a = parse_args()
     trams = {t.strip().lower() for t in a.tramvai.split(",") if t.strip()}
-    lines, stops, unnamed = [], [], 0
+    uats = Uats()
+    lines, stops, unnamed, warnings = [], [], 0, []
     for src, props, g in records(a.inputs):
         if not g:
             continue
         t = g["type"]
         if t in ("LineString", "MultiLineString"):
-            ref = line_ref(props)
+            ref, oref = line_ref(props), osm_name_ref(props)
+            name = next(field(props, ("name", "nume", "denumire", "den", "traseu", "descriere")), None) or props.get("_folder")
+            if oref and ref and oref != ref:     # ex. ref=6B la „Bus 36: Breazu => Rond Dacia” – eroare în OSM
+                warnings.append(f"„{name}”: ref={ref} diferă de numele relației → linia {oref}")
+                ref = oref
+            ref = ref or oref
             if not ref:
                 unnamed += 1
-            name = next(field(props, ("name", "nume", "denumire", "den", "traseu", "descriere")), None) or props.get("_folder")
-            try:
-                g = simplify(g)
-            except Exception:
-                pass
-            lines.append({"type": "Feature", "properties": {
-                "linie": ref, "tip": line_mode(props, ref, trams), "nume": name, "sursa": src},
-                "geometry": {"type": g["type"], "coordinates": rnd(g["coordinates"])}})
+            shp, g = clean_line(g)
+            km, outside, crossed = uats.measure(shp)
+            retea = declared_network(src, props) or ("metropolitan" if outside > 0.25 else "local")
+            p = {"linie": ref, "tip": line_mode(props, ref, trams), "retea": retea, "nume": name,
+                 "de_la": next(field(props, ("from", "de_la", "plecare")), None),
+                 "pana_la": next(field(props, ("to", "pana_la", "sosire", "destinatie")), None),
+                 "km": km, "uat": [s for s, _ in crossed], "uat_nume": [n for _, n in crossed]}
+            osm = next(field(props, ("full_id", "osm_id", "@id", "id")), None)
+            if osm and re.match(r"^(r|relation/)?\d+$", osm) and ("osm_type" in props or osm.startswith(("r", "relation"))):
+                p["osm"] = "relation/" + re.sub(r"\D", "", osm)
+            op = next(field(props, ("operator", "operator_", "operat")), None)
+            if op:
+                p["operator"] = op
+            p["sursa"] = src
+            lines.append({"type": "Feature", "properties": p,
+                          "geometry": {"type": g["type"], "coordinates": rnd(g["coordinates"])}})
         elif t in ("Point", "MultiPoint"):
             c = g["coordinates"] if t == "Point" else g["coordinates"][0]
             name = next(field(props, STOP_FIELDS), None)
-            lr = next(field(props, ("linii", "lines", "routes", "trasee")), None)
+            lr = next(field(props, ("linii", "lines", "routes", "trasee", "route_ref")), None)
             stops.append({"type": "Feature", "properties": {"nume": name, "linii": lr, "sursa": src},
                           "geometry": {"type": "Point", "coordinates": rnd(c)}})
     if not lines and not stops:
@@ -274,17 +350,28 @@ def main():
     od = Path(a.out)
     od.mkdir(parents=True, exist_ok=True)
     meta = {"generated": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%MZ")}
+
+    def num(r):
+        return (int(re.match(r"\d+", r).group()), r) if r else (999, "")
     if lines:
-        lines.sort(key=lambda f: (f["properties"]["tip"] != "tramvai", int(re.match(r"\d+", f["properties"]["linie"]).group())
-                                  if f["properties"]["linie"] else 999, f["properties"]["linie"] or ""))
+        order = {"tramvai": 0, "troleibuz": 1, "autobuz": 2, "microbuz": 3}
+        lines.sort(key=lambda f: (order.get(f["properties"]["tip"], 4), f["properties"]["retea"] != "local",
+                                  num(f["properties"]["linie"])))
         (od / "linii.geojson").write_text(json.dumps({"type": "FeatureCollection", "meta": meta, "features": lines},
                                                      ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     if stops:
         (od / "statii.geojson").write_text(json.dumps({"type": "FeatureCollection", "meta": meta, "features": stops},
                                                       ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-    refs = sorted({f["properties"]["linie"] for f in lines if f["properties"]["linie"]},
-                  key=lambda r: (int(re.match(r"\d+", r).group()), r))
-    print(f"{len(lines)} trasee ({len(refs)} linii: {', '.join(refs)}), {len(stops)} stații → {od}")
+    for w in warnings:
+        print("atenție:", w, file=sys.stderr)
+    summary = {}
+    for f in lines:
+        p = f["properties"]
+        if p["linie"]:
+            summary.setdefault(f"{p['tip']} {p['retea']}", set()).add(p["linie"])
+    for k, v in sorted(summary.items()):
+        print(f"{k}: {', '.join(sorted(v, key=num))}")
+    print(f"{len(lines)} trasee, {len(stops)} stații → {od}")
     if unnamed:
         print(f"atenție: {unnamed} trasee fără număr de linie recunoscut (vezi câmpurile acceptate în descrierea scriptului)",
               file=sys.stderr)
