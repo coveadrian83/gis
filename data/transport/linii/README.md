@@ -11,6 +11,7 @@ Conținut actual:
 |---|---|
 | `rute_autobuz_local.*` | 18 linii de autobuz locale CTP, ambele sensuri (relații OpenStreetMap, © contribuitorii OSM, ODbL) |
 | `trasee_transport_public_metropolitan.gpkg` | 28 de linii de autobuz metropolitane (101 … 902) |
+| `rute_tramvai_osm.geojson` | traseele tramvaiului pe linii (1, 3, 5, 6, 7, 8, 9, 11, 13), extrase din OSM de `scripts/transport_osm.py` – nu se editează manual |
 | `retea_tramvai.geojson` | rețeaua de tramvai existentă și extinderea propusă (din `Infrastructura_Mobilitate.gpkg`) |
 | `statii_autobuz_local.*` | 273 de stații de autobuz (OpenStreetMap); liniile stației se calculează din traseele aflate la ≤ 30 m |
 | `statii_autobuz_metropolitan.*` | stațiile liniilor metropolitane (`statii_TP_ZMI_analiza_2D`); dublurile – aceeași stație pentru fiecare traseu – se elimină |

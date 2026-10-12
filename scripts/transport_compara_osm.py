@@ -96,14 +96,28 @@ def osm_routes():
         if not ways:
             continue
         merged = linemerge(MultiLineString(ways))
-        parts = len(merged.geoms) if merged.geom_type == "MultiLineString" else 1
+        gaps = route_gaps(proj(merged))
         stops = [(m["lon"], m["lat"], m["role"]) for m in el.get("members", []) if m["type"] == "node" and "lat" in m]
         ref = (t.get("ref") or "").upper().strip()
         m = re.match(r"^\s*(bus|tram|trolleybus|minibus)\s+([0-9]{1,3}[a-z]?)\s*:", t.get("name", ""), re.I)
         name_ref = m.group(2).upper() if m else None
         out.append({"id": el["id"], "tags": t, "mode": MODE.get(t.get("route"), "autobuz"), "ref": name_ref or ref, "ref_tag": ref,
-                    "geom": proj(merged), "parts": parts, "stops": stops, "ctp": is_ctp(t)})
+                    "geom": proj(merged), "gaps": gaps, "stops": stops, "ctp": is_ctp(t)})
     return out
+
+
+def route_gaps(g, tol=20):
+    """Golurile unui traseu: capetele „libere” ale bucăților (la peste tol m de orice altă bucată). Un traseu continuu
+    are 2 capete libere (o buclă – 0); fiecare gol mai adaugă 2."""
+    if g.geom_type != "MultiLineString":
+        return 0
+    parts = list(g.geoms)
+    free = 0
+    for i, part in enumerate(parts):
+        for e in (Point(part.coords[0]), Point(part.coords[-1])):
+            if all(e.distance(q) > tol for j, q in enumerate(parts) if j != i):
+                free += 1
+    return max(0, (free - 1) // 2)
 
 
 def our_lines():
@@ -168,8 +182,9 @@ def compare_lines(osm, ours, feats, issues):
             issues.append(problem("relație", r["id"], name, f"ref={r['ref_tag']} diferă de numărul din nume ({r['ref']}); comparat ca linia {r['ref']}"))
         if r["ctp"] and not r["ref_tag"]:
             issues.append(problem("relație", r["id"], name, "lipsește ref (numărul liniei)"))
-        if r["ctp"] and r["parts"] > 1:
-            issues.append(problem("relație", r["id"], name, f"traseu posibil discontinuu: căile formează {r['parts']} bucăți neconectate (lipsesc căi, ramificații sau ordine greșită)"))
+        if r["ctp"] and r["gaps"]:
+            issues.append(problem("relație", r["id"], name, f"traseu întrerupt: {r['gaps']} {'gol' if r['gaps'] == 1 else 'goluri'} "
+                                  "(capete de căi la peste 20 m de restul traseului – lipsesc căi din relație)"))
         if r["ctp"] and not (t.get("from") and t.get("to")):
             issues.append(problem("relație", r["id"], name, "lipsesc from / to"))
         net = norm(t.get("network", ""))
