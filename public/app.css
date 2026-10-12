@@ -207,6 +207,7 @@ dialog::backdrop { background: rgba(16, 24, 40, .45); }
 .doc { max-width: 760px; margin: 0 auto; padding: 20px 16px 60px; background: var(--c-surface); line-height: 1.55; }
 .doc h1 { font-size: 24px; }
 .doc h2 { font-size: 19px; margin-top: 28px; }
+.doc .copy { margin-top: 36px; padding-top: 12px; border-top: 1px solid var(--c-border); font-size: 12px; color: var(--c-muted); }
 .doc table { border-collapse: collapse; width: 100%; font-size: 14px; }
 .doc td, .doc th { border: 1px solid var(--c-border); padding: 6px 8px; text-align: left; vertical-align: top; }
 .draft { background: #fff4d6; border: 1px solid #f0d78c; border-radius: 8px; padding: 10px 12px; }
