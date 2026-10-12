@@ -151,14 +151,31 @@ class Rails:
         după intrarea în buclă (ex. Dacia, Tătărași Nord), de aceea bucla poate porni din oricare nod din `tail`.
         Ex. buclele de la Spital Elytis, Dacia, Târgu Cucu, Tătărași Nord, Rond Țuțora, Dancu.
         Întoarce (indicele din tail de unde pleacă bucla, nodurile buclei) sau None."""
+        def twins(u, a, b):
+            """u și nodurile de pe șina paralelă (puntea ≤ 12 m), cu vecinul lor în direcția a→b."""
+            out = [(u, None)]
+            for v in self.adj[u]:
+                if frozenset((u, v)) in self.bridges:
+                    w = min(self.adj[v], key=lambda w: angle2(a, b, v, w))
+                    if angle2(a, b, v, w) <= 30:
+                        out.append((v, w))
+            return out
+
         goals = {}
         for u, nxt in head:                                  # (nod, nodul următor) la începutul sensurilor
-            goals.setdefault(u, nxt)
-        src = {tail[i]: i for i in range(1, len(tail))}
+            for v, w in twins(u, u, nxt):                    # și pe șina paralelă, dacă sensul a fost prins pe ea
+                goals.setdefault(v, w or nxt)
+        src, starts = {}, []
+        for i in range(1, len(tail)):
+            for v, w in twins(tail[i], tail[i - 1], tail[i]):
+                p = tail[i - 1] if w is None else min(self.adj[v], key=lambda x: angle2(x, v, tail[i - 1], tail[i]))
+                if v not in src:
+                    src[v] = i
+                    starts.append((v, p))
         best, prev_of, q = {}, {}, []
-        for u, i in src.items():
-            best[(u, tail[i - 1])] = 0.0
-            q.append((0.0, u, tail[i - 1], u))
+        for u, w in starts:
+            best[(u, w)] = 0.0
+            q.append((0.0, u, w, u))
         heapq.heapify(q)
         while q:
             d, u, w, s0 = heapq.heappop(q)
@@ -166,7 +183,7 @@ class Rails:
                 return None
             i = src[s0]
             if d > 20 and u in goals and angle(w, u, goals[u]) <= 60 and \
-                    angle2(tail[i - 1], s0, u, goals[u]) >= 120:
+                    angle2(tail[i - 1], tail[i], u, goals[u]) >= 120:
                 out, st = [u], (u, w)
                 while st in prev_of:
                     st = prev_of[st]
@@ -202,8 +219,9 @@ class Rings:
         u = min(self.nodes, key=lambda u: dist(p, u), default=None)
         return u if u and dist(p, u) <= self.NEAR else None
 
-    def turn(self, end, prev, start, nxt):
-        if dist(end, start) > 150 or angle2(prev, end, start, nxt) < 120:
+    def turn(self, end, prev, start, nxt, force=False):
+        """force: întoarcere confirmată (linii_corecturi.json) – fără condiția schimbării direcției de mers."""
+        if dist(end, start) > (300 if force else 150) or not force and angle2(prev, end, start, nxt) < 120:
             return None
         a, b = self.nearest(end), self.nearest(start)
         if not a or not b:
@@ -349,20 +367,54 @@ def main():
                 by_line[ref_of(r)].append(sid)
     # autobuzele: întoarcerea prin sensul giratoriu de la capăt
     rings, bus_loop, bus_shapes = Rings(OSM_DIR / "giratorii.json"), {}, defaultdict(list)
+    heads = {t.get("shape_id"): t.get("trip_headsign") for t in trips.values()}
     for t in trips.values():
         sid = t.get("shape_id")
         r = routes[t["route_id"]]
         if sid in shapes and mode_of(r) != "tramvai" and sid not in bus_shapes[ref_of(r)]:
             bus_shapes[ref_of(r)].append(sid)
     loops = []
+    norm = lambda x: re.sub(r"[^a-z0-9]", "", (x or "").lower().translate(str.maketrans("ăâîșşțţ", "aaisstt")))
+    fixed = set()
+    for fx in json.loads(FIXES.read_text(encoding="utf-8")).get("intoarceri", []) if FIXES.exists() else []:
+        sids = bus_shapes.get(fx["linie"], [])
+        for a in [a for a in sids if norm(heads.get(a)) == norm(fx["capat"])]:
+            A = [(x, y) for _, x, y in sorted(shapes[a])]
+            Bs = [[(x, y) for _, x, y in sorted(shapes[b])] for b in sids if b != a]
+            B = min(Bs, key=lambda B: dist(A[-1], B[0]), default=None)
+            if not B:
+                continue
+            ext = None
+            if fx["prin"] == "legatura":
+                ext = (len(A), [B[0]])
+            elif fx["prin"] == "giratoriu":
+                ring = rings.turn(A[-1], A[-2], B[0], B[1], force=True)
+                ext = (len(A), ring) if ring else None
+            elif fx["prin"] == "bucla_tramvai":         # autobuzul pe bucla de șine (rondul e comun cu tramvaiul)
+                idx = [i for i in range(len(A)) if dist(A[i], A[-1]) <= 250]
+                tail = [(i, rails.nearest(A[i])) for i in idx]
+                tail = [(i, u) for i, u in tail if u]
+                tail = [x for k, x in enumerate(tail) if not k or x[1] != tail[k - 1][1]]
+                hb = [rails.nearest(p) for p in B if dist(p, B[0]) <= 250]
+                hb = [u for k, u in enumerate(hb) if u and (not k or u != hb[k - 1])]
+                res = rails.turn([u for _, u in tail], list(zip(hb, hb[1:]))) if len(tail) > 1 and len(hb) > 1 else None
+                ext = (tail[res[0]][0], res[1]) if res else None
+            if ext:
+                bus_loop[a] = ext
+                fixed.add(a)
+                loops.append(f"{fx['linie']}:{a} ({fx['prin']})")
+            else:
+                print(f"atenție: întoarcerea liniei {fx['linie']} la {fx['capat']} ({fx['prin']}) nu s-a putut desena", file=sys.stderr)
     for ref, sids in bus_shapes.items():
         for a in sids:
+            if a in fixed:
+                continue
             A = [(x, y) for _, x, y in sorted(shapes[a])]
             for b in sids:
                 B = [(x, y) for _, x, y in sorted(shapes[b])]
                 ring = rings.turn(A[-1], A[-2], B[0], B[1]) if len(A) > 1 and len(B) > 1 else None
                 if ring:
-                    bus_loop[a] = ring
+                    bus_loop[a] = (len(A), ring)
                     loops.append(f"{ref}:{a} (giratoriu, {round(sum(dist(u, v) for u, v in zip(ring, ring[1:])))} m)")
                     break
     for ref, sids in by_line.items():
@@ -403,7 +455,8 @@ def main():
             pts = [[round(x, 6), round(y, 6)] for x, y in on_rails[sid]]
             snapped.append(sid)
         elif sid in bus_loop:
-            pts += [[round(x, 6), round(y, 6)] for x, y in bus_loop[sid]]
+            cut, tail = bus_loop[sid]
+            pts = pts[:cut] + [[round(x, 6), round(y, 6)] for x, y in tail]
         key = f"{mode_of(r)}|{ref_of(r)}"
         props = {"linie": ref_of(r), "tip": mode_of(r), "retea": serv.get(key, {}).get("retea", "local"),
                  "name": r.get("route_long_name") or "", "from": first, "to": t.get("trip_headsign") or None,
