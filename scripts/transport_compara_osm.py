@@ -318,7 +318,8 @@ def compare_amtpi(lines, routes):
         if p.get("retea") == "metropolitan" and ref not in listed:
             rows.append({"linie": ref, "comuna": ", ".join(p.get("uat_nume") or []), "statii_amtpi": p.get("nume") or "",
                          "statut_amtpi": "nelistat", "in_proiect_date": "da", "in_osm": "da" if ref in osm else "nu",
-                         "observatii": p.get("nota") or ("în datele proiectului, dar nu în lista AMTPI (posibil desființată): " + (p.get("nume") or "")),
+                         "observatii": p.get("nota") or (("în orarul GTFS (CTP), dar nu în lista AMTPI: " if "gtfs" in (p.get("sursa") or "") else
+                                                          "în datele proiectului, dar nu în lista AMTPI (posibil desființată): ") + (p.get("nume") or "")),
                          "url": ""})
     return rows
 
@@ -330,7 +331,8 @@ def compare_inventory(routes):
 
     def row(mod, ref):
         key = (mod, ref)
-        return inv.setdefault(key, {"linie": ref, "mod": mod, "proiect": "", "osm": "", "amtpi": "", "moovit": "", "descriere": ""})
+        return inv.setdefault(key, {"linie": ref, "mod": mod, "proiect": "", "osm": "", "amtpi": "", "gtfs": "", "moovit": "",
+                                    "descriere": "", "acoperire_gtfs": ""})
     for f in load(PUB / "linii.geojson")["features"]:
         p = f["properties"]
         if p.get("linie"):
@@ -340,6 +342,28 @@ def compare_inventory(routes):
     for r0 in routes:
         if r0["ctp"] and r0["ref"]:
             row(r0["mode"], r0["ref"])["osm"] = "da"
+    # orarul GTFS: prezența, cursele pe zi și suprapunerea traseului de pe hartă cu formele GTFS (la ≤ 30 m)
+    serv = PUB / "gtfs_servicii.json"
+    gshapes = ROOT / "data" / "transport" / "linii" / "rute_gtfs.geojson"
+    if serv.exists():
+        for k, g in json.loads(serv.read_text(encoding="utf-8"))["linii"].items():
+            r = row(g["tip"], g["linie"])
+            r["gtfs"] = f"{g['lucru']} curse/zi"
+            r["descriere"] = r["descriere"] or g.get("nume") or ""
+    if gshapes.exists():
+        gg = {}
+        for f in load(gshapes)["features"]:
+            p = f["properties"]
+            gg.setdefault((p["tip"], p["linie"].upper()), []).append(proj(shape(f["geometry"])))
+        mine = {}
+        for f in load(PUB / "linii.geojson")["features"]:
+            p = f["properties"]
+            if p.get("linie") and "gtfs" not in (p.get("sursa") or "") and p.get("stare") != "propus":
+                mine.setdefault((p["tip"], p["linie"].upper()), []).append(proj(shape(f["geometry"])))
+        for k, gl in mine.items():
+            if k in gg:
+                a, b = unary_union(gl), unary_union(gg[k])
+                row(*k)["acoperire_gtfs"] = round(min(share_within(a, b, LINE_TOL), share_within(b, a, LINE_TOL)) * 100)
     amtpi = ROOT / "data" / "transport" / "amtpi_trasee.json"
     if amtpi.exists():
         for a in json.loads(amtpi.read_text(encoding="utf-8"))["linii"]:
@@ -358,7 +382,7 @@ def compare_inventory(routes):
                 r["moovit"] = "; ".join(x for x in [r["moovit"], d] if x) if d not in r["moovit"] else r["moovit"]
     out = []
     for (mod, ref), r in inv.items():
-        have = [k for k in ("proiect", "osm", "amtpi", "moovit") if r[k]]
+        have = [k for k in ("proiect", "osm", "amtpi", "gtfs", "moovit") if r[k]]
         if r["proiect"] == "da":
             st = "pe hartă"
         elif r["proiect"] == "propusă":

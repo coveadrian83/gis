@@ -210,6 +210,13 @@ CTP și titlurile de călătorie vândute în comunele ZMI deservite de CTP, ian
   metropolitan Iași); `statii_derivate.gpkg` – stațiile aglomerate CTP, capetele de linie și stațiile de transfer.
   Versiunile anterioare ale rețelei metropolitane (`trasee_transport_public_metropolitan.gpkg`,
   `statii_TP_ZMI_analiza_2D`) sunt păstrate în `data/transport/arhiva/` și nu mai sunt folosite.
+- **Orarul GTFS** (`data/transport/gtfs/IASI_GTFS.zip`, CTP Iași publicat de Tranzy – https://tranzy.ai/opendata/;
+  `python scripts/transport_gtfs.py`): `public/data/transport/gtfs_servicii.json` – pe linie, cursele pe zi lucrătoare /
+  de weekend, prima și ultima plecare, intervalul mediu la vârf (7–9); pe stație, liniile exacte din orar și plecările
+  pe zi; `data/transport/linii/rute_gtfs.geojson` – formele traseelor, folosite doar pentru liniile fără traseu în altă
+  sursă (23B, 48, 54, 501B, 503B, 802B). Pe hartă: grosimea liniilor după curse pe zi (zi lucrătoare / weekend),
+  stațiile din orar dimensionate după plecări și clasamentul stațiilor după plecări (Tg. Cucu, Gară, Moara 1 Mai, CUG I,
+  Țesătura…). În raport: coloanele „Orar GTFS” și „Traseu = GTFS %” ale inventarului.
 - **Lista oficială AMTPI** (`python scripts/transport_amtpi.py` → `data/transport/amtpi_trasee.json`, din
   https://www.amtpi.ro/trasee-2/): liniile „în proiect” (402, 504, 506, 507, 508) apar pe hartă ca propuneri, punctat,
   împreună cu stațiile deservite doar de ele; fișa liniei arată statutul AMTPI și legătura la pagina traseului; liniile

@@ -93,7 +93,9 @@
       table($('inventar'), $('invFilter'), C.inventar, [
         ['linie', 'Linia', function (r) { return '<span class="linechip" style="background:' + (r.mod === 'tramvai' ? cssv('--tram') : cssv('--metro')) + (r.stare === 'lipsește de pe hartă' ? ';opacity:.55' : '') + '">' + esc(r.linie) + '</span>'; }],
         ['mod', 'Mod'], ['stare', 'Stare'], ['proiect', 'Hartă', yes('proiect')], ['osm', 'OSM', yes('osm')],
-        ['amtpi', 'AMTPI', yes('amtpi')], ['moovit', 'Moovit (descriere)', function (r) { return r.moovit ? esc(r.moovit) : '<span class="note">–</span>'; }],
+        ['amtpi', 'AMTPI', yes('amtpi')], ['gtfs', 'Orar GTFS', yes('gtfs')],
+        ['acoperire_gtfs', 'Traseu = GTFS %', function (r) { return r.acoperire_gtfs === '' ? '<span class="note">–</span>' : '<span class="badge ' + (r.acoperire_gtfs >= 95 ? 's-ok' : r.acoperire_gtfs >= 80 ? 's-minor' : 's-major') + '">' + r.acoperire_gtfs + '</span>'; }, 1],
+        ['moovit', 'Moovit (descriere)', function (r) { return r.moovit ? esc(r.moovit) : '<span class="note">–</span>'; }],
         ['descriere', 'Descriere (hartă / AMTPI)']
       ], 'stare', { 'pe hartă': 's-ok', 'pe hartă (propusă)': 's-minor', 'lipsește de pe hartă': 's-major', 'în proiect (AMTPI)': 's-minor' });
     }

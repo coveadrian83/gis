@@ -14,7 +14,8 @@
   var COLOR = {}; CATS.forEach(function (c) { COLOR[c[0]] = cssv(c[2]); });
   var TRAM = cssv('--tram'), BUS = cssv('--bus'), METRO = cssv('--metro'), HOT = cssv('--hot');
 
-  var S = { metric: 1, cat: 'all', rep: true, mi: 0, year: false, sel: null, line: null, stop: null, playing: null };
+  var S = { metric: 1, cat: 'all', rep: true, mi: 0, year: false, sel: null, line: null, stop: null, playing: null, width: 'gtfs', day: 'lucru' };
+  var SERV = null;   // orarul GTFS: serviciul pe linie și pe stație (gtfs_servicii.json)
   var T = null, UATS = [], CENTER = {}, MONTHS = [], HOTS = null, TOP = {};
 
   function $(id) { return document.getElementById(id); }
@@ -84,7 +85,7 @@
   map.createPane('lines'); map.getPane('lines').style.zIndex = 400;
   map.createPane('bubbles'); map.getPane('bubbles').style.zIndex = 450;
   map.createPane('hot'); map.getPane('hot').style.zIndex = 620;
-  var haloLayer = L.layerGroup().addTo(map), proposedLayer = L.layerGroup(), busStopLayer = L.layerGroup().addTo(map), tramStopLayer = L.layerGroup().addTo(map), uatLayer = L.layerGroup().addTo(map), lineLayer = L.layerGroup().addTo(map), stopLayer = L.layerGroup(),
+  var haloLayer = L.layerGroup().addTo(map), proposedLayer = L.layerGroup(), busStopLayer = L.layerGroup().addTo(map), tramStopLayer = L.layerGroup().addTo(map), gtfsStopLayer = L.layerGroup().addTo(map), uatLayer = L.layerGroup().addTo(map), lineLayer = L.layerGroup().addTo(map), stopLayer = L.layerGroup(),
     hotLayer = L.layerGroup().addTo(map), bubbleLayer = L.layerGroup().addTo(map), extraLayer = L.layerGroup().addTo(map);
   var bubbles = {};
   // etichetele stațiilor aglomerate se suprapun sub zoom 13
@@ -313,7 +314,9 @@
     if (e.key === 'ArrowRight') setMonth(S.mi + (S.year ? 12 : 1));
     else if (e.key === 'ArrowLeft') setMonth(S.mi - (S.year ? 12 : 1));
   });
-  [['showLines', [lineLayer, haloLayer]], ['showProposed', [proposedLayer]], ['showStops', [stopLayer]], ['showBusStops', [busStopLayer]], ['showTramStops', [tramStopLayer]], ['showHot', [hotLayer]], ['showUat', [uatLayer]], ['showBubbles', [bubbleLayer]]].forEach(function (p) {
+  $('widthBy').addEventListener('change', function () { S.width = this.value; restyleLines(); renderLineInfo(); });
+  $('dayType').addEventListener('change', function () { S.day = this.value; restyleLines(); if (SERV) { restyleGtfsStops(); renderGtfsRank(); } renderLineInfo(); });
+  [['showGtfsStops', [gtfsStopLayer]], ['showLines', [lineLayer, haloLayer]], ['showProposed', [proposedLayer]], ['showStops', [stopLayer]], ['showBusStops', [busStopLayer]], ['showTramStops', [tramStopLayer]], ['showHot', [hotLayer]], ['showUat', [uatLayer]], ['showBubbles', [bubbleLayer]]].forEach(function (p) {
     $(p[0]).addEventListener('change', function () { var on = this.checked; p[1].forEach(function (l) { if (on) l.addTo(map); else map.removeLayer(l); }); });
   });
 
@@ -354,10 +357,14 @@
     return t;
   }
   var metroMax = 1;
+  // serviciul liniei din orarul GTFS (curse pe zi, prima / ultima plecare, intervalul la vârf)
+  function svc(p) { return SERV && p.linie ? SERV.linii[(p.tip === 'tramvai' ? 'tramvai' : 'autobuz') + '|' + p.linie] || null : null; }
+  var gMax = 1;
   function lineStyle(p) {
     var dim = S.line ? S.line !== lineKey(p) : S.stop ? !servesStop(p) : false, on = S.line === lineKey(p) || (S.stop && servesStop(p)), w = isTop(p) ? 4 : 1.8;
-    var sv = servedVal(p), net = !p.linie && p.tip === 'tramvai';
+    var sv = S.width === 'cota' ? servedVal(p) : null, net = !p.linie && p.tip === 'tramvai', g = S.width === 'gtfs' ? svc(p) : null;
     if (sv != null) w = 1.5 + 5 * Math.sqrt(sv / metroMax);
+    if (g && p.stare !== 'propus') w = 1 + 7 * Math.sqrt((g[S.day] || 0) / gMax);
     if (net) w = 3;
     return { color: lineColor(p), weight: on ? Math.max(5, w) : w, opacity: dim ? 0.08 : on || isTop(p) || net ? 0.95 : 0.6,
       dashArray: p.stare === 'propus' ? '6 6' : null, lineCap: p.stare === 'propus' ? 'butt' : 'round', lineJoin: 'round' };
@@ -368,19 +375,26 @@
     return refs.indexOf(k) >= 0 || refs.indexOf(p.linie) >= 0;
   }
   function restyleLines() {
+    gMax = 1;
+    if (SERV) Object.keys(SERV.linii).forEach(function (k) { gMax = Math.max(gMax, SERV.linii[k][S.day] || 0); });
     metroMax = 1;
     lineFeatures.forEach(function (l) { var v = servedVal(l._p); if (v) metroMax = Math.max(metroMax, v); });
     lineFeatures.forEach(function (l) { l.setStyle(lineStyle(l._p)); });
     halos.forEach(function (h) { h.setStyle({ opacity: (S.line && S.line !== lineKey(h._p)) || (S.stop && !servesStop(h._p)) ? 0 : 0.35 }); });
   }
+  function svcText(g) {
+    return g ? (g.lucru || 0) + ' curse / zi lucrătoare · ' + (g.weekend || 0) + ' / zi de weekend' +
+      (g.prima ? ' · ' + g.prima + '–' + g.ultima : '') + (g.interval_varf ? ' · la ~' + g.interval_varf + ' min în vârf (7–9)' : '') : '';
+  }
   function tipLine(p, src) {
-    var sv = servedVal(p);
+    var sv = servedVal(p), g = svc(p);
     if (!p.linie) return '<b>' + esc(p.nume || 'Traseu fără număr') + '</b>' + (p.km ? '<br><span class="note">' + p.km.toLocaleString('ro-RO') + ' km de cale</span>' : '') +
       (p.stare === 'propus' ? '<br><span class="note">propunere – nu este în exploatare</span>' : '') + (p.tip === 'tramvai' ? '<br><span class="note">infrastructura, fără împărțirea pe linii</span>' : '');
     return '<b>' + (p.linie ? 'Linia ' + esc(p.linie) : 'Traseu fără număr') + '</b> · ' + esc(p.tip || '') + (p.retea ? ' ' + esc(p.retea) : '') +
       (p.de_la && p.pana_la ? '<br>' + esc(p.de_la) + ' → ' + esc(p.pana_la) : p.nume ? '<br>' + esc(p.nume) : '') +
       (p.km ? '<br><span class="note">' + p.km.toLocaleString('ro-RO') + ' km</span>' : '') +
       (isTop(p) ? '<br><span style="color:' + HOT + '">printre cele mai utilizate linii (CTP)</span>' : '') +
+      (g ? '<br>' + esc(svcText(g)) : '') +
       (sv != null ? '<br>cota din comunele deservite: ' + fmt(sv) + ' ' + (S.metric ? 'călătorii' : 'titluri') + ' · ' + esc(label(S.mi)) : '') +
       (src ? '<br><span class="note">' + esc(src) + '</span>' : '');
   }
@@ -420,15 +434,16 @@
     if (S.stop) {
       var refs = stopRefs(S.stop);
       box.hidden = false;
-      var tramStop = S.stop.mod === 'tramvai';
+      var tramStop = S.stop.mod === 'tramvai' && !S.stop._g;
       box.innerHTML = '<h3>' + esc(S.stop.nume || 'Stație') + (tramStop ? ' <span class="note">stație de tramvai</span>' : '') + '</h3><p class="note">' +
         (tramStop ? (refs.length ? 'Legături cu autobuzul – ' + refs.length + (refs.length === 1 ? ' linie' : ' linii') + ' la ≤ 100 m:' : 'Nicio linie de autobuz la ≤ 100 m.') :
         refs.length ? refs.length + (refs.length === 1 ? ' linie' : ' linii') + ' ' +
-        (S.stop._peroane > 1 ? 'în cele ' + S.stop._peroane + ' peroane' : 'în stație') + ':' : 'Nicio linie CTP de autobuz la ≤ 30 m.') + '</p>' +
+        (S.stop._peroane > 1 ? 'în cele ' + S.stop._peroane + ' peroane' : 'în stație') + ':' : 'Nicio linie CTP la ≤ 30 m.') + '</p>' +
         '<div class="chips">' + refs.map(function (r) {
           var k = lineFeatures.filter(function (l) { return l._p.linie === r.replace(/^T/, ''); })[0];
           return '<button type="button" class="' + (k && k._p.retea === 'metropolitan' ? 'metro' : /^T/.test(r) ? 'tram' : 'bus') + (k && isTop(k._p) ? ' top' : '') + '" data-k="' + (k ? esc(lineKey(k._p)) : '') + '">' + esc(r) + '</button>';
-        }).join('') + '</div><p class="note">' + (tramStop ? 'Liniile de tramvai ale stației vor apărea când vor exista traseele pe linii. ' : 'Liniile sunt cele ale căror trasee trec la cel mult 30 m de stație. ') + 'Apăsați din nou pe stație sau pe o linie pentru a ieși.</p>';
+        }).join('') + '</div><p class="note">' + (S.stop._g ? 'Liniile din orarul GTFS; ' + S.stop._g.plecari_lucru.toLocaleString('ro-RO') + ' plecări / zi lucrătoare, ' + S.stop._g.plecari_weekend.toLocaleString('ro-RO') + ' / zi de weekend. ' :
+          tramStop ? 'Legăturile cu autobuzul la ≤ 100 m. ' : 'Liniile sunt cele ale căror trasee trec la cel mult 30 m de stație. ') + 'Apăsați din nou pe stație sau pe o linie pentru a ieși.</p>';
       Array.prototype.forEach.call(box.querySelectorAll('button[data-k]'), function (b) {
         b.addEventListener('click', function () { if (b.getAttribute('data-k')) setLine(b.getAttribute('data-k')); });
       });
@@ -443,6 +458,9 @@
     box.innerHTML = '<h3><span class="badge" style="background:' + lineColor(p) + '">' + esc(p.linie || '?') + '</span> ' +
       esc(p.tip || '') + ' ' + esc(p.retea || '') + (p.stare === 'propus' ? ' <span class="note">· în proiect</span>' : '') + '</h3>' +
       (isTop(p) ? '<p class="topnote">Printre cele mai utilizate linii ' + (p.tip === 'tramvai' ? 'de tramvai' : 'de autobuz') + ' (răspunsul CTP pentru PMI)</p>' : '') +
+      (svc(p) ? '<p class="note"><b>Orar (GTFS):</b> ' + esc(svcText(svc(p))) + ' · ' + svc(p).statii + ' stații' +
+        (svc(p).url ? ' · <a href="' + esc(svc(p).url) + '" target="_blank" rel="noopener">pagina CTP</a>' : '') + '</p>' :
+        SERV && p.linie && p.stare !== 'propus' ? '<p class="note">Linia nu apare în orarul GTFS.</p>' : '') +
       '<table>' + fs.map(function (x, i) {
         return '<tr><td>' + esc(x.de_la && x.pana_la ? x.de_la + ' → ' + x.pana_la : x.nume && x.nume !== x.linie ? x.nume : 'traseu ' + (i + 1)) + '</td><td>' + (x.km ? x.km.toLocaleString('ro-RO') + ' km' : '') + '</td><td>' +
           (x.osm ? '<a href="https://www.openstreetmap.org/' + esc(x.osm) + '" target="_blank" rel="noopener">OSM</a>' : '') + '</td></tr>';
@@ -496,7 +514,8 @@
     d.innerHTML = '<div><i class="ln" style="background:' + TRAM + '"></i>Tramvai</div>' +
       '<div><i class="ln dash" style="color:' + TRAM + '"></i>Tramvai – extindere propusă</div>' +
       '<div><i class="ln" style="background:' + BUS + '"></i>Autobuz – local</div>' +
-      '<div><i class="ln" style="background:' + METRO + '"></i>Autobuz – metropolitan<small>grosimea: cota din comunele deservite</small></div>' +
+      '<div><i class="ln" style="background:' + METRO + '"></i>Autobuz – metropolitan<small>grosimea liniilor: curse pe zi (orar)</small></div>' +
+      '<div><i class="bub" style="width:12px;height:12px;margin-right:12px"></i>Stație (orar): plecări pe zi</div>' +
       '<div><i class="st"></i>Stație de transfer / cap de linie</div>' +
       '<div><i class="sd" style="border-color:' + TRAM + '"></i>Stație de tramvai</div>' +
       '<div><i class="sd"></i>Stație de autobuz (local / <span style="color:' + METRO + '">metropolitan</span>)<small>mărimea: numărul de linii</small></div>' +
@@ -638,6 +657,62 @@
     });
   }
 
+  // stațiile din orarul GTFS: mărimea = plecări pe zi (tipul zilei ales), liniile exacte din orar
+  var gtfsMarkers = [];
+  function drawGtfsStops() {
+    SERV.statii.forEach(function (st) {
+      var p = { nume: st.nume, linii: st.linii.join(', '), mod: st.linii.every(function (r) { return /^T/.test(r); }) ? 'tramvai' : 'autobuz', _g: st };
+      var m = L.circleMarker([st.lat, st.lng], { pane: 'lines', weight: 1, color: '#1a1a19', fillColor: '#f0efec', fillOpacity: 0.85 }).addTo(gtfsStopLayer);
+      m._g = st;
+      m.on('mouseover', function (e) {
+        showTip(e.originalEvent, '<b>' + esc(st.nume) + '</b><br>' + st.plecari_lucru.toLocaleString('ro-RO') + ' plecări / zi lucrătoare · ' +
+          st.plecari_weekend.toLocaleString('ro-RO') + ' / zi de weekend<br>' + st.linii.length + (st.linii.length === 1 ? ' linie: ' : ' linii: ') + esc(st.linii.join(', ')) +
+          '<br><span class="note">orar GTFS · apăsați pentru liniile stației</span>');
+      });
+      m.on('mousemove', function (e) { moveTip(e.originalEvent); });
+      m.on('mouseout', hideTip);
+      m.on('click', function () { setStop(S.stop && S.stop._g === st ? null : p); });
+      gtfsMarkers.push(m);
+    });
+    restyleGtfsStops();
+  }
+  function restyleGtfsStops() {
+    var key = S.day === 'weekend' ? 'plecari_weekend' : 'plecari_lucru', mx = 1;
+    gtfsMarkers.forEach(function (m) { mx = Math.max(mx, m._g[key]); });
+    gtfsMarkers.forEach(function (m) { m.setRadius(1.5 + 11 * Math.sqrt(m._g[key] / mx)); m.setStyle({ fillOpacity: m._g[key] ? 0.85 : 0.2 }); });
+  }
+  // clasamentul stațiilor după plecări (peroanele cu același nume la ≤ 600 m se adună)
+  function renderGtfsRank() {
+    var key = S.day === 'weekend' ? 'plecari_weekend' : 'plecari_lucru', groups = [];
+    SERV.statii.forEach(function (st) {
+      var k = stopKey(st.nume), ll = L.latLng(st.lat, st.lng);
+      var g = groups.filter(function (x) { return x.k === k && x.ll.distanceTo(ll) <= 600; })[0];
+      if (!g) groups.push(g = { k: k, nume: st.nume, ll: ll, lls: [], dep: 0, refs: {}, n: 0 });
+      g.dep += st[key]; g.lls.push(ll); g.n++;
+      st.linii.forEach(function (r) { g.refs[r] = 1; });
+    });
+    var hot = {};
+    if (HOTS) HOTS.statii.forEach(function (h) { [h.nume].concat(h.alias || []).forEach(function (a) { hot[stopKey(a)] = 1; }); });
+    var rows = groups.sort(function (a, b) { return b.dep - a.dep; }).slice(0, 15), mx = rows[0] ? rows[0].dep : 1;
+    $('stopRankBox').hidden = false;
+    $('stopRankTitle').textContent = 'Stațiile cu cele mai multe plecări (' + (S.day === 'weekend' ? 'weekend' : 'zi lucrătoare') + ')';
+    $('stopRankNote').innerHTML = 'Plecări pe zi din orarul GTFS (toate liniile, toate peroanele stației); între paranteze, numărul de linii; <i class="hotdot"></i> = stație aglomerată după CTP. Apăsați pe o stație pentru liniile ei.';
+    $('stopRank').innerHTML = rows.map(function (e, i) {
+      return '<div class="r" data-i="' + i + '"><span>' + esc(e.nume) + (hot[e.k] ? ' <i class="hotdot" title="stație aglomerată (CTP)"></i>' : '') + '</span>' +
+        '<span class="track"><div class="fill" style="width:' + (e.dep / mx * 100) + '%"></div></span><span class="v">' + e.dep.toLocaleString('ro-RO') +
+        '</span><span class="d">(' + Object.keys(e.refs).length + ')</span></div>';
+    }).join('');
+    Array.prototype.forEach.call($('stopRank').querySelectorAll('.r'), function (el) {
+      el.addEventListener('click', function () {
+        var e = rows[+el.getAttribute('data-i')];
+        var refs = Object.keys(e.refs).sort(function (x, y) { return /^T/.test(y) - /^T/.test(x) || parseInt(x.replace(/^T/, ''), 10) - parseInt(y.replace(/^T/, ''), 10) || x.localeCompare(y); });
+        setStop({ nume: e.nume, linii: refs.join(', '), _peroane: e.n });
+        var b = L.latLngBounds(e.lls);
+        if (b.isValid()) map.setView(b.getCenter(), Math.max(map.getZoom(), 15));
+      });
+    });
+  }
+
   function drawHots(stops) {
     var byName = {};
     // stratul stațiilor aglomerate (dacă există) are prioritate față de alte stații cu același nume (ex. capătul „Gară”)
@@ -718,8 +793,8 @@
       .catch(function (e) { if (opt) return null; throw e; });
   }
   Promise.all([getJSON(D + 'titluri_zm.json'), getJSON('../data/zmi_uat_web.geojson'), getJSON(D + 'statii_aglomerate.json', true),
-    getJSON(D + 'linii.geojson', true), getJSON(D + 'statii.geojson', true)]).then(function (r) {
-    T = r[0]; HOTS = r[2]; MONTHS = T.months;
+    getJSON(D + 'linii.geojson', true), getJSON(D + 'statii.geojson', true), getJSON(D + 'gtfs_servicii.json', true)]).then(function (r) {
+    T = r[0]; HOTS = r[2]; MONTHS = T.months; SERV = r[5];
     UATS = Object.keys(T.uat).map(function (k) { return T.uat[k]; });
     if (HOTS && HOTS.linii_utilizate) Object.keys(HOTS.linii_utilizate).forEach(function (tip) { HOTS.linii_utilizate[tip].forEach(function (l) { TOP[l] = tip; }); });
     drawUat(r[1]);
@@ -733,14 +808,25 @@
       renderLineChips();
       var hasTramLines = r[3].features.some(function (f) { return f.properties.tip === 'tramvai' && f.properties.linie; });
       $('linesNote').innerHTML = 'Apăsați pe o linie, pe hartă sau mai sus, pentru a o izola și a-i vedea fișa. Liniile cele mai utilizate după CTP au un halou galben' +
-        (hasTramLines ? '.' : '; tramvaiul apare deocamdată ca rețea (infrastructură), fără împărțirea pe linii – liniile 1 și 9 vor fi evidențiate când vor exista traseele lor.') +
-        ' Grosimea liniilor metropolitane arată cota lor din titlurile comunelor deservite (volumul comunei împărțit egal între liniile ei) – indicativ, CTP raportează vânzările pe comună, nu pe linie.';
+        (hasTramLines ? '.' : '; tramvaiul apare deocamdată ca rețea (infrastructură), fără împărțirea pe linii.') +
+        ' Grosimea liniilor: numărul de curse pe zi din orarul GTFS sau, la liniile metropolitane, cota din titlurile comunelor deservite (volumul comunei împărțit egal între liniile ei – indicativ, CTP raportează vânzările pe comună).';
     } else {
       $('linesNote').innerHTML = 'Traseele liniilor nu sunt încă publicate. Se generează cu <code>scripts/transport_linii.py</code> din fișierele KML / GeoPackage / Shapefile (vezi README) – sau le puteți previzualiza mai jos, direct din calculator.';
     }
     if (r[4]) { addStops(r[4]); renderStopRank(); } else { $('showStops').parentNode.hidden = true; $('showBusStops').parentNode.hidden = true; }
     if (!busStops.length) $('showBusStops').parentNode.hidden = true;
     if (!nTramStops) $('showTramStops').parentNode.hidden = true;
+    if (SERV) {
+      // cu orarul GTFS: stațiile din orar (liniile exacte) înlocuiesc implicit straturile de stații din fișiere
+      [['showBusStops', busStopLayer], ['showTramStops', tramStopLayer]].forEach(function (x) { $(x[0]).checked = false; map.removeLayer(x[1]); });
+      drawGtfsStops();
+      renderGtfsRank();
+      $('gtfsInfo').innerHTML = 'Orar: GTFS CTP Iași (Tranzy, <a href="https://tranzy.ai/opendata/" target="_blank" rel="noopener">tranzy.ai/opendata</a>), valabil ' +
+        esc((SERV.valabil.de_la || '').replace(/(\d{4})(\d\d)(\d\d)/, '$3.$2.$1')) + '–' + esc((SERV.valabil.pana_la || '').replace(/(\d{4})(\d\d)(\d\d)/, '$3.$2.$1')) + '.';
+    } else {
+      $('gtfsCtl').hidden = true; $('showGtfsStops').parentNode.hidden = true;
+      if (S.width === 'gtfs') S.width = 'cota';
+    }
     if (HOTS) drawHots(r[4]);
     iasiBox();
     var missing = UATS.filter(function (u) { return u.years.length < ys.length; }).map(function (u) {

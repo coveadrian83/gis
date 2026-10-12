@@ -36,6 +36,7 @@ jobs:
         run: python scripts/transport_osm.py
       - name: Regenerează traseele hărții și comparația cu OSM
         run: |
+          python scripts/transport_gtfs.py
           python scripts/transport_linii.py data/transport/linii
           python scripts/transport_compara_osm.py
       - name: Salvează datele în branch

@@ -107,7 +107,10 @@ body.light .leaflet-container { background: #f1efe9; }
 @media (prefers-reduced-motion: reduce) { .hot::after { animation: none; } .bubble { transition: none; } }
 .z-lo .hot-label, .z-lo .stop-dot { display: none; }
 .hotdot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--hot); vertical-align: middle; }
-.rank .r { grid-template-columns: 1.4fr 1fr 30px 0; }
+.rank .r { grid-template-columns: 1.4fr 1fr 46px 30px; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; margin: 8px 0; }
+.row label { display: flex; flex-direction: column; gap: 3px; }
+#gtfsCtl select { font-size: 12px; padding: 3px 6px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 4px; }
 .map-legend .sd { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid #f0efec; background: var(--surface-1); margin: 0 13px 0 6px; }
 .hot-label { color: var(--hot); font-size: 11px; font-weight: 700; white-space: nowrap; text-shadow: 0 0 3px #000, 0 0 3px #000; margin: -4px 0 0 14px; }
 .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: var(--surface-2); color: var(--text-primary); }

@@ -57,10 +57,24 @@
 
   <details id="linesBox" open>
     <summary>Trasee și stații</summary>
+    <div class="row" id="gtfsCtl">
+      <label class="small">Grosimea liniilor
+        <select id="widthBy">
+          <option value="gtfs">curse pe zi (orar GTFS)</option>
+          <option value="cota">cota din titlurile comunelor (metropolitan)</option>
+          <option value="none">uniformă</option>
+        </select></label>
+      <label class="small">Ziua
+        <select id="dayType">
+          <option value="lucru">lucrătoare</option>
+          <option value="weekend">de weekend</option>
+        </select></label>
+    </div>
     <div class="ctl toggles">
+      <label><input type="checkbox" id="showGtfsStops" checked> Stațiile din orar (GTFS) – mărimea: plecări pe zi</label>
       <label><input type="checkbox" id="showLines" checked> Traseele liniilor</label>
       <label><input type="checkbox" id="showProposed"> Proiecte: extinderea tramvaiului, liniile metropolitane „în proiect” (AMTPI)</label>
-      <label><input type="checkbox" id="showBusStops" checked> Stațiile de autobuz locale și metropolitane (de la zoom 13)</label>
+      <label><input type="checkbox" id="showBusStops" checked> Stațiile din fișierele de stații (OSM, AMTPI; de la zoom 13)</label>
       <label><input type="checkbox" id="showTramStops" checked> Stațiile de tramvai (de la zoom 13)</label>
       <label><input type="checkbox" id="showStops"> Stații de transfer și capete de linie metropolitane</label>
       <label><input type="checkbox" id="showHot" checked> Stațiile cele mai aglomerate</label>
@@ -74,10 +88,10 @@
       <input type="file" id="file" accept=".geojson,.json,.kml" multiple></label>
   </details>
 
-  <details id="stopRankBox" hidden>
-    <summary>Stațiile cu cele mai multe linii</summary>
+  <details id="stopRankBox" hidden open>
+    <summary id="stopRankTitle">Stațiile cu cele mai multe linii</summary>
     <div id="stopRank" class="rank"></div>
-    <p class="note">Numărul de linii de autobuz (locale și metropolitane) care trec prin stație, cu toate peroanele ei; <i class="hotdot"></i> = stație aglomerată după CTP. Apăsați pe o stație pentru a-i vedea liniile.</p>
+    <p class="note" id="stopRankNote">Numărul de linii de autobuz (locale și metropolitane) care trec prin stație, cu toate peroanele ei; <i class="hotdot"></i> = stație aglomerată după CTP. Apăsați pe o stație pentru a-i vedea liniile.</p>
   </details>
 
   <details id="iasiBox">
@@ -86,6 +100,7 @@
   </details>
 
   <p class="note" id="dataInfo"></p>
+  <p class="note" id="gtfsInfo"></p>
   <p class="note"><b>Prelucrarea și integrarea datelor:</b> dr. geogr. Adrian Covăsnianu</p>
   <p class="note">Sursa: Compania de Transport Public Iași – centralizatoarele titlurilor de călătorie vândute în Zona Metropolitană (2023–2025) și datele solicitate pentru Planul de Mobilitate (Masterplan). Călătoriile sunt estimate cu numărul de călătorii pe titlu folosit de CTP (bilet = 1, abonament 30 de zile = 60, ZM + Iași = 135). Traseele și fundalul hărții: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">contribuitorii OpenStreetMap</a> (ODbL). <a href="comparatie.html">Comparația cu OSM</a> · <a href="../puz/">Harta PUZ</a> · <a href="../15min/">Harta 15 minute</a> · <a href="../">Studiul O–D</a></p>
   <p class="note">© 2026 Moldova Vrea Infrastructură și Moldova Vrea Autostradă. Toate drepturile rezervate.</p>

@@ -13,6 +13,8 @@ on:
   push:
     paths:
       - data/transport/linii/**
+      - data/transport/gtfs/**
+      - scripts/transport_gtfs.py
       - scripts/transport_linii.py
       - .github/workflows/transport-linii.yml
 
@@ -37,9 +39,10 @@ jobs:
         run: python -m unittest discover -s test -p 'test_transport*.py'
       - name: Convertește traseele
         run: |
-          if ! find data/transport/linii -type f \( -iname '*.kml' -o -iname '*.kmz' -o -iname '*.gpkg' -o -iname '*.shp' \) | grep -q .; then
+          if ! find data/transport/linii data/transport/gtfs -type f \( -iname '*.kml' -o -iname '*.kmz' -o -iname '*.gpkg' -o -iname '*.shp' \) | grep -q .; then
             echo "Nu există încă fișiere cu trasee în data/transport/linii/."; exit 0
           fi
+          python scripts/transport_gtfs.py
           python scripts/transport_linii.py data/transport/linii --tramvai "${{ github.event.inputs.tramvai || '' }}"
       - name: Salvează datele în branch
         run: |

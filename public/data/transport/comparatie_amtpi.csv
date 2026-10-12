@@ -11,12 +11,12 @@
 401,Holboca,Tătărași Sud – Rond Dancu – Primăria Holboca – Rusenii Vechi – Rusenii Noi,în exploatare,da,nu,,https://www.amtpi.ro/401-tatarasi-sud-rond-dancu-primaria-holboca-rusenii-vechi-rusenii-noi/
 402,Holboca,Tătărași Sud – Str. Aeroportului – sat Valea Lungă,în proiect,da,nu,în proiect – pe hartă ca propunere,https://www.amtpi.ro/402-tatarasi-sud-str-aeroportului-sat-valea-lunga/
 23,Miroslava,Podu Roș – Primăria Miroslava – Balciu – Cornești – Proselnici,în exploatare,da,da,preluată din OSM (fără fișier KMZ),https://www.amtpi.ro/23-23b-podu-ros-primaria-miroslava-balciu-cornesti-proselnici/
-23B,Miroslava,Podu Roș – Primăria Miroslava – Balciu – Cornești – Proselnici,în exploatare,nu,nu,lipsește din datele proiectului,https://www.amtpi.ro/23-23b-podu-ros-primaria-miroslava-balciu-cornesti-proselnici/
+23B,Miroslava,Podu Roș – Primăria Miroslava – Balciu – Cornești – Proselnici,în exploatare,da,nu,,https://www.amtpi.ro/23-23b-podu-ros-primaria-miroslava-balciu-cornesti-proselnici/
 501,Miroslava,Podu Roș 4 – Sun City – Miroslava – Vorovești – Ferma Liliac,în exploatare,da,da,față de OSM: diferențe minore,https://www.amtpi.ro/501-podu-ros-sun-city-miroslava-vorovesti/
-501B,Miroslava,Podu Roș 4 – Sun City – Miroslava – Vorovești – Ferma Liliac,în exploatare,nu,nu,lipsește din datele proiectului,https://www.amtpi.ro/501-podu-ros-sun-city-miroslava-vorovesti/
+501B,Miroslava,Podu Roș 4 – Sun City – Miroslava – Vorovești – Ferma Liliac,în exploatare,da,nu,,https://www.amtpi.ro/501-podu-ros-sun-city-miroslava-vorovesti/
 502,Miroslava,C.U.G. I (Selgros) – Tehnopolis – Horpaz – Ciurbești,în exploatare,da,nu,,https://www.amtpi.ro/502-tehnopolis-horpaz-str-noua-ciurbesti-strprincipala-horpaz-strnoua-tehnopolis/
 503,Miroslava,Selgros – Valea Adâncă / Miroslava,în exploatare,da,da,față de OSM: diferențe majore,https://www.amtpi.ro/503-selgros-valea-adanca-503b-selgros-miroslava/
-503B,Miroslava,Selgros – Valea Adâncă / Miroslava,în exploatare,nu,nu,lipsește din datele proiectului,https://www.amtpi.ro/503-selgros-valea-adanca-503b-selgros-miroslava/
+503B,Miroslava,Selgros – Valea Adâncă / Miroslava,în exploatare,da,nu,,https://www.amtpi.ro/503-selgros-valea-adanca-503b-selgros-miroslava/
 504,Miroslava,Metro – Brătuleni (Parc Industrial) – Vorovești – Brătuleni – Valea Ursului,în proiect,da,nu,în proiect – pe hartă ca propunere,https://www.amtpi.ro/504-metro-bratuleni-parc-industrial-vorovesti-bratuleni-valea-ursului-uricani-metro/
 506,Miroslava,Tehnopolis – Horpaz – Str. Principală – Str. Bisericii – Dancaș – Str. Principală,în proiect,da,nu,în proiect – pe hartă ca propunere,https://www.amtpi.ro/506-tehnopolis-horpaz-str-principala-str-bisericii-dancas-str-principala/
 507,Miroslava,Bis. Înălțarea Domnului – Valea Adâncă – Balciu – Bis. Înălțarea Domnului,în proiect,da,nu,în proiect – pe hartă ca propunere,https://www.amtpi.ro/507-bis-inaltarea-domnului-valea-adanca-balciu-bis-inaltarea-domnului/
@@ -33,3 +33,4 @@
 901,Valea Lupului,Str. Bacinschi – Canta – Valea Lupului,în exploatare,da,nu,,https://www.amtpi.ro/901-str-bacinschi-canta-valea-lupului/
 902,Valea Lupului,Canta – Păcurari – Valea Lupului,în exploatare,da,nu,,https://www.amtpi.ro/902-canta-pacurari-valea-lupului/
 205,Bârnova,Sat Barnova – Str Sf Maria – Str Traian Vuia intersectie cu str Sf Ap Petru – Pietrarie,nelistat,da,nu,"Traseu planificat, neoperațional la 12.10.2026: pagina AMTPI îl marchează „indisponibil” (în proiect), lipsește din listele CTP și AMTPI; studiul de oportunitate AMTPI (oct. 2024, anexă la HCL Tomești 231/19.12.2024) îl include la „trasee ce urmează a fi înființate”.",
+802B,Tomeşti,Podu Ros (2) - Rond Tutora-Tomesti-Goruni-Chicerea,nelistat,da,nu,"în orarul GTFS (CTP), dar nu în lista AMTPI: Podu Ros (2) - Rond Tutora-Tomesti-Goruni-Chicerea",

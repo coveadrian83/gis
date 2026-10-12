@@ -497,6 +497,8 @@ def main():
             stare = next(field(props, ("stare", "status", "state")), None)
             if stare:
                 p["stare"] = stare
+            if next(field(props, ("prioritate",)), None) == "suplimentar":
+                p["_suplimentar"] = True               # ex. GTFS: doar dacă linia nu are traseu din altă sursă
             p["sursa"] = src
             lines.append({"type": "Feature", "properties": p,
                           "geometry": {"type": g["type"], "coordinates": rnd(g["coordinates"])}})
@@ -528,6 +530,15 @@ def main():
                           "geometry": {"type": "Point", "coordinates": rnd(c)}})
     if not lines and not stops:
         sys.exit("Nu am găsit trasee sau stații în fișierele date.")
+    primary = {(f["properties"]["tip"], f["properties"]["linie"]) for f in lines if not f["properties"].get("_suplimentar")}
+    extra = sorted({f["properties"]["linie"] for f in lines if f["properties"].get("_suplimentar")
+                    and (f["properties"]["tip"], f["properties"]["linie"]) not in primary and f["properties"]["linie"]},
+                   key=ref_key)
+    lines = [f for f in lines if not f["properties"].get("_suplimentar") or (f["properties"]["tip"], f["properties"]["linie"]) not in primary]
+    for f in lines:
+        f["properties"].pop("_suplimentar", None)
+    if extra:
+        print(f"din sursele suplimentare (GTFS): {', '.join(extra)}", file=sys.stderr)
     stops = dedupe_stops(stops)
     proposed = apply_amtpi(lines)
     split_proposed_stops(stops, proposed)
