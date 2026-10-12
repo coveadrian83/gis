@@ -27,7 +27,6 @@ Necesită: pip install pyshp pyproj shapely  (KML/KMZ se citesc doar cu bibliote
 Rulare:   python scripts/transport_linii.py data/transport/linii [alt_fisier.kml …] [--tramvai 1,3,6]
 """
 import argparse
-import datetime as dt
 import json
 import re
 import sqlite3
@@ -374,7 +373,6 @@ def main():
         sys.exit("Nu am găsit trasee sau stații în fișierele date.")
     od = Path(a.out)
     od.mkdir(parents=True, exist_ok=True)
-    meta = {"generated": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%MZ")}
 
     def num(r):
         return (int(re.match(r"\d+", r).group()), r) if r else (999, "")
@@ -382,10 +380,10 @@ def main():
         order = {"tramvai": 0, "troleibuz": 1, "autobuz": 2, "microbuz": 3}
         lines.sort(key=lambda f: (order.get(f["properties"]["tip"], 4), f["properties"]["retea"] != "local",
                                   num(f["properties"]["linie"])))
-        (od / "linii.geojson").write_text(json.dumps({"type": "FeatureCollection", "meta": meta, "features": lines},
+        (od / "linii.geojson").write_text(json.dumps({"type": "FeatureCollection", "features": lines},
                                                      ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     if stops:
-        (od / "statii.geojson").write_text(json.dumps({"type": "FeatureCollection", "meta": meta, "features": stops},
+        (od / "statii.geojson").write_text(json.dumps({"type": "FeatureCollection", "features": stops},
                                                       ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     for w in warnings:
         print("atenție:", w, file=sys.stderr)
