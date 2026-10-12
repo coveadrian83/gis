@@ -247,3 +247,7 @@ docs/                       specificația v1.0, metodologia și ghidul de testar
 - finalizarea informării GDPR (`public/confidentialitate.html` este proiect), retenție, operator de date, DPIA;
 - un serviciu de geocodare adecvat volumului (Nominatim public: max. 1 cerere/s);
 - test controlat cu 20–30 de utilizatori (roadmap etapa 4).
+
+## Licență
+
+© 2026 Moldova Vrea Infrastructură și Moldova Vrea Autostradă. Toate drepturile rezervate. Detalii și excepții (componente terțe) în [LICENSE](LICENSE).
