@@ -102,6 +102,8 @@ KML = """<?xml version="1.0" encoding="UTF-8"?>
  <MultiGeometry><LineString><coordinates>27.58,47.16 27.59,47.15</coordinates></LineString>
  <LineString><coordinates>27.59,47.15 27.60,47.14</coordinates></LineString></MultiGeometry></Placemark>
 <Placemark><name>Piata Unirii</name><Point><coordinates>27.5797,47.1658,0</coordinates></Point></Placemark>
+<Placemark><name>Pe linia 20</name><Point><coordinates>27.5801,47.1601,0</coordinates></Point></Placemark>
+<Placemark><name>Pe linia de tramvai</name><Point><coordinates>27.57,47.165,0</coordinates></Point></Placemark>
 </Document></kml>"""
 
 
@@ -156,7 +158,8 @@ class Linii(unittest.TestCase):
             self.assertEqual(lines[1]["geometry"]["type"], "LineString")      # bucățile unite (linemerge)
             self.assertEqual(stops[0]["properties"]["nume"], "Piata Unirii")
             self.assertEqual(stops[0]["properties"]["mod"], "autobuz")
-            self.assertEqual(stops[0]["properties"]["linii"], "20")       # traseul liniei 20 pleacă din stație
+            self.assertEqual(stops[1]["properties"]["linii"], "20")       # traseul liniei 20 trece la ~13 m
+            self.assertIsNone(stops[2]["properties"]["linii"])            # stație de autobuz: tramvaiul 9 nu se numără
 
     @unittest.skipUnless(HAVE_GEO, "pyshp / pyproj / shapely lipsesc")
     def test_shapefile_stereo70(self):
