@@ -1,0 +1,71 @@
+{
+ "name": "Iași",
+ "bbox": [
+  27.4255,
+  47.04838,
+  27.7429,
+  47.26421
+ ],
+ "start": [
+  47.16485,
+  27.58186
+ ],
+ "center": [
+  47.1563,
+  27.5842
+ ],
+ "radius_m": 12000,
+ "nodes": 23897,
+ "edges": 31296,
+ "pois": 1941,
+ "counts": {
+  "Alimentație": 435,
+  "Sănătate": 347,
+  "Educație": 186,
+  "Parcuri și locuri de joacă": 300,
+  "Cafenele și restaurante": 393,
+  "Parcări pentru biciclete": 28,
+  "Stații de transport public": 250,
+  "Închiriere biciclete / trotinete": 2
+ },
+ "steps": 414,
+ "infrastructure": {
+  "km_by_class": {
+   "pistă pentru biciclete": 22.0,
+   "alee comună (bicicleta permisă)": 13.7,
+   "alee / drum de pământ": 1057.4,
+   "stradă locală": 1581.3,
+   "stradă terțiară": 171.7,
+   "stradă secundară": 170.6,
+   "stradă principală": 87.8,
+   "drum național (trunk)": 24.9,
+   "trotuar / zonă pietonală": 142.8,
+   "scări": 7.4,
+   "drum interzis bicicletelor": 2.2
+  },
+  "km_roads_with_bike_lane": 19.4,
+  "km_roads_maxspeed_over_50": 120.7,
+  "km_roads_maxspeed_tagged": 1255.7,
+  "km_roads_total": 2036.3,
+  "km_oneway_for_vehicles": 209.2,
+  "km_sett": 4.3,
+  "km_unpaved": 1304.8
+ },
+ "osmnx": "2.1.1",
+ "source": "overpass",
+ "generated": "2026-10-13T13:21Z",
+ "elevation": {
+  "source": "Copernicus GLO-30 (DSM), deschidere morfologică 5 px + gauss σ=1",
+  "min_m": 33.8,
+  "max_m": 413.2,
+  "street_length_share_by_grade_pct": {
+   "0-3": 31.4,
+   "3-5": 17.2,
+   "5-8": 16.7,
+   "8-12": 15.9,
+   "12+": 18.8
+  },
+  "osm_incline_edges": 251,
+  "generated": "2026-10-13T13:21Z"
+ }
+}
