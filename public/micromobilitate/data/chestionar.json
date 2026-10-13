@@ -1125,7 +1125,7 @@
    "dorite": 1
   },
   {
-   "nume": "Strada Alexandru Vodă Ipsilanti",
+   "nume": "Strada Gospodarilor",
    "parcurse": 0,
    "dorite": 1
   },
@@ -1135,7 +1135,7 @@
    "dorite": 1
   },
   {
-   "nume": "Strada Gospodarilor",
+   "nume": "Strada Alexandru Vodă Ipsilanti",
    "parcurse": 0,
    "dorite": 1
   },
@@ -1205,12 +1205,12 @@
    "dorite": 1
   },
   {
-   "nume": "Strada Petre Vancea",
+   "nume": "Strada Constantin Pop",
    "parcurse": 1,
    "dorite": 0
   },
   {
-   "nume": "Strada Constantin Pop",
+   "nume": "Strada Petre Vancea",
    "parcurse": 1,
    "dorite": 0
   },
@@ -1245,12 +1245,12 @@
    "dorite": 0
   },
   {
-   "nume": "Strada Mitropolit Varlaam",
+   "nume": "Strada Colonel Langa",
    "parcurse": 0,
    "dorite": 1
   },
   {
-   "nume": "Strada Colonel Langa",
+   "nume": "Strada Mitropolit Varlaam",
    "parcurse": 0,
    "dorite": 1
   },
@@ -1260,12 +1260,12 @@
    "dorite": 0
   },
   {
-   "nume": "Strada Dimineții",
+   "nume": "Strada Mușatini",
    "parcurse": 0,
    "dorite": 1
   },
   {
-   "nume": "Strada Mușatini",
+   "nume": "Strada Dimineții",
    "parcurse": 0,
    "dorite": 1
   },
@@ -1384,19 +1384,19 @@
   },
   "IAS-Z14": {
    "zona": "Cantemir – Socola",
-   "respondenti": 69,
-   "bicicleta_pct": 81.2,
-   "frecvent_pct": 68.1,
-   "mod_bicicleta_pct": 37.7,
-   "sigur_pct": 2.9
+   "respondenti": 22,
+   "bicicleta_pct": 72.7,
+   "frecvent_pct": 63.6,
+   "mod_bicicleta_pct": 31.8,
+   "sigur_pct": 4.5
   },
   "IAS-Z15": {
    "zona": "Centru",
-   "respondenti": 81,
-   "bicicleta_pct": 82.7,
-   "frecvent_pct": 74.1,
-   "mod_bicicleta_pct": 27.2,
-   "sigur_pct": 4.9
+   "respondenti": 128,
+   "bicicleta_pct": 83.6,
+   "frecvent_pct": 72.7,
+   "mod_bicicleta_pct": 32.0,
+   "sigur_pct": 3.9
   },
   "IAS-Z16": {
    "zona": "Studențesc",
