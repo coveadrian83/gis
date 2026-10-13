@@ -140,6 +140,9 @@ cu aceeași deplasare **fără restricții** și cu mersul pe jos.
   (facilitățile cu `amenity=bicycle_parking` la ≤ 100 m), bicicletă + transport public (park & ride, orarul GTFS CTP prin
   `scripts/transit_micro15.py`, fără transbordare) și **lipsurile din rețea** (segmentele pe care o pistă / un contrasens ar
   scurta cele mai multe deplasări; tabel și CSV).
+- **Chestionarul velo al Masterplanului** (2022–2023, 1.413 chestionare): străzile parcurse și dorite, potrivite cu rețeaua OSM
+  (strat pe hartă și pondere în prioritizarea lipsurilor), bicicliștii pe zone de domiciliu și indicatorii de opinie –
+  doar agregate, prin `scripts/chestionar_velo.py` (răspunsurile brute stau local în `data/chestionar_velo/`, ignorat de git).
 - **Linia de comandă**: `node scripts/analiza-micro15.js [--vehicle scooter --kmh 18 --min 15 --ref free --out var/zone.csv]`.
 - Metodologia și **cadrul legal** (definiții, reguli, RCA din 16.11.2025, proiecte în curs): `public/micromobilitate/metodologie.html`.
 
@@ -336,6 +339,7 @@ scripts/export_15min.py     exportul rețelei pietonale și al facilităților d
 scripts/elevatie_15min.py   panta: elevația Copernicus GLO-30 pe fiecare segment (elev.bin)
 scripts/export_micro15.py   rețeaua pentru micromobilitate: piste, limite de viteză, sens unic (osmnx)
 scripts/transit_micro15.py  orarul CTP (GTFS) compact pentru varianta bicicletă + transport public
+scripts/chestionar_velo.py  agregatele chestionarului velo (străzi, zone, opinii) pentru harta micromobilității
 scripts/analiza-micro15.js  analiza micromobilității pe puncte și pe zone din linia de comandă
 scripts/analiza-15min.js    analiza pe puncte și pe zone din linia de comandă (--scari: scările și străzile abrupte)
 test/                       teste automate (date geografice sintetice)

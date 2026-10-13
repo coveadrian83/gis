@@ -42,7 +42,9 @@
 
   var G = null, grid = null, POIS_ALL = null, POIS_PARK = null, PARKFLAG = null, TRANSIT = null, EDGE_NAMES = null;
   var PARK_RADIUS = 100, PARK_AND_RIDE = 60;   // m; s pentru legarea vehiculului la stație
-  var wsA = null, wsB = null, wsC = null, wsD = null, GAPS = null;
+  var wsA = null, wsB = null, wsC = null, wsD = null, GAPS = null, SURVEY = null, SURVEY_EDGE = null;
+  // clasele stratului „străzi din chestionar” (respondenți care au numit strada), ca în harta Masterplanului
+  var SURVEY_CLASSES = [[1, '#b2182b', 1], [11, '#f46d43', 2], [31, '#fdae61', 3], [61, '#e6e600', 3.5], [121, '#a6d96a', 4.5], [251, '#4d9221', 6]];
   var ZONES = null, zoneLayer = null, zoneResults = null, zoneRunning = false;
   var origin = L.latLng(47.16485, 27.58186), state = null, queued = false;
   var marker = L.marker(origin, { draggable: true }).addTo(map);
@@ -307,6 +309,7 @@
       });
       ctx.globalAlpha = 1;
     }
+    if (SURVEY && $('showSurvey').checked && z >= 11) drawSurvey(ctx, X, Y, box, z);
     // lipsurile din rețea: grosimea și opacitatea după scor
     if (GAPS && $('showGaps').checked && z >= 11) {
       var top = GAPS.top, max = GAPS.max;
@@ -454,25 +457,31 @@
       return va - vb;   // cele mai slab deservite zone primele
     });
     var refName = zoneResults.refKind === 'walk' ? 'pe jos' : 'fără restr.';
-    $('zoneTable').innerHTML = '<thead><tr><th>Zona</th><th>Facilități<br>vehicul / ' + refName + '</th><th>Dif.</th><th>5/5</th><th>Stații</th></tr></thead><tbody>' +
+    var sz = SURVEY && SURVEY.zone;
+    $('zoneTable').innerHTML = '<thead><tr><th>Zona</th><th>Facilități<br>vehicul / ' + refName + '</th><th>Dif.</th><th>5/5</th><th>Stații</th>' +
+      (sz ? '<th title="Respondenții chestionarului velo care locuiesc în zonă și folosesc bicicleta cel puțin o dată pe săptămână">Velo*</th>' : '') + '</tr></thead><tbody>' +
       rows.map(function (r) {
         var st = zoneStyle({ properties: { zone_id: r.zone_id } });
         return '<tr data-id="' + esc(r.zone_id) + '"><td><span class="sw" style="background:' + (st.fillColor || 'transparent') + '"></span>' + esc(r.zone_name) +
           '</td><td>' + fmt(r.amen_mean) + ' / ' + fmt(r.amen_mean_ref) + '</td><td>' + (r.gain_pct === null ? '–' : (r.gain_pct > 0 ? '+' : '') + fmt(r.gain_pct) + '%') +
-          '</td><td>' + (r.full_share === null ? '–' : fmt(r.full_share) + '%') + '</td><td>' + fmt(r.stations_mean, 1) + '</td></tr>';
+          '</td><td>' + (r.full_share === null ? '–' : fmt(r.full_share) + '%') + '</td><td>' + fmt(r.stations_mean, 1) + '</td>' +
+          (sz ? '<td>' + (sz[r.zone_id] ? fmt(sz[r.zone_id].frecvent_pct) + '% <small>(n=' + sz[r.zone_id].respondenti + ')</small>' : '–') + '</td>' : '') + '</tr>';
       }).join('') + '</tbody>';
   }
   function zonesCsv() {
     var o = zoneResults;
     var head = ['zona_id', 'zona', 'vehicul', 'viteza_kmh', 'reguli', 'referinta', 'minute', 'puncte_analizate', 'facilitati_medie_vehicul',
-      'facilitati_medie_referinta', 'diferenta_pct', 'facilitati_mediana', 'puncte_cu_toate_5_categorii_pct', 'statii_medie'];
+      'facilitati_medie_referinta', 'diferenta_pct', 'facilitati_mediana', 'puncte_cu_toate_5_categorii_pct', 'statii_medie',
+      'chestionar_respondenti', 'chestionar_folosesc_bicicleta_pct', 'chestionar_saptamanal_pct', 'chestionar_mod_principal_bicicleta_pct'];
     var num = function (v) { return v === null || v === undefined || !isFinite(v) ? '' : String(Math.round(v * 10) / 10); };
     var txt = function (v) { var t = String(v); return /[",;\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
     var lines = [head.join(',')];
     o.rows.forEach(function (r) {
       lines.push([txt(r.zone_id), txt(r.zone_name), o.s.vehicle, num(o.s.v0 * 3.6), o.s.legal ? 'cod_rutier' : 'fara_restrictii',
         o.refKind === 'walk' ? 'pe_jos_1.4ms' : 'fara_restrictii', o.s.minutes, r.points, num(r.amen_mean), num(r.amen_mean_ref),
-        num(r.gain_pct), num(r.amen_median), num(r.full_share), num(r.stations_mean)].join(','));
+        num(r.gain_pct), num(r.amen_median), num(r.full_share), num(r.stations_mean)].concat((function (z) {
+          return z ? [z.respondenti, num(z.bicicleta_pct), num(z.frecvent_pct), num(z.mod_bicicleta_pct)] : ['', '', '', ''];
+        })(SURVEY && SURVEY.zone && SURVEY.zone[r.zone_id])).join(','));
     });
     return lines.join('\n') + '\n';
   }
@@ -573,15 +582,26 @@
       if (!g) { g = groups[key] = { name: name, reason: reason, score: 0, len: 0, edges: [] }; list.push(g); }
       g.score = Math.max(g.score, GAPS.score[e]); g.len += G.elen[e]; g.edges.push(e);
     });
-    return list.sort(function (a, b) { return b.score - a.score; });
+    list.forEach(function (g) {
+      var d = SURVEY && SURVEY.byName[g.name];
+      g.parcurse = d ? d.parcurse : 0; g.dorite = d ? d.dorite : 0; g.demand = g.parcurse + g.dorite;
+    });
+    // prioritatea combinată: scorul rețelei și cererea declarată, fiecare raportat la maximul din listă
+    var maxS = Math.max.apply(null, list.map(function (g) { return g.score; }).concat([1e-9]));
+    var maxD = Math.max.apply(null, list.map(function (g) { return g.demand; }).concat([1]));
+    list.forEach(function (g) { g.priority = g.score / maxS + g.demand / maxD; });
+    var by = SURVEY && $('gapSort').value === 'both' ? 'priority' : 'score';
+    return list.sort(function (a, b) { return b[by] - a[by]; });
   }
   function renderGaps() {
     if (!GAPS) return;
     var list = gapGroups().slice(0, 25);
     GAPS.groups = list;
-    $('gapTable').innerHTML = '<thead><tr><th>Stradă / segment</th><th>Motiv</th><th>m</th><th>Scor</th></tr></thead><tbody>' +
+    $('gapTable').innerHTML = '<thead><tr><th>Stradă / segment</th><th>Motiv</th><th>m</th><th>Scor</th>' +
+      (SURVEY ? '<th title="Respondenți care au numit strada: parcursă cel mai des / dorită pentru biciclete și pietoni">Chest.</th>' : '') + '</tr></thead><tbody>' +
       list.map(function (g, k) {
-        return '<tr data-k="' + k + '"><td>' + esc(g.name) + '</td><td>' + esc(g.reason) + '</td><td>' + fmt(g.len) + '</td><td>' + fmt(g.score, 1) + '</td></tr>';
+        return '<tr data-k="' + k + '"><td>' + esc(g.name) + '</td><td>' + esc(g.reason) + '</td><td>' + fmt(g.len) + '</td><td>' + fmt(g.score, 1) + '</td>' +
+          (SURVEY ? '<td>' + (g.demand ? g.parcurse + ' / ' + g.dorite : '–') + '</td>' : '') + '</tr>';
       }).join('') + '</tbody>';
   }
   $('gapTable').addEventListener('click', function (ev) {
@@ -595,10 +615,12 @@
   $('csvGaps').addEventListener('click', function () {
     if (!GAPS) return;
     var t = function (v) { var x = String(v); return /[",;\n]/.test(x) ? '"' + x.replace(/"/g, '""') + '"' : x; };
-    var lines = ['segment,strada,motiv,clasa,limita_kmh,lungime_m,scor,lat,lon'];
+    var lines = ['segment,strada,motiv,clasa,limita_kmh,lungime_m,scor,chestionar_parcurse,chestionar_dorite,lat,lon'];
     GAPS.top.forEach(function (e) {
+      var d = SURVEY && EDGE_NAMES && SURVEY.byName[EDGE_NAMES[e]];
       lines.push([e, t(EDGE_NAMES && EDGE_NAMES[e] || ''), t(gapReason(e)), t(CLS_LABEL[G.cls[e]]), G.maxspeed[e] || '', Math.round(G.elen[e]),
-        Math.round(GAPS.score[e] * 100) / 100, ((G.lat[G.eu[e]] + G.lat[G.ev[e]]) / 2).toFixed(5), ((G.lon[G.eu[e]] + G.lon[G.ev[e]]) / 2).toFixed(5)].join(','));
+        Math.round(GAPS.score[e] * 100) / 100, d ? d.parcurse : 0, d ? d.dorite : 0,
+        ((G.lat[G.eu[e]] + G.lat[G.ev[e]]) / 2).toFixed(5), ((G.lon[G.eu[e]] + G.lon[G.ev[e]]) / 2).toFixed(5)].join(','));
     });
     var blob = new Blob(['﻿' + lines.join('\n') + '\n'], { type: 'text/csv;charset=utf-8' });
     var a = document.createElement('a');
@@ -608,6 +630,71 @@
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
   });
   $('runGaps').addEventListener('click', runGaps);
+  $('gapSort').addEventListener('change', renderGaps);
+
+  // ---------------------------------------------------------------- chestionarul velo (Masterplan 2022–2023)
+  function initSurvey(ch) {
+    SURVEY = ch;
+    SURVEY.byName = {};
+    ch.strazi.forEach(function (x) { SURVEY.byName[x.nume] = x; });
+    $('surveyToggle').hidden = false; $('surveyBox').hidden = false; $('gapSortRow').hidden = false;
+    $('gapSort').value = 'both';
+    $('surveyKey').innerHTML = SURVEY_CLASSES.map(function (c, i) {
+      var hi = i + 1 < SURVEY_CLASSES.length ? SURVEY_CLASSES[i + 1][0] - 1 : null;
+      return '<span style="background:' + c[1] + ';height:' + Math.max(2, c[2]) + 'px"></span>' + c[0] + (hi ? '–' + hi : '+');
+    }).join(' ');
+    var S = ch.sumar, M2 = ch.sumar_multiplu, n = ch.raspunsuri;
+    var pct = function (obj, key) { return fmt((obj[key] || 0) / n * 100) + '%'; };
+    var row = function (label, value) { return '<tr><td>' + label + '</td><td>' + value + '</td></tr>'; };
+    var top = ch.strazi.slice(0, 8).map(function (x) { return esc(x.nume) + ' (' + x.parcurse + ')'; }).join(', ');
+    var wanted = ch.strazi.slice().sort(function (a, b) { return b.dorite - a.dorite; }).slice(0, 6).map(function (x) { return esc(x.nume) + ' (' + x.dorite + ')'; }).join(', ');
+    var fmtDate = function (d) { return d.split('-').reverse().join('.'); };
+    $('surveySummary').innerHTML = '<p class="note">' + n.toLocaleString('ro-RO') + ' de răspunsuri, ' + fmtDate(ch.perioada[0]) + ' – ' + fmtDate(ch.perioada[1]) +
+      '. Agregatele de mai jos; răspunsurile individuale nu sunt publicate.</p><table>' +
+      row('Folosesc bicicleta', pct(S.bicicleta, 'DA')) +
+      row('… zilnic sau de mai multe ori pe săptămână', fmt(((S.frecventa['Zilnic'] || 0) + (S.frecventa['De mai multe ori pe săptămână'] || 0)) / n * 100) + '%') +
+      row('Bicicleta / trotineta e modul principal', pct(S.mod, 'Bicicletă/trotinetă')) +
+      row('Mulțumiți de pistele din Iași', pct(S.multumit, 'DA') + ' (parțial ' + pct(S.multumit, 'PARȚIAL') + ')') +
+      row('Se simt în siguranță ca bicicliști', pct(S.siguranta, 'DA')) +
+      row('Ar merge cu bicicleta pe orice vreme, cu infrastructură bună', pct(S.vreme, 'DA')) +
+      row('De acord cu redimensionarea străzilor pentru biciclete', pct(S.redimensionare, 'DA')) +
+      row('De acord cu înlocuirea parcărilor de pe străzile principale cu benzi velo / de transport public', pct(S.parcare, 'DA')) +
+      row('Cere siguranță / continuitate a traseelor', fmt((M2.aspecte['Siguranța în deplasare'] || 0) / n * 100) + '% / ' + fmt((M2.aspecte['Continuitate în deplasare'] || 0) / n * 100) + '%') +
+      row('Problema nr. 1: „Nu există o rețea de piste”', fmt((M2.probleme['Nu există o rețea de piste pentru biciclete'] || 0) / n * 100) + '%') +
+      '</table><p class="note"><b>Cele mai parcurse străzi</b> (respondenți): ' + top + '.</p><p class="note"><b>Dorite pentru biciclete și pietoni</b>: ' + wanted +
+      '.</p><p class="note">Zona de domiciliu: ' + Object.keys(ch.zone).reduce(function (a, k) { return a + ch.zone[k].respondenti; }, 0) + ' respondenți în cele 17 zone, ' +
+      Object.keys(ch.zm).reduce(function (a, k) { return a + ch.zm[k]; }, 0) + ' în comunele ZM (' + Object.keys(ch.zm).slice(0, 5).join(', ') + ' …). Procentele pe zone apar în analiza pe zone (coloana „Velo*”).</p>';
+  }
+  // pentru fiecare segment: câți respondenți au numit strada lui (după denumirea OSM din edges.json)
+  function surveyEdges() {
+    if (!SURVEY || !EDGE_NAMES) return null;
+    if (!SURVEY_EDGE) {
+      SURVEY_EDGE = { parcurse: new Uint16Array(G.nE), dorite: new Uint16Array(G.nE) };
+      for (var e = 0; e < G.nE; e++) {
+        var d = EDGE_NAMES[e] && SURVEY.byName[EDGE_NAMES[e]];
+        if (d) { SURVEY_EDGE.parcurse[e] = d.parcurse; SURVEY_EDGE.dorite[e] = d.dorite; }
+      }
+    }
+    return SURVEY_EDGE;
+  }
+  function drawSurvey(ctx, X, Y, box, z) {
+    var se = surveyEdges();
+    if (!se) return;
+    var arr = se[$('surveyKind').value];
+    for (var k = 0; k < SURVEY_CLASSES.length; k++) {
+      var lo = SURVEY_CLASSES[k][0], hi = k + 1 < SURVEY_CLASSES.length ? SURVEY_CLASSES[k + 1][0] : Infinity, list = [];
+      for (var e = 0; e < G.nE; e++) if (arr[e] >= lo && arr[e] < hi && inView(e, box)) list.push({ e: e });
+      if (!list.length) continue;
+      ctx.beginPath(); ctx.strokeStyle = SURVEY_CLASSES[k][1]; ctx.globalAlpha = 0.85;
+      ctx.lineWidth = SURVEY_CLASSES[k][2] * Math.max(1, (z - 11) * 0.5);
+      strokeEdges(ctx, X, Y, list); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
+  $('showSurvey').addEventListener('change', function () {
+    if ($('showSurvey').checked) loadNames().then(draw); else draw();
+  });
+  $('surveyKind').addEventListener('change', draw);
 
   // ---------------------------------------------------------------- link partajabil
   var hashTimer;
@@ -666,7 +753,8 @@
   labels();
   var elevReq = fetch(DATA_DIR + 'elev.bin').then(function (r) { return r.ok ? r.arrayBuffer() : null; }).catch(function () { return null; });
   Promise.all([getOk('meta.json', 'json'), getOk('graph.bin', 'arrayBuffer'), getOk('micro.bin', 'arrayBuffer'), getOk('pois.json', 'json'), elevReq,
-    fetch('data/transit.json').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })]).then(function (res) {
+    fetch('data/transit.json').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
+    fetch('data/chestionar.json').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })]).then(function (res) {
     var meta = res[0];
     G = C.parseGraph(res[1]); grid = C.buildGrid(G);
     M.parseMicro(res[2], G);
@@ -681,6 +769,7 @@
     // varianta „doar cu parcare”: facilitățile din cele 5 categorii fără parcare în apropiere nu se mai numără
     POIS_PARK = poisView(res[3].cats, pts, POIS_ALL.snap, function (p, i) { return p[2] > 4 || PARKFLAG[i]; });
     if (res[5]) { TRANSIT = M.prepareTransit(res[5], G, grid, C.nearestNode); $('transitBox').hidden = false; }
+    if (res[6]) initSurvey(res[6]);
     origin = L.latLng(meta.start[0], meta.start[1]);
     var h = applyHash(meta);
     if (!h.hadOrigin) {

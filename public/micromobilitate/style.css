@@ -14,3 +14,7 @@ table.law td, table.law th { text-align: left !important; white-space: normal !i
 #gapTable tr { cursor: pointer; }
 #gapTable tbody tr:hover { background: #ece7da; }
 .ctl > label { display: block; margin: 3px 0; }
+.surveykey { display: inline-flex; flex-wrap: wrap; gap: 3px; align-items: center; font-size: 11px; color: var(--muted); margin-left: 4px; }
+.surveykey span { display: inline-block; width: 14px; border-radius: 2px; }
+#showSurvey + select, #surveyKind { padding: 2px 4px; font-size: 12px; }
+#surveySummary table td:first-child { white-space: normal; }

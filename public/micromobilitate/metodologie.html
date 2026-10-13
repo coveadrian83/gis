@@ -124,6 +124,22 @@
   <h3>Lipsurile din rețea</h3>
   <p>Din puncte pe o grilă (implicit 800 m, maximum 25 pe zonă) în cele 17 zone se calculează drumurile cele mai rapide <b>fără restricții</b> până la fiecare facilitate atinsă în timpul ales. Fiecare segment de pe un astfel de drum, parcurs într-un sens în care vehiculul nu poate circula legal (trotuar, zonă pietonală, sens unic fără contrasens, stradă peste 50 km/h pentru trotinetă) sau care nu face parte din rețeaua confortabilă (dacă opțiunea e bifată), primește un punct. Scorul segmentului este media punctelor pe grilă: <i>câte facilități pe punct de pornire ar fi mai aproape</i> dacă segmentul ar avea o pistă, o bandă sau un contrasens. Segmentele cu același nume și același motiv se adună în tabel; lista completă se descarcă în CSV. Este un indicator de prioritizare, nu un studiu de trafic: nu ține cont de cererea reală, de populație sau de fezabilitate.</p>
 
+  <h2 id="chestionar">5b. Chestionarul velo al Masterplanului (2022–2023)</h2>
+  <p>Ancheta online pentru Masterplanul pistelor de biciclete din municipiul Iași (6 aprilie 2022 – 16 ianuarie 2023; <b>1.413 chestionare</b>, același eșantion ca harta „Tramă stradală parcursă cu bicicleta”, dr. geogr. Adrian Covăsnianu, 2022) intră în hartă doar ca <b>agregate</b> (<code>public/micromobilitate/data/chestionar.json</code>, scrise de <code>scripts/chestionar_velo.py</code>); răspunsurile individuale nu sunt publicate. Formularul a rămas deschis: cele 43 de răspunsuri de după ianuarie 2023 se pot include cu <code>--pana-la toate</code>.</p>
+  <table>
+    <tr><th>Indicator (din 1.413)</th><th>Valoare</th></tr>
+    <tr><td>Folosesc bicicleta</td><td>72,3%</td></tr>
+    <tr><td>Bicicleta / trotineta este modul principal în cursul săptămânii</td><td>23,1%</td></tr>
+    <tr><td>Mulțumiți de pistele din Iași (DA / parțial)</td><td>0,9% / 20,4%</td></tr>
+    <tr><td>Se simt în siguranță ca bicicliști</td><td>5,7%</td></tr>
+    <tr><td>Ar merge cu bicicleta indiferent de vreme, dacă infrastructura ar fi adecvată</td><td>71,4%</td></tr>
+    <tr><td>De acord cu redimensionarea străzilor pentru infrastructura velo</td><td>97,0%</td></tr>
+    <tr><td>De acord cu înlocuirea parcărilor gratuite de pe străzile principale cu benzi velo și de transport public</td><td>88,0%</td></tr>
+  </table>
+  <p><b>Străzile parcurse</b> (întrebarea 11: „Enumerați 3 străzi pe care le parcurgeți cel mai des cu bicicleta”) și <b>străzile dorite</b> exclusiv pentru biciclete și pietoni (întrebarea 12) sunt text liber. Textul se împarte în străzi (virgule, „și”, punct urmat de un tip de stradă), tipul și diacriticele se ignoră, iar fiecare stradă se caută în denumirile rețelei OSM: toate cuvintele importante trebuie să apară în denumire („Bd. Carol” → Bulevardul Carol I, „Mangeron” → Bulevardul Profesor Dimitrie Mangeron), cu corectarea greșelilor mici. Denumirile populare au aliasuri („Copou” → Bulevardul Carol I, „Tudor” → Bulevardul Tudor Vladimirescu, „Ștefan cel Mare” → Bulevardul Ștefan cel Mare și Sfânt). Fără tip scris, la nume identice se alege bulevardul / șoseaua / calea. Un respondent contează o singură dată pe stradă. 1.219 respondenți au numit cel puțin o stradă; s-au regăsit 232 de străzi. Textele negăsite numite de cel puțin trei ori („centru”, „toate”, „Gara” …) sunt listate în fișier.</p>
+  <p>Pe hartă, stratul <b>„Străzi din chestionarul velo”</b> colorează fiecare segment după numărul de respondenți care i-au numit strada (pe toată lungimea străzii, nu pe porțiunea efectiv parcursă). În <b>„Lipsuri în rețea”</b>, coloana „Chest.” arată respondenții (parcurse / dorite), iar ordonarea implicită combină cele două surse: <code>prioritate = scor / scorul maxim + cerere / cererea maximă</code>, unde cererea = parcurse + dorite. Un segment ajunge sus dacă este și o verigă lipsă a rețelei, și o stradă pe care bicicliștii o folosesc sau o cer.</p>
+  <p><b>Zona de domiciliu</b> (întrebarea 3, text liber) se atribuie celor 17 zone după denumirea cartierului (cu aliasuri: Podu Roș → Cantemir–Socola, Tudor Vladimirescu → Studențesc, Canta → Păcurari, Gara / Târgu Cucu → Centru …) sau comunelor ZM după nomenclatorul SIRUTA: 1.009 respondenți în cele 17 zone, 302 în ZM (mai ales Miroslava, Valea Lupului, Rediu, Ciurea, Bârnova), 102 nealocați. În analiza pe zone, coloana „Velo*” arată proporția respondenților din zonă care folosesc bicicleta cel puțin o dată pe săptămână (cu numărul lor); în CSV apar și proporția celor care folosesc bicicleta și a celor pentru care este modul principal. Eșantionul este autoselectat (cei interesați de bicicletă au răspuns mai des), deci proporțiile descriu respondenții, nu populația zonei.</p>
+
   <h2>6. Limite</h2>
   <ul>
     <li><b>Limitele de viteză</b> lipsesc pe multe străzi în OSM. O stradă fără <code>maxspeed</code> este considerată de 50 km/h (limita implicită în localitate), iar un drum național (<code>trunk</code>) fără etichetă de 90 km/h. Limita localității nu este folosită; completarea <code>maxspeed</code> în OSM pe bulevardele Iașului schimbă direct rezultatul pentru trotinete (procentul străzilor etichetate apare sub hartă).</li>
@@ -140,6 +156,7 @@
 python scripts/export_micro15.py                                    # scrie public/micromobilitate/data/iasi/
 python scripts/elevatie_15min.py --dir public/micromobilitate/data/iasi   # panta (elev.bin)
 python scripts/transit_micro15.py                                   # orarul CTP (GTFS) → data/transit.json
+python scripts/chestionar_velo.py data/chestionar_velo/….xlsx     # chestionarul velo → data/chestionar.json (fișierul brut nu se publică)
 node scripts/analiza-micro15.js                                     # vehiculele în câteva puncte + zonele
 node scripts/analiza-micro15.js --vehicle scooter --ref free --out var/zone_trotineta.csv
 node scripts/analiza-micro15.js --point 47.17411,27.57178 --min 10</pre>

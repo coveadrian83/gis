@@ -8,3 +8,5 @@ cache/
 __pycache__/
 # centralizatoarele CTP (conțin și foi contabile) – se publică doar agregatele din public/data/transport
 data/transport/*.xlsx
+# răspunsurile individuale ale chestionarului velo – se publică doar agregatele (public/micromobilitate/data/chestionar.json)
+data/chestionar_velo/

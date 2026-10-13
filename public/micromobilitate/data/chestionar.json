@@ -1,0 +1,1508 @@
+{
+ "sursa": "Chestionar Masterplan piste pentru biciclete, municipiul Iași",
+ "perioada": [
+  "2022-04-06",
+  "2023-01-16"
+ ],
+ "raspunsuri": 1413,
+ "raspunsuri_in_fisier": 1456,
+ "pana_la": "2023-01-31",
+ "respondenti_cu_strazi": 1219,
+ "sumar": {
+  "varsta": {
+   "25-34 ani": 602,
+   "35-45 ani": 452,
+   "19-24 ani": 170,
+   "46-65 ani": 157,
+   "16-18 ani": 18,
+   "Sub 15 ani": 8,
+   "peste 66 ani": 6
+  },
+  "ocupatie": {
+   "Angajat": 1111,
+   "Elev, Student": 125,
+   "Liber profesionist": 118,
+   "Alta": 42,
+   "Neangajat": 10,
+   "Pensionar": 7
+  },
+  "distanta": {
+   "6 - 8 km": 398,
+   "3 - 5 km": 387,
+   "9 - 12 km": 244,
+   "peste 15 km": 222,
+   "13 - 15 km": 109,
+   "0 - 2 km": 53
+  },
+  "mod": {
+   "Autovehiculul personal": 703,
+   "Bicicletă/trotinetă": 326,
+   "Transportul în comun": 218,
+   "Pietonal": 116,
+   "Taxi/Uber/Bolt": 30,
+   "Scuter/motocicletă/moped": 11,
+   "cand vremea e bună bicicleta sau trotineta, cand e frig masina": 1,
+   "Mers pe jos": 1,
+   "Bicicleta, Mașina": 1,
+   "Mersul pe jos": 1,
+   "Depinzand de vreme si de anotimp, jonglez cu masina, bicicleta si mers pe jos.": 1,
+   "Autovehiculul personal din lipsa infrastructurii pentru biciclete": 1,
+   "mașina companiei": 1,
+   "Pietonal + transport in comun": 1,
+   "Auto de serviciu": 1
+  },
+  "bicicleta": {
+   "DA": 1021,
+   "NU": 392
+  },
+  "frecventa": {
+   "De mai multe ori pe săptămână": 488,
+   "O dată la câteva luni": 281,
+   "O dată pe săptămână": 206,
+   "Zilnic": 181,
+   "De mai multe ori pe lună": 101,
+   "O dată pe lună": 98
+  },
+  "multumit": {
+   "NU": 1112,
+   "PARȚIAL": 288,
+   "DA": 13
+  },
+  "siguranta": {
+   "NU": 1333,
+   "DA": 80
+  },
+  "vreme": {
+   "DA": 1009,
+   "NU": 404
+  },
+  "zgomot": {
+   "DA": 1180,
+   "NU": 233
+  },
+  "poluare": {
+   "DA": 1377,
+   "NU": 36
+  },
+  "redimensionare": {
+   "DA": 1370,
+   "NU": 43
+  },
+  "parcare": {
+   "DA": 1243,
+   "NU": 170
+  }
+ },
+ "sumar_multiplu": {
+  "scop": {
+   "Recreere și sport": 1141,
+   "Serviciu / Locul de muncă": 1138,
+   "Cumpărături": 837,
+   "Activități socio-culturale": 634,
+   "Creșă / Grădiniță / Școală / Liceu": 316,
+   "Universitate": 1
+  },
+  "aspecte": {
+   "Siguranța în deplasare": 1311,
+   "Continuitate în deplasare": 1235,
+   "Confortul în deplasare": 800,
+   "Traseele trebuie să fie cât mai directe": 574,
+   "Multi-modalitate": 280
+  },
+  "probleme": {
+   "Obstacole pe pistă": 1174,
+   "Nu există o rețea de piste pentru biciclete": 1026,
+   "Piste lipsite de conectivitate": 1017,
+   "Lipsă semnalistică specifică": 834,
+   "Bordurile sunt prea înalte": 791,
+   "Pista nu are o lățime corespunzătoare": 684,
+   "Pista nu este marcată și delimitată corespunzător": 678,
+   "Pista trece printr-o stație de autobuz": 646,
+   "Lipsa / număr insuficient rasteluir": 563,
+   "Lipsa / număr insuficient de centre de închiriat": 268,
+   "Stații de închiriere puține": 194
+  }
+ },
+ "strazi": [
+  {
+   "nume": "Bulevardul Carol I",
+   "parcurse": 413,
+   "dorite": 148
+  },
+  {
+   "nume": "Bulevardul Ștefan cel Mare și Sfânt",
+   "parcurse": 153,
+   "dorite": 338
+  },
+  {
+   "nume": "Șoseaua Nicolina",
+   "parcurse": 283,
+   "dorite": 49
+  },
+  {
+   "nume": "Bulevardul Independenței",
+   "parcurse": 206,
+   "dorite": 89
+  },
+  {
+   "nume": "Strada Palat",
+   "parcurse": 135,
+   "dorite": 124
+  },
+  {
+   "nume": "Șoseaua Păcurari",
+   "parcurse": 182,
+   "dorite": 66
+  },
+  {
+   "nume": "Splai Bahlui Mal Stâng",
+   "parcurse": 149,
+   "dorite": 49
+  },
+  {
+   "nume": "Bulevardul Poitiers",
+   "parcurse": 129,
+   "dorite": 43
+  },
+  {
+   "nume": "Șoseaua Bucium",
+   "parcurse": 121,
+   "dorite": 33
+  },
+  {
+   "nume": "Bulevardul Tudor Vladimirescu",
+   "parcurse": 92,
+   "dorite": 39
+  },
+  {
+   "nume": "Bulevardul Socola",
+   "parcurse": 92,
+   "dorite": 18
+  },
+  {
+   "nume": "Strada Cuza Vodă",
+   "parcurse": 11,
+   "dorite": 96
+  },
+  {
+   "nume": "Strada Anastasie Panu",
+   "parcurse": 49,
+   "dorite": 53
+  },
+  {
+   "nume": "Strada Canta",
+   "parcurse": 72,
+   "dorite": 27
+  },
+  {
+   "nume": "Strada Sfântul Lazăr",
+   "parcurse": 61,
+   "dorite": 37
+  },
+  {
+   "nume": "Bulevardul Alexandru cel Bun",
+   "parcurse": 57,
+   "dorite": 21
+  },
+  {
+   "nume": "Bulevardul Nicolae Iorga",
+   "parcurse": 62,
+   "dorite": 12
+  },
+  {
+   "nume": "Strada Vasile Lupu",
+   "parcurse": 58,
+   "dorite": 15
+  },
+  {
+   "nume": "Șoseaua Națională",
+   "parcurse": 37,
+   "dorite": 21
+  },
+  {
+   "nume": "Calea Chișinăului",
+   "parcurse": 40,
+   "dorite": 17
+  },
+  {
+   "nume": "Șoseaua Arcu",
+   "parcurse": 29,
+   "dorite": 23
+  },
+  {
+   "nume": "Piața Podu Roș",
+   "parcurse": 37,
+   "dorite": 11
+  },
+  {
+   "nume": "Șoseaua Sărărie",
+   "parcurse": 27,
+   "dorite": 17
+  },
+  {
+   "nume": "Șoseaua Ciric",
+   "parcurse": 22,
+   "dorite": 14
+  },
+  {
+   "nume": "Bulevardul Chimiei",
+   "parcurse": 27,
+   "dorite": 7
+  },
+  {
+   "nume": "Strada Ion Constantin Brătianu",
+   "parcurse": 1,
+   "dorite": 33
+  },
+  {
+   "nume": "Strada Alexandru Lăpușneanu",
+   "parcurse": 15,
+   "dorite": 17
+  },
+  {
+   "nume": "Strada Elena Doamna",
+   "parcurse": 26,
+   "dorite": 6
+  },
+  {
+   "nume": "Aleea Mihail Sadoveanu",
+   "parcurse": 27,
+   "dorite": 5
+  },
+  {
+   "nume": "Strada Păcurari",
+   "parcurse": 25,
+   "dorite": 6
+  },
+  {
+   "nume": "Strada Libertății",
+   "parcurse": 21,
+   "dorite": 7
+  },
+  {
+   "nume": "Bulevardul Dacia",
+   "parcurse": 20,
+   "dorite": 7
+  },
+  {
+   "nume": "Șoseaua Voinești",
+   "parcurse": 23,
+   "dorite": 3
+  },
+  {
+   "nume": "Bulevardul Primăverii",
+   "parcurse": 20,
+   "dorite": 4
+  },
+  {
+   "nume": "Strada Gării",
+   "parcurse": 15,
+   "dorite": 8
+  },
+  {
+   "nume": "Strada Toma Cozma",
+   "parcurse": 17,
+   "dorite": 6
+  },
+  {
+   "nume": "Strada Lascăr Catargi",
+   "parcurse": 5,
+   "dorite": 17
+  },
+  {
+   "nume": "Bulevardul Dimitrie Cantemir",
+   "parcurse": 19,
+   "dorite": 2
+  },
+  {
+   "nume": "Strada Eternitate",
+   "parcurse": 17,
+   "dorite": 4
+  },
+  {
+   "nume": "Strada Nicolina",
+   "parcurse": 17,
+   "dorite": 3
+  },
+  {
+   "nume": "Strada Arcu",
+   "parcurse": 9,
+   "dorite": 11
+  },
+  {
+   "nume": "Bulevardul Profesor Dimitrie Mangeron",
+   "parcurse": 14,
+   "dorite": 5
+  },
+  {
+   "nume": "Strada Sarmisegetuza",
+   "parcurse": 16,
+   "dorite": 3
+  },
+  {
+   "nume": "Strada Bahlui",
+   "parcurse": 10,
+   "dorite": 8
+  },
+  {
+   "nume": "Aleea Tudor Neculai",
+   "parcurse": 13,
+   "dorite": 5
+  },
+  {
+   "nume": "Șoseaua Tudor Neculai",
+   "parcurse": 10,
+   "dorite": 8
+  },
+  {
+   "nume": "Străpungerea Silvestru",
+   "parcurse": 14,
+   "dorite": 4
+  },
+  {
+   "nume": "Strada Mihail Sadoveanu",
+   "parcurse": 15,
+   "dorite": 3
+  },
+  {
+   "nume": "Strada Bucium",
+   "parcurse": 11,
+   "dorite": 6
+  },
+  {
+   "nume": "Strada Palas",
+   "parcurse": 9,
+   "dorite": 8
+  },
+  {
+   "nume": "Aleea Sf. Andrei",
+   "parcurse": 9,
+   "dorite": 8
+  },
+  {
+   "nume": "Strada Agatha Bârsescu",
+   "parcurse": 0,
+   "dorite": 15
+  },
+  {
+   "nume": "Strada Ciurchi",
+   "parcurse": 8,
+   "dorite": 7
+  },
+  {
+   "nume": "Strada Tătărași",
+   "parcurse": 10,
+   "dorite": 4
+  },
+  {
+   "nume": "Șoseaua Munteni",
+   "parcurse": 4,
+   "dorite": 10
+  },
+  {
+   "nume": "Bulevardul C.A. Rosetti",
+   "parcurse": 12,
+   "dorite": 1
+  },
+  {
+   "nume": "Bulevardul Țuțora",
+   "parcurse": 7,
+   "dorite": 6
+  },
+  {
+   "nume": "Piața Unirii",
+   "parcurse": 6,
+   "dorite": 7
+  },
+  {
+   "nume": "Strada Smârdan",
+   "parcurse": 5,
+   "dorite": 7
+  },
+  {
+   "nume": "Strada Ion Creangă",
+   "parcurse": 9,
+   "dorite": 3
+  },
+  {
+   "nume": "Strada Moara de Vânt",
+   "parcurse": 11,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Silvestru",
+   "parcurse": 10,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Costache Negri",
+   "parcurse": 1,
+   "dorite": 10
+  },
+  {
+   "nume": "Strada Sărărie",
+   "parcurse": 7,
+   "dorite": 3
+  },
+  {
+   "nume": "Șoseaua Moara de Foc",
+   "parcurse": 8,
+   "dorite": 2
+  },
+  {
+   "nume": "Strada Trei Fântâni",
+   "parcurse": 9,
+   "dorite": 1
+  },
+  {
+   "nume": "Bulevardul Regele Ferdinand I al României",
+   "parcurse": 8,
+   "dorite": 2
+  },
+  {
+   "nume": "Strada Teodor Codrescu",
+   "parcurse": 2,
+   "dorite": 8
+  },
+  {
+   "nume": "Calea Galata",
+   "parcurse": 6,
+   "dorite": 4
+  },
+  {
+   "nume": "Strada Ciric",
+   "parcurse": 6,
+   "dorite": 3
+  },
+  {
+   "nume": "Strada 14 Decembrie 1989",
+   "parcurse": 0,
+   "dorite": 9
+  },
+  {
+   "nume": "Strada Tabacului",
+   "parcurse": 5,
+   "dorite": 3
+  },
+  {
+   "nume": "Strada Sfântul Andrei",
+   "parcurse": 2,
+   "dorite": 6
+  },
+  {
+   "nume": "Strada Aurel Vlaicu",
+   "parcurse": 6,
+   "dorite": 2
+  },
+  {
+   "nume": "Strada Melodiei",
+   "parcurse": 0,
+   "dorite": 8
+  },
+  {
+   "nume": "Strada Cucu",
+   "parcurse": 6,
+   "dorite": 1
+  },
+  {
+   "nume": "Bulevardul Metalurgiei",
+   "parcurse": 7,
+   "dorite": 0
+  },
+  {
+   "nume": "Aleea Uzinei",
+   "parcurse": 4,
+   "dorite": 3
+  },
+  {
+   "nume": "Strada Pantelimon Halipa",
+   "parcurse": 6,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Han Tătar",
+   "parcurse": 5,
+   "dorite": 2
+  },
+  {
+   "nume": "Strada Bularga",
+   "parcurse": 4,
+   "dorite": 3
+  },
+  {
+   "nume": "Strada Râpa Galbenă",
+   "parcurse": 2,
+   "dorite": 5
+  },
+  {
+   "nume": "Splai Bahlui Mal Drept",
+   "parcurse": 4,
+   "dorite": 2
+  },
+  {
+   "nume": "Strada Pepinierii",
+   "parcurse": 4,
+   "dorite": 2
+  },
+  {
+   "nume": "Strada Grigore Ghica Vodă",
+   "parcurse": 2,
+   "dorite": 4
+  },
+  {
+   "nume": "Strada Vișan",
+   "parcurse": 3,
+   "dorite": 3
+  },
+  {
+   "nume": "Strada Independenței",
+   "parcurse": 4,
+   "dorite": 2
+  },
+  {
+   "nume": "Șoseaua Ștefan cel Mare și Sfânt",
+   "parcurse": 5,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Cerna",
+   "parcurse": 3,
+   "dorite": 2
+  },
+  {
+   "nume": "Strada Copou",
+   "parcurse": 5,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Sfântul Petru Movilă",
+   "parcurse": 2,
+   "dorite": 3
+  },
+  {
+   "nume": "Strada Săulescu",
+   "parcurse": 2,
+   "dorite": 3
+  },
+  {
+   "nume": "Strada Aeroportului",
+   "parcurse": 4,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Ignat",
+   "parcurse": 3,
+   "dorite": 1
+  },
+  {
+   "nume": "Aleea Rozelor",
+   "parcurse": 3,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Dumbrava Roșie",
+   "parcurse": 1,
+   "dorite": 3
+  },
+  {
+   "nume": "Strada 1 Decembrie",
+   "parcurse": 0,
+   "dorite": 4
+  },
+  {
+   "nume": "Strada Viticultori",
+   "parcurse": 3,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Mircea cel Bătrân",
+   "parcurse": 3,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Primăverii",
+   "parcurse": 3,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Clopotari",
+   "parcurse": 4,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Petre Andrei",
+   "parcurse": 0,
+   "dorite": 4
+  },
+  {
+   "nume": "Stradela Sărăriei",
+   "parcurse": 1,
+   "dorite": 3
+  },
+  {
+   "nume": "Strada Cetățuia",
+   "parcurse": 1,
+   "dorite": 3
+  },
+  {
+   "nume": "Bulevardul Regele Mihai I al României",
+   "parcurse": 3,
+   "dorite": 1
+  },
+  {
+   "nume": "Șoseaua Rediu",
+   "parcurse": 4,
+   "dorite": 0
+  },
+  {
+   "nume": "Șoseaua Bârnova",
+   "parcurse": 4,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Gavril Muzicescu",
+   "parcurse": 2,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Macilor",
+   "parcurse": 3,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Armeană",
+   "parcurse": 0,
+   "dorite": 3
+  },
+  {
+   "nume": "Strada Mănăstirea Dancu",
+   "parcurse": 1,
+   "dorite": 2
+  },
+  {
+   "nume": "Strada Stejar",
+   "parcurse": 1,
+   "dorite": 2
+  },
+  {
+   "nume": "Strada Zimbrului",
+   "parcurse": 1,
+   "dorite": 2
+  },
+  {
+   "nume": "Stradela Bucșinescu",
+   "parcurse": 2,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Mircea Eliade",
+   "parcurse": 1,
+   "dorite": 2
+  },
+  {
+   "nume": "Strada Pădurea Breazu",
+   "parcurse": 2,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Sfinții Petru și Pavel",
+   "parcurse": 1,
+   "dorite": 2
+  },
+  {
+   "nume": "Strada Titu Maiorescu",
+   "parcurse": 1,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Vasile Conta",
+   "parcurse": 0,
+   "dorite": 2
+  },
+  {
+   "nume": "Strada Păun",
+   "parcurse": 2,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Munteni",
+   "parcurse": 0,
+   "dorite": 2
+  },
+  {
+   "nume": "Strada Șapte Oameni",
+   "parcurse": 1,
+   "dorite": 1
+  },
+  {
+   "nume": "Piața Palat",
+   "parcurse": 0,
+   "dorite": 2
+  },
+  {
+   "nume": "Strada Sfântul Sava",
+   "parcurse": 0,
+   "dorite": 2
+  },
+  {
+   "nume": "Strada Vasile Alecsandri",
+   "parcurse": 0,
+   "dorite": 2
+  },
+  {
+   "nume": "Șoseaua Valea Rediului",
+   "parcurse": 1,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Tudor Neculai",
+   "parcurse": 2,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Doctor Victor Babeș",
+   "parcurse": 1,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Frumoasa",
+   "parcurse": 2,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Valea Adanca",
+   "parcurse": 2,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Ioan Berindei, Arhitect",
+   "parcurse": 1,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Zugravi",
+   "parcurse": 1,
+   "dorite": 1
+  },
+  {
+   "nume": "Aleea Grigore Ghica Vodă",
+   "parcurse": 1,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Oancea",
+   "parcurse": 1,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Poienilor",
+   "parcurse": 0,
+   "dorite": 2
+  },
+  {
+   "nume": "Centura Iași",
+   "parcurse": 1,
+   "dorite": 1
+  },
+  {
+   "nume": "Stradela Plopii Fără Soț",
+   "parcurse": 1,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Eugen Stătescu",
+   "parcurse": 1,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Vasile Pogor",
+   "parcurse": 0,
+   "dorite": 2
+  },
+  {
+   "nume": "Strada Cicoarei",
+   "parcurse": 0,
+   "dorite": 2
+  },
+  {
+   "nume": "Strada Pictorului",
+   "parcurse": 0,
+   "dorite": 2
+  },
+  {
+   "nume": "Strada Țicăul de Jos",
+   "parcurse": 0,
+   "dorite": 2
+  },
+  {
+   "nume": "Strada George Călinescu",
+   "parcurse": 2,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Profesor Ion Simionescu",
+   "parcurse": 1,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Bazei",
+   "parcurse": 2,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Decebal",
+   "parcurse": 2,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Profesor Ion Paul",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Theodor Rosetti",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "Șoseaua Iași - Tomești",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "Alexandrina Miron Tănăsescu",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Timpului",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Fermei",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Nicolae Istrati",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Nicolae Iorga",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Pantel",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Dudescu",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "Stradela Arhitect Ioan Berindei",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Misai",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Aleea Valea Adâncă",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Izvor",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Cristofor",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Gându",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Mihai Vodă Viteazul",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Iuliu Maniu",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Alexandru Osvald Teodoreanu",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Doctor Nicolae Vicol",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Orientului",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Stradela Nicoriță",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Doctor Emil Savini",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Voinești",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Macazului",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Perju",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Bulevardul Virgil Săhleanu",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Horia Lovinescu",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Universității",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Garabet Ibrăileanu",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Pantelimon",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Lascăr Catargiu",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Moldovei",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Principală",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Doamna Elena Cuza",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Bradului",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Ferdinand I",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "str. Grigore Sturdza",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Sfântul Ilie",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Obreja",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Aviației",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Buridava",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Vasile Alexandrescu Urechia",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Pasajul Mitocul Maicilor",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Oastei",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Șoseaua Albineț",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Agronomilor",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Profesor Theodor Văscăuțeanu",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "Aleea Mușatini",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Profesor Ion Inculeț",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Petre Țuțea",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "Aleea Nicolina",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "DJ248",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Aleea Ștefan Procopiu",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Alexandru Vodă Ipsilanti",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Morilor",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Gospodarilor",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Costache Negruzzi",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Semnului",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Rozelor",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Iarmaroc",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Mașinii",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Iazului",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Strugurilor",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Nicolae Gane",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Podgoriilor",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Petru Rareș",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Neculau",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Stradela Grădinari",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Neptun",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Petre Vancea",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Constantin Pop",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Tudor Vladimirescu",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Romană",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Capela Inculeț",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Fundacul Gavril Musicescu",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Trei Ierarhi",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Miroslava",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Mitropolit Varlaam",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Colonel Langa",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Rândunica",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Dimineții",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Mușatini",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Pădurii",
+   "parcurse": 0,
+   "dorite": 1
+  },
+  {
+   "nume": "Strada Holboca",
+   "parcurse": 1,
+   "dorite": 0
+  },
+  {
+   "nume": "Strada Veche",
+   "parcurse": 1,
+   "dorite": 0
+  }
+ ],
+ "zone": {
+  "IAS-Z01": {
+   "zona": "Bularga – Zona Industrială",
+   "respondenti": 15,
+   "bicicleta_pct": 80.0,
+   "frecvent_pct": 66.7,
+   "mod_bicicleta_pct": 53.3,
+   "sigur_pct": 0.0
+  },
+  "IAS-Z03": {
+   "zona": "Moara de Vânt",
+   "respondenti": 15,
+   "bicicleta_pct": 86.7,
+   "frecvent_pct": 60.0,
+   "mod_bicicleta_pct": 13.3,
+   "sigur_pct": 6.7
+  },
+  "IAS-Z04": {
+   "zona": "Țicău – Sărărie",
+   "respondenti": 11,
+   "bicicleta_pct": 90.9,
+   "frecvent_pct": 81.8,
+   "mod_bicicleta_pct": 45.5,
+   "sigur_pct": 9.1
+  },
+  "IAS-Z05": {
+   "zona": "Copou",
+   "respondenti": 83,
+   "bicicleta_pct": 79.5,
+   "frecvent_pct": 74.7,
+   "mod_bicicleta_pct": 20.5,
+   "sigur_pct": 4.8
+  },
+  "IAS-Z06": {
+   "zona": "Dacia",
+   "respondenti": 67,
+   "bicicleta_pct": 73.1,
+   "frecvent_pct": 68.7,
+   "mod_bicicleta_pct": 26.9,
+   "sigur_pct": 6.0
+  },
+  "IAS-Z07": {
+   "zona": "Păcurari",
+   "respondenti": 79,
+   "bicicleta_pct": 64.6,
+   "frecvent_pct": 55.7,
+   "mod_bicicleta_pct": 16.5,
+   "sigur_pct": 2.5
+  },
+  "IAS-Z08": {
+   "zona": "Galata – Mircea",
+   "respondenti": 48,
+   "bicicleta_pct": 64.6,
+   "frecvent_pct": 68.8,
+   "mod_bicicleta_pct": 39.6,
+   "sigur_pct": 2.1
+  },
+  "IAS-Z09": {
+   "zona": "CUG",
+   "respondenti": 95,
+   "bicicleta_pct": 65.3,
+   "frecvent_pct": 53.7,
+   "mod_bicicleta_pct": 12.6,
+   "sigur_pct": 6.3
+  },
+  "IAS-Z10": {
+   "zona": "Bucium",
+   "respondenti": 86,
+   "bicicleta_pct": 68.6,
+   "frecvent_pct": 53.5,
+   "mod_bicicleta_pct": 14.0,
+   "sigur_pct": 2.3
+  },
+  "IAS-Z11": {
+   "zona": "Nicolina",
+   "respondenti": 109,
+   "bicicleta_pct": 72.5,
+   "frecvent_pct": 61.5,
+   "mod_bicicleta_pct": 22.9,
+   "sigur_pct": 10.1
+  },
+  "IAS-Z12": {
+   "zona": "Frumoasa",
+   "respondenti": 22,
+   "bicicleta_pct": 72.7,
+   "frecvent_pct": 68.2,
+   "mod_bicicleta_pct": 45.5,
+   "sigur_pct": 9.1
+  },
+  "IAS-Z13": {
+   "zona": "Alexandru cel Bun",
+   "respondenti": 56,
+   "bicicleta_pct": 73.2,
+   "frecvent_pct": 60.7,
+   "mod_bicicleta_pct": 25.0,
+   "sigur_pct": 3.6
+  },
+  "IAS-Z14": {
+   "zona": "Cantemir – Socola",
+   "respondenti": 69,
+   "bicicleta_pct": 81.2,
+   "frecvent_pct": 68.1,
+   "mod_bicicleta_pct": 37.7,
+   "sigur_pct": 2.9
+  },
+  "IAS-Z15": {
+   "zona": "Centru",
+   "respondenti": 81,
+   "bicicleta_pct": 82.7,
+   "frecvent_pct": 74.1,
+   "mod_bicicleta_pct": 27.2,
+   "sigur_pct": 4.9
+  },
+  "IAS-Z16": {
+   "zona": "Studențesc",
+   "respondenti": 44,
+   "bicicleta_pct": 72.7,
+   "frecvent_pct": 63.6,
+   "mod_bicicleta_pct": 25.0,
+   "sigur_pct": 13.6
+  },
+  "IAS-Z17": {
+   "zona": "Tătărași",
+   "respondenti": 129,
+   "bicicleta_pct": 71.3,
+   "frecvent_pct": 62.0,
+   "mod_bicicleta_pct": 21.7,
+   "sigur_pct": 7.0
+  }
+ },
+ "zm": {
+  "Miroslava": 101,
+  "Valea Lupului": 69,
+  "Rediu": 40,
+  "Ciurea": 34,
+  "Bârnova": 29,
+  "Aroneanu": 9,
+  "Holboca": 9,
+  "Tomești": 5,
+  "Golăiești": 2,
+  "Grajduri": 1,
+  "Comarna": 1,
+  "Voinești": 1,
+  "Horlești": 1
+ },
+ "nealocati": 102,
+ "nepotrivite": [
+  [
+   "toate",
+   26
+  ],
+  [
+   "centru",
+   26
+  ],
+  [
+   "cug",
+   16
+  ],
+  [
+   "nu stiu",
+   10
+  ],
+  [
+   "zona centrala",
+   10
+  ],
+  [
+   "gara",
+   9
+  ],
+  [
+   "cat mai multe",
+   6
+  ],
+  [
+   "niciuna",
+   5
+  ],
+  [
+   "centrul orasului",
+   5
+  ],
+  [
+   "venetia",
+   4
+  ],
+  [
+   "biciclete",
+   4
+  ],
+  [
+   "dj 248",
+   4
+  ],
+  [
+   "peste tot",
+   3
+  ],
+  [
+   "valea lupului",
+   3
+  ],
+  [
+   "nu pe trotuar",
+   3
+  ],
+  [
+   "parc copou",
+   3
+  ],
+  [
+   "pod nicolina",
+   3
+  ],
+  [
+   "pietoni",
+   3
+  ]
+ ]
+}
