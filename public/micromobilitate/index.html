@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>15 minute pe două roți – Iași</title>
+  <meta name="description" content="Hartă interactivă a accesibilității cu bicicleta, bicicleta electrică, trotineta electrică și Segway în Iași: ce atingeți în 15 minute respectând Codul rutier.">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="../15min/style.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<aside id="panel">
+  <h1>15 minute<br><span>pe două roți</span></h1>
+  <p class="sub">Iași · micromobilitate pe rețeaua OpenStreetMap, după regulile Codului rutier</p>
+  <p class="note">Apăsați pe hartă sau trageți markerul. Străzile colorate sunt cele la care ajungeți cu vehiculul ales, colorate după timp. Cele gri le-ați atinge doar ignorând regulile de circulație (pe trotuar, în contrasens, trotineta pe bulevarde de peste 50 km/h).</p>
+
+  <div class="ctl">
+    <div class="lbl">Vehicul</div>
+    <div class="profiles" id="vehicles"></div>
+  </div>
+
+  <div class="ctl"><label>Timp disponibil: <b id="minOut">15</b> min
+    <input type="range" id="minutes" min="5" max="30" value="15"></label></div>
+
+  <div class="ctl"><label>Viteza de croazieră pe plat: <b id="spdOut"></b>
+    <input type="range" id="speed" min="8" max="25" step="1" value="15"></label>
+    <div class="note" id="spdNote"></div></div>
+
+  <div class="ctl">
+    <label><input type="checkbox" id="legal" checked> Respectă regulile de circulație (Codul rutier)</label>
+    <div class="note" id="ruleNote"></div>
+    <label><input type="checkbox" id="comfort"> Doar rețeaua confortabilă (piste și străzi liniștite)</label>
+    <div class="note">Fără bulevarde și străzi principale fără pistă: acolo vehiculul se împinge pe trotuar. Pentru începători, copii de peste 14 ani, oricine evită traficul.</div>
+    <label id="transitBox" hidden><input type="checkbox" id="transit"> + transport public (lași vehiculul la stație)</label>
+    <label><input type="checkbox" id="onlyPark"> Numără doar facilitățile cu parcare de biciclete la ≤ 100 m</label>
+    <label id="slopeBox" hidden><input type="checkbox" id="slope" checked> Ține cont de pantă (relief)</label>
+  </div>
+
+  <div class="ctl">
+    <div id="legend"></div>
+    <div id="legendLabels"><span>0 min</span><span id="legendEnd"></span></div>
+  </div>
+
+  <div id="zoneHere" class="note"></div>
+  <div id="stats"></div>
+  <div id="status">Se încarcă rețeaua…</div>
+
+  <div id="compare"></div>
+
+  <div class="ctl toggles">
+    <label><input type="checkbox" id="showAm" checked> Facilități</label>
+    <label><input type="checkbox" id="showPark" checked> Parcări și închirieri <span class="dot" style="background:#0f6e8c"></span><span class="dot" style="background:#d6336c"></span></label>
+    <label><input type="checkbox" id="showSt"> Stații de transport public</label>
+    <label><input type="checkbox" id="showPush" checked> Porțiuni pe jos, cu vehiculul de mână <span class="keyline push"></span></label>
+    <label><input type="checkbox" id="showInfra"> Infrastructura
+      <span class="infrakey"><span style="background:#1a9850"></span>pistă <span style="background:#91cf60"></span>bandă <span style="background:#d73027"></span>&gt; 50 km/h <span style="background:#9e9e9e"></span>trotuar / pietonal</span></label>
+    <label id="surveyToggle" hidden><input type="checkbox" id="showSurvey"> Străzi din chestionarul velo
+      <select id="surveyKind"><option value="parcurse">parcurse cel mai des</option><option value="dorite">dorite pentru biciclete și pietoni</option></select>
+      <span class="surveykey" id="surveyKey"></span></label>
+    <label><input type="checkbox" id="showZones" checked> Cele 17 zone MVA–MVI</label>
+  </div>
+
+  <div class="ctl"><button id="copyLink" type="button">Copiază linkul acestei vederi</button> <span class="note" id="copyMsg"></span></div>
+
+  <details id="zonesBox">
+    <summary>Analiză pe zone (17 zone MVA–MVI)</summary>
+    <p class="note">Pentru fiecare zonă se iau puncte pe o grilă regulată (legate de cea mai apropiată stradă, la cel mult 150 m) și se numără facilitățile atinse în timpul ales cu vehiculul curent, comparat cu referința aleasă.</p>
+    <div class="row">
+      <label>Comparat cu
+        <select id="zoneRef">
+          <option value="walk">mersul pe jos (1,4 m/s)</option>
+          <option value="free">același vehicul, fără restricții</option>
+        </select></label>
+      <label>Grilă
+        <select id="spacing">
+          <option value="400">400 m</option>
+          <option value="600" selected>600 m</option>
+          <option value="800">800 m</option>
+        </select></label>
+      <label>Max. puncte/zonă
+        <select id="maxPoints">
+          <option value="30">30</option>
+          <option value="60" selected>60</option>
+          <option value="150">150</option>
+        </select></label>
+    </div>
+    <div class="row">
+      <button id="runZones" type="button" class="primary">Calculează pentru zone</button>
+      <button id="csvZones" type="button" disabled>Descarcă CSV</button>
+    </div>
+    <div id="zonesStatus" class="note"></div>
+    <div id="zonesResult" hidden>
+      <label>Colorează zonele după
+        <select id="metric">
+          <option value="amen_mean">Facilități medii (vehicul)</option>
+          <option value="gain_pct">Diferența față de referință (%)</option>
+          <option value="full_share">Puncte cu toate cele 5 categorii (%)</option>
+          <option value="stations_mean">Stații de transport public, medie</option>
+        </select></label>
+      <div id="zoneLegend"></div>
+      <div class="tablewrap"><table id="zoneTable"></table></div>
+      <p class="note">Apăsați pe un rând pentru a vedea zona pe hartă. „5/5” = proporția punctelor din care se ajunge la toate cele 5 categorii.</p>
+    </div>
+  </details>
+
+  <details id="gapsBox">
+    <summary>Lipsuri în rețea</summary>
+    <p class="note">Unde ar ajuta cel mai mult o pistă, o bandă sau un contrasens pentru biciclete? Din puncte pe o grilă în cele 17 zone se caută drumurile cele mai rapide <i>fără restricții</i> până la facilitățile atinse în timpul ales. Fiecare segment de pe aceste drumuri pe care vehiculul ales nu poate circula legal (sau în rețeaua confortabilă, dacă e bifată) primește un punct pentru fiecare facilitate. Scorul este media pe punctele grilei.</p>
+    <div class="row">
+      <label>Grilă
+        <select id="gapSpacing">
+          <option value="500">500 m</option>
+          <option value="800" selected>800 m</option>
+          <option value="1200">1.200 m</option>
+        </select></label>
+      <button id="runGaps" type="button" class="primary">Calculează lipsurile</button>
+      <button id="csvGaps" type="button" disabled>CSV</button>
+    </div>
+    <div class="row" id="gapSortRow" hidden>
+      <label>Ordonează după
+        <select id="gapSort">
+          <option value="score">scorul rețelei</option>
+          <option value="both">scorul rețelei + cererea declarată (chestionar)</option>
+        </select></label>
+    </div>
+    <div id="gapsStatus" class="note"></div>
+    <div class="tablewrap"><table id="gapTable"></table></div>
+    <label id="gapToggle" hidden><input type="checkbox" id="showGaps" checked> Arată lipsurile pe hartă <span class="keyline gap"></span></label>
+  </details>
+
+  <details id="surveyBox" hidden>
+    <summary>Ce spun bicicliștii (chestionarul Masterplanului)</summary>
+    <div id="surveySummary"></div>
+  </details>
+
+  <details id="lawBox">
+    <summary>Ce spune legea (pe scurt)</summary>
+    <table class="law">
+      <tr><th></th><th>Bicicletă / pedelec</th><th>Trotinetă electrică</th></tr>
+      <tr><td>Definiție</td><td>propulsie musculară; pedelec = asistență ≤ 250 W, oprită la 25 km/h</td><td>2–3 roți, ghidon, o persoană, 6–25 km/h, motor electric (art. 6 pct. 10<sup>1</sup>)</td></tr>
+      <tr><td>Vârsta minimă</td><td colspan="2">14 ani pe drumurile publice (art. 70)</td></tr>
+      <tr><td>Cască</td><td colspan="2">obligatorie sub 16 ani pe partea carosabilă</td></tr>
+      <tr><td>Pista pentru biciclete</td><td colspan="2">obligatorie acolo unde există</td></tr>
+      <tr><td>Fără pistă</td><td>pe carosabil, pe partea dreaptă</td><td>doar pe drumurile cu viteza maximă admisă ≤ 50 km/h</td></tr>
+      <tr><td>Trotuar</td><td colspan="2">interzis, cu excepția pistelor amenajate pe trotuar</td></tr>
+      <tr><td>RCA</td><td colspan="2">obligatorie de la 16.11.2025 doar peste 25 km/h, sau peste 25 kg și peste 14 km/h (Legea 181/2025)</td></tr>
+    </table>
+    <p class="note">Hoverboard-ul, monoroata și skateboardul electric nu sunt definite în Codul rutier, deci nu au un loc legal pe carosabil sau pe pistă; harta nu le modelează. Un Segway <b>cu ghidon</b> se încadrează, după text, în definiția trotinetei electrice (interpretare, nu jurisprudență). Detalii, surse și proiectele de lege în curs: <a href="metodologie.html#lege">metodologie</a>.</p>
+  </details>
+
+  <p class="note" id="dataInfo"></p>
+  <p class="note">Modelul nu include semafoarele, traficul, parcarea vehiculului și starea pistelor. Datele vin din OpenStreetMap și sunt incomplete pe alocuri: o stradă fără limita de viteză etichetată este considerată de 50 km/h (în localitate), iar drumurile naționale fără etichetă de peste 50 km/h. Panta: Copernicus GLO-30.</p>
+  <p class="note">Construită pe <a href="../15min/">harta „15 minute. Pentru cine?”</a>, adaptare a proiectului <a href="https://github.com/martincantcode/15-minutes" target="_blank" rel="noopener">„15 minutes. For whom?”</a> (Martin Bangratz, licență MIT). Date © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">contribuitorii OpenStreetMap</a>, ODbL. <a href="metodologie.html">Metodologie și cadru legal</a> · <a href="../15min/">Pe jos</a> · <a href="../transport/">Transport public</a> · <a href="../">Studiul O–D</a></p>
+  <p class="note" id="baseNote"></p>
+</aside>
+<div id="map"></div>
+
+<script src="../vendor/leaflet/leaflet.js"></script>
+<script src="../15min/core.js"></script>
+<script src="micro.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

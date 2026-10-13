@@ -1,0 +1,20 @@
+/* completări peste ../15min/style.css */
+h1 span { color: #1a9850; }
+.profiles { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+.keyline.push { background: repeating-linear-gradient(to right, #15171a 0 3px, transparent 3px 7px); height: 2px; }
+.infrakey { display: inline-flex; flex-wrap: wrap; gap: 3px; align-items: center; font-size: 11px; color: var(--muted); margin-left: 4px; }
+.infrakey span { display: inline-block; width: 12px; height: 4px; border-radius: 2px; }
+#compare tr.free td { color: var(--muted); }
+#compare small { font-size: 11px; }
+table.law { font-size: 12px; }
+table.law td, table.law th { text-align: left !important; white-space: normal !important; vertical-align: top; }
+#lawBox .note { margin-top: 6px; }
+.keyline.gap { background: #7b2cbf; height: 4px; }
+.keyline.tp { background: #7b5ea7; }
+#gapTable tr { cursor: pointer; }
+#gapTable tbody tr:hover { background: #ece7da; }
+.ctl > label { display: block; margin: 3px 0; }
+.surveykey { display: inline-flex; flex-wrap: wrap; gap: 3px; align-items: center; font-size: 11px; color: var(--muted); margin-left: 4px; }
+.surveykey span { display: inline-block; width: 14px; border-radius: 2px; }
+#showSurvey + select, #surveyKind { padding: 2px 4px; font-size: 12px; }
+#surveySummary table td:first-child { white-space: normal; }
