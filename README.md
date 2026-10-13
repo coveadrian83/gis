@@ -121,6 +121,24 @@ acceptată – ex. 8 % pentru scaun rulant/cărucior). Totul rulează în browse
   același calcul ca pagina (`public/15min/core.js`).
 - Metodologia și limitele: `public/15min/metodologie.html`.
 
+## Harta „15 minute pe două roți” – micromobilitate în Iași (`/micromobilitate/`)
+
+Aceeași logică precum harta pietonală, pentru **bicicletă, bicicletă electrică (pedelec), trotinetă electrică și
+Segway cu ghidon**: ce facilități, parcări și puncte de închiriere pentru biciclete și stații de transport public se
+ating în 5–30 de minute **respectând Codul rutier** (OUG 195/2002, Regulamentul HG 1391/2006 / HG 1075/2021), comparat
+cu aceeași deplasare **fără restricții** și cu mersul pe jos.
+
+- **Reguli**: pistele pentru biciclete sunt permise tuturor; bicicleta circulă pe carosabil, trotineta doar pe
+  străzile cu limita ≤ 50 km/h (sau cu pistă / bandă); trotuarele, zonele pietonale și contrasensul se parcurg pe jos,
+  cu vehiculul de mână; autostrăzile sunt excluse; Segway-ul nu urcă scări.
+- **Viteza**: ecuație de putere (masă, rulare, aer, motor 250 / 350 / 600 W) pe panta Copernicus GLO-30, piatră cubică și
+  neasfaltat mai lente.
+- **Date**: `public/micromobilitate/data/iasi/` (graph.bin + micro.bin cu clasele, pistele, limita de viteză, sensul
+  unic) se generează cu `scripts/export_micro15.py` și `scripts/elevatie_15min.py --dir …`, automat în GitHub Actions:
+  **Actions → Export date micromobilitate (Iași) → Run workflow**.
+- **Linia de comandă**: `node scripts/analiza-micro15.js [--vehicle scooter --kmh 18 --min 15 --ref free --out var/zone.csv]`.
+- Metodologia și **cadrul legal** (definiții, reguli, RCA din 16.11.2025, proiecte în curs): `public/micromobilitate/metodologie.html`.
+
 ## Unde crește Iașul – harta PUZ-urilor votate de Consiliul Local Iași (`/puz/`)
 
 Planurile urbanistice zonale (PUZ, inclusiv PUZ pentru zone construite protejate) aprobate, respinse sau modificate
@@ -301,6 +319,7 @@ public/                     aplicația publică, dashboardul (/admin/), Confiden
 public/shared/              geo-core.js (căutare + point-in-polygon) și domain.js – comune browser/server
 public/data/                fișierele geografice
 public/15min/               harta „15 minute. Pentru cine?” – Iași (core.js = calculul, data/iasi = export OSM)
+public/micromobilitate/     harta „15 minute pe două roți” (micro.js = regulile și vitezele, data/iasi = export OSM)
 public/puz/                 harta PUZ-urilor votate de Consiliul Local Iași (date: public/data/puz_iasi.geojson)
 public/transport/           harta transportului public (date: public/data/transport/)
 scripts/puz_iasi.py         colectarea PUZ-urilor (hcl.usr.ro + apix.ro), extragerea indicatorilor, localizarea
@@ -311,6 +330,8 @@ scripts/transport_linii.py  traseele și stațiile din KML / GeoPackage / Shapef
 data/puz_iasi_completari.csv  corecturi și completări manuale pentru PUZ-uri
 scripts/export_15min.py     exportul rețelei pietonale și al facilităților din OSM (osmnx)
 scripts/elevatie_15min.py   panta: elevația Copernicus GLO-30 pe fiecare segment (elev.bin)
+scripts/export_micro15.py   rețeaua pentru micromobilitate: piste, limite de viteză, sens unic (osmnx)
+scripts/analiza-micro15.js  analiza micromobilității pe puncte și pe zone din linia de comandă
 scripts/analiza-15min.js    analiza pe puncte și pe zone din linia de comandă (--scari: scările și străzile abrupte)
 test/                       teste automate (date geografice sintetice)
 docs/                       specificația v1.0, metodologia și ghidul de testare v0.4.5

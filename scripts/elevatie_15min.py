@@ -7,6 +7,7 @@ folosește pentru opțiunea „Ține cont de pantă”.
 
     pip install rasterio scipy numpy
     python scripts/elevatie_15min.py                 # după scripts/export_15min.py
+    python scripts/elevatie_15min.py --dir public/micromobilitate/data/iasi   # după scripts/export_micro15.py
 
 Modelul (detalii în public/15min/metodologie.html):
   * GLO-30 este un model al suprafeței (include clădiri și copaci). O deschidere morfologică (minim, apoi
@@ -209,9 +210,10 @@ def load_edge_info(path, n_edges):
 def main():
     ap = argparse.ArgumentParser(description="Adaugă panta (elev.bin) la datele hărții 15 minute.")
     ap.add_argument("--slug", default="iasi")
+    ap.add_argument("--dir", help="alt director cu graph.bin (ex. public/micromobilitate/data/iasi); implicit public/15min/data/<slug>")
     ap.add_argument("--opening", type=int, default=5, help="fereastra deschiderii morfologice, pixeli (1 = fără)")
     args = ap.parse_args()
-    out = ROOT / "public" / "15min" / "data" / args.slug
+    out = Path(args.dir) if args.dir else ROOT / "public" / "15min" / "data" / args.slug
     g = read_graph(out / "graph.bin")
     nN, nE = len(g["lonlat"]), len(g["eu"])
     info, _ = load_edge_info(out / "edges.json", nE)

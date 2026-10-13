@@ -1,0 +1,64 @@
+# Generează datele pentru harta „15 minute pe două roți” – Iași (public/micromobilitate/data/iasi/)
+# din OpenStreetMap, cu scripts/export_micro15.py, adaugă panta din modelul de elevație Copernicus GLO-30
+# (scripts/elevatie_15min.py --dir …) și le salvează în același branch.
+# Rulează singur când se modifică scriptul de export, modelul vehiculelor sau acest fișier; poate fi pornit și manual
+# (Actions → „Export date micromobilitate (Iași)” → Run workflow), de exemplu pentru a reîmprospăta datele OSM.
+name: Export date micromobilitate (Iași)
+
+on:
+  workflow_dispatch:
+    inputs:
+      radius:
+        description: "Metri de la centru la fiecare latură a pătratului exportat"
+        default: "12000"
+  push:
+    paths:
+      - scripts/export_micro15.py
+      - scripts/export_15min.py
+      - scripts/elevatie_15min.py
+      - scripts/analiza-micro15.js
+      - public/micromobilitate/micro.js
+      - .github/workflows/export-micro15.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: export-micro15-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Instalează osmnx, rasterio, scipy
+        run: pip install "osmnx==2.1.1" "rasterio>=1.4" "scipy>=1.13"
+      - name: Testează exportul pe date sintetice
+        run: python -m unittest discover -s test -p 'test_micro15*.py'
+      - name: Exportă rețeaua și facilitățile din OpenStreetMap
+        run: python scripts/export_micro15.py --radius "${{ github.event.inputs.radius || '12000' }}"
+      - uses: actions/cache@v4
+        with:
+          path: cache/dem
+          key: glo30-dem-v1
+      - name: Adaugă panta (Copernicus GLO-30)
+        run: python scripts/elevatie_15min.py --dir public/micromobilitate/data/iasi
+      - name: Verifică datele cu testele aplicației
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: node --test test/micro15.test.js test/min15-core.test.js && node scripts/analiza-micro15.js --check && node scripts/analiza-micro15.js --min 15
+      - name: Salvează datele în branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898699+github-actions[bot]@users.noreply.github.com"
+          git add public/micromobilitate/data
+          if git diff --cached --quiet; then echo "Datele nu s-au schimbat."; exit 0; fi
+          git commit -m "Date OSM actualizate pentru harta micromobilității (Iași)"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

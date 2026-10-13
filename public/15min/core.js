@@ -22,13 +22,21 @@
   var STAIRS_GRADE = 255;   // în elev.bin, panta „scări”
 
   /* Profil de deplasare: { speed (m/s), avoid (evită scările), slope (ține cont de pantă),
-   * maxGrade (panta maximă acceptată, %; 0 = fără limită) }. */
+   * maxGrade (panta maximă acceptată, %; 0 = fără limită) }.
+   * Opțional (harta micromobilității): tf / tb = timpul în secunde pe fiecare muchie, de la nodul mic la cel mare
+   * și invers (Infinity = interzis), cu speed = 1; access = viteza (m/s) pe ultimii metri, de la stradă la facilitate. */
   function profile(p) {
-    return { speed: +p.speed, avoid: !!p.avoid, slope: !!p.slope, maxGrade: +p.maxGrade || 0 };
+    var out = { speed: +p.speed, avoid: !!p.avoid, slope: !!p.slope, maxGrade: +p.maxGrade || 0 };
+    if (p.tf) { out.tf = p.tf; out.tb = p.tb; }
+    if (p.access) out.access = +p.access;
+    return out;
   }
   function sameProfile(a, b) {
-    return a.speed === b.speed && !!a.avoid === !!b.avoid && !!a.slope === !!b.slope && (+a.maxGrade || 0) === (+b.maxGrade || 0);
+    return a.speed === b.speed && !!a.avoid === !!b.avoid && !!a.slope === !!b.slope && (+a.maxGrade || 0) === (+b.maxGrade || 0) &&
+      a.tf === b.tf && (a.access || 0) === (b.access || 0);
   }
+  // viteza pe distanța dintre punct (sau facilitate) și cel mai apropiat nod al rețelei
+  function accessSpeed(prof) { return prof.access || prof.speed; }
 
   // ---------------------------------------------------------------- rețeaua
   function buildAdjacency(nN, nE, eu, ev) {
@@ -92,10 +100,12 @@
   // muchia nu poate fi folosită cu profilul dat (scări evitate, pantă peste limită)
   function blocked(g, e, prof) {
     if (prof.avoid && (g.eflag[e] & 1)) return true;
+    if (prof.tf && prof.tf[e] === Infinity && prof.tb[e] === Infinity) return true;
     return prof.maxGrade > 0 && g.grd !== undefined && g.grd[e] !== STAIRS_GRADE && g.grd[e] > prof.maxGrade;
   }
   // lungimea echivalentă pe teren plat a muchiei e, parcursă de la nodul mic la cel mare (fwd) sau invers
   function edgeCost(g, e, fwd, prof) {
+    if (prof.tf) return fwd ? prof.tf[e] : prof.tb[e];
     if (prof.slope && g.lfw) return fwd ? g.lfw[e] : g.lbw[e];
     return g.elen[e];
   }
@@ -255,7 +265,7 @@
    * Întoarce { cats[7], amen (suma celor 5 categorii), present (câte din cele 5 categorii există),
    *            stUsable, stByWc[4], stByMode{1,2,3}, inside (Uint8Array, opțional) }. */
   function countReach(pois, dist, prof, T, wantInside) {
-    var speed = prof.speed, avoid = prof.avoid, pts = pois.pts, n = pts.length, cats = new Array(pois.cats.length).fill(0);
+    var speed = accessSpeed(prof), avoid = prof.avoid, pts = pois.pts, n = pts.length, cats = new Array(pois.cats.length).fill(0);
     var stByWc = [0, 0, 0, 0], stByMode = { 1: 0, 2: 0, 3: 0 }, stUsable = 0;
     var inside = wantInside ? new Uint8Array(n) : null;
     for (var i = 0; i < n; i++) {
@@ -281,7 +291,7 @@
   function evaluatePoint(ctx, lon, lat, prof, T, maxSnap) {
     var snap = nearestNode(ctx.g, ctx.grid, lon, lat, 8);
     if (snap.node < 0 || snap.dist > (maxSnap || 500)) return null;
-    var dist = dijkstra(ctx.g, snap.node, snap.dist / prof.speed, prof, T, ctx.ws);
+    var dist = dijkstra(ctx.g, snap.node, snap.dist / accessSpeed(prof), prof, T, ctx.ws);
     var r = countReach(ctx.pois, dist, prof, T, false);
     r.snapDist = snap.dist;
     return r;
@@ -351,16 +361,17 @@
 
   /* Analiza unei zone: pentru fiecare punct al grilei (legat de rețea la cel mult opts.maxSnap metri),
    * facilitățile atinse în T minute cu profilul ales și cu profilul de referință (1,4 m/s, cu scări).
-   * opts = { minutes, profile:{speed, avoid, slope, maxGrade}, spacing (m), maxPoints, maxSnap (m) } */
+   * opts = { minutes, profile:{speed, avoid, slope, maxGrade}, spacing (m), maxPoints, maxSnap (m),
+   *          ref (opțional: alt profil de comparație decât REF) } */
   function analyzeZone(ctx, feature, opts) {
-    var T = opts.minutes * 60, prof = profile(opts.profile);
+    var T = opts.minutes * 60, prof = profile(opts.profile), ref = opts.ref ? profile(opts.ref) : REF;
     var all = gridPoints(feature.geometry, opts.spacing || 400);
     var pts = thin(all, opts.maxPoints || 80);
     var amenP = [], amenR = [], full = 0, fullR = 0, stP = 0, stR = 0, used = 0, skipped = 0, catsP = [0, 0, 0, 0, 0];
     for (var i = 0; i < pts.length; i++) {
       var rp = evaluatePoint(ctx, pts[i][0], pts[i][1], prof, T, opts.maxSnap || 150);
       if (!rp) { skipped++; continue; }
-      var rr = sameProfile(prof, REF) ? rp : evaluatePoint(ctx, pts[i][0], pts[i][1], REF, T, opts.maxSnap || 150);
+      var rr = sameProfile(prof, ref) ? rp : evaluatePoint(ctx, pts[i][0], pts[i][1], ref, T, opts.maxSnap || 150);
       used++;
       amenP.push(rp.amen); amenR.push(rr.amen);
       if (rp.present === 5) full++;
@@ -410,7 +421,7 @@
 
   return {
     R_LAT: R_LAT, R_LON: R_LON, STATION: STATION, BENCH: BENCH, AMENITY_CATS: AMENITY_CATS, MODES: MODES, REF: REF,
-    STAIRS_GRADE: STAIRS_GRADE, profile: profile, sameProfile: sameProfile, parseElev: parseElev, blocked: blocked, edgeCost: edgeCost,
+    STAIRS_GRADE: STAIRS_GRADE, profile: profile, sameProfile: sameProfile, accessSpeed: accessSpeed, parseElev: parseElev, blocked: blocked, edgeCost: edgeCost,
     merc: merc, parseGraph: parseGraph, buildAdjacency: buildAdjacency, buildGrid: buildGrid, nearestNode: nearestNode,
     workspace: workspace, dijkstra: dijkstra, dijkstraMulti: dijkstraMulti, collectReach: collectReach, edgePath: edgePath, cutPath: cutPath,
     snapPois: snapPois, stationUsable: stationUsable, countReach: countReach, evaluatePoint: evaluatePoint,
