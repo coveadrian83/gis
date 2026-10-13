@@ -31,6 +31,10 @@
   <div class="ctl">
     <label><input type="checkbox" id="legal" checked> Respectă regulile de circulație (Codul rutier)</label>
     <div class="note" id="ruleNote"></div>
+    <label><input type="checkbox" id="comfort"> Doar rețeaua confortabilă (piste și străzi liniștite)</label>
+    <div class="note">Fără bulevarde și străzi principale fără pistă: acolo vehiculul se împinge pe trotuar. Pentru începători, copii de peste 14 ani, oricine evită traficul.</div>
+    <label id="transitBox" hidden><input type="checkbox" id="transit"> + transport public (lași vehiculul la stație)</label>
+    <label><input type="checkbox" id="onlyPark"> Numără doar facilitățile cu parcare de biciclete la ≤ 100 m</label>
     <label id="slopeBox" hidden><input type="checkbox" id="slope" checked> Ține cont de pantă (relief)</label>
   </div>
 
@@ -96,6 +100,24 @@
       <div class="tablewrap"><table id="zoneTable"></table></div>
       <p class="note">Apăsați pe un rând pentru a vedea zona pe hartă. „5/5” = proporția punctelor din care se ajunge la toate cele 5 categorii.</p>
     </div>
+  </details>
+
+  <details id="gapsBox">
+    <summary>Lipsuri în rețea</summary>
+    <p class="note">Unde ar ajuta cel mai mult o pistă, o bandă sau un contrasens pentru biciclete? Din puncte pe o grilă în cele 17 zone se caută drumurile cele mai rapide <i>fără restricții</i> până la facilitățile atinse în timpul ales. Fiecare segment de pe aceste drumuri pe care vehiculul ales nu poate circula legal (sau în rețeaua confortabilă, dacă e bifată) primește un punct pentru fiecare facilitate. Scorul este media pe punctele grilei.</p>
+    <div class="row">
+      <label>Grilă
+        <select id="gapSpacing">
+          <option value="500">500 m</option>
+          <option value="800" selected>800 m</option>
+          <option value="1200">1.200 m</option>
+        </select></label>
+      <button id="runGaps" type="button" class="primary">Calculează lipsurile</button>
+      <button id="csvGaps" type="button" disabled>CSV</button>
+    </div>
+    <div id="gapsStatus" class="note"></div>
+    <div class="tablewrap"><table id="gapTable"></table></div>
+    <label id="gapToggle" hidden><input type="checkbox" id="showGaps" checked> Arată lipsurile pe hartă <span class="keyline gap"></span></label>
   </details>
 
   <details id="lawBox">

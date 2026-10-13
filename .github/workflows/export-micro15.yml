@@ -18,6 +18,7 @@ on:
       - scripts/elevatie_15min.py
       - scripts/analiza-micro15.js
       - public/micromobilitate/micro.js
+      - scripts/transit_micro15.py
       - .github/workflows/export-micro15.yml
 
 permissions:
@@ -46,6 +47,8 @@ jobs:
         with:
           path: cache/dem
           key: glo30-dem-v1
+      - name: Orarul CTP pentru bicicletă + transport public
+        run: python scripts/transit_micro15.py
       - name: Adaugă panta (Copernicus GLO-30)
         run: python scripts/elevatie_15min.py --dir public/micromobilitate/data/iasi
       - name: Verifică datele cu testele aplicației

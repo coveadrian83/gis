@@ -114,6 +114,16 @@
   </ol>
   <p>Analiza pe zone folosește aceeași grilă ca harta pietonală (implicit 600 m, maximum 60 de puncte pe zonă), cu referința aleasă: mersul pe jos sau același vehicul fără restricții. „Diferența” = media vehiculului / media referinței − 1.</p>
 
+  <h2>5a. Indicatorii pentru bicicletă</h2>
+  <h3>Rețeaua „confortabilă”</h3>
+  <p>Opțiunea restrânge circulația pe vehicul la pistele pentru biciclete, aleile, străzile locale (<code>residential</code>, <code>living_street</code>, <code>service</code>, <code>unclassified</code>), străzile de orice tip cu bandă / pistă pentru biciclete și străzile terțiare cu limita etichetată de cel mult 30 km/h – aproximativ nivelurile 1–2 de „stres al traficului” (<i>Level of Traffic Stress</i>, Mekuria, Furth &amp; Nixon, 2012). Pe celelalte străzi vehiculul se împinge pe trotuar. Diferența față de varianta legală arată cât din accesibilitate depinde de curajul de a circula printre mașini.</p>
+  <h3>Parcarea la destinație</h3>
+  <p>O facilitate are parcare dacă în OpenStreetMap există un <code>amenity=bicycle_parking</code> la cel mult 100 m în linie dreaptă. Sub statistici apare proporția facilităților atinse care au parcare; opțiunea „Numără doar facilitățile cu parcare” aplică filtrul și în comparații, în analiza pe zone și în calculul lipsurilor. La exportul din octombrie 2026, OSM avea doar 28 de parcări de biciclete în zona Iașului, deci indicatorul măsoară deocamdată mai ales lipsa datelor (și a parcărilor).</p>
+  <h3>Bicicletă + transport public (park &amp; ride)</h3>
+  <p>Din orarul GTFS al CTP Iași (<code>data/transport/gtfs/IASI_GTFS.zip</code>, prelucrat de <code>scripts/transit_micro15.py</code>): pentru fiecare linie, sens și variantă de traseu, stațiile și timpul median de parcurs dintre ele la vârful de dimineață (zi lucrătoare, 07:00–09:00). Calculul: pe vehicul până la o stație, 1 minut pentru parcarea vehiculului, așteptare egală cu jumătate din intervalul mediu dintre curse în aceeași perioadă, călătorie fără transbordare, apoi pe jos (1,4 m/s) până la facilități. Transportul vehiculului în tramvai sau autobuz nu este modelat. Liniile metropolitane rare (interval de o oră) contează doar dacă se încadrează în timp.</p>
+  <h3>Lipsurile din rețea</h3>
+  <p>Din puncte pe o grilă (implicit 800 m, maximum 25 pe zonă) în cele 17 zone se calculează drumurile cele mai rapide <b>fără restricții</b> până la fiecare facilitate atinsă în timpul ales. Fiecare segment de pe un astfel de drum, parcurs într-un sens în care vehiculul nu poate circula legal (trotuar, zonă pietonală, sens unic fără contrasens, stradă peste 50 km/h pentru trotinetă) sau care nu face parte din rețeaua confortabilă (dacă opțiunea e bifată), primește un punct. Scorul segmentului este media punctelor pe grilă: <i>câte facilități pe punct de pornire ar fi mai aproape</i> dacă segmentul ar avea o pistă, o bandă sau un contrasens. Segmentele cu același nume și același motiv se adună în tabel; lista completă se descarcă în CSV. Este un indicator de prioritizare, nu un studiu de trafic: nu ține cont de cererea reală, de populație sau de fezabilitate.</p>
+
   <h2>6. Limite</h2>
   <ul>
     <li><b>Limitele de viteză</b> lipsesc pe multe străzi în OSM. O stradă fără <code>maxspeed</code> este considerată de 50 km/h (limita implicită în localitate), iar un drum național (<code>trunk</code>) fără etichetă de 90 km/h. Limita localității nu este folosită; completarea <code>maxspeed</code> în OSM pe bulevardele Iașului schimbă direct rezultatul pentru trotinete (procentul străzilor etichetate apare sub hartă).</li>
@@ -129,6 +139,7 @@
   <pre>pip install osmnx rasterio scipy
 python scripts/export_micro15.py                                    # scrie public/micromobilitate/data/iasi/
 python scripts/elevatie_15min.py --dir public/micromobilitate/data/iasi   # panta (elev.bin)
+python scripts/transit_micro15.py                                   # orarul CTP (GTFS) → data/transit.json
 node scripts/analiza-micro15.js                                     # vehiculele în câteva puncte + zonele
 node scripts/analiza-micro15.js --vehicle scooter --ref free --out var/zone_trotineta.csv
 node scripts/analiza-micro15.js --point 47.17411,27.57178 --min 10</pre>
@@ -142,6 +153,7 @@ node scripts/analiza-micro15.js --point 47.17411,27.57178 --min 10</pre>
     <li>RCA: avocatnet.ro, <a href="https://www.avocatnet.ro/articol_64755/RCA-devine-obligatorie-de-duminic%C4%83-pentru-bicicletele-%C8%99i-trotinetele-electrice.html">RCA obligatorie pentru biciclete și trotinete electrice</a>; iLegis, <a href="https://blog.ilegis.ro/9-actualitate/1457-regimul-rca-pentru-trotinetele-electrice">regimul RCA pentru trotinete</a>.</li>
     <li>Senatul României, <a href="https://www.senat.ro/Legis/PDF/2026/26L013EM.pdf">expunerea de motive 26L013</a> (2026); <a href="https://adevarul.ro/stiri-interne/evenimente/senatul-vrea-curs-de-legislatie-rutiera-pentru-2563543.html">proiectul privind cursul obligatoriu</a> (Adevărul, octombrie 2026).</li>
     <li>RAR, despre bicicletele clasice și cele cu motor: <a href="https://www.dcnews.ro/rar-informatii-despre-circulatia-cu-bicicletele-clasice-si-cele-cu-motor-tot-ce-trebuie-sa-stii_832613.html">dcnews.ro</a>; Regulamentul (UE) nr. 168/2013 (categoriile L, excepția pedelecurilor).</li>
+    <li>Mekuria, M., Furth, P. &amp; Nixon, H. (2012), <i>Low-Stress Bicycling and Network Connectivity</i>, Mineta Transportation Institute; orarul: GTFS CTP Iași (<a href="https://tranzy.ai/opendata/">Tranzy</a>).</li>
     <li>Ideea și codul de bază: Martin Bangratz, <a href="https://github.com/martincantcode/15-minutes">„15 minutes. For whom?”</a>, licență MIT; harta pietonală a proiectului: <a href="../15min/metodologie.html">metodologie</a>.</li>
     <li>Date: © contribuitorii <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, licență ODbL; elevație Copernicus GLO-30 (© DLR, Airbus, programul Copernicus al UE).</li>
   </ul>

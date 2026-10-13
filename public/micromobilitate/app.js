@@ -40,8 +40,9 @@
   canvas.style.cssText = 'position:absolute;pointer-events:none';
   map.getPanes().overlayPane.appendChild(canvas);
 
-  var G = null, grid = null, POIS = null, poiMx = null, poiMy = null;
-  var wsA = null, wsB = null, wsC = null;
+  var G = null, grid = null, POIS_ALL = null, POIS_PARK = null, PARKFLAG = null, TRANSIT = null, EDGE_NAMES = null;
+  var PARK_RADIUS = 100, PARK_AND_RIDE = 60;   // m; s pentru legarea vehiculului la stație
+  var wsA = null, wsB = null, wsC = null, wsD = null, GAPS = null;
   var ZONES = null, zoneLayer = null, zoneResults = null, zoneRunning = false;
   var origin = L.latLng(47.16485, 27.58186), state = null, queued = false;
   var marker = L.marker(origin, { draggable: true }).addTo(map);
@@ -81,20 +82,39 @@
   function hasSlope() { return !!(G && G.up); }
   function settings() {
     return { T: $('minutes').value * 60, minutes: +$('minutes').value, v0: $('speed').value / 3.6,
-      legal: $('legal').checked, slope: hasSlope() && $('slope').checked, vehicle: vehicle };
+      legal: $('legal').checked, comfort: $('legal').checked && $('comfort').checked, slope: hasSlope() && $('slope').checked,
+      transit: !!TRANSIT && $('transit').checked, onlyPark: $('onlyPark').checked, vehicle: vehicle,
+      mode: !$('legal').checked ? 0 : $('comfort').checked ? 2 : 1 };
   }
-  // timpii pe segmente pentru un vehicul (păstrați până se schimbă setările)
-  function times(k, v0, legal, slope) {
-    var key = k + '|' + v0.toFixed(4) + '|' + (legal ? 1 : 0) + '|' + (slope ? 1 : 0);
+  // facilitățile numărate: toate sau doar cele cu parcare de biciclete în apropiere
+  function activePois() { return $('onlyPark').checked && POIS_PARK ? POIS_PARK : POIS_ALL; }
+  // un set de facilități pentru Min15Core (cu coordonatele Mercator pentru desen); keep(p, i) filtrează
+  function poisView(cats, pts, snap, keep) {
+    var idx = [];
+    pts.forEach(function (p, i) { if (!keep || keep(p, i)) idx.push(i); });
+    var v = { cats: cats, pts: idx.map(function (i) { return pts[i]; }), snap: { node: new Int32Array(idx.length), snap: new Float32Array(idx.length) },
+      mx: new Float64Array(idx.length), my: new Float64Array(idx.length) };
+    idx.forEach(function (i, k) {
+      v.snap.node[k] = snap.node[i]; v.snap.snap[k] = snap.snap[i];
+      var m = C.merc(pts[i][0], pts[i][1]); v.mx[k] = m[0]; v.my[k] = m[1];
+    });
+    return v;
+  }
+  /* timpii pe segmente pentru un vehicul (păstrați până se schimbă setările);
+   * mode: 0 = fără restricții, 1 = după Codul rutier, 2 = doar rețeaua confortabilă */
+  function times(k, v0, mode, slope) {
+    var key = k + '|' + v0.toFixed(4) + '|' + mode + '|' + (slope ? 1 : 0);
     if (!timesCache[key]) {
       if (Object.keys(timesCache).length > 24) timesCache = {};
-      timesCache[key] = k === 'walk' ? M.walkTimes(G, WALK, slope) : M.edgeTimes(G, M.VEHICLES[k], { v0: v0, legal: legal, slope: slope });
+      timesCache[key] = k === 'walk' ? M.walkTimes(G, WALK, slope)
+        : M.edgeTimes(G, M.VEHICLES[k], { v0: v0, legal: mode > 0, comfort: mode === 2, slope: slope });
     }
     return timesCache[key];
   }
-  function profileFor(k, v0, legal, slope) { return M.coreProfile(times(k, v0, legal, slope), 1.2); }
+  function profileFor(k, v0, mode, slope) { return M.coreProfile(times(k, v0, mode, slope), 1.2); }
   function describe(s) {
-    return veh().name + ', ' + fmt(s.v0 * 3.6) + ' km/h' + (s.legal ? ', după Codul rutier' : ', fără restricții') + (s.slope ? ', cu pantă' : ', teren plat');
+    return veh().name + ', ' + fmt(s.v0 * 3.6) + ' km/h' + (s.mode === 2 ? ', rețeaua confortabilă' : s.legal ? ', după Codul rutier' : ', fără restricții') +
+      (s.slope ? ', cu pantă' : ', teren plat') + (s.onlyPark ? ', doar facilitățile cu parcare' : '');
   }
   function labels() {
     var s = settings(), v = veh();
@@ -129,14 +149,26 @@
       draw(); return;
     }
     statusEl.className = ''; statusEl.textContent = '';
-    var tm = times(vehicle, s.v0, s.legal, s.slope);
-    var pA = profileFor(vehicle, s.v0, s.legal, s.slope), pF = profileFor(vehicle, s.v0, false, s.slope), pW = profileFor('walk', WALK, false, s.slope);
+    var P = activePois();
+    var tm = times(vehicle, s.v0, s.mode, s.slope);
+    var pA = profileFor(vehicle, s.v0, s.mode, s.slope), pF = profileFor(vehicle, s.v0, 0, s.slope), pW = profileFor('walk', WALK, 0, s.slope);
     var start = snap.dist / pA.access;
     var dA = C.dijkstra(G, snap.node, start, pA, T, wsA), dF = C.dijkstra(G, snap.node, start, pF, T, wsB);
     var rA = C.collectReach(G, dA, T, pA), rF = C.collectReach(G, dF, T, pF);
-    var cA = C.countReach(POIS, dA, pA, T, true), cF = C.countReach(POIS, dF, pF, T, false);
-    var dW = C.dijkstra(G, snap.node, start, pW, T, wsC), cW = C.countReach(POIS, dW, pW, T, false), rW = C.collectReach(G, dW, T, pW);
-    state = { T: T, reachA: rA, reachF: rF, inA: cA.inside, dA: dA, tm: tm, legal: s.legal };
+    var cA = C.countReach(P, dA, pA, T, true), cF = C.countReach(P, dF, pF, T, false);
+    var dW = C.dijkstra(G, snap.node, start, pW, T, wsC), cW = C.countReach(P, dW, pW, T, false), rW = C.collectReach(G, dW, T, pW);
+    // bicicletă + transport public: pe vehicul până la stație, parcare, așteptare, călătorie, apoi pe jos
+    var tp = null;
+    if (s.transit) {
+      var arr = M.transitArrivals(TRANSIT, dA, T, { park: PARK_AND_RIDE, access: pA.access });
+      var dT = C.dijkstraMulti(G, M.transitSources(TRANSIT, arr, T, WALK), pW, T, wsD).slice();
+      var dC = new Float64Array(G.nN);
+      for (var n = 0; n < G.nN; n++) dC[n] = Math.min(dA[n], dT[n]);
+      var cC = C.countReach(P, dC, pA, T, true);
+      tp = { arr: arr, reach: C.collectReach(G, dT, T, pW), count: cC };
+      cA = cC;   // facilitățile de pe hartă: cu sau fără transportul public
+    }
+    state = { T: T, reachA: rA, reachF: rF, inA: cA.inside, dA: dA, tm: tm, legal: s.legal, pois: P, tp: tp };
     showStats(s, rA, rF, rW, cA, cF, cW, snap);
     showCompare(snap, T, s);
     draw();
@@ -153,8 +185,9 @@
 
   function showStats(s, rA, rF, rW, cA, cF, cW, snap) {
     var km = function (m) { return fmt(m / 1000, 1); };
+    var P = state.pois;
     var rows = C.AMENITY_CATS.map(function (c) {
-      return '<tr><td><span class="dot" style="background:' + CAT_COLORS[c] + '"></span>' + POIS.cats[c] + '</td><td>' + cA.cats[c] + '</td><td>' + cF.cats[c] + '</td><td>' + cW.cats[c] + '</td></tr>';
+      return '<tr><td><span class="dot" style="background:' + CAT_COLORS[c] + '"></span>' + P.cats[c] + '</td><td>' + cA.cats[c] + '</td><td>' + cF.cats[c] + '</td><td>' + cW.cats[c] + '</td></tr>';
     }).join('');
     var extra = [[PARK, 'Parcări pentru biciclete'], [RENTAL, 'Închiriere biciclete / trotinete'], [STATION, 'Stații de transport public']].map(function (x) {
       return '<tr><td><span class="dot" style="background:' + CAT_COLORS[x[0]] + '"></span>' + x[1] + '</td><td>' + cA.cats[x[0]] + '</td><td>' + cF.cats[x[0]] + '</td><td>' + cW.cats[x[0]] + '</td></tr>';
@@ -165,28 +198,43 @@
     var elev = hasSlope() ? 'Altitudinea punctului: ' + fmt(G.ele[snap.node]) + ' m. ' : '';
     $('stats').innerHTML = '<div class="note">' + elev + 'Setări: ' + describe(s) + '.</div>' +
       '<div><b>' + km(rA.lengthM) + ' km</b> de rețea atinsă (fără restricții: ' + km(rF.lengthM) + ' km; pe jos: ' + km(rW.lengthM) + ' km)</div>' +
+      (state.tp ? '<div class="note tpnote"><span class="keyline tp"></span> Cu transportul public (vehiculul rămâne la stație, ' + PARK_AND_RIDE / 60 + ' min pentru parcare, așteptare = jumătate din intervalul la vârf, fără transbordare): ' +
+        (state.tp.arr.lines.length ? 'linii folosite: ' + esc(state.tp.arr.lines.slice(0, 18).join(', ')) + (state.tp.arr.lines.length > 18 ? ' …' : '') + '. Coloana „Vehicul” include și facilitățile atinse așa.' : 'nicio linie nu aduce un câștig în timpul ales.') + '</div>' : '') +
       (s.legal ? '<div class="note">' + fmt(push) + '% din rețeaua atinsă se parcurge pe jos, cu vehiculul de mână (trotuare, zone pietonale, contrasens' + (veh().rules === 'scooter' ? ', străzi peste 50 km/h fără pistă' : '') + ').</div>' : '') +
       '<table><thead><tr><th></th><th>Vehicul</th><th>Fără restr.</th><th>Pe jos</th></tr></thead><tbody>' + rows +
       '<tr><td><b>Total facilități</b></td><td><b>' + cA.amen + '</b></td><td>' + cF.amen + '</td><td>' + cW.amen + '</td></tr>' + extra + '</tbody></table>' +
       '<div class="note">' + cA.present + ' din 5 categorii prezente. ' + (gain !== null ? 'De ' + fmt(gain, 1) + ' ori mai multe facilități decât pe jos (1,4 m/s)' : '') +
-      (s.legal && lost > 0 ? '; regulile de circulație și lipsa pistelor reduc numărul cu ' + lost + '% față de varianta fără restricții.' : '.') + '</div>';
+      (s.legal && lost > 0 ? '; regulile de circulație și lipsa pistelor reduc numărul cu ' + lost + '% față de varianta fără restricții.' : '.') + '</div>' + parkLine(cA);
+  }
+
+  // câte dintre facilitățile atinse au o parcare de biciclete la cel mult PARK_RADIUS metri
+  function parkLine(cA) {
+    if (!PARKFLAG || $('onlyPark').checked) return '';
+    var all = 0, withPark = 0, pts = POIS_ALL.pts;
+    for (var i = 0; i < pts.length; i++) {
+      if (!cA.inside[i] || pts[i][2] > 4) continue;
+      all++; if (PARKFLAG[i]) withPark++;
+    }
+    return '<div class="note"><b>Parcare la destinație</b>: ' + withPark + ' din ' + all + ' facilități atinse (' + fmt(all ? withPark / all * 100 : 0) +
+      '%) au o parcare de biciclete cartografiată la cel mult ' + PARK_RADIUS + ' m. OpenStreetMap are doar ' + POIS_ALL.pts.filter(function (p) { return p[2] === PARK; }).length +
+      ' parcări de biciclete în zonă – completarea lor schimbă direct acest indicator.</div>';
   }
 
   // același punct, toate vehiculele (cu regulile alese) și mersul pe jos
   function showCompare(snap, T, s) {
     var run = function (prof) {
       var d = C.dijkstra(G, snap.node, snap.dist / prof.access, prof, T, wsC);
-      return C.countReach(POIS, d, prof, T, false);
+      return C.countReach(state.pois, d, prof, T, false);
     };
-    var walk = run(profileFor('walk', WALK, false, s.slope));
+    var walk = run(profileFor('walk', WALK, 0, s.slope));
     var rows = ['<tr><td>Pe jos (1,4 m/s)</td><td>' + walk.amen + '</td><td>1×</td><td>' + walk.cats[STATION] + '</td></tr>'];
     M.ORDER.forEach(function (k) {
       var v = M.VEHICLES[k], v0 = k === vehicle ? s.v0 : v.v0;
       [true, false].forEach(function (legal) {
-        var r = run(profileFor(k, v0, legal, s.slope));
+        var r = run(profileFor(k, v0, legal ? (s.mode || 1) : 0, s.slope));
         var cur = k === vehicle && legal === s.legal;
         var cls = (cur ? 'cur ' : '') + (legal ? '' : 'free');
-        rows.push('<tr' + (cls.trim() ? ' class="' + cls.trim() + '"' : '') + '><td>' + esc(v.name) + ' · ' + fmt(v0 * 3.6) + ' km/h' + (legal ? '' : ' <small>fără restricții</small>') +
+        rows.push('<tr' + (cls.trim() ? ' class="' + cls.trim() + '"' : '') + '><td>' + esc(v.name) + ' · ' + fmt(v0 * 3.6) + ' km/h' + (legal ? (s.mode === 2 ? ' <small>confortabil</small>' : '') : ' <small>fără restricții</small>') +
           '</td><td>' + r.amen + '</td><td>' + (walk.amen ? fmt(r.amen / walk.amen, 1) + '×' : '–') + '</td><td>' + r.cats[STATION] + '</td></tr>');
       });
     });
@@ -259,6 +307,18 @@
       });
       ctx.globalAlpha = 1;
     }
+    // lipsurile din rețea: grosimea și opacitatea după scor
+    if (GAPS && $('showGaps').checked && z >= 11) {
+      var top = GAPS.top, max = GAPS.max;
+      [[0.5, 1], [0.25, 0.5], [0, 0.25]].reverse().forEach(function (band) {
+        var list = top.filter(function (e) { var r = GAPS.score[e] / max; return r > band[0] && r <= band[1] && inView(e, box); }).map(function (e) { return { e: e }; });
+        if (!list.length) return;
+        ctx.beginPath(); ctx.strokeStyle = '#7b2cbf'; ctx.globalAlpha = 0.35 + band[1] * 0.5;
+        ctx.lineWidth = Math.max(3, Math.min(12, (2 + (z - 11)) * (0.6 + band[1])));
+        strokeEdges(ctx, X, Y, list); ctx.stroke();
+      });
+      ctx.globalAlpha = 1;
+    }
     if (!state) return;
     var width = Math.max(1.5, Math.min(5, 1.2 + (z - 12) * 0.5));
     // fără restricții, în gri: doar unde vehiculul, cu regulile alese, nu ajunge
@@ -281,12 +341,18 @@
       ctx.beginPath(); ctx.strokeStyle = BIN_COLORS[k];
       strokeEdges(ctx, X, Y, list); ctx.stroke();
     });
+    // continuarea pe jos de la stațiile de coborâre (bicicletă + transport public)
+    if (state.tp) {
+      ctx.beginPath(); ctx.strokeStyle = '#7b5ea7'; ctx.lineWidth = Math.max(1.5, width * 0.8); ctx.globalAlpha = 0.85;
+      strokeEdges(ctx, X, Y, state.tp.reach.items.filter(function (it) { return inView(it.e, box); }));
+      ctx.stroke(); ctx.globalAlpha = 1;
+    }
     if ($('showPush').checked && state.legal && pushed.length && z >= 13) {
       ctx.beginPath(); ctx.strokeStyle = '#15171a'; ctx.lineWidth = Math.max(1, width * 0.5); ctx.setLineDash([3, 4]);
       strokeEdges(ctx, X, Y, pushed); ctx.stroke(); ctx.setLineDash([]);
     }
     var showAm = $('showAm').checked, showSt = $('showSt').checked, showPark = $('showPark').checked;
-    var pts = POIS.pts;
+    var pts = state.pois.pts, poiMx = state.pois.mx, poiMy = state.pois.my;
     for (var i = 0; i < pts.length; i++) {
       if (!state.inA[i]) continue;
       var c = pts[i][2], x = X(poiMx[i]), y = Y(poiMy[i]);
@@ -345,7 +411,7 @@
     var prof = profileFor(vehicle, s.v0, s.legal, s.slope);
     var ref = refKind === 'walk' ? profileFor('walk', WALK, false, s.slope) : profileFor(vehicle, s.v0, false, s.slope);
     var opts = { minutes: s.minutes, profile: prof, ref: ref, spacing: +$('spacing').value, maxPoints: +$('maxPoints').value, maxSnap: 150 };
-    var ctx = { g: G, grid: grid, pois: POIS, ws: C.workspace(G) };
+    var ctx = { g: G, grid: grid, pois: activePois(), ws: C.workspace(G) };
     var rows = [], feats = ZONES.features.slice(), i = 0, t0 = Date.now();
     $('runZones').disabled = true; $('csvZones').disabled = true;
     (function step() {
@@ -434,6 +500,115 @@
     if ($('showZones').checked) zoneLayer.addTo(map); else map.removeLayer(zoneLayer);
   });
 
+
+  // ---------------------------------------------------------------- lipsurile din rețea
+  function runGaps() {
+    if (!G || !ZONES) return;
+    var s = settings();
+    if (!s.legal) { $('gapsStatus').textContent = 'Bifați „Respectă regulile de circulație”: lipsurile se măsoară față de varianta fără restricții.'; return; }
+    var T = s.T, spacing = +$('gapSpacing').value, free = times(vehicle, s.v0, 0, s.slope), rules = times(vehicle, s.v0, s.mode, s.slope);
+    var origins = [];
+    ZONES.features.forEach(function (f) {
+      C.thin(C.gridPoints(f.geometry, spacing), 25).forEach(function (pt) {
+        var r = C.nearestNode(G, grid, pt[0], pt[1], 8);
+        if (r.node >= 0 && r.dist <= 150) origins.push([r.node, r.dist]);
+      });
+    });
+    $('runGaps').disabled = true; $('csvGaps').disabled = true;
+    var score = new Float64Array(G.nE), i = 0, chunk = 10, t0 = Date.now(), P = activePois();
+    (function step() {
+      if (i >= origins.length) { finish(); return; }
+      $('gapsStatus').textContent = 'Se calculează: ' + i + ' din ' + origins.length + ' puncte…';
+      setTimeout(function () {
+        var part = M.gapScores(G, free, rules, origins.slice(i, i + chunk), P, T, { access: 1.2 });
+        var n = Math.min(chunk, origins.length - i);
+        for (var e = 0; e < G.nE; e++) score[e] += part[e] * n;
+        i += chunk; step();
+      }, 0);
+    })();
+    function finish() {
+      for (var e = 0; e < G.nE; e++) score[e] /= Math.max(1, origins.length);
+      var top = [];
+      for (e = 0; e < G.nE; e++) if (score[e] > 0) top.push(e);
+      top.sort(function (a, b) { return score[b] - score[a]; });
+      top = top.slice(0, 600);
+      GAPS = { score: score, top: top, max: top.length ? score[top[0]] : 1, s: s, origins: origins.length, spacing: spacing };
+      $('runGaps').disabled = false; $('csvGaps').disabled = !top.length;
+      $('gapToggle').hidden = !top.length;
+      $('gapsStatus').textContent = 'Calculat în ' + fmt((Date.now() - t0) / 1000, 1) + ' s din ' + origins.length + ' puncte: ' + describe(s) + ', ' + s.minutes +
+        ' min. Scor = facilități pe punct pentru care drumul cel mai rapid trece pe acolo fără să poată fi parcurs legal pe vehicul.';
+      loadNames().then(renderGaps);
+      draw();
+    }
+  }
+  function loadNames() {
+    if (EDGE_NAMES) return Promise.resolve(EDGE_NAMES);
+    return fetch(DATA_DIR + 'edges.json').then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+      EDGE_NAMES = new Array(G.nE);
+      if (d && d.edges === G.nE) d.name.forEach(function (x) { EDGE_NAMES[x[0]] = d.names[x[1]]; });
+      return EDGE_NAMES;
+    }).catch(function () { EDGE_NAMES = new Array(G.nE); return EDGE_NAMES; });
+  }
+  var CLS_LABEL = ['pistă', 'alee comună', 'alee', 'stradă locală', 'stradă terțiară', 'stradă secundară', 'stradă principală', 'drum național', 'autostradă', 'trotuar / pietonal', 'scări', 'interzis bicicletelor'];
+  // de ce nu se poate circula legal pe segment (pentru vehiculul și setările lipsurilor)
+  function gapReason(e) {
+    var c = G.cls[e], v = M.VEHICLES[GAPS.s.vehicle];
+    if (c === M.CLS.FOOTWAY || c === M.CLS.NOBIKE) return 'trotuar / zonă pietonală';
+    if (c === M.CLS.STEPS) return 'scări';
+    if (M.oneway(G, e)) {
+      var mode = M.legalMode(G, e, v, true, GAPS.s.mode === 2);
+      if (mode === M.RIDE) return 'sens unic fără contrasens';
+    }
+    if (v.rules === 'scooter' && c >= M.CLS.LOCAL && c <= M.CLS.TRUNK && M.speedLimit(G, e) > M.URBAN_LIMIT) return '> 50 km/h fără pistă';
+    if (GAPS.s.mode === 2 && !M.comfortable(G, e)) return CLS_LABEL[c] + ' fără pistă';
+    if (c === M.CLS.SHARED || c === M.CLS.PATH) return 'alee (nu e pistă)';
+    return CLS_LABEL[c];
+  }
+  // segmentele cu același nume și același motiv se adună (o stradă e de obicei împărțită în multe segmente)
+  function gapGroups() {
+    var groups = {}, list = [];
+    GAPS.top.forEach(function (e) {
+      var name = EDGE_NAMES[e] || '(fără nume)', reason = gapReason(e), key = name + '|' + reason;
+      var g = groups[key];
+      if (!g) { g = groups[key] = { name: name, reason: reason, score: 0, len: 0, edges: [] }; list.push(g); }
+      g.score = Math.max(g.score, GAPS.score[e]); g.len += G.elen[e]; g.edges.push(e);
+    });
+    return list.sort(function (a, b) { return b.score - a.score; });
+  }
+  function renderGaps() {
+    if (!GAPS) return;
+    var list = gapGroups().slice(0, 25);
+    GAPS.groups = list;
+    $('gapTable').innerHTML = '<thead><tr><th>Stradă / segment</th><th>Motiv</th><th>m</th><th>Scor</th></tr></thead><tbody>' +
+      list.map(function (g, k) {
+        return '<tr data-k="' + k + '"><td>' + esc(g.name) + '</td><td>' + esc(g.reason) + '</td><td>' + fmt(g.len) + '</td><td>' + fmt(g.score, 1) + '</td></tr>';
+      }).join('') + '</tbody>';
+  }
+  $('gapTable').addEventListener('click', function (ev) {
+    var tr = ev.target.closest('tr[data-k]');
+    if (!tr || !GAPS || !GAPS.groups) return;
+    var g = GAPS.groups[+tr.dataset.k], b = L.latLngBounds([]);
+    g.edges.forEach(function (e) { b.extend([G.lat[G.eu[e]], G.lon[G.eu[e]]]); b.extend([G.lat[G.ev[e]], G.lon[G.ev[e]]]); });
+    if (!$('showGaps').checked) { $('showGaps').checked = true; }
+    map.fitBounds(b.pad(0.6), { maxZoom: 17 });
+  });
+  $('csvGaps').addEventListener('click', function () {
+    if (!GAPS) return;
+    var t = function (v) { var x = String(v); return /[",;\n]/.test(x) ? '"' + x.replace(/"/g, '""') + '"' : x; };
+    var lines = ['segment,strada,motiv,clasa,limita_kmh,lungime_m,scor,lat,lon'];
+    GAPS.top.forEach(function (e) {
+      lines.push([e, t(EDGE_NAMES && EDGE_NAMES[e] || ''), t(gapReason(e)), t(CLS_LABEL[G.cls[e]]), G.maxspeed[e] || '', Math.round(G.elen[e]),
+        Math.round(GAPS.score[e] * 100) / 100, ((G.lat[G.eu[e]] + G.lat[G.ev[e]]) / 2).toFixed(5), ((G.lon[G.eu[e]] + G.lon[G.ev[e]]) / 2).toFixed(5)].join(','));
+    });
+    var blob = new Blob(['﻿' + lines.join('\n') + '\n'], { type: 'text/csv;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'iasi_micro15_lipsuri_' + GAPS.s.vehicle + (GAPS.s.mode === 2 ? '_confortabil' : '') + '_' + GAPS.s.minutes + 'min.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+  });
+  $('runGaps').addEventListener('click', runGaps);
+
   // ---------------------------------------------------------------- link partajabil
   var hashTimer;
   function writeHash() {
@@ -441,7 +616,8 @@
     hashTimer = setTimeout(function () {
       var s = settings();
       var q = new URLSearchParams({ lat: origin.lat.toFixed(5), lng: origin.lng.toFixed(5), min: s.minutes, v: vehicle,
-        kmh: $('speed').value, lg: s.legal ? 1 : 0, pa: $('slope').checked ? 1 : 0, z: map.getZoom() });
+        kmh: $('speed').value, lg: s.legal ? 1 : 0, cf: $('comfort').checked ? 1 : 0, tp: $('transit').checked ? 1 : 0,
+        pk: $('onlyPark').checked ? 1 : 0, pa: $('slope').checked ? 1 : 0, z: map.getZoom() });
       try { history.replaceState(null, '', '#' + q.toString()); } catch (e) { /* unele browsere limitează */ }
     }, 300);
   }
@@ -454,6 +630,9 @@
     var sp = num('kmh', 5, 30); if (sp !== null) { $('speed').value = sp; setVehicle(vehicle, true); }
     var m = num('min', 5, 30); if (m !== null) $('minutes').value = Math.round(m);
     if (q.get('lg') === '0') $('legal').checked = false;
+    if (q.get('cf') === '1') $('comfort').checked = true;
+    if (q.get('tp') === '1') $('transit').checked = true;
+    if (q.get('pk') === '1') $('onlyPark').checked = true;
     if (q.get('pa') === '0') $('slope').checked = false;
     labels();
     var z = num('z', 10, 19);
@@ -467,8 +646,8 @@
 
   // ---------------------------------------------------------------- evenimente
   ['minutes', 'speed'].forEach(function (id) { $(id).addEventListener('input', schedule); });
-  ['legal', 'slope'].forEach(function (id) { $(id).addEventListener('change', schedule); });
-  ['showAm', 'showSt', 'showPark', 'showPush', 'showInfra'].forEach(function (id) { $(id).addEventListener('change', draw); });
+  ['legal', 'slope', 'comfort', 'transit', 'onlyPark'].forEach(function (id) { $(id).addEventListener('change', schedule); });
+  ['showAm', 'showSt', 'showPark', 'showPush', 'showInfra', 'showGaps'].forEach(function (id) { $(id).addEventListener('change', draw); });
   $('vehicles').addEventListener('click', function (ev) {
     var b = ev.target.closest('button');
     if (!b) return;
@@ -486,7 +665,8 @@
   setVehicle('bike');
   labels();
   var elevReq = fetch(DATA_DIR + 'elev.bin').then(function (r) { return r.ok ? r.arrayBuffer() : null; }).catch(function () { return null; });
-  Promise.all([getOk('meta.json', 'json'), getOk('graph.bin', 'arrayBuffer'), getOk('micro.bin', 'arrayBuffer'), getOk('pois.json', 'json'), elevReq]).then(function (res) {
+  Promise.all([getOk('meta.json', 'json'), getOk('graph.bin', 'arrayBuffer'), getOk('micro.bin', 'arrayBuffer'), getOk('pois.json', 'json'), elevReq,
+    fetch('data/transit.json').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })]).then(function (res) {
     var meta = res[0];
     G = C.parseGraph(res[1]); grid = C.buildGrid(G);
     M.parseMicro(res[2], G);
@@ -494,11 +674,13 @@
       try { C.parseElev(res[4], G); $('slopeBox').hidden = false; }
       catch (err) { console.warn('Panta nu s-a putut încărca:', err); delete G.lfw; delete G.up; }
     }
-    wsA = C.workspace(G); wsB = C.workspace(G); wsC = C.workspace(G);
+    wsA = C.workspace(G); wsB = C.workspace(G); wsC = C.workspace(G); wsD = C.workspace(G);
     var pts = res[3].pts;
-    POIS = { cats: res[3].cats, pts: pts, snap: C.snapPois(G, grid, pts) };
-    poiMx = new Float64Array(pts.length); poiMy = new Float64Array(pts.length);
-    pts.forEach(function (p, i) { var m = C.merc(p[0], p[1]); poiMx[i] = m[0]; poiMy[i] = m[1]; });
+    POIS_ALL = poisView(res[3].cats, pts, C.snapPois(G, grid, pts), null);
+    PARKFLAG = M.parkingNearby(pts, PARK, PARK_RADIUS);
+    // varianta „doar cu parcare”: facilitățile din cele 5 categorii fără parcare în apropiere nu se mai numără
+    POIS_PARK = poisView(res[3].cats, pts, POIS_ALL.snap, function (p, i) { return p[2] > 4 || PARKFLAG[i]; });
+    if (res[5]) { TRANSIT = M.prepareTransit(res[5], G, grid, C.nearestNode); $('transitBox').hidden = false; }
     origin = L.latLng(meta.start[0], meta.start[1]);
     var h = applyHash(meta);
     if (!h.hadOrigin) {

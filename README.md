@@ -136,6 +136,10 @@ cu aceeași deplasare **fără restricții** și cu mersul pe jos.
 - **Date**: `public/micromobilitate/data/iasi/` (graph.bin + micro.bin cu clasele, pistele, limita de viteză, sensul
   unic) se generează cu `scripts/export_micro15.py` și `scripts/elevatie_15min.py --dir …`, automat în GitHub Actions:
   **Actions → Export date micromobilitate (Iași) → Run workflow**.
+- **Indicatori pentru bicicletă**: rețeaua „confortabilă” (doar piste și străzi liniștite), parcarea la destinație
+  (facilitățile cu `amenity=bicycle_parking` la ≤ 100 m), bicicletă + transport public (park & ride, orarul GTFS CTP prin
+  `scripts/transit_micro15.py`, fără transbordare) și **lipsurile din rețea** (segmentele pe care o pistă / un contrasens ar
+  scurta cele mai multe deplasări; tabel și CSV).
 - **Linia de comandă**: `node scripts/analiza-micro15.js [--vehicle scooter --kmh 18 --min 15 --ref free --out var/zone.csv]`.
 - Metodologia și **cadrul legal** (definiții, reguli, RCA din 16.11.2025, proiecte în curs): `public/micromobilitate/metodologie.html`.
 
@@ -331,6 +335,7 @@ data/puz_iasi_completari.csv  corecturi și completări manuale pentru PUZ-uri
 scripts/export_15min.py     exportul rețelei pietonale și al facilităților din OSM (osmnx)
 scripts/elevatie_15min.py   panta: elevația Copernicus GLO-30 pe fiecare segment (elev.bin)
 scripts/export_micro15.py   rețeaua pentru micromobilitate: piste, limite de viteză, sens unic (osmnx)
+scripts/transit_micro15.py  orarul CTP (GTFS) compact pentru varianta bicicletă + transport public
 scripts/analiza-micro15.js  analiza micromobilității pe puncte și pe zone din linia de comandă
 scripts/analiza-15min.js    analiza pe puncte și pe zone din linia de comandă (--scari: scările și străzile abrupte)
 test/                       teste automate (date geografice sintetice)

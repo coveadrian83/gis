@@ -165,3 +165,57 @@ test('integrarea cu Min15Core: trotineta ocolește bulevardul pe pistă, bicicle
   assert.equal(C.countReach(pois, db, bike, T, false).cats[0], 1);
   assert.equal(C.countReach(pois, db, bike, T - 1, false).cats[0], 0);
 });
+
+test('rețeaua confortabilă: bulevardul fără pistă se parcurge pe jos, cel cu bandă rămâne pe vehicul', () => {
+  assert.equal(M.legalMode(g, 0, V.bike, true, true), M.PUSH);
+  assert.equal(M.legalMode(g, 1, V.bike, true, true), M.RIDE);   // stradă locală
+  assert.equal(M.legalMode(g, 3, V.bike, true, true), M.RIDE);   // pistă
+  g.mflag[0] |= M.F_LANE;
+  assert.equal(M.legalMode(g, 0, V.bike, true, true), M.RIDE);
+  g.mflag[0] &= ~M.F_LANE;
+  const t = M.edgeTimes(g, V.bike, { v0: V.bike.v0, legal: true, comfort: true, slope: false });
+  assert.equal(t.mf[0], M.PUSH);
+  // fără legal, opțiunea nu are efect
+  assert.equal(M.edgeTimes(g, V.bike, { v0: V.bike.v0, legal: false, comfort: true }).mf[0], M.RIDE);
+});
+
+test('parcarea la destinație: doar facilitățile cu o parcare la cel mult 100 m', () => {
+  const pts = [P(0, 0).concat([0]), P(80, 0).concat([5]), P(300, 0).concat([1]), P(60, 50).concat([2])];
+  assert.deepEqual(Array.from(M.parkingNearby(pts, 5, 100)), [1, 1, 0, 1]);
+});
+
+test('bicicletă + transport public: urcare, așteptare, coborâre, fără întoarcere în sens opus', () => {
+  const grid = C.buildGrid(g);
+  // o linie 2 → 3 → 6 (stațiile lângă nodurile 2, 3 și 6), interval 10 min
+  const tr = { stops: [NODES[2].concat(['A']), NODES[3].concat(['B']), NODES[6].concat(['C'])],
+    patterns: [{ r: 'X', m: 3, h: 600, s: [0, 1, 2], t: [0, 120, 300] }] };
+  const tp = M.prepareTransit(tr, g, grid, C.nearestNode);
+  assert.deepEqual(Array.from(tp.node), [2, 3, 6]);
+  const dVeh = new Float64Array(g.nN).fill(Infinity);
+  dVeh[2] = 100; dVeh[3] = 500;
+  const arr = M.transitArrivals(tp, dVeh, 3600, { park: 60 });
+  // urcare la A: 100 + 60 + 300 (jumătate din interval) = 460; B: 460 + 120 = 580; C: 460 + 300 = 760
+  assert.equal(arr.arrive[0], Infinity);
+  const near = (a, b) => assert.ok(Math.abs(a - b) < 2, a + ' ≈ ' + b);   // stațiile sunt la < 1 m de noduri
+  near(arr.arrive[1], 580);
+  near(arr.arrive[2], 760);
+  assert.deepEqual(arr.lines, ['X']);
+  // în timpul disponibil scurt nu se mai ajunge la C
+  assert.equal(M.transitArrivals(tp, dVeh, 700, { park: 60 }).arrive[2], Infinity);
+  const src = M.transitSources(tp, arr, 3600, 1.4);
+  assert.deepEqual(src.map((x) => x[0]), [3, 6]);
+  near(src[0][1], 580); near(src[1][1], 760);
+});
+
+test('lipsurile: segmentele interzise pe drumul cel mai rapid fără restricții primesc puncte', () => {
+  const grid = C.buildGrid(g);
+  const pts = [NODES[1].concat([0, 0, 0])];   // o facilitate la nodul 1
+  const pois = { cats: ['A'], pts, snap: C.snapPois(g, grid, pts) };
+  const free = M.edgeTimes(g, V.scooter, { v0: V.scooter.v0, legal: false });
+  const rules = M.edgeTimes(g, V.scooter, { v0: V.scooter.v0, legal: true });
+  const s = M.gapScores(g, free, rules, [[0, 0]], pois, 3600, { cats: [0] });
+  assert.equal(s[0], 1);              // bulevardul de 60 km/h: drumul direct, interzis trotinetei
+  assert.equal(s[1], 0);
+  const bikeRules = M.edgeTimes(g, V.bike, { v0: V.bike.v0, legal: true });
+  assert.equal(M.gapScores(g, M.edgeTimes(g, V.bike, { v0: V.bike.v0, legal: false }), bikeRules, [[0, 0]], pois, 3600, { cats: [0] })[0], 0);
+});
