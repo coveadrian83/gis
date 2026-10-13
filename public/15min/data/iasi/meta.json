@@ -30,7 +30,7 @@
  "steps": 411,
  "steps_with_wheelchair_ramp": 6,
  "osmnx": "2.1.1",
- "generated": "2026-10-13T13:17Z",
+ "generated": "2026-10-13T15:30Z",
  "elevation": {
   "source": "Copernicus GLO-30 (DSM), deschidere morfologică 5 px + gauss σ=1",
   "min_m": 34.3,
@@ -43,6 +43,6 @@
    "12+": 17.8
   },
   "osm_incline_edges": 250,
-  "generated": "2026-10-13T13:17Z"
+  "generated": "2026-10-13T15:30Z"
  }
 }
