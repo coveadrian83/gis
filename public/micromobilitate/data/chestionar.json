@@ -1125,7 +1125,7 @@
    "dorite": 1
   },
   {
-   "nume": "Strada Gospodarilor",
+   "nume": "Strada Alexandru Vodă Ipsilanti",
    "parcurse": 0,
    "dorite": 1
   },
@@ -1135,7 +1135,7 @@
    "dorite": 1
   },
   {
-   "nume": "Strada Alexandru Vodă Ipsilanti",
+   "nume": "Strada Gospodarilor",
    "parcurse": 0,
    "dorite": 1
   },
@@ -1205,12 +1205,12 @@
    "dorite": 1
   },
   {
-   "nume": "Strada Constantin Pop",
+   "nume": "Strada Petre Vancea",
    "parcurse": 1,
    "dorite": 0
   },
   {
-   "nume": "Strada Petre Vancea",
+   "nume": "Strada Constantin Pop",
    "parcurse": 1,
    "dorite": 0
   },
@@ -1400,19 +1400,19 @@
   },
   "IAS-Z16": {
    "zona": "Studențesc",
-   "respondenti": 44,
-   "bicicleta_pct": 72.7,
-   "frecvent_pct": 63.6,
-   "mod_bicicleta_pct": 25.0,
-   "sigur_pct": 13.6
+   "respondenti": 2,
+   "bicicleta_pct": 0.0,
+   "frecvent_pct": 0.0,
+   "mod_bicicleta_pct": 0.0,
+   "sigur_pct": 0.0
   },
   "IAS-Z17": {
    "zona": "Tătărași",
-   "respondenti": 129,
-   "bicicleta_pct": 71.3,
-   "frecvent_pct": 62.0,
-   "mod_bicicleta_pct": 21.7,
-   "sigur_pct": 7.0
+   "respondenti": 171,
+   "bicicleta_pct": 72.5,
+   "frecvent_pct": 63.2,
+   "mod_bicicleta_pct": 22.8,
+   "sigur_pct": 8.8
   }
  },
  "zm": {

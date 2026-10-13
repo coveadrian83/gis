@@ -83,7 +83,7 @@ ZONE_RULES = [
     ("cug", "IAS-Z09"), ("c.u.g", "IAS-Z09"), ("bucium", "IAS-Z10"), ("visan", "IAS-Z10"),
     ("nicolina", "IAS-Z11"), ("frumoasa", "IAS-Z12"), ("alexandru", "IAS-Z13"), ("cantemir", "IAS-Z14"),
     ("socola", "IAS-Z14"), ("podu ros", "IAS-Z15"), ("podul ros", "IAS-Z15"), ("pod ros", "IAS-Z15"),
-    ("tudor", "IAS-Z16"), ("studentesc", "IAS-Z16"), ("tatarasi", "IAS-Z17"), ("metalurgie", "IAS-Z17"),
+    ("tudor", "IAS-Z17"), ("studentesc", "IAS-Z16"), ("tatarasi", "IAS-Z17"), ("metalurgie", "IAS-Z17"),
     ("centru", "IAS-Z15"), ("unirii", "IAS-Z15"), ("independentei", "IAS-Z15"), ("palas", "IAS-Z15"),
     ("targu cucu", "IAS-Z15"), ("tg cucu", "IAS-Z15"), ("gara", "IAS-Z15"),
 ]
