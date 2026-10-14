@@ -11,7 +11,7 @@ const MODE_BY_CODE = Domain.byCode(Domain.MODES);
 const PURPOSE_BY_CODE = Domain.byCode(Domain.PURPOSES);
 const REPEAT_BY_CODE = Domain.byCode(Domain.REPEAT_TYPES);
 const ROLE_BY_CODE = Domain.byCode(Domain.CAR_ROLES);
-const ENDPOINT_SOURCES = ['poi', 'locality', 'zone', 'map', 'geocoder', 'saved'];
+const ENDPOINT_SOURCES = ['poi', 'locality', 'zone', 'map', 'geocoder', 'saved', 'import'];
 
 // Aria geografică acceptată pentru coordonate (România + Republica Moldova, cu marjă)
 const ACCEPTED_BBOX = { minLat: 43.5, maxLat: 48.8, minLng: 20.0, maxLng: 30.5 };

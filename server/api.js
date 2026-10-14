@@ -14,8 +14,10 @@ const stats = require('./stats.js');
 const time = require('./time.js');
 const { geoStatus } = require('./geo.js');
 const { purgeCoords } = require('./maintenance.js');
+const TripImport = require('./import.js');
 
 const MAX_BODY = 16 * 1024;
+const MAX_IMPORT_BODY = 512 * 1024; // importul de deplasări din panou (cel mult 500 pe fișier)
 
 function originOf(url) {
   try { return new URL(url.replace(/\{[a-z]\}/g, 'a')).origin; } catch { return ''; }
@@ -87,16 +89,16 @@ function createApi(cfg, deps) {
     });
   }
 
-  async function readText(req) {
+  async function readText(req, max = MAX_BODY) {
     const len = parseInt(req.headers.get('content-length') || '0', 10);
-    if (len > MAX_BODY) throw new HttpError(413, 'Cerere prea mare.');
+    if (len > max) throw new HttpError(413, 'Cerere prea mare.');
     const t = await req.text();
-    if (t.length > MAX_BODY) throw new HttpError(413, 'Cerere prea mare.');
+    if (t.length > max) throw new HttpError(413, 'Cerere prea mare.');
     return t;
   }
 
-  async function readJson(req) {
-    const t = await readText(req);
+  async function readJson(req, max) {
+    const t = await readText(req, max);
     try { return JSON.parse(t || '{}'); } catch { throw new HttpError(400, 'JSON invalid.'); }
   }
 
@@ -425,6 +427,49 @@ function createApi(cfg, deps) {
       await storage.updatePoiOverrides((o) => ({ ...o, ...updates }));
       await audit({ action: 'POI_IMPORT', note: `${added} adăugate, ${updated} actualizate` });
       return json(200, { added, updated });
+    }
+
+    // --- import de deplasări din alte surse (ex. Cronologia Google a unui voluntar) ---
+    if (p === '/api/admin/trips/import' && method === 'POST') {
+      const body = await readJson(req, MAX_IMPORT_BODY);
+      const prep = TripImport.prepareImport(body, await deps.getGeo(req), cfg, Date.now());
+      const ok = prep.results.filter((r) => r.record);
+      const out = {
+        participant_id: prep.participant_id, label: prep.label, source: prep.source,
+        n: prep.results.length, n_ok: ok.length, n_errors: prep.results.length - ok.length,
+        results: prep.results.map(({ record, ...r }) => r)
+      };
+      if (body.dry_run) return json(200, { ...out, dry_run: true });
+      if (!ok.length) return json(400, { ...out, error: 'Nicio deplasare validă de importat.' });
+      const recs = ok.map((r) => r.record);
+      let created = 0;
+      if (storage.putRaws) created = (await storage.putRaws(recs)).created;
+      else for (const rec of recs) if ((await storage.putRaw(rec)).created) created++;
+      await audit({ action: 'TRIPS_IMPORT', note: `${prep.label} (${prep.source}, ${prep.participant_id}): ${created} noi, ${ok.length - created} existente deja, ${out.n_errors} respinse` });
+      return json(200, { ...out, created, already: ok.length - created });
+    }
+    // sugestii la import: încadrează câteva coordonate (ex. foaia „Locuri”) într-o unitate; coordonatele nu se salvează
+    if (p === '/api/admin/classify' && method === 'POST') {
+      const body = await readJson(req);
+      const geo = await deps.getGeo(req);
+      const pts = Array.isArray(body.points) ? body.points.slice(0, 50) : [];
+      return json(200, { units: pts.map((pt) => {
+        const lat = Number(pt && pt[0]), lng = Number(pt && pt[1]);
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+        const c = GeoCore.classifyPoint(geo, lat, lng);
+        return c.unit_type === 'OUT_ZMI' ? null : c.unit_id;
+      }) });
+    }
+    if (p === '/api/admin/imports' && method === 'GET') {
+      return json(200, { imports: TripImport.listImports(await storage.listRaws()) });
+    }
+    if (p === '/api/admin/imports/delete' && method === 'POST') {
+      const body = await readJson(req);
+      const pid = String(body.participant_id || '');
+      if (!TripImport.isImported(pid) || !/^[A-Za-z0-9_-]{8,64}$/.test(pid)) return json(400, { error: 'Se pot șterge doar deplasări importate.' });
+      const n = await storage.deleteByParticipant(pid);
+      await audit({ action: 'TRIPS_IMPORT_DELETE', note: `${pid}: ${n} deplasări șterse` });
+      return json(200, { deleted: n });
     }
 
     if (p === '/api/admin/od') return json(200, stats.odAggregate((await loadAnalysis(req)).rows, q));

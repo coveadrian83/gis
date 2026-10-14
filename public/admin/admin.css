@@ -156,3 +156,12 @@ label.chk { display: flex; gap: 6px; align-items: center; font-size: 13px; margi
 .promo-text h4 { margin: 0 0 6px; font-size: 13px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .promo-text pre { white-space: pre-wrap; font-family: inherit; font-size: 13px; margin: 0; background: var(--c-bg); padding: 8px; border-radius: 6px; max-height: 220px; overflow: auto; }
 .promo-tips li { margin-bottom: 6px; }
+
+/* import deplasări */
+.imp-head { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; margin-top: 10px; }
+.imp-head label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+.imp-paste { margin-top: 10px; }
+.imp-paste textarea { width: 100%; margin: 6px 0; }
+.imp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 8px 16px; margin-bottom: 12px; }
+.imp-grid label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+#tab-import h3 + p.muted { margin-top: -4px; }

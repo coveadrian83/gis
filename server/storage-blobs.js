@@ -89,6 +89,27 @@ function createBlobStorage(store) {
       return { created: true };
     },
 
+    /** Import în lot: fiecare deplasare nouă în raw/<id>, apoi o singură actualizare a indexului pe zi. */
+    async putRaws(recs) {
+      const created = [];
+      await mapLimit(recs, 8, async (rec) => {
+        const res = await store.setJSON('raw/' + rec.trip_id, rec, { onlyIfNew: true });
+        if (!(res && res.modified === false)) created.push(rec);
+      });
+      const byDay = new Map();
+      created.forEach((rec) => byDay.set(dayKey(rec), (byDay.get(dayKey(rec)) || []).concat([rec])));
+      for (const [key, list] of byDay) {
+        try {
+          await mutate(key, (arr) => {
+            const have = new Set(arr.map((x) => x.trip_id));
+            const add = list.filter((r) => !have.has(r.trip_id));
+            return add.length ? arr.concat(add) : undefined;
+          }, () => []);
+        } catch (e) { console.error('Index neactualizat pentru import', key, e.message); }
+      }
+      return { created: created.length };
+    },
+
     async getRaw(tripId) {
       return (await store.get('raw/' + tripId, JSON_OPTS)) || null;
     },

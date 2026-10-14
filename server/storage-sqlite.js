@@ -27,6 +27,15 @@ function createSqliteStorage(dbPathOrDb) {
       return { created: r.changes === 1 };
     },
 
+    async putRaws(recs) {
+      return transaction(db, () => {
+        const st = db.prepare('INSERT OR IGNORE INTO trips_raw (trip_id, participant_id, received_at, app_version, payload_json) VALUES (?,?,?,?,?)');
+        let created = 0;
+        for (const rec of recs) created += st.run(rec.trip_id, rec.participant_id, rec.received_at, rec.app_version, rec.payload_json).changes;
+        return { created };
+      });
+    },
+
     async getRaw(tripId) {
       const r = db.prepare('SELECT * FROM trips_raw WHERE trip_id = ?').get(tripId);
       return r ? rowToRecord(r) : null;

@@ -35,6 +35,7 @@
         <button role="tab" data-tab="coverage">Acoperire</button>
         <button role="tab" data-tab="pois">Repere</button>
         <button role="tab" data-tab="promo">Promovare</button>
+        <button role="tab" data-tab="import">Import</button>
         <button role="tab" data-tab="data">Export &amp; date</button>
         <button role="tab" data-tab="audit">Audit</button>
       </nav>
@@ -254,6 +255,54 @@
         </div>
       </section>
 
+      <!-- IMPORT -->
+      <section class="tab" id="tab-import" hidden>
+        <div class="grid">
+          <div class="card span-all">
+            <h3>Import deplasări din alte surse</h3>
+            <p class="muted small">De exemplu, drumurile extrase de un voluntar din Cronologia Google și adaptate metodologiei. Un fișier = un participant.
+              Se acceptă un fișier Excel (.xlsx) sau CSV, ori tabelul copiat din Excel, cu coloanele <code>Data</code>, <code>Origine</code>, <code>Destinație</code>,
+              <code>Ora plecării</code>, <code>Ora sosirii</code> și, opțional, <code>Mod</code>, <code>Scop</code>, <code>Opriri pe drum</code>, <code>Detalii opriri</code>,
+              <code>Status date</code>, <code>Persoane în mașină</code>. Locurile se aleg din zonele și localitățile ZMI: <strong>adresa exactă nu se salvează</strong>.
+              Se aplică regulile studiului (perioada de colectare, validarea automată), fără limita de 7 zile.</p>
+            <div class="imp-head">
+              <label>Numele importului <input type="text" id="impLabel" placeholder="ex. Voluntar Tomești 01" maxlength="80"></label>
+              <label>Sursa <input type="text" id="impSource" value="timeline_gps" maxlength="40"></label>
+              <label>Fișier <input type="file" id="impFile" accept=".xlsx,.csv,.txt"></label>
+            </div>
+            <details class="imp-paste"><summary>sau lipiți tabelul copiat din Excel</summary>
+              <textarea id="impPaste" rows="6" placeholder="Selectați în Excel tabelul cu tot cu antetul, copiați și lipiți aici."></textarea>
+              <button type="button" id="impPasteBtn">Citește tabelul</button>
+            </details>
+            <p id="impInfo" class="small"></p>
+          </div>
+          <div class="card span-all" id="impSetup" hidden>
+            <h3>1. Ce rânduri intră</h3>
+            <div id="impFilters" class="stack"></div>
+            <h3>2. Unde sunt locurile</h3>
+            <p class="muted small">Alegeți pentru fiecare loc zona din Iași sau localitatea / comuna. În date ajunge centrul unității, nu adresa.</p>
+            <div id="impPlaces" class="imp-grid"></div>
+            <h3>3. Modul de transport și scopul</h3>
+            <div id="impValues" class="imp-grid"></div>
+            <h3>4. Persoane în mașină (inclusiv șoferul)</h3>
+            <div id="impOcc" class="imp-grid"></div>
+            <div class="inline-form" style="margin-top:16px">
+              <button type="button" id="impCheck">Verifică</button>
+              <button type="button" class="primary" id="impSave" disabled>Importă</button>
+              <span id="impStatus" class="small"></span>
+            </div>
+            <div id="impResult"></div>
+          </div>
+          <div class="card span-all">
+            <h3>Importuri existente</h3>
+            <div class="table-wrap"><table class="data compact" id="impList">
+              <thead><tr><th>Nume</th><th>Sursa</th><th>Deplasări</th><th>Perioada</th><th>Importat la</th><th></th></tr></thead><tbody></tbody>
+            </table></div>
+            <p class="muted small">Ștergerea elimină toate deplasările importului (de ex. pentru a-l reface). Deplasările trimise din aplicație nu pot fi șterse de aici.</p>
+          </div>
+        </div>
+      </section>
+
       <!-- AUDIT -->
       <section class="tab" id="tab-audit" hidden>
         <div class="table-wrap">
@@ -345,5 +394,6 @@
   <script src="../shared/geo-core.js"></script>
   <script src="../shared/domain.js"></script>
   <script src="admin.js"></script>
+  <script src="import.js"></script>
 </body>
 </html>
