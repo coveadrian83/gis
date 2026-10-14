@@ -206,6 +206,49 @@ for (const [name, makeStorage] of [
       assert.ok((await admin('GET', 'audit')).body.rows.some((a) => a.action === 'POI_IMPORT'));
     });
 
+    test('import de deplasări din panou: verificare, salvare idempotentă, listare, ștergere', async () => {
+      const t = (over = {}) => ({ trip_date: yesterday, departure_time: '07:00', arrival_time: '07:25', origin_unit: 'LOC-95113', destination_unit: 'IAS-Z15',
+        mode: 'car', purpose: 'escort', repeat_type: 'recurrent', stops: ['direct'], car_role: 'driver', occupancy: 3, ...over });
+      const body = { label: 'Voluntar test 01', source: 'timeline_gps', trips: [
+        t(), t({ departure_time: '07:30', arrival_time: '07:50', origin_unit: 'IAS-Z15', destination_unit: 'LOC-95113', purpose: 'home', occupancy: 1 }),
+        t({ trip_date: '2019-12-31' }), t({ origin_unit: 'NU-EXISTA' }), t({ occupancy: 9 })
+      ] };
+      assert.equal((await call('POST', '/api/admin/trips/import', body, { cookie: '', 'X-Requested-With': 'mobilitate-admin' })).status, 401, 'doar pentru administrator');
+      const before = (await admin('GET', 'summary?status=VALID,CHECK,EXCLUDE')).body.n_trips;
+      const dry = await admin('POST', 'trips/import', { ...body, dry_run: true });
+      assert.equal(dry.status, 200, JSON.stringify(dry.body));
+      assert.equal(dry.body.n_ok, 2);
+      assert.equal(dry.body.n_errors, 3);
+      assert.match(dry.body.results[2].error, /anterioară/);
+      assert.equal(dry.body.results[3].field, 'origin');
+      assert.equal(dry.body.results[4].field, 'occupancy');
+      assert.equal(dry.body.results[0].status, 'VALID');
+      assert.equal(dry.body.results[0].record, undefined, 'înregistrarea brută nu se trimite înapoi');
+      assert.equal((await admin('GET', 'summary?status=VALID,CHECK,EXCLUDE')).body.n_trips, before, 'verificarea nu salvează');
+      const imp = await admin('POST', 'trips/import', body);
+      assert.equal(imp.body.created, 2);
+      assert.match(imp.body.participant_id, /^import-[0-9a-f]{16}$/);
+      const again = await admin('POST', 'trips/import', body);
+      assert.equal(again.body.created, 0, 'reimportul nu dublează');
+      assert.equal(again.body.already, 2);
+      const rows = (await admin('GET', 'trips?limit=500&status=VALID,CHECK,EXCLUDE')).body.rows.filter((r) => r.participant_id === imp.body.participant_id);
+      assert.equal(rows.length, 2);
+      const out = rows.find((r) => r.purpose === 'escort');
+      assert.equal(out.origin_unit_id, 'LOC-95113');
+      assert.equal(out.destination_unit_id, 'IAS-Z15');
+      assert.equal(out.occupancy, 3);
+      assert.equal(out.campaign_source, 'timeline_gps');
+      const list = (await admin('GET', 'imports')).body.imports;
+      assert.equal(list.length, 1);
+      assert.equal(list[0].label, 'Voluntar test 01');
+      assert.equal(list[0].n_trips, 2);
+      assert.equal((await admin('POST', 'imports/delete', { participant_id: PID })).status, 400, 'nu se pot șterge deplasările din aplicație');
+      assert.equal((await admin('POST', 'imports/delete', { participant_id: imp.body.participant_id })).body.deleted, 2);
+      assert.equal((await admin('GET', 'imports')).body.imports.length, 0);
+      const actions = (await admin('GET', 'audit')).body.rows.map((a) => a.action);
+      assert.ok(actions.includes('TRIPS_IMPORT') && actions.includes('TRIPS_IMPORT_DELETE'));
+    });
+
     test('dreptul la ștergere al participantului', async () => {
       const r = await call('POST', '/api/participant/erase', { participant_id: 'test-participant-0002' });
       assert.equal(r.body.deleted, 1);

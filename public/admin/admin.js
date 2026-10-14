@@ -129,13 +129,14 @@
       state.tab = b.getAttribute('data-tab');
       document.querySelectorAll('.tabs button').forEach(function (x) { x.setAttribute('aria-selected', x === b ? 'true' : 'false'); });
       document.querySelectorAll('.tab').forEach(function (t) { t.hidden = t.id !== 'tab-' + state.tab; });
-      $('filters').hidden = state.tab === 'pois' || state.tab === 'audit' || state.tab === 'promo';
+      $('filters').hidden = state.tab === 'pois' || state.tab === 'audit' || state.tab === 'promo' || state.tab === 'import';
       refresh();
     });
   });
 
   function refresh() {
-    var fn = { summary: loadSummary, trips: loadTrips, od: loadOd, coverage: loadCoverage, pois: loadPois, promo: loadPromo, data: loadData, audit: loadAudit }[state.tab];
+    var fn = { summary: loadSummary, trips: loadTrips, od: loadOd, coverage: loadCoverage, pois: loadPois, promo: loadPromo, data: loadData, audit: loadAudit,
+      'import': function () { return window.AdminImport && window.AdminImport.load(); } }[state.tab];
     fn().catch(function (e) { console.error(e); });
   }
 
@@ -849,6 +850,9 @@
   }
 
   // ---------------------------------------------------------------------------
+  // pentru modulele separate ale panoului (ex. import.js)
+  window.MobAdmin = { api: api, esc: esc, state: state, fmtDate: fmtDate, fmtTs: fmtTs };
+
   function boot() {
     fetch(API + 'session', { credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (s) {
       if (!s.enabled) return showLogin('Administrarea este dezactivată pe acest server (ADMIN_PASSWORD nesetat).');
