@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sănătatea transportului public – Iași</title>
+  <meta name="author" content="dr. geogr. Adrian Covăsnianu">
+  <meta name="description" content="Starea transportului public din Iași în timp real: vehicule pe traseu față de orar, viteza reală, plutoane de autobuze și tramvaie, opriri – din GPS-ul vehiculelor CTP și orarul GTFS.">
+  <link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../../vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<aside id="panel">
+  <h1>Sănătatea<br>transportului public<br><span>Iași · în timp real</span></h1>
+  <p class="sub">GPS-ul vehiculelor CTP comparat cu orarul: cât serviciu ajunge pe stradă, cât de repede și cât de regulat</p>
+
+  <div id="hero">
+    <div id="score" class="score"><b>–</b><small>scorul rețelei</small></div>
+    <div id="heroText" class="note">Se încarcă orarul și pozițiile vehiculelor…</div>
+  </div>
+  <div id="kpis"></div>
+
+  <div class="ctl">
+    <div class="lbl">Harta arată</div>
+    <div class="seg" id="modeSeg">
+      <button type="button" data-v="scor" class="on">Scorul liniilor</button>
+      <button type="button" data-v="viteza">Viteza reală (30 min)</button>
+    </div>
+  </div>
+  <div class="ctl toggles">
+    <label><input type="checkbox" id="showVeh" checked> Vehiculele (culoarea: starea)</label>
+    <label><input type="checkbox" id="onlyBad"> Doar liniile cu probleme (scor sub 60)</label>
+  </div>
+  <div id="legend" class="legend"></div>
+
+  <section>
+    <h2>Semnale acum <span id="alertCount" class="count"></span></h2>
+    <div id="alerts" class="alerts"></div>
+  </section>
+
+  <section>
+    <h2>Liniile, de la cea mai afectată</h2>
+    <div class="seg small-seg" id="netSeg">
+      <button type="button" data-v="" class="on">Toate</button>
+      <button type="button" data-v="tramvai">Tramvai</button>
+      <button type="button" data-v="local">Autobuz local</button>
+      <button type="button" data-v="metropolitan">Metropolitan</button>
+    </div>
+    <div id="lineInfo" hidden></div>
+    <div id="rank" class="rank"></div>
+  </section>
+
+  <details>
+    <summary>Cum se calculează</summary>
+    <div class="note method">
+      <p><b>Serviciul</b> (35 de puncte): vehiculele cu GPS de pe traseul liniei, față de câte cere orarul GTFS în acest minut (curse începute și neterminate).</p>
+      <p><b>Viteza</b> (30 de puncte): cât au avansat vehiculele de-a lungul traseului în ultimele ~6 minute, față de viteza comercială din orar la aceeași oră (lungimea traseului / durata cursei). Capetele de linie (300 m) nu intră în calcul.</p>
+      <p><b>Regularitatea</b> (35 de puncte): distanțele dintre vehiculele succesive de pe traseu, transformate în minute cu viteza din orar, față de intervalul din orar. Un <b>pluton</b> = două vehicule ale aceleiași linii la mai puțin de un sfert din interval (cel puțin 2 minute); un <b>gol</b> = peste dublul intervalului.</p>
+      <p>Componentele fără date nu contează. Scor: ≥ 80 bun, 60–80 acceptabil, 40–60 slab, sub 40 critic. Scorul rețelei = media liniilor, ponderată cu vehiculele cerute de orar.</p>
+      <p><b>Viteza reală</b>: din pozițiile succesive ale fiecărui vehicul, viteza mediană pe tronsoane de 250 m, în ultima jumătate de oră.</p>
+      <p><b>Limite:</b> linia și sensul vin din sursa GPS; unele vehicule nu au linia atribuită, iar la unele linii apar mult mai multe vehicule decât cere orarul (atribuire probabil greșită) – acestea sunt marcate „de verificat” și nu primesc scor. Vehiculele fără semnal de peste 10 minute nu apar.</p>
+      <p>Pozițiile se arhivează la fiecare minut, pentru hărțile vitezei pe ore și fiabilitatea liniilor pe luni. <a href="/live/istoric" target="_blank" rel="noopener">Orele colectate</a>.</p>
+    </div>
+  </details>
+
+  <p class="note" id="srcNote"></p>
+  <p class="note"><b>Prelucrarea și integrarea datelor:</b> dr. geogr. Adrian Covăsnianu</p>
+  <p class="note">Surse: poziții GPS și orar GTFS – CTP Iași, prin <a href="https://tranzy.ai/opendata/" target="_blank" rel="noopener">Tranzy</a>; fundal © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">contribuitorii OpenStreetMap</a>. <a href="../">Harta transportului public</a> · <a href="../../15min/">Harta 15 minute</a> · <a href="../../">Studiul O–D</a></p>
+  <p class="note">© 2026 Moldova Vrea Infrastructură și Moldova Vrea Autostradă. Toate drepturile rezervate.</p>
+</aside>
+<div id="map"></div>
+
+<script src="../../vendor/leaflet/leaflet.js"></script>
+<script src="core.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
