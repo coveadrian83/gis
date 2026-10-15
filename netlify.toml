@@ -5,6 +5,8 @@
 #  - pozițiile vehiculelor în timp real (/live/vehicule) vin din funcția netlify/functions/vehicule.mjs
 #  - colectarea GPS la fiecare minut (funcție programată netlify/functions/gps-colectare.mjs, în Netlify Blobs, store-ul „gps”)
 #    și istoricul ei (/live/istoric) – pentru harta /transport/sanatate/
+#  - aplicația Iași Live (/live/, public/live/): harta vectorială OpenFreeMap (tiles.openfreemap.org) cu MapLibre,
+#    care își pornește procesele de fundal din blob: – de aici worker-src și tiles.openfreemap.org în politica CSP
 #  - rapoartele zilnice (funcție programată netlify/functions/raport-zilnic.mjs, din oră în oră) și /live/raport –
 #    pentru pagina /transport/raport/
 # Setări (variabile de mediu): ADMIN_PASSWORD (obligatorie, parola dashboardului); TRANZY_API_KEY (cheia API Tranzy
@@ -24,10 +26,15 @@
 [[headers]]
   for = "/*"
   [headers.values]
-    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://tile.openstreetmap.org; connect-src 'self' https://nominatim.openstreetmap.org; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; connect-src 'self' https://nominatim.openstreetmap.org https://tiles.openfreemap.org; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "geolocation=(self), camera=(), microphone=()"
+
+[[headers]]
+  for = "/live/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
 
 [[headers]]
   for = "/admin/*"

@@ -30,6 +30,7 @@ ROOT = Path(__file__).resolve().parent.parent
 FEED = ROOT / "data" / "transport" / "gtfs" / "IASI_GTFS.zip"
 OUT_LINES = ROOT / "data" / "transport" / "linii" / "rute_gtfs.geojson"
 OUT_SERV = ROOT / "public" / "data" / "transport" / "gtfs_servicii.json"
+OUT_LIVE = ROOT / "public" / "data" / "transport" / "live"      # aplicația /live/: forme.json, plecari/<stație>.json
 OSM_DIR = ROOT / "data" / "transport" / "osm"
 FIXES = ROOT / "data" / "transport" / "linii_corecturi.json"
 
@@ -254,6 +255,80 @@ def dist(a, b):
     return math.hypot((b[0] - a[0]) * 111320 * math.cos(math.radians(a[1])), (b[1] - a[1]) * 110540)
 
 
+def project_stops(coords, pts):
+    """Distanța (m) de-a lungul traseului `coords` până la fiecare punct din `pts`, în ordinea cursei: fiecare stație
+    se caută doar înaintea celei anterioare (traseele cu buclă trec de două ori pe lângă aceeași stradă)."""
+    cum = [0.0]
+    for a, b in zip(coords, coords[1:]):
+        cum.append(cum[-1] + dist(a, b))
+    out, i0 = [], 0
+    for p in pts:
+        best = None
+        for i in range(i0, len(coords) - 1):
+            a, b = coords[i], coords[i + 1]
+            k = math.cos(math.radians(a[1]))
+            ax, ay, bx, by, px, py = a[0] * k, a[1], b[0] * k, b[1], p[0] * k, p[1]
+            dx, dy = bx - ax, by - ay
+            t = max(0.0, min(1.0, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy))) if dx or dy else 0.0
+            q = (a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t)
+            d = dist(p, q) + 0.02 * (cum[i] - cum[i0])     # la egalitate, prima trecere
+            if best is None or d < best[0]:
+                best = (d, i, cum[i] + dist(a, q))
+            if cum[i] - cum[i0] > 3000 and best[0] < 40:   # destul de departe înainte: stația a fost găsită
+                break
+        out.append(round(best[2]) if best else 0)
+        i0 = best[1] if best else i0
+    return out, cum[-1]
+
+
+def export_live(feats, trips, routes, trip_times, weekday, weekend, stops):
+    """Datele aplicației /live/ (public/data/transport/live/):
+    forme.json – pe sens (shape_id = „ruta_sens”, ca trip_id din pozițiile Tranzy): traseul, stațiile cu distanța de
+        la plecare (m), viteza comercială medie din orar (m/s), destinația; vehiculele se mișcă pe traseu, iar sosirea
+        în stație se estimează din distanța rămasă;
+    plecari/<stop_id>.json – plecările din orar pe zi lucrătoare (l) și de weekend (w): {„ruta_sens”: [minute]}."""
+    OUT_LIVE.mkdir(parents=True, exist_ok=True)
+    by_shape = defaultdict(list)
+    for t in trips.values():
+        if t.get("shape_id"):
+            by_shape[t["shape_id"]].append(t)
+    forme, plecari = {}, defaultdict(lambda: {"l": defaultdict(list), "w": defaultdict(list)})
+    for f in feats:
+        sid = f["properties"]["gtfs_shape"]
+        if sid.endswith("_ocol") or sid not in by_shape:
+            continue
+        coords = [tuple(c) for c in f["geometry"]["coordinates"]]
+        ts = by_shape[sid]
+        rep = max(ts, key=lambda t: len(trip_times.get(t["trip_id"], [])))
+        seq = sorted(trip_times.get(rep["trip_id"], []))
+        if len(seq) < 2:
+            continue
+        pts = [(float(stops[s]["stop_lon"]), float(stops[s]["stop_lat"])) for _, s, _ in seq if s in stops]
+        ds, length = project_stops(coords, pts)
+        durs = sorted(sorted(trip_times[t["trip_id"]])[-1][2] - sorted(trip_times[t["trip_id"]])[0][2]
+                      for t in ts if len(trip_times.get(t["trip_id"], [])) > 1)
+        dur = durs[len(durs) // 2] if durs else 0
+        r = routes[rep["route_id"]]
+        forme[sid] = {"linie": ref_of(r), "tip": mode_of(r), "retea": f["properties"]["retea"], "spre": rep.get("trip_headsign") or "",
+                      "v": round((ds[-1] - ds[0]) / (dur * 60), 2) if dur else None,
+                      "s": [[s, d] for (_, s, _), d in zip(seq, ds)],
+                      "c": [[round(x, 5), round(y, 5)] for x, y in coords], "lung": round(length)}
+        for t in ts:
+            days = ("l" if t["service_id"] in weekday else "") + ("w" if t["service_id"] in weekend else "")
+            for _, s, m in trip_times.get(t["trip_id"], []):
+                for day in days:
+                    plecari[s][day][sid].append(m)
+    (OUT_LIVE / "forme.json").write_text(json.dumps(forme, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    pdir = OUT_LIVE / "plecari"
+    pdir.mkdir(exist_ok=True)
+    for old in pdir.glob("*.json"):
+        if old.stem not in plecari:
+            old.unlink()
+    for s, days in plecari.items():
+        out = {d: {sid: sorted(set(v)) for sid, v in sorted(m.items())} for d, m in days.items()}
+        (pdir / f"{re.sub(r'[^0-9A-Za-z_-]', '_', s)}.json").write_text(json.dumps(out, separators=(",", ":")), encoding="utf-8")
+
+
 def table(z, name):
     if name not in z.namelist():
         return []
@@ -300,7 +375,7 @@ def main():
     validity = (min((c["start_date"] for c in cal), default=""), max((c["end_date"] for c in cal), default=""))
 
     # orarul: plecările pe stație, stațiile și ora de plecare a fiecărei curse
-    trip_start, trip_stops = {}, defaultdict(list)
+    trip_start, trip_stops, trip_times = {}, defaultdict(list), defaultdict(list)
     dep = defaultdict(lambda: [0, 0])
     stop_lines = defaultdict(set)
     for st in table(z, "stop_times.txt"):
@@ -317,6 +392,8 @@ def main():
         seq = int(st["stop_sequence"])
         trip_stops[st["trip_id"]].append((seq, st["stop_id"]))
         tm = st.get("departure_time") or st.get("arrival_time")
+        if tm:
+            trip_times[st["trip_id"]].append((seq, st["stop_id"], minutes(tm)))
         if tm and (st["trip_id"] not in trip_start or seq < trip_start[st["trip_id"]][0]):
             trip_start[st["trip_id"]] = (seq, minutes(tm))
 
@@ -475,6 +552,7 @@ def main():
         feats.append({"type": "Feature", "properties": props, "geometry": {"type": "LineString", "coordinates": pts}})
     feats.sort(key=lambda f: (f["properties"]["tip"] != "tramvai", int(re.match(r"\d+", f["properties"]["linie"]).group())
                               if re.match(r"\d+", f["properties"]["linie"]) else 999, f["properties"]["linie"], f["properties"]["gtfs_shape"]))
+    export_live(feats, trips, routes, trip_times, weekday, weekend, stops)
     OUT_LINES.write_text(json.dumps({"type": "FeatureCollection", "features": feats}, ensure_ascii=False, separators=(",", ":")),
                          encoding="utf-8")
 

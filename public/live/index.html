@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Iași Live – transport public</title>
+  <meta name="description" content="Tramvaiele și autobuzele CTP Iași în timp real: unde sunt vehiculele, când vin în stație, pe hartă.">
+  <meta name="author" content="dr. geogr. Adrian Covăsnianu">
+  <meta name="theme-color" content="#1a1a19">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="stylesheet" href="../vendor/maplibre-gl/maplibre-gl.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="map" aria-label="Harta transportului public"></div>
+
+<header id="top">
+  <a class="brand" href="./" title="Iași Live">Iași <span>Live</span></a>
+  <div class="search">
+    <input id="q" type="search" placeholder="Caută o stație sau o linie" autocomplete="off" aria-label="Caută o stație sau o linie">
+    <div id="results" role="listbox" hidden></div>
+  </div>
+</header>
+
+<div id="fabs">
+  <button id="locate" type="button" title="Stațiile de lângă mine" aria-label="Stațiile de lângă mine">◎</button>
+</div>
+
+<section id="sheet" aria-live="polite">
+  <button id="grab" type="button" aria-label="Restrânge / extinde"></button>
+  <div id="sheetBody"></div>
+</section>
+
+<div id="status" role="status"></div>
+<script type="module" src="app.js"></script>
+</body>
+</html>
