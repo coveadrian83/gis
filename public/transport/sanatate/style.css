@@ -85,6 +85,12 @@ details summary { cursor: pointer; font-size: 14px; font-weight: 700; margin-bot
 .leaflet-control-attribution a { color: var(--text-secondary); }
 .leaflet-bar a { background: var(--surface-2); color: var(--text-primary); border-color: var(--line); }
 .leaflet-tooltip { background: var(--surface-2); color: var(--text-primary); border: 1px solid var(--line); }
+/* vehiculele, de la zoom 13: numărul liniei pe culoarea stării */
+.vlab { display: inline-block; transform: translate(-50%, -50%); min-width: 20px; height: 16px; padding: 0 4px; border-radius: 8px;
+  font: 700 10px/16px system-ui, sans-serif; text-align: center; white-space: nowrap; color: #fff;
+  border: 1px solid rgba(0, 0, 0, .6); box-shadow: 0 0 0 1px rgba(255, 255, 255, .35); cursor: pointer; }
+.vlab.normal, .vlab.lent { color: #111; }
+.vlab.cap { opacity: .75; min-width: 16px; height: 13px; font-size: 9px; line-height: 13px; }
 .blip { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--bad); animation: blip 1.6s ease-out infinite; }
 @keyframes blip { from { transform: scale(.4); opacity: 1; } to { transform: scale(1.6); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .blip { animation: none; } }

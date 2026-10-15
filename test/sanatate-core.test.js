@@ -112,3 +112,18 @@ test('score / level / fmtMin', () => {
   assert.equal(C.fmtMin(0.5), '30 s');
   assert.equal(C.fmtMin(2.25), '2,5 min');
 });
+
+test('analyze: serviciul pe toată linia – vehicule raportate pe sensul greșit nu scad scorul', () => {
+  const r0 = plan.rute['99_0'];
+  const plan2 = { servicii: plan.servicii, rute: { '99_0': r0, '99_1': { ...r0, spre: 'Vest', forma: r0.forma.slice().reverse() } } };
+  // orarul cere 5 + 5; sursa raportă 8 vehicule pe sensul 0 și 2 pe sensul 1 → linia are tot serviciul
+  const tr = new C.Tracker(plan2), vs = [];
+  for (let i = 0; i < 8; i++) vs.push({ id: i, ruta: '99', sens: '0', ts: T, ...at(400 + i * 700) });
+  for (let i = 8; i < 10; i++) vs.push({ id: i, ruta: '99', sens: '1', ts: T, ...at(6000 - 400 - (i - 8) * 2000) });
+  tr.add({ actualizat: T, vehicule: vs });
+  const A = C.analyze(tr);
+  assert.equal(A.linii['99_1'].parti.serviciu, 1);
+  assert.equal(A.linii['99_1'].linieVehicule, 10);
+  assert.equal(A.retea.serviciu, 1);
+  assert.equal(A.alerte.filter((a) => a.tip === 'lipsa').length, 0);
+});

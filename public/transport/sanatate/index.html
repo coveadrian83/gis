@@ -29,7 +29,7 @@
     </div>
   </div>
   <div class="ctl toggles">
-    <label><input type="checkbox" id="showVeh" checked> Vehiculele (culoarea: starea)</label>
+    <label><input type="checkbox" id="showVeh" checked> Vehiculele, cu numărul liniei de la zoom 13 (culoarea: starea)</label>
     <label><input type="checkbox" id="onlyBad"> Doar liniile cu probleme (scor sub 60)</label>
   </div>
   <div id="legend" class="legend"></div>
@@ -54,8 +54,8 @@
   <details>
     <summary>Cum se calculează</summary>
     <div class="note method">
-      <p><b>Serviciul</b> (35 de puncte): vehiculele cu GPS de pe traseul liniei, față de câte cere orarul GTFS în acest minut (curse începute și neterminate).</p>
-      <p><b>Viteza</b> (30 de puncte): cât au avansat vehiculele de-a lungul traseului în ultimele ~6 minute, față de viteza comercială din orar la aceeași oră (lungimea traseului / durata cursei). Capetele de linie (300 m) nu intră în calcul.</p>
+      <p><b>Serviciul</b> (35 de puncte): vehiculele cu GPS de pe traseul liniei, față de câte cere orarul GTFS în acest minut (curse începute și neterminate), pe toată linia – ambele sensuri, pentru că sensul raportat de sursă e des greșit.</p>
+      <p><b>Viteza</b> (30 de puncte): cât au avansat vehiculele de-a lungul traseului în ultimele 3–6 minute, față de viteza comercială din orar la aceeași oră (lungimea traseului / durata cursei). Capetele de linie (300 m) nu intră în calcul.</p>
       <p><b>Regularitatea</b> (35 de puncte): distanțele dintre vehiculele succesive de pe traseu, transformate în minute cu viteza din orar, față de intervalul din orar. Un <b>pluton</b> = două vehicule ale aceleiași linii la mai puțin de un sfert din interval (cel puțin 2 minute); un <b>gol</b> = peste dublul intervalului.</p>
       <p>Componentele fără date nu contează. Scor: ≥ 80 bun, 60–80 acceptabil, 40–60 slab, sub 40 critic. Scorul rețelei = media liniilor, ponderată cu vehiculele cerute de orar.</p>
       <p><b>Viteza reală</b>: din pozițiile succesive ale fiecărui vehicul, viteza mediană pe tronsoane de 250 m, în ultima jumătate de oră.</p>

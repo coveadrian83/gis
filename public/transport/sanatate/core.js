@@ -3,7 +3,8 @@
  * orarul GTFS CTP (public/data/transport/sanatate_plan.json, scripts/transport_sanatate.py). Fără dependențe de browser.
  *
  * Pe fiecare linie și sens (cheia „route_id_sens”, ex. „8_1” = linia 46 spre Păcurari):
- *   - serviciul: câte vehicule circulă acum cu GPS față de câte cere orarul (curse începute și neterminate);
+ *   - serviciul: câte vehicule circulă acum cu GPS față de câte cere orarul (curse începute și neterminate), pe toată
+ *     linia (ambele sensuri – sensul din sursă e des greșit);
  *   - viteza comercială: cât avansează vehiculele de-a lungul traseului (din pozițiile succesive), față de viteza
  *     planificată în orar la aceeași oră (lungimea traseului / durata cursei);
  *   - regularitatea: distanțele dintre vehiculele succesive de pe traseu, transformate în minute cu viteza planificată,
@@ -27,6 +28,7 @@
     stopMove: 30,         // m: sub această deplasare vehiculul „stă”
     stopMin: 180,         // s: oprit cel puțin atât → semnalat
     speedWin: 6 * 60,     // s: fereastra pentru viteza unui vehicul
+    speedMin: 3 * 60,     // s: viteza se calculează doar din cel puțin atâtea secunde de mers (altfel e zgomot de stație)
     bin: 250,             // m: lungimea tronsoanelor hărții de viteză
     segMaxDt: 200,        // s: între două poziții mai depărtate de atât nu desenăm tronsonul
     bunchFrac: 0.25, bunchMin: 2, gapFrac: 2
@@ -160,7 +162,7 @@
         var p = h[i];
         if (p.key !== cur.key || p.d > cur.d + 50) break;
         if (cur.ts - p.ts >= CFG.speedWin || i === 0) {
-          if (cur.ts - p.ts >= 60) st.viteza = Math.max(0, cur.d - p.d) / (cur.ts - p.ts) * 3.6;
+          if (cur.ts - p.ts >= CFG.speedMin) st.viteza = Math.max(0, cur.d - p.d) / (cur.ts - p.ts) * 3.6;
           break;
         }
       }
@@ -209,15 +211,22 @@
       st.id = id; vehs.push(st);
       if (st.key) (byKey[st.key] = byKey[st.key] || []).push(st);
     });
-    var linii = {}, alerte = [];
+    var linii = {}, alerte = [], PL = {}, line = {};
+    // serviciul se judecă pe linie, cu ambele sensuri: sensul raportat de sursă e des greșit (ex. 4 vehicule „spre
+    // C.U.G.” și 1 „spre Păcurari”, când orarul cere 2 + 3 – linia are tot serviciul)
     Object.keys(plan.rute).forEach(function (k) {
-      var r = plan.rute[k], pl = planned(r, plan.servicii, lt.dow, lt.min), vs = byKey[k] || [], sh = shapes[k];
+      var rid = k.slice(0, k.lastIndexOf('_')), t = line[rid] || (line[rid] = { pl: 0, v: 0 });
+      PL[k] = planned(plan.rute[k], plan.servicii, lt.dow, lt.min);
+      t.pl += PL[k].vehicule; t.v += (byKey[k] || []).length;
+    });
+    Object.keys(plan.rute).forEach(function (k) {
+      var r = plan.rute[k], pl = PL[k], vs = byKey[k] || [], tot = line[k.slice(0, k.lastIndexOf('_'))];
       if (!pl.vehicule && !vs.length) return;                               // nu circulă acum
       var enRoute = vs.filter(function (s) { return !s.cap; }).sort(function (a, b) { return a.cur.d - b.cur.d; });
       var speeds = enRoute.map(function (s) { return s.viteza; }).filter(function (x) { return x != null; });
       // mult mai multe vehicule decât cere orarul: atribuirea liniei din sursă e îndoielnică (ex. tramvaie raportate
       // toate pe aceeași linie) – linia apare „de verificat”, fără scor și fără alerte de pluton
-      var suspect = vs.length > Math.max(2 * pl.vehicule, pl.vehicule + 2);
+      var suspect = tot.v > Math.max(2 * tot.pl, tot.pl + 2);
       var vObs = median(speeds), mPerMin = pl.viteza ? pl.viteza * 1000 / 60 : null;
       var gaps = [], pluton = [], gol = [];
       if (mPerMin && pl.interval && !suspect) {
@@ -237,15 +246,16 @@
         cv = mean ? Math.sqrt(gaps.reduce(function (a, b) { return a + (b - mean) * (b - mean); }, 0) / gaps.length) / mean : null;
       }
       var opriti = vs.filter(function (s) { return !s.cap && s.oprit >= CFG.stopMin; });
-      var parts = suspect ? {} : {
-        serviciu: pl.vehicule ? clamp01(vs.length / pl.vehicule) : null,
+      // linia nu are curse în orar acum (vehicul care așteaptă / în afara programului): fără scor
+      var parts = suspect || !tot.pl ? {} : {
+        serviciu: tot.pl ? clamp01(tot.v / tot.pl) : null,
         viteza: vObs != null && pl.viteza ? clamp01(vObs / pl.viteza) : null,
         regularitate: gaps.length ? clamp01(1 - Math.min(1, cv != null ? cv : 0) - 0.15 * pluton.length) : null
       };
       var sc = score(parts);
       linii[k] = {
         key: k, linie: r.linie, tip: r.tip, retea: r.retea, spre: r.spre, culoare: r.culoare,
-        planificat: pl, vehicule: vs.length, pePista: enRoute.length, viteza: vObs, intervale: gaps, cv: cv,
+        planificat: pl, vehicule: vs.length, linieVehicule: tot.v, liniePlanificat: tot.pl, pePista: enRoute.length, viteza: vObs, intervale: gaps, cv: cv,
         pluton: pluton.length, goluri: gol.length, opriti: opriti.length, parti: parts, scor: sc, nivel: level(sc), suspect: suspect
       };
       var nume = (r.tip === 'tramvai' ? 'Tramvaiul ' : 'Autobuzul ') + r.linie + ' spre ' + r.spre;
@@ -257,8 +267,11 @@
         alerte.push({ tip: 'gol', key: k, grav: 1, lat: (p[0].cur.lat + p[1].cur.lat) / 2, lng: (p[0].cur.lng + p[1].cur.lng) / 2,
           text: nume + ': gol de ' + fmtMin(p[2]) + ' între două vehicule (în orar: ' + fmtMin(pl.interval) + ').' });
       });
-      if (pl.vehicule >= 2 && !vs.length)
-        alerte.push({ tip: 'lipsa', key: k, grav: 1, text: nume + ': niciun vehicul cu GPS pe traseu, orarul cere ' + pl.vehicule + '.' });
+      if (tot.pl >= 2 && !tot.v && !tot.semnalat) {                     // o singură alertă pe linie
+        tot.semnalat = true;
+        alerte.push({ tip: 'lipsa', key: k, grav: 1, text: (r.tip === 'tramvai' ? 'Tramvaiul ' : 'Autobuzul ') + r.linie +
+          ': niciun vehicul cu GPS pe traseu, orarul cere ' + tot.pl + '.' });
+      }
       opriti.forEach(function (s) {
         alerte.push({ tip: 'oprit', key: k, grav: s.oprit >= 300 ? 2 : 1, lat: s.cur.lat, lng: s.cur.lng, id: s.id,
           text: nume + ' (vehiculul ' + (s.cur.nr || s.id) + ') stă de ' + fmtMin(s.oprit / 60) + ' în afara capetelor de linie.' });
@@ -280,7 +293,7 @@
     alerte.sort(function (a, b) { return b.grav - a.grav; });
 
     var L = Object.keys(linii).map(function (k) { return linii[k]; }), plTot = 0, vTot = 0;
-    L.forEach(function (l) { plTot += l.planificat.vehicule; vTot += Math.min(l.vehicule, l.planificat.vehicule || l.vehicule); });
+    Object.keys(line).forEach(function (rid) { plTot += line[rid].pl; vTot += Math.min(line[rid].v, line[rid].pl); });
     var allSp = vehs.filter(function (s) { return s.key && !s.cap && s.viteza != null; }).map(function (s) { return s.viteza; });
     var scored = L.filter(function (l) { return l.scor != null; });
     return {
