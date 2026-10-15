@@ -35,3 +35,12 @@ test('handler: fără cheie → 503; cu cheie → datele, apoi din cache', async
   assert.strictEqual(calls, 1);
   delete process.env.TRANZY_API_KEY;
 });
+
+test('handler: cheia copiată cu spații / ghilimele e curățată', async () => {
+  const mod = await import('../netlify/functions/vehicule.mjs?curat');
+  process.env.TRANZY_API_KEY = ' "abc123"\n';
+  let key = null;
+  await mod.default(null, null, async (_u, o) => { key = o.headers['X-API-KEY']; return { ok: false, status: 403, json: async () => ({}) }; });
+  assert.strictEqual(key, 'abc123');
+  delete process.env.TRANZY_API_KEY;
+});

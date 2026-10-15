@@ -39,12 +39,16 @@ function json(status, data, maxAge = 0) {
 }
 
 export default async function handler(_req, _ctx, fetchImpl = fetch) {
-  const key = process.env.TRANZY_API_KEY;
+  // fără spațiile, liniile noi sau ghilimelele copiate odată cu cheia în setările Netlify
+  const key = (process.env.TRANZY_API_KEY || '').trim().replace(/^["']+|["']+$/g, '').trim();
   if (!key) return json(503, { eroare: 'Pozițiile în timp real nu sunt configurate (lipsește TRANZY_API_KEY).' });
   if (cache && Date.now() - cache.at < TTL_MS) return json(200, cache.body, 15);
   try {
     const r = await fetchImpl(SOURCE, { headers: { 'X-API-KEY': key, 'X-Agency-Id': AGENCY, Accept: 'application/json' } });
-    if (!r.ok) return json(502, { eroare: `Sursa Tranzy a răspuns ${r.status}.` });
+    if (!r.ok) {
+      const msg = r.status === 403 ? ' – cheia TRANZY_API_KEY nu este acceptată (verificați valoarea în Netlify)' : '';
+      return json(502, { eroare: `Sursa Tranzy a răspuns ${r.status}${msg}.` });
+    }
     const body = { sursa: 'Tranzy – CTP Iași', actualizat: Math.round(Date.now() / 1000), vehicule: simplify(await r.json()) };
     cache = { at: Date.now(), body };
     return json(200, body, 15);
