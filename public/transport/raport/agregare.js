@@ -135,7 +135,7 @@
 
       // cartierele și punctele negre: fiecare vehicul pe traseu (fără capete) contează dt
       A.vehicule.forEach(function (s) {
-        if (!s.key || s.cap) return;
+        if (!s.key || s.cap || s.depou) return;
         var c = s.cur, z = zoneOf(zones, c.lng, c.lat), w = dt / 60, l = A.linii[s.key];
         if (z) {
           var za = zoneAcc[z] || (zoneAcc[z] = {}), ha = za[hour] || (za[hour] = { veh: 0, oprit: 0, pluton: 0, vit: [], scor: [] });

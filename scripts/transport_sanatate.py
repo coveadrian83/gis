@@ -5,6 +5,7 @@ Pozițiile GPS în timp real (Tranzy) se compară cu orarul GTFS CTP Iași. Pent
 „route_id_direction_id”, aceeași cu trip_id-ul vehiculelor din Tranzy, ex. „8_1”), scriptul păstrează:
   - forma traseului, simplificată (din data/transport/linii/rute_gtfs.geojson – formele corectate, cu tramvaiele pe
     șine), și lungimea ei în metri;
+  - șinele din depouri (OSM, data/transport/osm/sine.json), ca vehiculele garate să nu apară oprite pe linie;
   - cursele din orar pe tipul de serviciu din calendar.txt (ex. LV = luni–vineri, SD = weekend, LD = zilnic), ca
     perechi [plecare, sosire] în minute de la miezul nopții – din ele pagina află câte vehicule ar trebui să fie pe
     traseu acum, intervalul planificat și viteza comercială planificată.
@@ -27,6 +28,7 @@ ROOT = Path(__file__).resolve().parent.parent
 FEED = ROOT / "data" / "transport" / "gtfs" / "IASI_GTFS.zip"
 SHAPES = ROOT / "data" / "transport" / "linii" / "rute_gtfs.geojson"
 OUT = ROOT / "public" / "data" / "transport" / "sanatate_plan.json"
+RAILS = ROOT / "data" / "transport" / "osm" / "sine.json"     # scripts/transport_osm.py
 TOL_M = 4.0           # toleranța simplificării formelor (Douglas–Peucker), în metri
 R_LAT, R_LON = 110540.0, 111320.0
 DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
@@ -83,6 +85,19 @@ def network(ref):
 def table(z, name):
     with z.open(name) as f:
         return list(csv.DictReader(io.TextIOWrapper(f, encoding="utf-8-sig")))
+
+
+def depots(path=RAILS):
+    """Șinele din depouri (railway=tram cu service=yard / spur în OSM, ex. Depoul Gară): un tramvai mai aproape de ele
+    decât de traseu e garat, nu oprit pe linie."""
+    if not Path(path).exists():
+        return []
+    out = []
+    for e in json.loads(Path(path).read_text(encoding="utf-8")).get("elements", []):
+        t = e.get("tags", {})
+        if e.get("type") == "way" and t.get("railway") == "tram" and t.get("service") in ("yard", "spur") and e.get("geometry"):
+            out.append([[round(p["lon"], 5), round(p["lat"], 5)] for p in e["geometry"]])
+    return out
 
 
 def build(feed=FEED, shapes=SHAPES):
@@ -143,7 +158,7 @@ def build(feed=FEED, shapes=SHAPES):
             rec["forma"] = [[round(x, 5), round(y, 5)] for x, y in simplify(coords)]
         out[key] = rec
     return {"sursa": "GTFS CTP Iași (Tranzy, https://tranzy.ai/opendata/)", "valabil": valid,
-            "servicii": services, "rute": out}
+            "servicii": services, "rute": out, "depouri": depots()}
 
 
 def main(argv):

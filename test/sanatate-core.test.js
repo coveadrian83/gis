@@ -127,3 +127,25 @@ test('analyze: serviciul pe toată linia – vehicule raportate pe sensul greși
   assert.equal(A.retea.serviciu, 1);
   assert.equal(A.alerte.filter((a) => a.tip === 'lipsa').length, 0);
 });
+
+test('vehicule garate: pe o șină de depou sau oprite departe de traseu – nu sunt în serviciu, nici oprite pe linie', () => {
+  // depoul: o șină paralelă la 60 m nord de traseu, între 2 și 3 km
+  const plan2 = { ...plan, depouri: [[[at(2000).lng, LAT + 60 / 110540], [at(3000).lng, LAT + 60 / 110540]]] };
+  const tr = new C.Tracker(plan2);
+  for (let k = -10; k <= 0; k++) {
+    const t = T + k * 30;
+    tr.add({ actualizat: t, vehicule: [
+      { id: 1, ruta: '99', sens: '0', ts: t, tip: 'tramvai', lat: LAT + 55 / 110540, lng: at(2500).lng },   // pe șina depoului
+      { id: 2, ruta: '99', sens: '0', ts: t, tip: 'autobuz', lat: LAT + 80 / 110540, lng: at(4500).lng },   // parcat la 80 m
+      { id: 3, ruta: '99', sens: '0', ts: t, tip: 'autobuz', ...at(1500) }                                  // oprit pe linie
+    ] });
+  }
+  const A = C.analyze(tr), st = Object.fromEntries(A.vehicule.map((s) => [s.id, s]));
+  assert.equal(st[1].depou, true);
+  assert.equal(st[2].depou, true);
+  assert.equal(st[3].depou, false);
+  assert.equal(A.retea.garate, 2);
+  assert.equal(A.linii['99_0'].vehicule, 1);
+  assert.equal(A.linii['99_0'].opriti, 1);
+  assert.deepEqual(A.alerte.filter((a) => a.tip === 'oprit').map((a) => a.id), ['3']);
+});
