@@ -309,6 +309,25 @@ jumătate de oră. Metoda completă e în pagină („Cum se calculează”); ca
   linii cu un singur vehicul e sensibil la o singură oprire.
 - **Teste**: `node --test test/sanatate-core.test.js test/gps.test.js` și `test/test_transport_sanatate.py`.
 
+### Raportul zilnic – „Transportul public, zi de zi” (`/transport/raport/`)
+
+Din arhiva GPS, fiecare zi se rezumă pentru analize de mobilitate urbană (`public/transport/raport/agregare.js` – aceleași
+calcule ca harta în timp real, rulate peste toate citirile zilei):
+- **cronologia rețelei** la 5 minute (scor, serviciu, viteză, plutoane, opriri), comparabilă între zile;
+- **zilele** – scorul mediu (06–22), scorul la vârful de dimineață, viteza, durata curselor față de orar; zile
+  lucrătoare față de weekend;
+- **liniile oră cu oră** (scor, serviciu, viteză) și **cursele reconstituite** capăt–capăt: ora plecării, durata reală,
+  durata din orar;
+- **cartierele** (zonele MVA–MVI) pe ore: scorul liniilor care trec, viteza, timpul oprit și în pluton;
+- **tronsoanele de 250 m** pe intervale orare: viteza medie de spațiu și **minutele-vehicul pierdute** față de viteza de
+  referință a tronsonului (percentila 85 din zi); **punctele negre** – unde vehiculele stau pe loc pe traseu;
+- **exporturi CSV** (cronologie, linii, cartiere, curse, tronsoane cu coordonate, puncte negre) și JSON.
+
+Rapoartele le calculează funcția programată `netlify/functions/raport-zilnic.mjs`, din oră în oră (ziua de azi până
+acum; ziua de ieri, finalizată după miezul nopții), în Netlify Blobs (store-ul `gps`, cheile `raport/zi/<zi>` și
+`raport/index`), serviți la `/live/raport` (lista zilelor) și `/live/raport?zi=AAAA-LL-ZZ`. Pagina poate calcula și
+ziua de azi direct din arhiva pe minut („Calculează azi, până acum”). Teste: `node --test test/raport.test.js`.
+
 ---
 
 ## Rulare pe un server propriu (alternativă la Netlify)
@@ -359,6 +378,7 @@ public/micromobilitate/     harta „15 minute pe două roți” (micro.js = reg
 public/puz/                 harta PUZ-urilor votate de Consiliul Local Iași (date: public/data/puz_iasi.geojson)
 public/transport/           harta transportului public (date: public/data/transport/)
 public/transport/sanatate/  harta „Sănătatea transportului public” (core.js = calculul; GPS: /live/vehicule, /live/istoric)
+public/transport/raport/    raportul zilnic din GPS (agregare.js = rezumatul zilei; date: /live/raport)
 scripts/puz_iasi.py         colectarea PUZ-urilor (hcl.usr.ro + apix.ro), extragerea indicatorilor, localizarea
 scripts/puz_parcele.py      extrasul parcelelor PUZ din parcelarul OCPI (data/puz_parcele.geojson)
 scripts/puz_mobilitate.py   deplasările generate de PUZ-uri (scenariile PMUD și RPL; config/puz_mobilitate.json)

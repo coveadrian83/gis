@@ -5,6 +5,8 @@
 #  - pozițiile vehiculelor în timp real (/live/vehicule) vin din funcția netlify/functions/vehicule.mjs
 #  - colectarea GPS la fiecare minut (funcție programată netlify/functions/gps-colectare.mjs, în Netlify Blobs, store-ul „gps”)
 #    și istoricul ei (/live/istoric) – pentru harta /transport/sanatate/
+#  - rapoartele zilnice (funcție programată netlify/functions/raport-zilnic.mjs, din oră în oră) și /live/raport –
+#    pentru pagina /transport/raport/
 # Setări (variabile de mediu): ADMIN_PASSWORD (obligatorie, parola dashboardului); TRANZY_API_KEY (cheia API Tranzy
 # pentru vehiculele în timp real de pe /transport/ – fără ea, doar acel strat nu funcționează).
 
