@@ -132,3 +132,11 @@ body.light .leaflet-container { background: #f1efe9; }
   h1 { font-size: 24px; }
   #rank .r { grid-template-columns: 92px 1fr 54px 54px; }
 }
+
+/* vehiculele în timp real: eticheta cu numărul liniei, săgeata direcției de mers */
+.vehw { position: relative; width: 30px; height: 30px; }
+.veh { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); min-width: 18px; height: 16px; padding: 0 3px;
+  border-radius: 8px; color: #fff; font: 700 10px/16px system-ui, sans-serif; text-align: center; white-space: nowrap;
+  border: 1px solid rgba(0, 0, 0, .55); box-shadow: 0 0 0 1px rgba(255, 255, 255, .45); }
+.veh-dir { position: absolute; left: 11px; top: 0; width: 0; height: 0; border: 4px solid transparent; border-top: 0;
+  border-bottom: 7px solid; transform-origin: 4px 15px; }

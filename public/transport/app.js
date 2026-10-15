@@ -381,6 +381,7 @@
     lineFeatures.forEach(function (l) { var v = servedVal(l._p); if (v) metroMax = Math.max(metroMax, v); });
     lineFeatures.forEach(function (l) { l.setStyle(lineStyle(l._p)); });
     halos.forEach(function (h) { h.setStyle({ opacity: (S.line && S.line !== lineKey(h._p)) || (S.stop && !servesStop(h._p)) ? 0 : 0.35 }); });
+    if (vehMarks) restyleLive();                        // vehiculele în timp real: doar ale liniei alese
   }
   function svcText(g) {
     return g ? (g.lucru || 0) + ' curse / zi lucrătoare · ' + (g.weekend || 0) + ' / zi de weekend' +
@@ -723,6 +724,74 @@
         .addTo(hotLayer);
     });
   }
+
+  // ---------- vehiculele în timp real ----------
+  // pozițiile GPS ale vehiculelor CTP (Tranzy), prin funcția Netlify /live/vehicule (cheia API rămâne pe server);
+  // vehiculul primește linia și destinația din orarul GTFS (SERV.rute: route_id → linie, sens → destinație)
+  map.createPane('veh'); map.getPane('veh').style.zIndex = 640;
+  var vehLayer = L.layerGroup(), vehMarks = {}, vehTimer = null, LIVE_MS = 15000;
+  function vehRoute(v) { return SERV && SERV.rute && v.ruta ? SERV.rute[v.ruta] || null : null; }
+  function vehKey(r) { return r ? r.linie + '|' + r.tip + '|' + r.retea : null; }
+  function vehDim(v) { return !!S.line && S.line !== vehKey(vehRoute(v)); }
+  function bearing(a, b) {
+    var k = Math.cos(a[0] * Math.PI / 180), dx = (b[1] - a[1]) * k, dy = b[0] - a[0];
+    return { deg: Math.atan2(dx, dy) * 180 / Math.PI, m: Math.sqrt(dx * dx + dy * dy) * 111000 };
+  }
+  function vehIcon(v, dir) {
+    var r = vehRoute(v), col = r ? lineColor(r) : '#8f8e86';
+    return L.divIcon({ className: '', iconSize: [30, 30], iconAnchor: [15, 15],
+      html: '<div class="vehw">' + (dir == null ? '' : '<i class="veh-dir" style="transform:rotate(' + Math.round(dir) + 'deg);border-bottom-color:' + col + '"></i>') +
+        '<div class="veh" style="background:' + col + '">' + esc(r ? r.linie : '?') + '</div></div>' });
+  }
+  function vehPopup(v) {
+    var r = vehRoute(v), age = Math.max(0, Math.round(Date.now() / 1000 - v.ts));
+    return '<b>' + (r ? 'Linia ' + esc(r.linie) + '</b> · ' + esc(r.tip) + ' ' + esc(r.retea) : 'Vehicul fără linie atribuită</b>') +
+      (r && v.sens != null && r.spre[v.sens] ? '<br>spre ' + esc(r.spre[v.sens]) : '') +
+      '<br><span class="note">vehiculul ' + esc(v.nr || v.id) + (v.v != null ? ' · ' + v.v + ' km/h' : '') + ' · semnal acum ' +
+      (age < 90 ? age + ' s' : Math.round(age / 60) + ' min') + '</span>';
+  }
+  function restyleLive() {
+    Object.keys(vehMarks).forEach(function (id) { var m = vehMarks[id]; m.mk.setOpacity(vehDim(m.v) ? 0.12 : 1); });
+  }
+  function drawLive(d) {
+    var seen = {};
+    (d.vehicule || []).forEach(function (v) {
+      var ll = [v.lat, v.lng], m = vehMarks[v.id];
+      seen[v.id] = 1;
+      if (m) {
+        var b = bearing(m.ll, ll);
+        if (b.m > 8) m.dir = b.deg;                    // direcția: din deplasarea față de poziția anterioară
+        m.ll = ll; m.v = v;
+        m.mk.setLatLng(ll).setIcon(vehIcon(v, m.dir)).setPopupContent(vehPopup(v));
+      } else {
+        m = vehMarks[v.id] = { ll: ll, v: v, dir: null };
+        m.mk = L.marker(ll, { pane: 'veh', icon: vehIcon(v, null) }).bindPopup(vehPopup(v)).addTo(vehLayer);
+      }
+    });
+    Object.keys(vehMarks).forEach(function (id) { if (!seen[id]) { vehLayer.removeLayer(vehMarks[id].mk); delete vehMarks[id]; } });
+    restyleLive();
+    var n = d.vehicule.length, linked = d.vehicule.filter(vehRoute).length;
+    $('liveNote').innerHTML = n + ' vehicule cu semnal în ultimele 10 minute (' + linked + ' pe o linie), actualizat la ' +
+      new Date(d.actualizat * 1000).toLocaleTimeString('ro-RO') + '. Sursa: GPS CTP Iași, prin <a href="https://tranzy.ai/opendata/" target="_blank" rel="noopener">Tranzy</a>. Săgeata arată direcția de mers.';
+  }
+  function loadLive() {
+    if (document.hidden) return;                        // fila nu e vizibilă: nu consumăm cereri
+    fetch('/live/vehicule', { cache: 'no-store' }).then(function (r) {
+      return r.json().then(function (d) { if (!r.ok) throw new Error(d.eroare || 'eroare ' + r.status); return d; });
+    }).then(drawLive).catch(function (e) {
+      $('liveNote').innerHTML = 'Pozițiile în timp real nu sunt disponibile acum: ' + esc(e.message);
+    });
+  }
+  $('showLive').addEventListener('change', function () {
+    $('liveNote').hidden = !this.checked;
+    if (this.checked) {
+      vehLayer.addTo(map); $('liveNote').textContent = 'Se încarcă pozițiile…';
+      loadLive(); vehTimer = setInterval(loadLive, LIVE_MS);
+    } else {
+      map.removeLayer(vehLayer); clearInterval(vehTimer); vehTimer = null;
+    }
+  });
+  document.addEventListener('visibilitychange', function () { if (!document.hidden && vehTimer) loadLive(); });
 
   // ---------- fișiere încărcate de utilizator (rămân în browser) ----------
   function kmlToGeoJSON(text) {

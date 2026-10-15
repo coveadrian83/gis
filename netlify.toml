@@ -2,7 +2,9 @@
 #  - paginile (aplicația publică și dashboardul /admin/) vin din directorul public/
 #  - API-ul (/api/*) rulează ca funcție Netlify: netlify/functions/api.mjs
 #  - datele se salvează în Netlify Blobs (în contul Netlify, fără configurare suplimentară)
-# Singura setare obligatorie: variabila de mediu ADMIN_PASSWORD (parola dashboardului).
+#  - pozițiile vehiculelor în timp real (/live/vehicule) vin din funcția netlify/functions/vehicule.mjs
+# Setări (variabile de mediu): ADMIN_PASSWORD (obligatorie, parola dashboardului); TRANZY_API_KEY (cheia API Tranzy
+# pentru vehiculele în timp real de pe /transport/ – fără ea, doar acel strat nu funcționează).
 
 [build]
   publish = "public"
