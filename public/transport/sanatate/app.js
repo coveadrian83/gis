@@ -3,7 +3,7 @@
  * Calculele: core.js (SanatateCore). */
 (function () {
   'use strict';
-  var C = window.SanatateCore, LIVE_MS = 30000;
+  var C = window.SanatateCore, LIVE_MS = 30000, LABEL_ZOOM = 13;
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
   // ora Iașiului, oricare ar fi fusul orar al calculatorului
@@ -96,15 +96,21 @@
   function drawVehicles() {
     vehLayer.clearLayers();
     if (!A || !$('showVeh').checked) return;
+    var labels = map.getZoom() >= LABEL_ZOOM;
     A.vehicule.forEach(function (s) {
       var st = vehState(s), l = s.key ? A.linii[s.key] : null;
       if (sel && s.key !== sel) return;
       if (l && !visible(l)) return;
       var c = s.cur, r = plan.rute[s.key];
-      L.circleMarker([c.lat, c.lng], {
+      // de la zoom 13: eticheta cu numărul liniei, în culoarea stării; mai departe, doar cercuri (orașul întreg)
+      var mk = labels && r ? L.marker([c.lat, c.lng], {
+        icon: L.divIcon({ className: '', iconSize: null, html: '<span class="vlab ' + st + '" style="background:' + VEH[st][0] + '">' + esc(r.linie) + '</span>' }),
+        riseOnHover: true, zIndexOffset: st === 'cap' ? -100 : st === 'normal' ? 0 : 100
+      }) : L.circleMarker([c.lat, c.lng], {
         renderer: renderer, radius: st === 'fara' ? 3.5 : st === 'cap' ? 4 : 5.5, color: '#111', weight: 1,
         fillColor: VEH[st][0], fillOpacity: st === 'fara' ? 0.6 : 0.95
-      }).bindPopup(function () {
+      });
+      mk.bindPopup(function () {
         return '<b>' + esc(r ? (r.tip === 'tramvai' ? 'Tramvaiul ' : 'Autobuzul ') + r.linie + ' → ' + r.spre : 'Vehicul fără linie atribuită' + (c.ruta ? ' (ruta ' + c.ruta + ' din sursă)' : '')) + '</b>' +
           '<br>Vehiculul ' + esc(c.nr || s.id) + ' · ' + VEH[st][1] +
           (s.viteza != null ? '<br>Avans pe traseu: ' + fmt(s.viteza) + ' km/h (ultimele minute)' : '') +
@@ -255,6 +261,11 @@
     });
   });
   $('showVeh').addEventListener('change', redraw);
+  var labelsOn = map.getZoom() >= LABEL_ZOOM;
+  map.on('zoomend', function () {                       // etichete ↔ cercuri doar la trecerea pragului
+    var on = map.getZoom() >= LABEL_ZOOM;
+    if (on !== labelsOn) { labelsOn = on; drawVehicles(); }
+  });
   $('onlyBad').addEventListener('change', redraw);
   document.addEventListener('visibilitychange', function () { if (!document.hidden) tick(); });
 
