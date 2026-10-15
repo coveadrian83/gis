@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Transportul public, zi de zi – Iași</title>
+  <meta name="author" content="dr. geogr. Adrian Covăsnianu">
+  <meta name="description" content="Raportul zilnic al transportului public din Iași, din GPS-ul vehiculelor CTP: scorul rețelei pe ore și pe zile, liniile, cartierele, timpii reali ai curselor, viteza pe tronsoane, minutele pierdute și punctele negre – cu exporturi CSV pentru analize de mobilitate.">
+  <link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../../vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <h1>Transportul public, zi de zi <span>Iași · din GPS-ul vehiculelor CTP</span></h1>
+    <div class="filters">
+      <label>Ziua <select id="day"></select></label>
+      <label>Comparați cu <select id="cmp"><option value="">–</option></select></label>
+      <button type="button" id="today" class="btn">Calculează azi, până acum</button>
+      <a href="../sanatate/" class="btn ghost">Harta în timp real</a>
+    </div>
+    <p class="note" id="status">Se încarcă rapoartele…</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <section id="kpis" class="kpis"></section>
+
+  <section class="card">
+    <div class="head">
+      <h2 id="tlTitle">Scorul rețelei de-a lungul zilei</h2>
+      <div class="seg" id="tlSeg">
+        <button type="button" data-v="1" class="on">Scor</button>
+        <button type="button" data-v="2">Serviciu</button>
+        <button type="button" data-v="3">Viteză</button>
+        <button type="button" data-v="4">Plutoane</button>
+        <button type="button" data-v="5">Opriri</button>
+      </div>
+    </div>
+    <div id="tlLegend" class="legend"></div>
+    <div id="timeline" class="chart"></div>
+    <p class="note" id="tlNote"></p>
+  </section>
+
+  <section class="card">
+    <div class="head"><h2>Zilele colectate</h2><div class="seg" id="trSeg">
+      <button type="button" data-v="scor" class="on">Scor</button>
+      <button type="button" data-v="scorVarf">Scor 07–09</button>
+      <button type="button" data-v="viteza">Viteză</button>
+      <button type="button" data-v="durataRaport">Durata curselor / orar</button>
+    </div></div>
+    <div id="trend" class="chart short"></div>
+    <p class="note" id="trendNote"></p>
+  </section>
+
+  <section class="card grid2">
+    <div>
+      <div class="head">
+        <h2>Harta zilei</h2>
+        <div class="seg" id="mapSeg">
+          <button type="button" data-v="viteza" class="on">Viteza pe tronsoane</button>
+          <button type="button" data-v="pierdut">Minute pierdute</button>
+          <button type="button" data-v="puncte">Puncte negre</button>
+          <button type="button" data-v="cartiere">Cartiere</button>
+        </div>
+      </div>
+      <div class="row">
+        <label class="small">Intervalul <select id="band"></select></label>
+        <span id="mapLegend" class="legend"></span>
+      </div>
+      <div id="map"></div>
+    </div>
+    <div>
+      <h2>Cartierele <span class="count" id="zoneBand"></span></h2>
+      <div class="tablewrap"><table id="zones" class="tbl"></table></div>
+      <p class="note">Zonele MVA–MVI. <b>Scorul liniilor</b> = scorul mediu al liniilor vehiculelor aflate în cartier; <b>oprit</b> și <b>pluton</b> = din timpul vehiculelor pe traseu în cartier. Apăsați pe un rând pentru zona pe hartă și profilul ei pe ore.</p>
+      <div id="zoneChart" class="chart short" hidden></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="head"><h2>Liniile, oră cu oră</h2><div class="seg" id="hmSeg">
+      <button type="button" data-v="0" class="on">Scor</button>
+      <button type="button" data-v="1">Serviciu</button>
+      <button type="button" data-v="2">Viteză</button>
+    </div></div>
+    <div id="hmLegend" class="legend"></div>
+    <div id="heatmap" class="heat"></div>
+    <p class="note">Rândurile: liniile, de la cea mai afectată (scorul mediu al zilei). Apăsați pe o linie pentru cursele ei.</p>
+  </section>
+
+  <section class="card" id="lineBox" hidden>
+    <div class="head"><h2 id="lineTitle"></h2><button type="button" class="btn ghost" id="lineClose">Închide</button></div>
+    <div id="lineLegend" class="legend"></div>
+    <div id="lineChart" class="chart"></div>
+    <p class="note" id="lineNote"></p>
+  </section>
+
+  <section class="card">
+    <div class="head"><h2>Timpii de deplasare: cursele reale față de orar</h2>
+      <label class="small">Intervalul <select id="tripBand"></select></label></div>
+    <div class="tablewrap"><table id="trips" class="tbl"></table></div>
+    <p class="note">Cursele reconstituite din GPS: de la ultima poziție a vehiculului în zona capătului de plecare (300 m) până la prima poziție în zona capătului de sosire. Fără cursele cu goluri de semnal sau ocoluri (sub 40% sau peste 300% din durata din orar). Raport &gt; 1 = mai lent decât orarul.</p>
+  </section>
+
+  <section class="card">
+    <h2>Datele, pentru analize</h2>
+    <div id="exports" class="exports"></div>
+    <p class="note">CSV (separator virgulă, UTF-8) pentru ziua aleasă. Pozițiile brute, minut cu minut: <code>/live/istoric?ora=AAAA-LL-ZZTHH</code> (ora UTC), lista orelor la <a href="/live/istoric" target="_blank" rel="noopener">/live/istoric</a>; rezumatul zilei în JSON: <code>/live/raport?zi=AAAA-LL-ZZ</code>.</p>
+  </section>
+
+  <details class="card">
+    <summary>Cum se calculează</summary>
+    <div class="note method">
+      <p>Pozițiile GPS ale vehiculelor CTP sunt salvate la fiecare minut. Fiecare citire trece prin aceleași calcule ca <a href="../sanatate/">harta în timp real</a>: vehiculele se potrivesc pe traseele din orarul GTFS și se calculează scorul fiecărei linii (serviciu 35 + viteză 30 + regularitate 35 de puncte) și al rețelei. Raportul zilei se refac din oră în oră; ziua precedentă se finalizează după miezul nopții.</p>
+      <p><b>Scorul zilei</b> = media citirilor dintre 06 și 22. <b>Serviciul</b> = vehiculele cu GPS față de cele cerute de orar, pe linie. <b>Viteza</b> = avansul pe traseu (fără capetele de linie).</p>
+      <p><b>Viteza pe tronsoane</b>: pe bucăți de 250 m ale fiecărei linii și sens, viteza medie de spațiu = distanța parcursă / timpul petrecut în tronson (include oprirea în stații și la semafoare). <b>Minutele pierdute</b> = timpul petrecut în tronson peste cel necesar la viteza de referință a tronsonului (percentila 85 a vitezelor din zi, între 12 și 50 km/h) – o măsură a congestiei și a opririlor, în minute-vehicul (nu minute-călător).</p>
+      <p><b>Punctele negre</b>: celule de ~150 m unde vehiculele au stat pe loc cel puțin 2 minute, pe traseu (nu la capete) – minute-vehicul adunate în zi.</p>
+      <p><b>Limite</b>: linia și sensul vin din sursa GPS (unele vehicule nu au linia atribuită, iar la unele linii atribuirea pare greșită); orele fără citiri (pauze în colectare) lipsesc din rezumat – vezi „minute colectate”.</p>
+    </div>
+  </details>
+
+  <p class="note foot"><b>Prelucrarea și integrarea datelor:</b> dr. geogr. Adrian Covăsnianu · Surse: poziții GPS și orar GTFS – CTP Iași, prin <a href="https://tranzy.ai/opendata/" target="_blank" rel="noopener">Tranzy</a>; zonele MVA–MVI; fundal © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">contribuitorii OpenStreetMap</a>. <a href="../">Harta transportului public</a> · <a href="../../">Studiul O–D</a><br>© 2026 Moldova Vrea Infrastructură și Moldova Vrea Autostradă. Toate drepturile rezervate.</p>
+</main>
+<div id="tip" role="tooltip" hidden></div>
+
+<script src="../../vendor/leaflet/leaflet.js"></script>
+<script src="../sanatate/core.js"></script>
+<script src="agregare.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
