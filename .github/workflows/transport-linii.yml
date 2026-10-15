@@ -16,6 +16,7 @@ on:
       - data/transport/gtfs/**
       - scripts/transport_gtfs.py
       - scripts/transport_linii.py
+      - scripts/transport_sanatate.py
       - .github/workflows/transport-linii.yml
 
 permissions:
@@ -44,6 +45,7 @@ jobs:
           fi
           python scripts/transport_gtfs.py
           python scripts/transport_linii.py data/transport/linii --tramvai "${{ github.event.inputs.tramvai || '' }}"
+          python scripts/transport_sanatate.py
       - name: Salvează datele în branch
         run: |
           git config user.name "github-actions[bot]"

@@ -286,6 +286,29 @@ CTP și titlurile de călătorie vândute în comunele ZMI deservite de CTP, ian
 - **Limite**: indicatorii sunt extrași automat din text – verificați hotărârea înainte de a-i cita; un PUZ aprobat nu
   înseamnă o construcție autorizată sau realizată; apartamentele și parcările sunt cunoscute doar pentru o parte din PUZ-uri.
 
+## Sănătatea transportului public – Iași, în timp real (`/transport/sanatate/`)
+
+Pozițiile GPS ale vehiculelor CTP (Tranzy, la 15 s) comparate cu orarul GTFS: pe fiecare linie și sens, **câte
+vehicule sunt pe stradă față de câte cere orarul**, **cât de repede avansează** față de viteza din orar, **cât de
+regulat** sunt distanțate (plutoane = două vehicule lipite, goluri = peste dublul intervalului) și **cine stă pe loc**
+în afara capetelor de linie. Din ele: un scor 0–100 pe linie și pe rețea, alertele momentului (inclusiv „mai multe
+tramvaie oprite pe aceeași porțiune – posibilă blocare”) și harta vitezei reale pe tronsoane de 250 m, în ultima
+jumătate de oră. Metoda completă e în pagină („Cum se calculează”); calculele sunt în `public/transport/sanatate/core.js`.
+
+- **Planul de referință**: `python scripts/transport_sanatate.py` → `public/data/transport/sanatate_plan.json` (formele
+  traseelor din `rute_gtfs.geojson`, simplificate, și cursele din orar pe tip de zi). Rulează automat în acțiunea
+  **Trasee transport public**, după `transport_gtfs.py`.
+- **Colectarea GPS** (`netlify/functions/gps-colectare.mjs`): funcție programată Netlify, **la fiecare minut**, salvează
+  pozițiile în Netlify Blobs (store-ul `gps`): o citire pe minut (~10 KB), adunate apoi într-un fișier pe oră.
+  Rulează doar pe publicarea de producție și doar cu `TRANZY_API_KEY` setată. Din aceste date vor ieși harta vitezei pe
+  ore, minutele pierdute pe tronsoane și fiabilitatea lunară a liniilor.
+- **Istoricul** (`/live/istoric`): fără parametri – orele colectate (verificarea colectării); `?min=30` – ultima
+  jumătate de oră (o folosește harta la deschidere); `?ora=2026-10-15T06` – citirile unei ore (UTC), pentru descărcare.
+- **Limite**: linia și sensul vin din sursa GPS – o parte din vehicule nu au linia atribuită, iar la unele linii apar
+  mult mai multe vehicule decât în orar (atribuire probabil greșită; marcate „de verificat”, fără scor). Scorul unei
+  linii cu un singur vehicul e sensibil la o singură oprire.
+- **Teste**: `node --test test/sanatate-core.test.js test/gps.test.js` și `test/test_transport_sanatate.py`.
+
 ---
 
 ## Rulare pe un server propriu (alternativă la Netlify)
@@ -335,11 +358,13 @@ public/15min/               harta „15 minute. Pentru cine?” – Iași (core.
 public/micromobilitate/     harta „15 minute pe două roți” (micro.js = regulile și vitezele, data/iasi = export OSM)
 public/puz/                 harta PUZ-urilor votate de Consiliul Local Iași (date: public/data/puz_iasi.geojson)
 public/transport/           harta transportului public (date: public/data/transport/)
+public/transport/sanatate/  harta „Sănătatea transportului public” (core.js = calculul; GPS: /live/vehicule, /live/istoric)
 scripts/puz_iasi.py         colectarea PUZ-urilor (hcl.usr.ro + apix.ro), extragerea indicatorilor, localizarea
 scripts/puz_parcele.py      extrasul parcelelor PUZ din parcelarul OCPI (data/puz_parcele.geojson)
 scripts/puz_mobilitate.py   deplasările generate de PUZ-uri (scenariile PMUD și RPL; config/puz_mobilitate.json)
 scripts/transport_titluri.py  titlurile de călătorie CTP pe comune ZMI și luni (din centralizatoarele Excel)
 scripts/transport_linii.py  traseele și stațiile din KML / GeoPackage / Shapefile (data/transport/linii/)
+scripts/transport_sanatate.py  planul de referință al hărții de sănătate (orar GTFS + forme → sanatate_plan.json)
 data/puz_iasi_completari.csv  corecturi și completări manuale pentru PUZ-uri
 scripts/export_15min.py     exportul rețelei pietonale și al facilităților din OSM (osmnx)
 scripts/elevatie_15min.py   panta: elevația Copernicus GLO-30 pe fiecare segment (elev.bin)
