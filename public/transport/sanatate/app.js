@@ -138,7 +138,7 @@
       [fmt(R.viteza) + ' km/h', 'viteza mediană de avans pe traseu (fără capete)'],
       [R.pluton, R.pluton === 1 ? 'pluton (vehicule lipite pe aceeași linie)' : 'plutoane (vehicule lipite pe aceeași linie)'],
       [R.opriti, 'vehicule oprite de peste 3 minute pe traseu'],
-      [lipsa, 'linii-sens fără niciun vehicul cu GPS (orarul cere ≥ 2)'],
+      [lipsa, lipsa === 1 ? 'linie fără niciun vehicul cu GPS (orarul cere ≥ 2)' : 'linii fără niciun vehicul cu GPS (orarul cere ≥ 2)'],
       [R.faraLinie, 'vehicule cu GPS fără linie / în afara traseului']
     ].map(function (k) { return '<div><b>' + k[0] + '</b><small>' + k[1] + '</small></div>'; }).join('');
   }
@@ -193,10 +193,11 @@
     }
     box.innerHTML = '<h3><span class="badge" style="background:' + l.culoare + ';padding:1px 6px;border-radius:4px;color:#fff">' + esc(l.linie) + '</span>' +
       esc('→ ' + l.spre) + '<button type="button" class="close" aria-label="Închide">×</button></h3>' +
-      (l.suspect ? '<p class="note">De verificat: sursa GPS atribuie liniei ' + l.vehicule + ' vehicule, iar orarul cere ' + pl.vehicule + '. Probabil vehicule ale altor linii raportate pe aceasta.</p>' : '') +
+      (l.suspect ? '<p class="note">De verificat: sursa GPS atribuie liniei ' + l.linieVehicule + ' vehicule, iar orarul cere ' + l.liniePlanificat + '. Probabil vehicule ale altor linii raportate pe aceasta.</p>' : '') +
       '<table>' +
       '<tr><td>Scor</td><td><b style="color:' + l.nivel.culoare + '">' + (l.scor == null ? '–' : l.scor + ' · ' + l.nivel.nume) + '</b></td></tr>' +
-      '<tr><td>Vehicule cu GPS / cerute de orar</td><td>' + l.vehicule + ' / ' + pl.vehicule + ' (' + pct(P.serviciu) + ')</td></tr>' +
+      '<tr><td>Vehicule cu GPS / cerute: acest sens</td><td>' + l.vehicule + ' / ' + pl.vehicule + '</td></tr>' +
+      '<tr><td>Vehicule cu GPS / cerute: toată linia</td><td>' + l.linieVehicule + ' / ' + l.liniePlanificat + ' (' + pct(P.serviciu) + ')</td></tr>' +
       '<tr><td>Viteza reală / din orar</td><td>' + fmt(l.viteza) + ' / ' + fmt(pl.viteza) + ' km/h (' + pct(P.viteza) + ')</td></tr>' +
       '<tr><td>Intervalul din orar</td><td>' + C.fmtMin(pl.interval) + '</td></tr>' +
       '<tr><td>Regularitate</td><td>' + pct(P.regularitate) + (l.cv != null ? ' (variație ' + fmt(l.cv * 100) + '%)' : '') + '</td></tr>' +
