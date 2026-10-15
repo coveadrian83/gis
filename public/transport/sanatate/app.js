@@ -25,10 +25,12 @@
     lent: ['#e58a2e', 'sub 8 km/h în ultimele minute'],
     normal: ['#f0efec', 'circulă normal'],
     cap: ['#8f8e86', 'la capăt de linie'],
+    depou: ['#6b6b64', 'garat (depou, autobază sau oprit departe de traseu)'],
     fara: ['#55554f', 'fără linie atribuită / în afara traseului']
   };
   function vehState(s) {
     if (!s.key) return 'fara';
+    if (s.depou) return 'depou';
     if (s.cap) return 'cap';
     if (s.pluton) return 'pluton';
     if (s.oprit >= C.CFG.stopMin) return 'oprit';
@@ -145,7 +147,7 @@
       [R.pluton, R.pluton === 1 ? 'pluton (vehicule lipite pe aceeași linie)' : 'plutoane (vehicule lipite pe aceeași linie)'],
       [R.opriti, 'vehicule oprite de peste 3 minute pe traseu'],
       [lipsa, lipsa === 1 ? 'linie fără niciun vehicul cu GPS (orarul cere ≥ 2)' : 'linii fără niciun vehicul cu GPS (orarul cere ≥ 2)'],
-      [R.faraLinie, 'vehicule cu GPS fără linie / în afara traseului']
+      [R.faraLinie + (R.garate ? ' · ' + R.garate : ''), 'vehicule fără linie' + (R.garate ? ' · garate (depou, autobază, departe de traseu)' : '')]
     ].map(function (k) { return '<div><b>' + k[0] + '</b><small>' + k[1] + '</small></div>'; }).join('');
   }
 

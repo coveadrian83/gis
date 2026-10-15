@@ -27,6 +27,8 @@
     history: 35 * 60,     // s păstrate în istoric
     stopMove: 30,         // m: sub această deplasare vehiculul „stă”
     stopMin: 180,         // s: oprit cel puțin atât → semnalat
+    parkOff: 40,          // m: oprit la peste atât de traseu → garat (depou, autobază, parcare), nu oprit pe linie
+    depotOff: 25,         // m: lângă o șină de depou (și mai aproape de ea decât de traseu) → în depou
     speedWin: 6 * 60,     // s: fereastra pentru viteza unui vehicul
     speedMin: 3 * 60,     // s: viteza se calculează doar din cel puțin atâtea secunde de mers (altfel e zgomot de stație)
     bin: 250,             // m: lungimea tronsoanelor hărții de viteză
@@ -117,6 +119,7 @@
     this.plan = plan; this.shapes = {}; this.hist = {}; this.t = 0;
     var self = this;
     Object.keys(plan.rute).forEach(function (k) { if (plan.rute[k].forma) self.shapes[k] = prepareShape(plan.rute[k].forma); });
+    this.depots = (plan.depouri || []).filter(function (c) { return c.length > 1; }).map(prepareShape);
   }
   /* Linia-sens a vehiculului: din sensul raportat; fără sens, sensul al cărui traseu e mai aproape (la egalitate,
    * cel pe care vehiculul avansează). */
@@ -152,8 +155,10 @@
   };
 
   // starea curentă a unui vehicul, din istoricul lui
-  function vehicleState(h, now, shapes) {
-    var cur = h[h.length - 1], st = { id: null, cur: cur, key: cur.key, viteza: null, oprit: 0, cap: false };
+  /* Starea vehiculului: viteza de avans, de cât timp stă, dacă e la capăt de linie (cap) sau garat (depou: pe o șină de
+   * depou sau oprit departe de traseu – nu e în serviciu și nu contează la opriri, blocaje, puncte negre). */
+  function vehicleState(h, now, shapes, depots) {
+    var cur = h[h.length - 1], st = { id: null, cur: cur, key: cur.key, viteza: null, oprit: 0, cap: false, depou: false };
     if (cur.key && shapes[cur.key]) {
       var L = shapes[cur.key].len;
       st.cap = cur.d < CFG.terminal || cur.d > L - CFG.terminal;
@@ -173,6 +178,10 @@
         since = h[j].ts;
       }
       st.oprit = cur.ts - since;
+      st.depou = (st.oprit >= 120 && cur.off > CFG.parkOff) || (depots || []).some(function (dp) {
+        var p = project(dp, cur.lat, cur.lng);
+        return p && p.off < CFG.depotOff && p.off < cur.off;
+      });
     }
     st.vechime = now - cur.ts;
     return st;
@@ -206,10 +215,10 @@
     opts = opts || {};
     var now = tr.t, lt = localTime(now), plan = tr.plan, shapes = tr.shapes, byKey = {}, vehs = [];
     Object.keys(tr.hist).forEach(function (id) {
-      var st = vehicleState(tr.hist[id], now, shapes);
+      var st = vehicleState(tr.hist[id], now, shapes, tr.depots);
       if (st.vechime > 600) return;
       st.id = id; vehs.push(st);
-      if (st.key) (byKey[st.key] = byKey[st.key] || []).push(st);
+      if (st.key && !st.depou) (byKey[st.key] = byKey[st.key] || []).push(st);     // cele garate nu sunt în serviciu
     });
     var linii = {}, alerte = [], PL = {}, line = {};
     // serviciul se judecă pe linie, cu ambele sensuri: sensul raportat de sursă e des greșit (ex. 4 vehicule „spre
@@ -278,7 +287,7 @@
       });
     });
     // tramvaie oprite unul lângă altul → probabilă blocare a liniei
-    var trams = vehs.filter(function (s) { return s.cur.tip === 'tramvai' && !s.cap && s.oprit >= CFG.stopMin; });
+    var trams = vehs.filter(function (s) { return s.cur.tip === 'tramvai' && !s.cap && !s.depou && s.oprit >= CFG.stopMin; });
     var used = {};
     trams.forEach(function (a) {
       if (used[a.id]) return;
@@ -294,12 +303,12 @@
 
     var L = Object.keys(linii).map(function (k) { return linii[k]; }), plTot = 0, vTot = 0;
     Object.keys(line).forEach(function (rid) { plTot += line[rid].pl; vTot += Math.min(line[rid].v, line[rid].pl); });
-    var allSp = vehs.filter(function (s) { return s.key && !s.cap && s.viteza != null; }).map(function (s) { return s.viteza; });
+    var allSp = vehs.filter(function (s) { return s.key && !s.cap && !s.depou && s.viteza != null; }).map(function (s) { return s.viteza; });
     var scored = L.filter(function (l) { return l.scor != null; });
     return {
       t: now, ora: lt, linii: linii, vehicule: vehs, alerte: alerte,
       retea: {
-        planificate: plTot, cuGps: vehs.filter(function (s) { return s.key; }).length, faraLinie: vehs.filter(function (s) { return !s.key; }).length,
+        planificate: plTot, cuGps: vehs.filter(function (s) { return s.key && !s.depou; }).length, garate: vehs.filter(function (s) { return s.depou; }).length, faraLinie: vehs.filter(function (s) { return !s.key; }).length,
         serviciu: plTot ? Math.min(1, vTot / plTot) : null, viteza: median(allSp),
         pluton: L.reduce(function (a, l) { return a + l.pluton; }, 0), opriti: L.reduce(function (a, l) { return a + l.opriti; }, 0),
         scor: scored.length ? Math.round(scored.reduce(function (a, l) { return a + l.scor * Math.max(1, l.planificat.vehicule); }, 0) /
