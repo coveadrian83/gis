@@ -1,9 +1,9 @@
-/* Harta „Sănătatea transportului public” (Iași): pozițiile GPS ale vehiculelor CTP (/live/vehicule, la 15 s; ultima
+/* Harta „Sănătatea transportului public” (Iași): pozițiile GPS ale vehiculelor CTP (/live/vehicule, la 30 s; ultima
  * jumătate de oră din /live/istoric) comparate cu orarul GTFS (../../data/transport/sanatate_plan.json).
  * Calculele: core.js (SanatateCore). */
 (function () {
   'use strict';
-  var C = window.SanatateCore, LIVE_MS = 15000;
+  var C = window.SanatateCore, LIVE_MS = 30000;
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
   // ora Iașiului, oricare ar fi fusul orar al calculatorului
@@ -226,7 +226,7 @@
   function update(d) {
     tr.add(d);
     A = C.analyze(tr);
-    $('srcNote').innerHTML = 'Pozițiile: GPS CTP Iași prin Tranzy, actualizate la 15 secunde (ultima: ' +
+    $('srcNote').innerHTML = 'Pozițiile: GPS CTP Iași prin Tranzy, actualizate la 30 de secunde (ultima: ' +
       clock(d.actualizat) + '). Orarul GTFS valabil ' + plan.valabil.de_la.replace(/(\d{4})(\d\d)(\d\d)/, '$3.$2.$1') +
       ' – ' + plan.valabil.pana_la.replace(/(\d{4})(\d\d)(\d\d)/, '$3.$2.$1') + '.';
     redraw();

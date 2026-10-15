@@ -729,7 +729,7 @@
   // pozițiile GPS ale vehiculelor CTP (Tranzy), prin funcția Netlify /live/vehicule (cheia API rămâne pe server);
   // vehiculul primește linia și destinația din orarul GTFS (SERV.rute: route_id → linie, sens → destinație)
   map.createPane('veh'); map.getPane('veh').style.zIndex = 640;
-  var vehLayer = L.layerGroup(), vehMarks = {}, vehTimer = null, LIVE_MS = 15000;
+  var vehLayer = L.layerGroup(), vehMarks = {}, vehTimer = null, LIVE_MS = 30000;
   function vehRoute(v) { return SERV && SERV.rute && v.ruta ? SERV.rute[v.ruta] || null : null; }
   function vehKey(r) { return r ? r.linie + '|' + r.tip + '|' + r.retea : null; }
   function vehDim(v) { return !!S.line && S.line !== vehKey(vehRoute(v)); }

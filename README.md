@@ -236,9 +236,9 @@ CTP și titlurile de călătorie vândute în comunele ZMI deservite de CTP, ian
   Versiunile anterioare ale rețelei metropolitane (`trasee_transport_public_metropolitan.gpkg`,
   `statii_TP_ZMI_analiza_2D`) sunt păstrate în `data/transport/arhiva/` și nu mai sunt folosite.
 - **Vehiculele în timp real** (stratul „Vehiculele în timp real”, oprit implicit): pozițiile GPS ale vehiculelor CTP
-  din API-ul de date deschise Tranzy (https://tranzy.ai/opendata/), actualizate la 15 s, cu numărul liniei, destinația
+  din API-ul de date deschise Tranzy (https://tranzy.ai/opendata/), actualizate la 30 s, cu numărul liniei, destinația
   (din orarul GTFS) și direcția de mers. Pagina le cere de la funcția Netlify `/live/vehicule`
-  (`netlify/functions/vehicule.mjs`), care ține cheia API pe server și păstrează răspunsul ~15 s. **Setare necesară:**
+  (`netlify/functions/vehicule.mjs`), care ține cheia API pe server și păstrează răspunsul 30 s (cota cheii Tranzy: 5.000 de cereri pe zi; de aici cel mult 2.880, plus 1.440 ale colectării GPS). **Setare necesară:**
   variabila de mediu `TRANZY_API_KEY` în Netlify (Site configuration → Environment variables); fără ea, stratul
   afișează că pozițiile nu sunt configurate.
 - **Orarul GTFS** (`data/transport/gtfs/IASI_GTFS.zip`, CTP Iași publicat de Tranzy – https://tranzy.ai/opendata/;
@@ -288,7 +288,7 @@ CTP și titlurile de călătorie vândute în comunele ZMI deservite de CTP, ian
 
 ## Sănătatea transportului public – Iași, în timp real (`/transport/sanatate/`)
 
-Pozițiile GPS ale vehiculelor CTP (Tranzy, la 15 s) comparate cu orarul GTFS: pe fiecare linie și sens, **câte
+Pozițiile GPS ale vehiculelor CTP (Tranzy, la 30 s) comparate cu orarul GTFS: pe fiecare linie și sens, **câte
 vehicule sunt pe stradă față de câte cere orarul**, **cât de repede avansează** față de viteza din orar, **cât de
 regulat** sunt distanțate (plutoane = două vehicule lipite, goluri = peste dublul intervalului) și **cine stă pe loc**
 în afara capetelor de linie. Din ele: un scor 0–100 pe linie și pe rețea, alertele momentului (inclusiv „mai multe
