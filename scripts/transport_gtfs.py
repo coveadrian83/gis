@@ -478,6 +478,15 @@ def main():
     OUT_LINES.write_text(json.dumps({"type": "FeatureCollection", "features": feats}, ensure_ascii=False, separators=(",", ":")),
                          encoding="utf-8")
 
+    # rutele GTFS (route_id) → linia și destinația pe sens: pozițiile vehiculelor în timp real (Tranzy, funcția Netlify
+    # /live/vehicule) vin cu route_id și sensul (trip_id „ruta_sens”), iar harta le leagă astfel de liniile ei
+    rute = {}
+    for t in trips.values():
+        r = routes[t["route_id"]]
+        e = rute.setdefault(t["route_id"], {"linie": ref_of(r), "tip": mode_of(r),
+                                            "retea": serv.get(f"{mode_of(r)}|{ref_of(r)}", {}).get("retea", "local"), "spre": {}})
+        e["spre"].setdefault(t.get("direction_id") or "0", t.get("trip_headsign") or "")
+
     def lkey(k):
         m = re.search(r"\d+", k)
         return (k[:1] != "T", int(m.group()) if m else 999, k)
@@ -487,7 +496,7 @@ def main():
                 for sid, s in stops.items() if s.get("location_type", "0") in ("", "0")]
     out = {"sursa": "GTFS CTP Iași (Tranzy, https://tranzy.ai/opendata/)", "operator": agency.get("agency_name"),
            "valabil": {"de_la": validity[0], "pana_la": validity[1]},
-           "linii": dict(sorted(serv.items())), "statii": stop_out}
+           "linii": dict(sorted(serv.items())), "statii": stop_out, "rute": rute}
     OUT_SERV.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     top = sorted(stop_out, key=lambda s: -s["plecari_lucru"])[:5]
     trams = sum(f["properties"]["tip"] == "tramvai" for f in feats)

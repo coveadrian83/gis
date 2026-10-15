@@ -235,6 +235,12 @@ CTP și titlurile de călătorie vândute în comunele ZMI deservite de CTP, ian
   metropolitan Iași); `statii_derivate.gpkg` – stațiile aglomerate CTP, capetele de linie și stațiile de transfer.
   Versiunile anterioare ale rețelei metropolitane (`trasee_transport_public_metropolitan.gpkg`,
   `statii_TP_ZMI_analiza_2D`) sunt păstrate în `data/transport/arhiva/` și nu mai sunt folosite.
+- **Vehiculele în timp real** (stratul „Vehiculele în timp real”, oprit implicit): pozițiile GPS ale vehiculelor CTP
+  din API-ul de date deschise Tranzy (https://tranzy.ai/opendata/), actualizate la 15 s, cu numărul liniei, destinația
+  (din orarul GTFS) și direcția de mers. Pagina le cere de la funcția Netlify `/live/vehicule`
+  (`netlify/functions/vehicule.mjs`), care ține cheia API pe server și păstrează răspunsul ~15 s. **Setare necesară:**
+  variabila de mediu `TRANZY_API_KEY` în Netlify (Site configuration → Environment variables); fără ea, stratul
+  afișează că pozițiile nu sunt configurate.
 - **Orarul GTFS** (`data/transport/gtfs/IASI_GTFS.zip`, CTP Iași publicat de Tranzy – https://tranzy.ai/opendata/;
   `python scripts/transport_gtfs.py`): `public/data/transport/gtfs_servicii.json` – pe linie, cursele pe zi lucrătoare /
   de weekend, prima și ultima plecare, intervalul mediu la vârf (7–9); pe stație, liniile exacte din orar și plecările
