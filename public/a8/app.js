@@ -6,7 +6,7 @@
   var st = null, alese = [], estim = null, lotSel = null, refProgram = null;
 
   var RATING = ['BB+ · sub nivelul investițional', 'BBB− · perspectivă negativă', 'BBB− · perspectivă stabilă'];
-  var STARE = { executie: 'în execuție', proiectare: 'în proiectare', neatribuit: 'neatribuit – contestații', suspendat: 'suspendat în instanță', deschis: 'deschis circulației', blocat: 'oprit – insolvență' };
+  var STARE = { executie: 'în execuție', proiectare: 'în proiectare', neatribuit: 'neatribuit – contestații', suspendat: 'suspendat în instanță', neactivat: 'semnat, fără ordin de începere', deschis: 'deschis circulației', blocat: 'oprit – insolvență' };
 
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function f1(x) { return C.fmt(x); }
@@ -51,7 +51,7 @@
     st.loturi.forEach(function (l, i) {
       var a = pts[i], b = pts[i + 1], inf = C.LOTURI[i], stare = stareLot(l);
       var gata = l.deschis != null ? 1 : Math.max(0, Math.min(1, 1 - l.left / inf.ramas));
-      if (l.stare === 'neatribuit' || l.stare === 'suspendat') gata = 0;
+      if (l.stare === 'neatribuit' || l.stare === 'suspendat' || l.stare === 'neactivat') gata = 0;
       var d = 'M' + a[0].toFixed(1) + ',' + a[1].toFixed(1) + 'L' + b[0].toFixed(1) + ',' + b[1].toFixed(1);
       s += '<g class="lot s-' + stare + (lotSel === l.id ? ' sel' : '') + '" data-id="' + l.id + '" tabindex="0" role="button" aria-label="' + esc(inf.nume + ': ' + STARE[stare]) + '">' +
         '<title>' + esc(inf.nume + ' · ' + f1(inf.km) + ' km · ' + STARE[stare]) + '</title>' +
@@ -89,18 +89,20 @@
     box.hidden = false;
     box.innerHTML = '<b>' + esc(inf.nume) + '</b> · ' + f1(inf.km) + ' km · <span class="pill s-' + stare + '">' + STARE[stare] + '</span>' +
       '<p>' + esc(inf.info) + '</p>' +
+      (inf.etapa ? '<p class="small">Segment prioritar: ' + esc(f1(inf.etapa.km) + ' km, ' + inf.etapa.nume) + (l.etapa != null ? ' – deschis în ' + C.eticheta(l.etapa) : '') + '.</p>' : '') +
+      (inf.mva ? '<p class="small"><b>Estimarea MVA</b> (bilanț aug. 2026): ' + esc(inf.mva) + '</p>' : '') +
       '<p class="small">Constructor: ' + esc(inf.constructor) + ' · Valoare: ' + f2(inf.cost) + ' mld. lei' + (inf.est ? ' (est.)' : '') + ' · Bani: ' + (inf.sursa === 'SAFE' ? 'SAFE' : 'Programul Transport / BEI') + ' + buget</p>' +
       '<p class="small">' + (l.deschis != null ? 'Deschis în ' + C.SEMESTRE[l.deschis] + '.' : 'Rămas: ≈' + f1(Math.max(0, l.left)) + ' semestre de lucru la ritm contractual, ' + f2(l.cost) + ' mld. lei de plătit' + (p != null ? ' · șanse să fie gata până la final: <b>' + pct(p) + '</b>' : '') + '.') + '</p>';
   }
 
   function tabel() {
-    var h = '<thead><tr><th>Lot</th><th>km</th><th>Stare</th><th>Rămas</th><th>Șanse 2030</th></tr></thead><tbody>';
+    var h = '<thead><tr><th>Lot</th><th>km</th><th>Stare</th><th>Rămas</th><th>Șanse 2030</th><th>Estimarea MVA (aug. 2026)</th></tr></thead><tbody>';
     st.loturi.forEach(function (l, i) {
       var inf = C.LOTURI[i], stare = stareLot(l);
       h += '<tr><td>' + esc(inf.nume) + '<small>' + esc(inf.sectiune) + ' · ' + (inf.sursa === 'SAFE' ? 'SAFE' : 'PT/BEI') + '</small></td><td class="num">' + f1(inf.km) + '</td>' +
         '<td><span class="pill s-' + stare + '">' + STARE[stare] + '</span></td>' +
         '<td class="num">' + (l.deschis != null ? C.SEMESTRE[l.deschis] : f1(Math.max(0, l.left)) + ' sem. · ' + f1(l.cost) + ' mld.') + '</td>' +
-        '<td class="num">' + (l.deschis != null ? '✓' : estim ? pct(estim.lot[l.id]) : '–') + '</td></tr>';
+        '<td class="num">' + (l.deschis != null ? '✓' : estim ? pct(estim.lot[l.id]) : '–') + '</td><td class="mvacol">' + esc(inf.mva || '') + '</td></tr>';
     });
     $('loturi').innerHTML = h + '</tbody>';
   }
@@ -152,6 +154,14 @@
     });
     var nat = $('national');
     nat.value = st.national; nat.disabled = interimat;
+    $('prioritate').innerHTML = Object.keys(C.PRIORITATI).map(function (k) {
+      var on = (st.prioritate || 'prorata') === k;
+      return '<button type="button" data-k="' + k + '" class="' + (on ? 'on' : '') + '" aria-pressed="' + on + '"' + (interimat ? ' disabled' : '') + ' title="' + esc(C.PRIORITATI[k].descriere) + '">' + esc(C.PRIORITATI[k].nume) + '</button>';
+    }).join('');
+    $('prioritateNota').textContent = C.PRIORITATI[st.prioritate || 'prorata'].descriere;
+    Array.prototype.forEach.call(document.querySelectorAll('#prioritate button'), function (b) {
+      b.addEventListener('click', function () { st.prioritate = b.getAttribute('data-k'); salveaza(); decizii(); recalculeaza(); });
+    });
     natText();
     var act = Object.keys(st.carti).map(function (id) { return C.CARTE[id] ? '<span class="chip">' + esc(C.CARTE[id].titlu) + '</span>' : ''; }).join('');
     var safe = '<span class="chip safe">SAFE pentru A8: ' + Math.round(st.safeA8 * 100) + '%</span>';

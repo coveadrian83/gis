@@ -25,7 +25,8 @@
       <div class="card">
         <h2>De unde pornești (ianuarie 2027)</h2>
         <ul class="facts">
-          <li><b>0 km</b> de A8 deschiși; <b>12 loturi</b>, ≈<b>46 mld. lei</b> (≈9 mld. euro) fără TVA – aproape totul (≈<b>45 mld. lei</b>) încă de plătit.</li>
+          <li><b>0 km</b> de A8 deschiși. <b>90,6%</b> din traseu are contracte semnate (față de 44% în aug. 2025), dar doar ≈<b>23%</b> are autorizație de construire și puține șantiere sunt active (bilanțul MVA, 29.08.2026).</li>
+          <li><b>12 loturi</b>, ≈<b>45 mld. lei</b> (≈9 mld. euro) fără TVA – aproape totul (≈<b>43 mld. lei</b>) încă de plătit.</li>
           <li>Deficit: <b>6,0%</b> din PIB în 2026 → ținte <b>5,2%</b> (2027), <b>3,2%</b> (2029), <b>sub 3%</b> (2030).</li>
           <li>Datorie <b>60,4%</b> din PIB, dobânzi ≈<b>3%</b> din PIB, rating cu <b>perspectivă negativă</b>. Granturile PNRR dispar în 2027.</li>
           <li><b>SAFE</b>: ≈4,2 mld. euro pentru coridoare cu dublă utilizare – A8 Târgu Mureș – Iași – Ungheni <i>și</i> Pașcani – Siret. Pe 45 de ani, cu 10 ani de grație.</li>
@@ -87,6 +88,11 @@
             <input type="range" id="national" min="0" max="5" step="0.25">
             <p class="note" id="nationalNota"></p>
           </div>
+          <div class="slider prio">
+            <div class="lbl">Ordinea de plată când banii nu ajung</div>
+            <div class="seg" id="prioritate" role="group" aria-label="Prioritizarea"></div>
+            <p class="note" id="prioritateNota"></p>
+          </div>
           <div id="mana" class="mana"></div>
           <div id="active" class="active"></div>
           <button id="next" class="btn primary wide" type="button">Semestrul următor →</button>
@@ -122,7 +128,7 @@
     </details>
 
     <h3>Ce spun bugetele, partidele și societatea civilă</h3>
-    <div class="actori">
+    <div class="actori patru">
       <div>
         <h4>Bani alocați</h4>
         <ul>
@@ -138,6 +144,16 @@
           <li><b>PNL Iași</b> (Alexandru Muraru, feb. 2026): „punct critic”, risc de pierdere a banilor SAFE, lipsa banilor de exproprieri pe munte în bugetul pe 2026; cere un calendar ferm pentru Târgu Frumos – Lețcani – Ungheni (<a href="https://spotmedia.ro/stiri/eveniment/seful-pnl-iasi-ii-cere-explicatii-ministrului-transporturilor-pentru-autostrada-unirii-suntem-intr-un-punct-critic-exista-un-risc-major" rel="noopener">spotmedia.ro</a>).</li>
           <li><b>Legea A8</b> (inițiată de PMP Iași, modificată cu voturile parlamentarilor de Iași): 2030 pentru Târgu Mureș – Târgu Neamț (<a href="https://www.bzi.ro/presedintele-pmp-iasi-petru-movila-anunta-amanarea-termenului-de-construire-a-autostrazii-a8-cu-sprijinul-parlamentarilor-de-iasi-klaus-iohannis-a-semnat-modificarea-legii-initiate-de-mine-4290286" rel="noopener">bzi.ro</a>).</li>
         </ul>
+      </div>
+      <div>
+        <h4>Moldova Vrea Autostradă – propuneri</h4>
+        <ul>
+          <li><b>2026 an de accelerare</b>, cu condițiile: proiectare tehnică riguroasă, resurse financiare și logistice, studii geotehnice, antreprenori proactivi, beneficiar atent, societate civilă vigilentă; fără termenul „2030” în comunicarea publică dacă nu e susținut în teren.</li>
+          <li><b>Până la finalul lui 2026</b>: semnarea T2 fără un nou ciclu de contestații, clarificarea juridică a T4, autorizație și ordin de execuție pentru 1B, ordin de proiectare pentru 2C, PAC pentru 2A, program de recuperare pentru Leghin – Moțca, raportări publice unitare, corelarea podului de la Ungheni cu drumurile de acces.</li>
+          <li><b>Bani</b>: ≈800–900 mil. euro pe an pentru A8; resurse bugetare multianuale pentru Ungheni – Iași – Târgu Neamț; A8 prioritară în CFM 2028–2034; statul să completeze fondurile UE în regiunile rămase în urmă – Iașul e abia pe locul 21 la absorbția din Programul Transport, Botoșani are 22 lei pe locuitor (analiza „Harta discrepanțelor”, ZDI, 3.12.2025).</li>
+          <li><b>Securitate</b>: Moldova, zonă de interes strategic (CSAT); A8 proiect de interes strategic național și obiectiv de securitate națională, cu dublu rol economic și militar; prezență aliată avansată în Nord-Est.</li>
+        </ul>
+        <p class="note">În scenarii, aceste propuneri sunt opțiunile marcate „MVA” la politică, buget, proceduri și prioritizare.</p>
       </div>
       <div>
         <h4>Termene anunțate (inclusiv societatea civilă)</h4>
@@ -161,9 +177,9 @@
       </ul>
     </details>
     <details>
-      <summary>Stadiul loturilor A8 (presa de specialitate, CNAIR/CNIR, oct. 2026)</summary>
-      <p>Secțiunea I (Nurol) și secțiunea III Leghin – Târgu Neamț sunt în execuție, ambele scoase din PNRR. Pe secțiunea montană, cinci din șase loturi sunt în proiectare, iar Joseni – Ditrău a început lucrările în august 2026; valoarea secțiunii depășește 20 mld. lei. Pe secțiunea de Est, finanțată din SAFE, Târgu Neamț – Târgu Frumos și Lețcani – Iași au contracte din 29 mai 2026 (termen 24 iunie 2030), Târgu Frumos – Lețcani e blocat de contestații, iar contractul Iași – Ungheni (3,57 mld. lei, semnat în iulie 2026) a fost suspendat de Curtea de Apel București la 5 august 2026. Podul peste Prut de la Ungheni era la 80% în februarie 2026.</p>
-      <p>Surse: <a href="https://colegu.eu/autostrada-a8-unirii-tronsoane/" rel="noopener">colegu.eu (8.10.2026)</a>, <a href="https://arenaconstruct.ro/autostrada-a8-unirii-pe-52-km-se-lucreaza-si-alti-peste-153-km-sunt-in-proiectare/" rel="noopener">arenaconstruct.ro</a>, <a href="https://www.economica.net/autostrada-unirii-a8-contestatii_965669.html" rel="noopener">economica.net</a>, <a href="https://radarlocal.ro/primul-contract-safe-pentru-autostrada-a8-a-fost-semnat/" rel="noopener">radarlocal.ro</a>, <a href="https://adevarul.ro/stiri-interne/societate/ultimul-tronson-al-autostrazii-a8-dintre-iasi-si-2540578.html" rel="noopener">adevarul.ro</a>. Costurile marcate „est.” sunt estimări (valoarea contractului nu e publică sau sursele se contrazic).</p>
+      <summary>Stadiul loturilor A8 (bilanțul Moldova Vrea Autostradă, 29.08.2026)</summary>
+      <p>Punctul de plecare al jocului e bilanțul publicat de Adrian Covăsnianu (Moldova Vrea Autostradă) în Ziarul de Iași, cu situația la 29 august 2026: ≈274 din ≈303 km (90,6%) au contracte de proiectare și execuție; patru contracte au cel puțin o autorizație de construire (Podul de la Ungheni, Târgu Mureș – Miercurea Nirajului, Joseni – Ditrău, Leghin – Moțca: ≈69,7 km, 23% din traseu); autorizațiile emise însumează ≈3,8 mld. lei (2,9 mld. în 2025, 0,9 mld. în 2026). Singurul tronson fără contract e Târgu Frumos – Lețcani (reevaluare după CNSC); contractul DN24 – Vama Ungheni e suspendat în instanță; Pipirig – Leghin are contract din aprilie 2025, dar fără ordin de începere; Leghin – Moțca are 12% progres fizic. Pentru sectorul ieșean, România a primit în august 2026 o prefinanțare SAFE de ≈2,5 mld. euro pentru tot programul. Estimările pe fiecare lot apar în tabelul loturilor din joc.</p>
+      <p>Surse: <a href="https://www.ziaruldeiasi.ro/stiri/autostrada-a8-la-un-an-de-la-bilant-aproape-contractata-dar-cu-putine-santiere-active--1888214.html" rel="noopener">„Autostrada A8, la un an de la bilanț” (ZDI, aug. 2026)</a>, <a href="https://www.ziaruldeiasi.ro/stiri/analiza-la-sange-2025-a-fost-un-moment-cheie-pentru-autostrada-a8-dar-poate-fi-aceasta-finalizata-pana-in-2033--1785673.html" rel="noopener">„2025, un moment-cheie… 2032–2033?” (ZDI, aug. 2025)</a>, <a href="https://www.ziaruldeiasi.ro/stiri/a8-si-testul-maturitatii-autostrada-strategica-sau-proiect-sacrificat-pana-in-2031--1791077.html" rel="noopener">„A8 și testul maturității” (ZDI)</a>; completări din <a href="https://colegu.eu/autostrada-a8-unirii-tronsoane/" rel="noopener">colegu.eu</a>, <a href="https://arenaconstruct.ro/autostrada-a8-unirii-pe-52-km-se-lucreaza-si-alti-peste-153-km-sunt-in-proiectare/" rel="noopener">arenaconstruct.ro</a>, <a href="https://www.economica.net/autostrada-unirii-a8-contestatii_965669.html" rel="noopener">economica.net</a>. Costurile marcate „est.” sunt estimări.</p>
     </details>
     <details>
       <summary>Cum funcționează modelul (și ce e inventat)</summary>

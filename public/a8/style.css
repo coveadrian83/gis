@@ -238,3 +238,16 @@ td small { display: block; color: var(--muted); }
   .tick.rar { display: none; }
   .calrow.repererow { display: none; }
 }
+.lot.s-neactivat .fond { stroke: var(--blocked); stroke-dasharray: 10 8; stroke-linecap: butt; }
+.pill.s-neactivat { background: color-mix(in srgb, var(--blocked) 20%, transparent); }
+.mvacol { font-size: .78rem; color: var(--muted); min-width: 14em; }
+.slider.prio .lbl { font-size: .9rem; margin-bottom: 2px; }
+.slider.prio .seg { background: var(--card); }
+.builder { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 1000px) { .builder { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .builder { grid-template-columns: 1fr; } }
+.actori.patru { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 900px) { .actori.patru { grid-template-columns: 1fr; } }
+.calrow.mva { background: color-mix(in srgb, var(--ok) 7%, transparent); }
+.calrow.mva .calbar { background: color-mix(in srgb, var(--ok) 45%, transparent); }
+.calrow.mva .caldot { background: var(--ok); }

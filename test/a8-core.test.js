@@ -52,3 +52,36 @@ test('calendarul: scenariile pesimiste termină mai târziu decât cele optimist
   assert.equal(C.dataGata(2031.5), 'S1 2031');
   assert.equal(C.dataGata(Infinity), 'după 2040');
 });
+
+test('Pipirig – Leghin pornește doar după ordinul de începere; deblocările MVA îl emit imediat', () => {
+  const s = C.stareInitiala(11);
+  assert.equal(C.lot(s, '2C').stare, 'neactivat');
+  C.aplicaCarte(s, 'deblocari', C.rngStare(s));
+  assert.equal(C.lot(s, '2C').stare, 'proiectare');
+});
+
+test('prioritizarea: în planul MVA, banii naționali merg întâi la Est', () => {
+  const s = C.stareInitiala(5);
+  s.prioritate = 'mva';
+  for (const id of ['T2', 'T4']) C.lot(s, id).stare = 'proiectare';
+  s.safeA8 = 0; s.pt = 0; s.national = 0.5;          // bani puțini: doar 0,5 mld. lei pe semestru
+  const rng = C.rngStare(s);
+  C.pas(s, rng);
+  // T4 e primul în ordinea MVA și primește banii; ultimele loturi montane rămân neplătite
+  assert.ok(C.lot(s, 'T4').cost < 3.5);
+  assert.equal(C.lot(s, '1C').cost, 4.5);
+  assert.equal(C.lot(s, '2B').cost, 5.97);
+});
+
+test('segmentele prioritare se numără la km deschiși înainte de finalul lotului', () => {
+  const s = C.stareInitiala(3);
+  C.lot(s, 'T1').etapa = 0;
+  assert.equal(C.rezultat(s).km, 5.5);
+});
+
+test('scenariul MVA termină mai devreme decât scenariul realist', () => {
+  const mva = C.SCENARII.find((x) => x.id === 'mva');
+  const a = C.calendar(mva.politic, mva.buget, mva.procedural, 150, 9, mva.prioritate);
+  const b = C.calendar('alternanta', 'program', 'actual', 150, 9);
+  assert.ok(a.complet.p50 < b.complet.p50);
+});
