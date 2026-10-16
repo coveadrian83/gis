@@ -15,13 +15,17 @@
 [build]
   publish = "public"
   command = "echo 'fără pas de build'"
+  # Fiecare publicare în producție costă 15 credite Netlify. Dacă de la ultima publicare nu s-a schimbat nimic din ce
+  # ajunge pe site (pagini și date din public/, funcții, configurație, dependențe), publicarea se sare (ieșire 0 =
+  # anulată, fără credite): ex. un merge care schimbă doar scripturi, teste, documentație sau date brute din data/.
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- public/ netlify/ netlify.toml server/ config/ package.json package-lock.json"
 
 [build.environment]
   NODE_VERSION = "22"
 
 [functions]
   node_bundler = "esbuild"
-  included_files = ["config/periods.json"]
+  included_files = ["config/periods.json", "public/data/transport/sanatate_plan.json", "public/data/iasi_17_zone_mva_mvi.geojson"]
 
 [[headers]]
   for = "/*"
