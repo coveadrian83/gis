@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>A8 până în 2030?</title>
+  <meta name="author" content="dr. geogr. Adrian Covăsnianu">
+  <meta name="description" content="Joc de strategie: guvernezi 2027–2030 cu cifrele Programului de guvernare (deficit, buget, SAFE) și vezi ce șanse are Autostrada Unirii A8 Târgu Mureș – Iași – Ungheni să fie gata până în 2030.">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <p class="kicker">Autostrada Unirii · Târgu Mureș – Iași – Ungheni · 302 km</p>
+    <h1>A8 până în 2030?</h1>
+    <p class="sub">Un joc de strategie pe cifrele Programului de guvernare 2026–2028: deficit, buget, SAFE și șantiere. Guvernezi opt semestre, 2027–2030. La 31 decembrie 2030 vedem câți kilometri ai deschis.</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- Ecranul de start -->
+  <section id="intro">
+    <div class="cols">
+      <div class="card">
+        <h2>De unde pornești (ianuarie 2027)</h2>
+        <ul class="facts">
+          <li><b>0 km</b> de A8 deschiși; <b>12 loturi</b>, ≈<b>46 mld. lei</b> (≈9 mld. euro) fără TVA – aproape totul (≈<b>45 mld. lei</b>) încă de plătit.</li>
+          <li>Deficit: <b>6,0%</b> din PIB în 2026 → ținte <b>5,2%</b> (2027), <b>3,2%</b> (2029), <b>sub 3%</b> (2030).</li>
+          <li>Datorie <b>60,4%</b> din PIB, dobânzi ≈<b>3%</b> din PIB, rating cu <b>perspectivă negativă</b>. Granturile PNRR dispar în 2027.</li>
+          <li><b>SAFE</b>: ≈4,2 mld. euro pentru coridoare cu dublă utilizare – A8 Târgu Mureș – Iași – Ungheni <i>și</i> Pașcani – Siret. Pe 45 de ani, cu 10 ani de grație.</li>
+          <li>Programul promite: rețea de peste 2.000 km până în 2028 „prin avansul lucrărilor pe … A8” și „coridoarele principale TEN-T se închid până în 2030”.</li>
+          <li>Tot programul: „nicio achiziție nu începe fără finanțare asigurată pe toată durata contractului”.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h2>Șansele, înainte să joci</h2>
+        <p class="note">Câte 1.000 de simulări 2027–2030 pentru trei strategii. Detalii despre model mai jos, la „Date reale”.</p>
+        <div id="strategii" class="strategii" aria-live="polite"><p class="note">Se calculează…</p></div>
+      </div>
+    </div>
+    <div class="card how">
+      <h2>Cum se joacă</h2>
+      <ol>
+        <li>În fiecare semestru primești <b>4 decizii</b> (măsuri din program și câteva din afara lui) și <b>2 ștampile</b>: alegi cel mult două.</li>
+        <li>Stabilești câți bani din <b>bugetul național</b> pui în A8. Peste 1,5 mld. lei pe semestru, banii intră în deficit.</li>
+        <li>Urmărește <b>deficitul</b>: dacă depășești ținta anuală cu peste 0,3 pp, Comisia cere ajustări, investițiile naționale se plafonează, iar după două abateri ratingul cade.</li>
+        <li>Urmărește <b>capitalul politic</b>: sub 15 vine moțiunea de cenzură; în decembrie 2028 sunt alegeri.</li>
+        <li>Contorul de șanse se recalculează după fiecare semestru: ce se întâmplă dacă de acum nu mai iei nicio decizie.</li>
+      </ol>
+      <button id="start" class="btn primary" type="button">Începe mandatul →</button>
+      <button id="continua" class="btn" type="button" hidden>Continuă jocul salvat</button>
+    </div>
+  </section>
+
+  <!-- Jocul -->
+  <section id="joc" hidden>
+    <div class="status">
+      <div class="semestru"><span id="semLabel">S1 2027</span><small id="semNr">semestrul 1 din 8</small></div>
+      <div id="kpis" class="kpis"></div>
+    </div>
+
+    <div class="grid">
+      <div class="col">
+        <div class="card mapcard">
+          <div class="cardhead"><h2>Traseul</h2><div class="legend" id="legend"></div></div>
+          <div id="harta"></div>
+          <p class="note">Schematic. Apasă pe un lot pentru detalii. Linia plină arată cât din lucrare e gata.</p>
+          <div id="lotInfo" class="lotinfo" hidden></div>
+        </div>
+        <details class="card" id="loturiBox">
+          <summary>Toate loturile</summary>
+          <div class="tablewrap"><table id="loturi"></table></div>
+        </details>
+      </div>
+
+      <div class="col">
+        <div class="card sanse">
+          <div class="cardhead"><h2>Șansele acum</h2><span class="note" id="sanseNota"></span></div>
+          <div id="sanse" aria-live="polite"></div>
+        </div>
+
+        <div class="card decizii">
+          <div class="cardhead"><h2>Deciziile semestrului</h2><span class="stamps" id="stamps"></span></div>
+          <div class="slider">
+            <label for="national">Bani din bugetul național pentru A8: <b id="nationalVal"></b></label>
+            <input type="range" id="national" min="0" max="5" step="0.25">
+            <p class="note" id="nationalNota"></p>
+          </div>
+          <div id="mana" class="mana"></div>
+          <div id="active" class="active"></div>
+          <button id="next" class="btn primary wide" type="button">Semestrul următor →</button>
+        </div>
+
+        <div class="card">
+          <h2>Ultima oră</h2>
+          <ul id="stiri" class="stiri"></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Finalul -->
+  <section id="final" hidden></section>
+
+  <!-- Scenariile: când ar fi gata? -->
+  <section id="scenarii" class="card">
+    <p class="kicker">Dincolo de 2030</p>
+    <h2 class="h2mare">Când ar fi gata A8?</h2>
+    <p class="sub2">Același model, rulat până la finalul lui 2040, de câte 500 de ori pentru fiecare scenariu. Trei pârghii: <b>politica</b> (alegerile din 2028, 2032 și 2036 și stabilitatea guvernelor), <b>bugetul</b> (bani naționali, SAFE, fondurile UE 2028–2034) și <b>procedurile</b> (avize, exproprieri, contestații). Banii SAFE se pot plăti doar până la finalul lui 2030, iar Programul Transport doar până la finalul lui 2029 – după aceea rămân bugetul și noul exercițiu european.</p>
+    <div class="seg" id="tintaSeg" role="group" aria-label="Ce tronson"></div>
+    <div id="calChart" class="calchart" aria-live="polite"><p class="note">Se calculează scenariile…</p></div>
+    <p class="note">Bara: între ce se întâmplă în 10% și în 90% dintre simulări; punctul: mediana (jumătate din simulări termină mai devreme). Liniile și benzile verticale: ce au spus actorii publici.</p>
+
+    <h3>Construiește-ți scenariul</h3>
+    <div class="builder" id="builder"></div>
+    <div id="calTau" class="caltau" aria-live="polite"></div>
+
+    <details class="tabelcal">
+      <summary>Tabelul scenariilor</summary>
+      <div class="tablewrap"><table id="calTabel"></table></div>
+    </details>
+
+    <h3>Ce spun bugetele, partidele și societatea civilă</h3>
+    <div class="actori">
+      <div>
+        <h4>Bani alocați</h4>
+        <ul>
+          <li>Bugetul CNIR pe 2026: ≈1 mld. lei pentru investiții, din care <b>455 mil. lei pentru A8 Est</b>, din SAFE (<a href="https://oficiuldestiri.ro/aproape-jumatate-din-bugetul-cnir-pe-2026-merge-catre-autostrada-a8-cati-bani-primeste-autostrada-unirii" rel="noopener">oficiuldestiri.ro</a>). Pentru 2027 nu există încă un buget publicat; programul promite credite de angajament multianuale și buget votat până la 31 decembrie 2026.</li>
+          <li>SAFE: ≈4,2 mld. euro pentru coridoare, față de ≈5,5 mld. euro de lucrări pe A8 Est și Pașcani – Siret: <b>lipsește peste 1 mld. euro</b> (Pro Infrastructură, <a href="https://business24.ro/infrastructura-rutiera/deficit-cincisprezece-miliarde-euro-proiecte-drumuri-1671231" rel="noopener">oct. 2026</a>). La nivel național, golul de finanțare pentru marile drumuri e estimat la ≈15 mld. euro.</li>
+          <li>Secțiunea montană (peste 20 mld. lei) și-a pierdut finanțarea PNRR; ministerul vrea să o continue din exercițiul 2028–2034, alături de A1 Sibiu – Pitești și A3 (<a href="https://www.sfin.ro/proiecte-infrastructura-dupa-2027/" rel="noopener">sfin.ro</a>).</li>
+        </ul>
+      </div>
+      <div>
+        <h4>Partide și guvern</h4>
+        <ul>
+          <li><b>Guvernul</b> (program): rețea de peste 2.000 km până în 2028, coridoare TEN-T închise până în 2030, SAFE pentru Târgu Mureș – Iași – Ungheni; ministerul (PSD) susține finanțarea mixtă: fonduri UE, buget, mobilitate militară.</li>
+          <li><b>PNL Iași</b> (Alexandru Muraru, feb. 2026): „punct critic”, risc de pierdere a banilor SAFE, lipsa banilor de exproprieri pe munte în bugetul pe 2026; cere un calendar ferm pentru Târgu Frumos – Lețcani – Ungheni (<a href="https://spotmedia.ro/stiri/eveniment/seful-pnl-iasi-ii-cere-explicatii-ministrului-transporturilor-pentru-autostrada-unirii-suntem-intr-un-punct-critic-exista-un-risc-major" rel="noopener">spotmedia.ro</a>).</li>
+          <li><b>Legea A8</b> (inițiată de PMP Iași, modificată cu voturile parlamentarilor de Iași): 2030 pentru Târgu Mureș – Târgu Neamț (<a href="https://www.bzi.ro/presedintele-pmp-iasi-petru-movila-anunta-amanarea-termenului-de-construire-a-autostrazii-a8-cu-sprijinul-parlamentarilor-de-iasi-klaus-iohannis-a-semnat-modificarea-legii-initiate-de-mine-4290286" rel="noopener">bzi.ro</a>).</li>
+        </ul>
+      </div>
+      <div>
+        <h4>Termene anunțate (inclusiv societatea civilă)</h4>
+        <ul id="repere"></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Datele -->
+  <section id="date" class="card">
+    <h2>Date reale și ce e simplificat</h2>
+    <details>
+      <summary>Ce spune Programul de guvernare 2026–2028</summary>
+      <ul>
+        <li><b>Finanțe publice</b>: deficit ≈6,0% (ESA) în 2026, 5,2% în 2027 (Strategia fiscal-bugetară), 3,2% în 2029, sub 3% în 2030; datorie 60,4% din PIB (iulie 2026), stabilizată sub 64%; dobânzi ≈3% din PIB în 2026–2027; cheltuieli nete +4,6% în 2027.</li>
+        <li><b>PIB nominal</b> (CNSP, primăvara 2026): 2.201 mld. lei (2027), 2.342,9 (2028), 2.483,2 (2029). Pentru 2030 jocul extrapolează 2.620.</li>
+        <li><b>Prioritizarea investițiilor</b> (Finanțe, M3): 1) cofinanțarea fondurilor UE, 2) proiectele strategice de transport, energie și sănătate, 3) proiecte locale avansate, 4) PNRR.</li>
+        <li><b>SAFE</b> (Finanțe M2, Transporturi M11): bugetul asigură avansurile și infrastructura cu dublă utilizare din Moldova, inclusiv Pașcani – Siret și Târgu Mureș – Iași – Ungheni; cota pentru coridoare ≈4,2 mld. euro, 45 de ani, 10 ani de grație.</li>
+        <li><b>Transporturi</b>: M1 (peste 2.000 km până în 2028, TEN-T închise până în 2030), M2 (continuarea șantierelor după PNRR din Programul Transport, CEF, BEI și buget; credite de angajament multianuale; plata în 30 de zile; „finalizăm coridoarele aflate în execuție înaintea deschiderii altora”), M13 (platformă unică de avize, aprobare tacită, exproprieri înainte de lucrări, UIP cu personal specializat), M14 (unitate PPP, cel puțin trei contracte majore până în 2028 – Terminalul 2 Otopeni, porturi, spații de servicii, noduri intermodale).</li>
+        <li><b>Fonduri UE</b>: cheltuielile din politica de coeziune 2021–2027 sunt eligibile până la 31 decembrie 2029; Programul Transport are cea mai mare rată de absorbție (53,4%).</li>
+      </ul>
+    </details>
+    <details>
+      <summary>Stadiul loturilor A8 (presa de specialitate, CNAIR/CNIR, oct. 2026)</summary>
+      <p>Secțiunea I (Nurol) și secțiunea III Leghin – Târgu Neamț sunt în execuție, ambele scoase din PNRR. Pe secțiunea montană, cinci din șase loturi sunt în proiectare, iar Joseni – Ditrău a început lucrările în august 2026; valoarea secțiunii depășește 20 mld. lei. Pe secțiunea de Est, finanțată din SAFE, Târgu Neamț – Târgu Frumos și Lețcani – Iași au contracte din 29 mai 2026 (termen 24 iunie 2030), Târgu Frumos – Lețcani e blocat de contestații, iar contractul Iași – Ungheni (3,57 mld. lei, semnat în iulie 2026) a fost suspendat de Curtea de Apel București la 5 august 2026. Podul peste Prut de la Ungheni era la 80% în februarie 2026.</p>
+      <p>Surse: <a href="https://colegu.eu/autostrada-a8-unirii-tronsoane/" rel="noopener">colegu.eu (8.10.2026)</a>, <a href="https://arenaconstruct.ro/autostrada-a8-unirii-pe-52-km-se-lucreaza-si-alti-peste-153-km-sunt-in-proiectare/" rel="noopener">arenaconstruct.ro</a>, <a href="https://www.economica.net/autostrada-unirii-a8-contestatii_965669.html" rel="noopener">economica.net</a>, <a href="https://radarlocal.ro/primul-contract-safe-pentru-autostrada-a8-a-fost-semnat/" rel="noopener">radarlocal.ro</a>, <a href="https://adevarul.ro/stiri-interne/societate/ultimul-tronson-al-autostrazii-a8-dintre-iasi-si-2540578.html" rel="noopener">adevarul.ro</a>. Costurile marcate „est.” sunt estimări (valoarea contractului nu e publică sau sursele se contrazic).</p>
+    </details>
+    <details>
+      <summary>Cum funcționează modelul (și ce e inventat)</summary>
+      <ul>
+        <li>Fiecare lot are un număr de <b>semestre de lucru rămase</b> la ritmul din contract. În fiecare semestru avansează cu un ritm aleator (în medie sub cel contractual, ca în istoria recentă a autostrăzilor românești), înmulțit cu efectul deciziilor (cel mult +15%), cu iarna, geotehnica, arheologia și contestațiile.</li>
+        <li><b>Banii</b>: loturile de Est se plătesc din SAFE (cota A8 pornește de la 70% din 21,4 mld. lei) și, eventual, CEF; celelalte din Programul Transport (ipoteză: 6 mld. lei pentru A8, doar până la finalul lui 2029) și BEI. Ce lipsește vine din bugetul național; dacă nici acolo nu sunt bani, apar arierate, constructorii încetinesc și unii intră în insolvență.</li>
+        <li><b>Deficitul</b> = ținta din program + efectele deciziilor tale + banii naționali pentru A8 peste 1,5 mld. lei pe semestru + un șoc aleator. Banii SAFE și cei europeni sunt presupuși deja incluși în traiectorie.</li>
+        <li>Evenimentele, personajele, probabilitățile și formulele sunt simplificate sau inventate. Jocul nu e o prognoză oficială, ci o modalitate de a vedea care sunt pârghiile și cât de strâns e calendarul.</li>
+        <li>Inspirat de <a href="https://guverneazadacapoti.ro" rel="noopener">guverneazadacapoti.ro</a>.</li>
+      </ul>
+    </details>
+  </section>
+</main>
+
+<footer class="wrap foot">
+  <p>Joc educativ, fără colectare de date. Progresul se păstrează doar în browserul tău. · <a href="../">mobilitate-iasi</a></p>
+</footer>
+
+<script src="core.js"></script>
+<script src="app.js"></script>
+<script src="scenarii.js"></script>
+</body>
+</html>
