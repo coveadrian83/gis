@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Accesibilitatea la transportul public – Iași și ZMI</title>
+  <meta name="description" content="Distanța pe jos până la stații pentru fiecare locuitor din Zona Metropolitană Iași și clasificarea cartierelor și comunelor, în situația existentă și în cea propusă prin Masterplanul Metropolitan de Transport. Madina (MIT City Form Lab), Covăsnianu (2025), Legea 155/2023.">
+  <meta property="og:title" content="Accesibilitatea la transportul public – Iași și ZMI">
+  <meta property="og:description" content="Cine ajunge pe jos la o stație? Situația existentă și cea propusă prin MPM Iași, pe caroiaj de 100 m și pe cartiere și UAT-uri.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+<div class="wrap">
+<p class="crumb"><a href="/">mobilitate-iasi</a> · accesibilitate</p>
+<header>
+  <h1>Accesibilitatea la transportul public în Iași și Zona Metropolitană</h1>
+  <p>Situația existentă și situația propusă prin Masterplanul Metropolitan de Transport Iași, pe două scări de analiză. Accesul pietonal la stații e calculat cu Madina (MIT City Form Lab, Urban Network Analysis), iar clasificarea pe cartiere și UAT-uri urmează metodologia Covăsnianu (2025), adaptată, cu pragurile din Legea nr. 155/2023.</p>
+</header>
+<p class="note" id="loading" role="status">Se încarcă datele (circa 1,5 MB)…</p>
+
+<div class="switch scen" role="tablist" aria-label="Situația analizată">
+  <button id="sc-ex" role="tab" aria-selected="true"><small>Harta 1</small><b>Situația existentă</b><span>Autobuz și tramvai urban, autobuz metropolitan, gări CF</span></button>
+  <button id="sc-pr" role="tab" aria-selected="false"><small>Harta 2</small><b>Situația propusă · MPM Iași</b><span>Tren metropolitan, trasee noi, inelele R1 și R2, puncte intermodale</span></button>
+</div>
+<div class="tren" id="tren" hidden>
+  <span>Tren metropolitan:</span>
+  <div class="tabs" role="group" aria-label="Varianta trenului metropolitan">
+    <button id="tr-v1" data-t="v1" aria-pressed="true">V1 · pe traseul CF existent</button>
+    <button id="tr-v2" data-t="v2" aria-pressed="false">V2 · cu extindere spre Aeroportul Iași</button>
+  </div>
+</div>
+
+<div class="switch" role="tablist" aria-label="Scara de analiză">
+  <button id="s-detail" role="tab" aria-selected="true" aria-controls="scale-detail"><small>Scara 1 · detaliu</small><b>Caroiaj de 100 m</b><span>Distanța pe jos de la fiecare locuitor la cea mai apropiată stație</span></button>
+  <button id="s-general" role="tab" aria-selected="false" aria-controls="scale-general"><small>Scara 2 · generală</small><b>Cartiere și UAT-uri</b><span>Indice multicriterial și clase de accesibilitate</span></button>
+</div>
+
+<!-- ================= SCALE 1 ================= -->
+<div class="scale" id="scale-detail" role="tabpanel">
+  <div class="tabs" id="d-views" role="group" aria-label="Indicator"></div>
+  <div class="kpis" id="d-kpis"></div>
+  <div class="main">
+    <div style="display:grid;gap:8px">
+      <div class="map" id="d-map"><canvas id="d-cv"></canvas>
+        <div class="zoom"><button id="d-zin" aria-label="Mărește">+</button><button id="d-zout" aria-label="Micșorează">−</button><button id="d-zreset" aria-label="Resetează vederea">⟲</button></div>
+        <div class="tip" id="d-tip" hidden></div>
+      </div>
+      <div class="toggles">
+        <label><input type="checkbox" id="g-routes" checked> Trasee</label>
+        <label><input type="checkbox" id="g-stops"> Stații</label>
+        <label><input type="checkbox" id="g-bnd" checked> Limite cartiere și UAT</label>
+      </div>
+      <div class="toggles" id="d-rleg"></div>
+    </div>
+    <aside>
+      <section><h2 id="d-legh">Distanță pe jos până la stație</h2><div class="legend" id="d-legend"></div><div class="dbar" id="d-bar"></div><p class="note" style="margin-top:6px" id="d-legnote">Procente din locuitorii ZMI. Fiecare punct e o celulă de 100 m locuită.</p></section>
+      <section id="d-topsec"><h2>Stațiile cu cei mai mulți locuitori la 500 m</h2><ol class="top" id="d-top"></ol></section>
+      <section id="d-meassec" hidden><h2>Ce aduce fiecare măsură</h2><div class="meas" id="d-meas"></div><p class="note" style="margin-top:8px">Locuitori care ajung la cel mult 500 m de o stație, locuitori nou acoperiți cu pragul pe mod (tren la 800 m) și locuitori care ies din zona de peste 1,5 km, toți față de situația existentă. Măsurile se suprapun parțial, așa că totalul e mai mic decât suma lor.</p></section>
+    </aside>
+    <section style="grid-column:1/-1" id="d-trainsec" hidden><h2>Distanța între stațiile trenului metropolitan</h2>
+      <div class="tbl"><table id="d-train"><thead><tr><th class="l">Stație</th><th class="l">Variantă</th><th class="l">Context</th><th class="l">Cea mai apropiată stație</th><th>Distanță pe linie</th><th class="l">Față de recomandare</th></tr></thead><tbody></tbody></table></div>
+      <p class="note" style="margin-top:8px">Recomandare: 0,8–1,2 km între stații în țesutul urban dens și 1,5–3 km în zona suburbană sau periurbană. „Urban” înseamnă stație aflată în cartierele municipiului Iași sau la cel mult 300 m de ele. Distanța e măsurată pe traseul propus până la cea mai apropiată altă stație. Pentru Aroneanu, traseul extinderii spre aeroport nu e conectat în date.</p>
+    </section>
+    <section style="grid-column:1/-1"><h2 id="d-uath">Pe unități administrative</h2>
+      <div class="tbl"><table id="d-uat"><thead></thead><tbody></tbody></table></div>
+      <p class="note" style="margin-top:8px">UAT-urile cu 0% nu au nicio stație în baza de date a masterplanului: transportul județean care le deservește nu e inclus. Caroiajul WorldPop acoperă doar parțial comunele de la marginea ZMI.</p>
+    </section>
+  </div>
+</div>
+
+<!-- ================= SCALE 2 ================= -->
+<div class="scale" id="scale-general" role="tabpanel" hidden>
+  <div class="kpis" id="a-kpis"></div>
+  <div class="tabs" id="a-metrics" role="group" aria-label="Indicator afișat pe hartă">
+    <button data-m="idx" aria-pressed="true">Indice de accesibilitate</button>
+    <button data-m="pc" aria-pressed="false">Acoperire, tren la 800 m</button>
+    <button data-m="p5" aria-pressed="false">Locuitori la ≤ 500 m de stație (art. 21 lit. d)</button>
+    <button data-m="pd" aria-pressed="false">Dotări la ≤ 300 m de stație (art. 21 lit. b)</button>
+    <button data-m="delta" id="a-mdelta" aria-pressed="false" hidden>Creștere a indicelui față de existent</button>
+  </div>
+  <div class="main">
+    <div class="map" id="a-map"><canvas id="a-cv"></canvas>
+      <div class="zoom"><button id="a-zin" aria-label="Mărește">+</button><button id="a-zout" aria-label="Micșorează">−</button><button id="a-zreset" aria-label="Resetează vederea">⟲</button></div>
+      <div class="oleg" id="a-legend"></div>
+    </div>
+    <aside><div class="card" id="a-detail"></div></aside>
+  </div>
+  <section>
+    <h2 id="a-math">Matricea de analiză</h2>
+    <div class="tbl"><table id="a-mat"><thead></thead><tbody></tbody></table></div>
+    <p class="note" style="margin-top:8px">Valorile I sunt normalizate 0–100. I2 e raportat la 30 de linii, maximul din situația existentă (Centru), ca indicii să fie comparabili între scenarii. Pentru I4, unitățile fără școli sau unități medicale identificate nu primesc punctaj, iar ponderea se redistribuie. Clasele sunt cele din Covăsnianu (2025): 0–40 slabă, 41–70 medie, 71–100 bună. „Fără date TP” înseamnă că nu există nicio stație în UAT.</p>
+  </section>
+</div>
+
+<!-- ================= SHARED ================= -->
+<div class="cols2">
+  <section class="prose">
+    <h2>Metodă</h2>
+    <p><b>Scara de detaliu.</b> Madina calculează, pentru fiecare celulă de 100 m locuită (WorldPop 2020), distanța pe rețeaua de străzi și drumuri (OSM, 5.029 km, nodată la intersecții) până la cea mai apropiată stație, în rază de 1,5 km.</p>
+    <p><b>Raze de captare pe mod.</b> Pentru autobuz și tramvai, pragul e 500 m (art. 21 lit. d). Pentru stațiile de tren, existente sau propuse, se folosește 800 m: limita superioară a razei de mers pe jos de 400–800 m (5–10 minute) din principiile TOD, unde călătorii acceptă un drum mai lung în schimbul unui timp de parcurs mai bun. Verificarea strict legală (≤ 500 m) rămâne afișată separat.</p>
+    <p><b>Scara generală.</b> Șase indicatori ponderați, după Covăsnianu (2025): acoperire pietonală, 500 m autobuz/tramvai sau 800 m tren (30%), linii distincte (25%), legătură directă cu Gara Iași, Gara Nicolina și autogări (15%), dotări la ≤ 300 m de stație (10%), benzi dedicate (10%) și acces velo (10%).</p>
+    <p><b>Situația existentă.</b> 109 stații de tramvai, 311 de autobuz urban, 455 de autobuz metropolitan (pe sensuri) și 11 gări CF, cu traseele lor, din baza de date MPM.</p>
+    <p><b>Situația propusă.</b> Situația existentă, plus măsurile din masterplan:</p>
+    <p>a) Trenul metropolitan, cu 26 de stații pe traseul CF existent (V1). Varianta V2 adaugă extinderea spre Aeroportul Iași, cu 4 stații.<br>b) Traseele propuse spre Lunca Cetățuii, Valea Adâncă, Ciurea, Hlincea, Vișan, Vlădiceni, Valea Lupului, Rediu, Șorogari, Dancu și Holboca: 65 de stații din MPM.<br>c) Inelul periurban prioritar R1.<br>d) Inelul metropolitan de perspectivă R2.<br>e) Cele 14 puncte intermodale propuse în MPM (Socola, Canta, Dacia, Gara Mare, Piața Unirii, Târgu Cucu, 2 Băieți, Tutora, Tomești, CUG I, Tehnopolis, Gara Nicolina, Podu Roș, Agronomie), tratate ca stații și ca noduri de transfer.</p>
+    <p>În situația propusă, indicatorul I3 numără nodurile intermodale legate direct: Gara Iași, Gara Nicolina, autogările și punctele intermodale propuse. Scorul maxim se atinge de la 3 noduri.</p>
+    <p>Unde masterplanul nu are stații pe traseu (o parte din b, inelele R1 și R2), le-am generat la 400 m una de alta, distanța maximă din art. 21 lit. c). Am omis stațiile generate aflate la mai puțin de 300 m de una existentă sau propusă. Rezultă 43 de stații pe trasee, 32 pe R1 și 78 pe R2. Pe hartă au contur gol.</p>
+    <p>Benzile dedicate și accesul velo rămân ca în situația existentă, pentru că nu fac parte din măsurile analizate aici.</p>
+    <p><b>Distanța între stațiile de tren.</b> Stațiile propuse sunt comparate cu intervalele recomandate pentru trenul metropolitan: 1,5–3 km în zona suburbană și periurbană, 0,8–1,2 km în țesutul urban dens. Documentul MT indicat (OMT nr. 2128/25.11.2025) modifică procedural Ghidul solicitantului „Trenurile metropolitane” (PT 2021–2027, Prioritatea 6) și trimite la standardele tehnice minime din Anexa 14 a ghidului. În textul ordinului nu apar valori pentru distanța între stații, așa că intervalele vin din literatura TOD.</p>
+    <p><b>Limite.</b> Frecvența curselor nu e verificată, deci pragul de 60% din art. 21 lit. d) e evaluat doar spațial. Transportul județean nu e în baza MPM. Stațiile generate sunt o ipoteză de lucru, nu poziții din proiect.</p>
+  </section>
+  <section>
+    <h2>Prevederi din Legea nr. 155/2023 folosite în analiză</h2>
+    <div class="law">
+      <div><b>art. 21 lit. d)</b><span>Cel puțin 60% din populație locuiește la mai puțin de 500 m de o linie de transport public cu frecvență de cel mult 20 de minute. Aici e verificată doar componenta spațială, prin indicatorul I1.</span></div>
+      <div><b>art. 21 lit. b)</b><span>Unitățile de învățământ, medicale, de îngrijire a vârstnicilor și comunitare sunt amplasate la cel mult 300 m de o stație existentă sau propusă. Indicatorul I4.</span></div>
+      <div><b>art. 21 lit. c)</b><span>Stațiile de autobuz, troleibuz și tramvai sunt amplasate la cel mult 400 m una de alta. Pasul folosit pentru stațiile generate.</span></div>
+      <div><b>art. 21 lit. a)</b><span>90% din terenurile rezidențiale au acces pietonal la rețeaua de transport public. Valoarea la 800 m e afișată ca indicator complementar.</span></div>
+      <div><b>art. 21</b><span>Țintele se aplică municipiului București și municipiilor de rangul I, deci și Iașului, cu termen 31 decembrie 2030. Pentru comune, pragurile sunt folosite doar ca reper.</span></div>
+      <div><b>art. 28, art. 19</b><span>Benzile dedicate pentru transportul public și ierarhia pieton, bicicletă, transport public, autoturism stau la baza indicatorilor I5 și I6.</span></div>
+      <div><b>art. 9 alin. (6)–(7)</b><span>În zonele metropolitane, PMUD-ul e elaborat și aprobat la nivel asociativ. Asta justifică analiza comună pentru cartiere și comune.</span></div>
+    </div>
+  </section>
+</div>
+<section>
+  <h2>Surse</h2>
+  <ol class="src">
+    <li>MADINA, MIT City Form Lab, Urban Network Analysis. Sevtsuk, A., Alhassan, A. (2025), <i>Madina Python Package: Scalable Urban Network Analysis for Modeling Pedestrian and Bicycle Trips in Cities</i>, Journal of Transport Geography. Cod sursă: <a href="https://github.com/City-Form-Lab/madina" target="_blank" rel="noopener">github.com/City-Form-Lab/madina</a></li>
+    <li>Covăsnianu Adrian, 2025, <i>Transport public ieșean la control! Analiză multicriterială privind accesibilitatea transportului public în cartierele municipiului Iași</i>, Ziarul de Iași, octombrie 2025. Metodologia, ponderile, clasele de accesibilitate și delimitarea cartierelor după PUG Iași.</li>
+    <li>Legea nr. 155/2023 privind mobilitatea urbană durabilă, Monitorul Oficial nr. 486 din 31 mai 2023, <a href="https://legislatie.just.ro/public/DetaliiDocument/270923" target="_blank" rel="noopener">legislatie.just.ro</a></li>
+    <li>Masterplanul Metropolitan de Transport Iași (Banca Mondială). Situația existentă: stații și trasee de transport public. Propuneri: tren metropolitan V1 și extinderea spre aeroport, trasee și stații propuse (statii_TP_ZM_Iasi_propunere), puncte intermodale propuse (puncte_intermodale_ZMI_propuneri), inelele R1 și R2. Limite administrative ANCPI.</li>
+    <li>Ordinul MT nr. 2128/25.11.2025 privind modificarea Ghidului solicitantului „Trenurile metropolitane”, Programul Transport 2021–2027, <a href="https://fonduri.mt.ro/documente/omt_2128_modf_ghid_metropolitane.pdf" target="_blank" rel="noopener">fonduri.mt.ro</a>. Principii TOD: rază de captare pietonală de 400–800 m și distanțe între stații de 1,5–3 km suburban, 0,8–1,2 km urban (literatura de specialitate, ResearchGate).</li>
+    <li>WorldPop 2020, populație pe caroiaj de 100 m. OpenStreetMap (extras Geofabrik): rețea de drumuri, unități de învățământ și medicale.</li>
+  </ol>
+</section>
+</div>
+</body>
+</html>

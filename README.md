@@ -335,6 +335,20 @@ acum; ziua de ieri, finalizată după miezul nopții), în Netlify Blobs (store-
 `raport/index`), serviți la `/live/raport` (lista zilelor) și `/live/raport?zi=AAAA-LL-ZZ`. Pagina poate calcula și
 ziua de azi direct din arhiva pe minut („Calculează azi, până acum”). Teste: `node --test test/raport.test.js`.
 
+## Accesibilitatea la transportul public – Iași și ZMI (`/accesibilitate/`)
+
+- Distanța pe jos, pe rețeaua de străzi și drumuri, de la fiecare celulă de 100 m locuită (WorldPop 2020) până la cea mai
+  apropiată stație, calculată cu **Madina** (MIT City Form Lab, Urban Network Analysis), și clasificarea celor 17 cartiere
+  și 18 comune din ZMI după metodologia **Covăsnianu (2025)**, adaptată, cu pragurile din **Legea nr. 155/2023**.
+- Două hărți (**situația existentă** și **situația propusă** prin Masterplanul Metropolitan de Transport: tren metropolitan
+  V1/V2, trasee noi, inelele R1 și R2, puncte intermodale) și două scări (caroiaj de 100 m · cartiere și UAT-uri).
+  Rază de captare: 500 m pentru autobuz și tramvai, 800 m pentru tren (TOD).
+- Pagină statică, fără bibliotecă externă (canvas): `public/accesibilitate/` – `index.html`, `app.js`, `style.css`,
+  `data/detaliu.json` (caroiaj, stații, trasee), `data/general.json` (indicatori pe unități).
+- **Date și calcul**: rulate în afara depozitului, pe baza de date MPM Iași (Banca Mondială), OpenStreetMap (Geofabrik) și
+  WorldPop; scripturile sunt în `scripts/accesibilitate/` (Madina se instalează din GitHub și are nevoie de două
+  corecturi pentru pandas 3, descrise în `prep_zmi.py`). `build_site.py` regenerează pagina din datele exportate.
+
 ---
 
 ## Rulare pe un server propriu (alternativă la Netlify)
@@ -382,6 +396,7 @@ public/shared/              geo-core.js (căutare + point-in-polygon) și domain
 public/data/                fișierele geografice
 public/15min/               harta „15 minute. Pentru cine?” – Iași (core.js = calculul, data/iasi = export OSM)
 public/micromobilitate/     harta „15 minute pe două roți” (micro.js = regulile și vitezele, data/iasi = export OSM)
+public/accesibilitate/      accesibilitatea la transportul public, existent vs. MPM (date: data/*.json, calcul Madina)
 public/puz/                 harta PUZ-urilor votate de Consiliul Local Iași (date: public/data/puz_iasi.geojson)
 public/transport/           harta transportului public (date: public/data/transport/)
 public/transport/sanatate/  harta „Sănătatea transportului public” (core.js = calculul; GPS: /live/vehicule, /live/istoric)
