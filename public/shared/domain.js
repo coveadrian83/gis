@@ -13,7 +13,7 @@
     { code: 'bus', label: 'Autobuz', icon: '🚌', pt: true },
     { code: 'tram', label: 'Tramvai', icon: '🚋', pt: true },
     { code: 'train', label: 'Tren', icon: '🚆', pt: true },
-    { code: 'bike', label: 'Bicicletă', icon: '🚲' },
+    { code: 'bike', label: 'Bicicletă / trotinetă', icon: '🚲' },
     { code: 'walk', label: 'Mers pe jos', icon: '🚶' },
     { code: 'moto', label: 'Moto / scuter', icon: '🛵' },
     { code: 'taxi', label: 'Taxi / ridesharing', icon: '🚕' },
