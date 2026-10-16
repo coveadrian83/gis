@@ -12,6 +12,9 @@ on:
         description: "Metri de la centru la fiecare latură a pătratului exportat"
         default: "12000"
   push:
+    # pe main nu rulează la push: rulează pe branch-ul PR-ului (publicările de acolo sunt gratuite), iar datele intră pe
+    # main odată cu merge-ul – altfel, după fiecare merge, un commit automat în plus = încă o publicare (15 credite)
+    branches-ignore: [main]
     paths:
       - scripts/export_micro15.py
       - scripts/export_15min.py

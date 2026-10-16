@@ -7,6 +7,9 @@ name: Date OSM transport public
 on:
   workflow_dispatch:
   push:
+    # pe main nu rulează la push: rulează pe branch-ul PR-ului (publicările de acolo sunt gratuite), iar datele intră pe
+    # main odată cu merge-ul – altfel, după fiecare merge, un commit automat în plus = încă o publicare (15 credite)
+    branches-ignore: [main]
     paths:
       - scripts/transport_osm.py
       - scripts/transport_compara_osm.py
