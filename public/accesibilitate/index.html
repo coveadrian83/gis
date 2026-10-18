@@ -85,11 +85,13 @@
   <div class="kpis" id="a-kpis"></div>
   <div class="tabs" id="a-metrics" role="group" aria-label="Indicator afișat pe hartă">
     <button data-m="idx" aria-pressed="true">Indice de accesibilitate</button>
+    <button data-m="rel" aria-pressed="false">Indice față de medie (Iași / ZMI)</button>
     <button data-m="pc" aria-pressed="false">Acoperire, tren la 800 m</button>
     <button data-m="p5" aria-pressed="false">Locuitori la ≤ 500 m de stație (art. 21 lit. d)</button>
     <button data-m="pd" aria-pressed="false">Dotări la ≤ 300 m de stație (art. 21 lit. b)</button>
     <button data-m="delta" id="a-mdelta" aria-pressed="false" hidden>Creștere a indicelui față de existent</button>
   </div>
+  <div class="tren" id="a-ref" hidden><span>Media de referință (100%):</span><div class="tabs" role="group" aria-label="Media de referință"><button data-r="ias" aria-pressed="true">municipiul Iași</button><button data-r="zmi" aria-pressed="false">Zona Metropolitană Iași</button></div></div>
   <div class="main">
     <div class="map" id="a-map"><canvas id="a-cv"></canvas>
       <div class="zoom"><button id="a-zin" aria-label="Mărește">+</button><button id="a-zout" aria-label="Micșorează">−</button><button id="a-zreset" aria-label="Resetează vederea">⟲</button></div>
@@ -100,7 +102,7 @@
   <section>
     <h2 id="a-math">Matricea de analiză</h2>
     <div class="tbl"><table id="a-mat"><thead></thead><tbody></tbody></table></div>
-    <p class="note" style="margin-top:8px">Valorile I sunt normalizate 0–100. I2 e raportat la 30 de linii, maximul din situația existentă (Centru), ca indicii să fie comparabili între scenarii. Pentru I4, unitățile fără școli sau unități medicale identificate nu primesc punctaj, iar ponderea se redistribuie. Clasele sunt cele din Covăsnianu (2025): 0–40 slabă, 41–70 medie, 71–100 bună. „Fără date TP” înseamnă că nu există nicio stație în UAT.</p>
+    <p class="note" style="margin-top:8px">Valorile I sunt normalizate 0–100. I2 e raportat la 30 de linii, maximul din situația existentă (Centru), ca indicii să fie comparabili între scenarii. Pentru I4, unitățile fără școli sau unități medicale identificate nu primesc punctaj, iar ponderea se redistribuie. Clasele sunt cele din Covăsnianu (2025): 0–40 slabă, 41–70 medie, 71–100 bună. Coloanele „față de media” raportează indicele la media ponderată cu populația a municipiului Iași (cele 17 cartiere) și a ZMI (cartiere și comune), din același scenariu: 100% înseamnă exact media, peste 100% peste medie. „Fără date TP” înseamnă că nu există nicio stație în UAT.</p>
   </section>
 </div>
 

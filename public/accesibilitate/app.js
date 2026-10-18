@@ -190,7 +190,13 @@ function bbox(rings){let a=[1e9,1e9,-1e9,-1e9];rings.forEach(([x,y])=>{a=[Math.m
   const CLS={'bună':'--good','medie':'--mid','slabă':'--weak','fără date TP':'--nodata'};
   const SEQ=[[20,'--s1'],[40,'--s2'],[60,'--s3'],[80,'--s4'],[101,'--s5']];
   const DSEQ=[[0.05,'--g0',' fără schimbare'],[5,'--g2','+0–5 puncte'],[15,'--g1','+5–15 puncte'],[Infinity,'--g3','peste +15 puncte']];
-  let metric='idx',sel=null;
+  const RSEQ=[[70,'--s1','sub 70% din medie'],[90,'--s2','70–90%'],[110,'--s3','90–110% (în jurul mediei)'],[130,'--s4','110–130%'],[Infinity,'--s5','peste 130% din medie']];
+  let metric='idx',sel=null,ref='ias';
+  /* media indicelui ponderată cu populația: municipiul Iași (cartierele) și ZMI (cartiere și comune) */
+  const MEAN={};for(const k of ['existent','propus_v1','propus_v2']){const w=a=>a.reduce((s,u)=>s+u.sc[k].idx*u.pop,0)/a.reduce((s,u)=>s+u.pop,0);MEAN[k]={ias:w(D.u.filter(u=>u.t==='cartier')),zmi:w(D.u)};}
+  const mean=r=>MEAN[scenKey()][r];
+  const rel=(u,r)=>cur(u).idx/mean(r)*100;
+  const relTxt=(u,r)=>{const v=rel(u,r),d=cur(u).idx-mean(r);return `${Math.round(v)}% <small style="color:var(${d>=0?'--good':'--weak'})">(${d>=0?'+':'−'}${Math.abs(d).toFixed(1).replace('.',',')} p.)</small>`;};
   D.u.forEach(u=>u.P=u.geo.map(r=>r.map(pr)));
   const IAS=D.ias.map(r=>r.map(pr));
   const cur=u=>u.sc[scenKey()],ex=u=>u.sc.existent,isProp=()=>S.scen==='propus';
@@ -199,6 +205,7 @@ function bbox(rings){let a=[1e9,1e9,-1e9,-1e9];rings.forEach(([x,y])=>{a=[Math.m
   function color(u){const c=cur(u);
     if(metric==='idx')return css(CLS[c.c]);
     if(metric==='delta'){const d=c.idx-ex(u).idx;for(const[t,col] of DSEQ)if(d<t)return css(col);}
+    if(metric==='rel'){const v=rel(u,ref);for(const[t,col] of RSEQ)if(v<t)return css(col);}
     const v=c[metric];if(v==null||(metric!=='pd'&&c.c==='fără date TP'))return css('--nodata');for(const[t,col] of SEQ)if(v<t)return css(col);}
   function draw(m){const ctx=m.ctx;ctx.fillStyle=css('--mapbg');ctx.fillRect(0,0,m.W,m.H);
     for(const u of [...D.u].sort((a,b)=>(a.t==='cartier')-(b.t==='cartier'))){ctx.beginPath();ringPath(m,u.P);ctx.fillStyle=color(u);ctx.globalAlpha=.88;ctx.fill();ctx.globalAlpha=1;ctx.strokeStyle=css('--panel');ctx.lineWidth=u.t==='cartier'?.8:1.2;ctx.stroke();}
@@ -209,6 +216,7 @@ function bbox(rings){let a=[1e9,1e9,-1e9,-1e9];rings.forEach(([x,y])=>{a=[Math.m
     ctx.textAlign='start';}
   function legend(){const el=$('a-legend');
     if(metric==='idx'){el.innerHTML=Object.entries(CLS).map(([k,v])=>`<div><i class="sw" style="background:var(${v})"></i>${k==='fără date TP'?k:'accesibilitate '+k}</div>`).join('')+'<div><i class="sw" style="border:1.5px dashed var(--ink)"></i>limita mun. Iași</div>';return;}
+    if(metric==='rel'){el.innerHTML=`<div style="font-weight:600">Indicele față de media ${ref==='ias'?'mun. Iași':'ZMI'} (${f1(mean(ref))} = 100%)</div>`+RSEQ.map(d=>`<div><i class="sw" style="background:var(${d[1]})"></i>${d[2]}</div>`).join('')+'<div><i class="sw" style="border:1.5px dashed var(--ink)"></i>limita mun. Iași</div>';return;}
     if(metric==='delta'){el.innerHTML=DSEQ.map(d=>`<div><i class="sw" style="background:var(${d[1]})"></i>${d[2].trim()}</div>`).join('');return;}
     const lab=['sub 20%','20–40%','40–60%','60–80%','peste 80%'];el.innerHTML=SEQ.map((s,i)=>`<div><i class="sw" style="background:var(${s[1]})"></i>${lab[i]}</div>`).join('')+`<div><i class="sw" style="background:var(--nodata)"></i>fără date</div>`;}
   const pill=c=>`<span class="pill" style="background:var(${CLS[c]});color:${c==='medie'?'#1d2421':'#fff'}">${c==='fără date TP'?c:'accesibilitate '+c}</span>`;
@@ -218,32 +226,35 @@ function bbox(rings){let a=[1e9,1e9,-1e9,-1e9];rings.forEach(([x,y])=>{a=[Math.m
     el.innerHTML=`<h2>${u.t==='cartier'?'Cartier, mun. Iași':'Comună, ZMI'}</h2><h3>${u.n}</h3><div>${pill(c.c)} <span style="font:600 22px var(--f-mono);margin-left:6px">${f1(c.idx)}</span><span class="note"> / 100</span>${prop?`<div class="note" style="margin-top:4px">existent: ${f1(e.idx)} (${e.c})${d?`, <b style="color:var(--good)">+${d.toLocaleString('ro-RO')}</b>`:''}</div>`:''}</div>
     <div class="ib">${c.I.map((v,i)=>`<span>${INAME[i]}</span><span class="v">${v==null?'–':Math.round(v)}</span><span class="bar"><i style="width:${v||0}%"></i>${prop&&e.I[i]!=null&&e.I[i]!==v?`<u style="left:${e.I[i]}%"></u>`:''}</span>`).join('')}</div>
     ${prop?'<p class="note">Linia subțire de pe bare marchează valoarea din situația existentă.</p>':''}
-    <dl class="facts"><dt>Locuitori (WorldPop 2020)</dt><dd>${fmt(u.pop)}</dd><dt>Mediana distanței la stație</dt><dd>${c.med==null?'peste 1,5 km':fmt(c.med)+' m'}</dd><dt>Acoperire (500 m / tren 800 m)</dt><dd>${f1(c.pc)}%</dd><dt>Locuitori ≤ 500 m / ≤ 800 m</dt><dd>${f1(c.p5)}% / ${f1(c.p8)}%</dd><dt>Locuitori la peste 1,5 km</dt><dd>${fmt(c.out)}</dd><dt>Stații / linii distincte</dt><dd>${c.ns} / ${c.nl}</dd><dt>Noduri legate direct</dt><dd style="font-family:var(--f-display)">${c.nod||'niciunul'}</dd><dt>Dotări ≤ 300 m de stație</dt><dd>${c.nd?f1(c.pd)+'% din '+c.nd:'nu au fost identificate'}</dd><dt>Art. 21 lit. d), componenta spațială</dt><dd style="font-family:var(--f-display)">${c.p5>=60?'prag de 60% atins':'sub pragul de 60%'}</dd>${u.old!=null?`<dt>Indice 2025 (Covăsnianu)</dt><dd>${f1(u.old)}</dd>`:''}</dl>`;}
+    <dl class="facts"><dt>Față de media mun. Iași (${f1(mean('ias'))})</dt><dd>${relTxt(u,'ias')}</dd><dt>Față de media ZMI (${f1(mean('zmi'))})</dt><dd>${relTxt(u,'zmi')}</dd><dt>Locuitori (WorldPop 2020)</dt><dd>${fmt(u.pop)}</dd><dt>Mediana distanței la stație</dt><dd>${c.med==null?'peste 1,5 km':fmt(c.med)+' m'}</dd><dt>Acoperire (500 m / tren 800 m)</dt><dd>${f1(c.pc)}%</dd><dt>Locuitori ≤ 500 m / ≤ 800 m</dt><dd>${f1(c.p5)}% / ${f1(c.p8)}%</dd><dt>Locuitori la peste 1,5 km</dt><dd>${fmt(c.out)}</dd><dt>Stații / linii distincte</dt><dd>${c.ns} / ${c.nl}</dd><dt>Noduri legate direct</dt><dd style="font-family:var(--f-display)">${c.nod||'niciunul'}</dd><dt>Dotări ≤ 300 m de stație</dt><dd>${c.nd?f1(c.pd)+'% din '+c.nd:'nu au fost identificate'}</dd><dt>Art. 21 lit. d), componenta spațială</dt><dd style="font-family:var(--f-display)">${c.p5>=60?'prag de 60% atins':'sub pragul de 60%'}</dd>${u.old!=null?`<dt>Indice 2025 (Covăsnianu)</dt><dd>${f1(u.old)}</dd>`:''}</dl>`;}
   function kpis(){const c=D.u.filter(u=>u.t==='cartier'),m=D.u.filter(u=>u.t==='comună'),pc=c.reduce((a,u)=>a+u.pop,0),pm=m.reduce((a,u)=>a+u.pop,0),prop=isProp();
     const avg=a=>a.reduce((s,u)=>s+cur(u).idx,0)/a.length,avgE=a=>a.reduce((s,u)=>s+ex(u).idx,0)/a.length;
     const n=(a,k)=>a.filter(u=>cur(u).c===k).length;
     const lc=c.filter(u=>cur(u).p5>=60).reduce((s,u)=>s+u.pop,0)/pc*100,lm=m.filter(u=>cur(u).p5>=60).reduce((s,u)=>s+u.pop,0)/pm*100;
     const lcE=c.filter(u=>ex(u).p5>=60).reduce((s,u)=>s+u.pop,0)/pc*100,lmE=m.filter(u=>ex(u).p5>=60).reduce((s,u)=>s+u.pop,0)/pm*100;
     const up=(a,b,suf)=>prop?`<small class="${a>b+.05?'up':''}">${a>b+.05?'+'+(a-b).toFixed(1).replace('.',',')+suf+' față de existent':'fără schimbare'}</small>`:'';
+    const mE=MEAN.existent,mC=MEAN[scenKey()];
     $('a-kpis').innerHTML=[
-      [f1(avg(c)),'indice mediu, cartiere',prop?up(avg(c),avgE(c),' puncte'):'<small>63,4 în analiza din 2025</small>'],
+      [f1(mC.ias)+' · '+f1(mC.zmi),'media ponderată: Iași · ZMI',prop?`<small class="up">+${(mC.ias-mE.ias).toFixed(1).replace('.',',')} · +${(mC.zmi-mE.zmi).toFixed(1).replace('.',',')} puncte față de existent</small>`:'<small>ponderată cu populația; referința 100%</small>'],
+      [f1(avg(c)),'media simplă, cartiere',prop?up(avg(c),avgE(c),' puncte'):'<small>63,4 în analiza din 2025</small>'],
       [`${n(c,'bună')} · ${n(c,'medie')} · ${n(c,'slabă')}`,'cartiere bune · medii · slabe','<small>17 cartiere delimitate după PUG</small>'],
-      [f1(avg(m)),'indice mediu, comune',prop?up(avg(m),avgE(m),' puncte'):'<small>18 comune din ZMI</small>'],
+      [f1(avg(m)),'media simplă, comune',prop?up(avg(m),avgE(m),' puncte'):'<small>18 comune din ZMI</small>'],
       [`${n(m,'bună')} · ${n(m,'medie')} · ${n(m,'slabă')} · ${n(m,'fără date TP')}`,'comune bune · medii · slabe · fără date',''],
       [Math.round(lc)+'% · '+Math.round(lm)+'%','pop. în unități ≥ 60% la 500 m','<small>cartiere · comune, art. 21 lit. d)</small>'+(prop&&(lm-lmE>.5)?`<small class="up">comune: +${Math.round(lm-lmE)} pp</small>`:'')]
     ].map(([v,l,s])=>`<div class="kpi"><b>${v}</b><span>${l}</span>${s}</div>`).join('');}
   function table(){const prop=isProp();
     $('a-math').textContent=prop?`Matricea de analiză, situația propusă (tren ${S.tren.toUpperCase()})`:'Matricea de analiză, situația existentă';
-    document.querySelector('#a-mat thead').innerHTML=`<tr><th class="l">Clasa</th><th class="l">Unitate</th><th>Locuitori</th><th>I1 Acoperire<br>500 m / tren 800 m · 30%</th><th>I2 Linii<br>distincte · 25%</th><th>I3 Noduri<br>intermodale · 15%</th><th>I4 Dotări<br>≤ 300 m · 10%</th><th>I5 Benzi<br>dedicate · 10%</th><th>I6 Velo<br>· 10%</th><th>Indice</th>${prop?'<th>Indice<br>existent</th><th>Δ</th>':'<th>Indice 2025<br>(Covăsnianu)</th>'}</tr>`;
-    let h='';for(const t of ['cartier','comună']){h+=`<tr class="grp"><td colspan="${prop?12:11}">${t==='cartier'?'Cartierele municipiului Iași':'Comunele din Zona Metropolitană Iași'}</td></tr>`;
+    document.querySelector('#a-mat thead').innerHTML=`<tr><th class="l">Clasa</th><th class="l">Unitate</th><th>Locuitori</th><th>I1 Acoperire<br>500 m / tren 800 m · 30%</th><th>I2 Linii<br>distincte · 25%</th><th>I3 Noduri<br>intermodale · 15%</th><th>I4 Dotări<br>≤ 300 m · 10%</th><th>I5 Benzi<br>dedicate · 10%</th><th>I6 Velo<br>· 10%</th><th>Indice</th><th>Față de<br>media Iași</th><th>Față de<br>media ZMI</th>${prop?'<th>Indice<br>existent</th><th>Δ</th>':'<th>Indice 2025<br>(Covăsnianu)</th>'}</tr>`;
+    let h='';for(const t of ['cartier','comună']){h+=`<tr class="grp"><td colspan="${prop?14:13}">${t==='cartier'?'Cartierele municipiului Iași':'Comunele din Zona Metropolitană Iași'}</td></tr>`;
       D.u.filter(u=>u.t===t).sort((a,b)=>cur(b).idx-cur(a).idx).forEach(u=>{const c=cur(u),e=ex(u),d=+(c.idx-e.idx).toFixed(1),i=D.u.indexOf(u);
-        h+=`<tr data-i="${i}" tabindex="0" class="${u===sel?'sel':''}"><td class="l">${pill(c.c)}</td><td class="l">${u.n}</td><td>${fmt(u.pop)}</td>${c.I.map(v=>`<td>${v==null?'–':Math.round(v)}</td>`).join('')}<td><b>${f1(c.idx)}</b></td>${prop?`<td>${f1(e.idx)}</td><td class="${d>0?'up':''}">${d>0?'+'+d.toLocaleString('ro-RO'):'–'}</td>`:`<td>${f1(u.old)}</td>`}</tr>`;});}
+        h+=`<tr data-i="${i}" tabindex="0" class="${u===sel?'sel':''}"><td class="l">${pill(c.c)}</td><td class="l">${u.n}</td><td>${fmt(u.pop)}</td>${c.I.map(v=>`<td>${v==null?'–':Math.round(v)}</td>`).join('')}<td><b>${f1(c.idx)}</b></td>${['ias','zmi'].map(r=>{const v=rel(u,r);return `<td style="color:var(${v>=110?'--good':v<90?'--weak':'--ink'})">${Math.round(v)}%</td>`;}).join('')}${prop?`<td>${f1(e.idx)}</td><td class="${d>0?'up':''}">${d>0?'+'+d.toLocaleString('ro-RO'):'–'}</td>`:`<td>${f1(u.old)}</td>`}</tr>`;});}
     const tb=document.querySelector('#a-mat tbody');tb.innerHTML=h;
     tb.querySelectorAll('tr[data-i]').forEach(r=>{const go=()=>select(D.u[+r.dataset.i]);r.onclick=go;r.onkeydown=e=>{if(e.key==='Enter')go();};});}
   function select(u){sel=u;detail(u);document.querySelectorAll('#a-mat tr[data-i]').forEach(r=>r.classList.toggle('sel',D.u[+r.dataset.i]===u));map.draw();}
   function hit(wx,wy){const inR=r=>{let c=false;for(let i=0,j=r.length-1;i<r.length;j=i++){const[xi,yi]=r[i],[xj,yj]=r[j];if(((yi>wy)!==(yj>wy))&&(wx<(xj-xi)*(wy-yi)/(yj-yi)+xi))c=!c;}return c;};
     const cs=D.u.filter(u=>u.P.some(inR));return cs.find(u=>u.t==='cartier')||cs[0]||null;}
-  function setMetric(k){metric=k;document.querySelectorAll('#a-metrics button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.m===k));legend();map.draw();}
+  function setMetric(k){metric=k;document.querySelectorAll('#a-metrics button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.m===k));$('a-ref').hidden=k!=='rel';document.querySelectorAll('#a-ref button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.r===ref));legend();map.draw();}
+  document.querySelectorAll('#a-ref button').forEach(b=>b.onclick=()=>{ref=b.dataset.r;setMetric('rel');});
   document.querySelectorAll('#a-metrics button').forEach(b=>b.onclick=()=>setMetric(b.dataset.m));
   $('a-zin').onclick=()=>map.zoomAt(1.4,map.W/2,map.H/2);$('a-zout').onclick=()=>map.zoomAt(1/1.4,map.W/2,map.H/2);$('a-zreset').onclick=()=>{map.fit();map.draw();};
   function refresh(){$('a-mdelta').hidden=!isProp();if(!isProp()&&metric==='delta')metric='idx';setMetric(metric);kpis();table();detail(sel);map.draw();}
