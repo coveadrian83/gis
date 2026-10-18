@@ -19,7 +19,7 @@
   <h1>Accesibilitatea la transportul public în Iași și Zona Metropolitană</h1>
   <p>Situația existentă și situația propusă prin Masterplanul Metropolitan de Transport Iași, pe două scări de analiză. Accesul pietonal la stații e calculat cu Madina (MIT City Form Lab, Urban Network Analysis), iar clasificarea pe cartiere și UAT-uri urmează metodologia Covăsnianu (2025), adaptată, cu pragurile din Legea nr. 155/2023.</p>
 </header>
-<p class="note" id="loading" role="status">Se încarcă datele (circa 1,5 MB)…</p>
+<p class="note" id="loading" role="status">Se încarcă datele (circa 1,7 MB)…</p>
 
 <div class="switch scen" role="tablist" aria-label="Situația analizată">
   <button id="sc-ex" role="tab" aria-selected="true"><small>Harta 1</small><b>Situația existentă</b><span>Autobuz și tramvai urban, autobuz metropolitan, gări CF</span></button>
@@ -41,6 +41,7 @@
 <!-- ================= SCALE 1 ================= -->
 <div class="scale" id="scale-detail" role="tabpanel">
   <div class="tabs" id="d-views" role="group" aria-label="Indicator"></div>
+  <div class="tren" id="d-win" hidden><span>Interval orar (zile lucrătoare):</span><div class="tabs" role="group" aria-label="Interval orar"><button data-w="v" aria-pressed="true">vârf de dimineață, 07–09</button><button data-w="o" aria-pressed="false">în afara vârfului, 10–14</button></div></div>
   <div class="kpis" id="d-kpis"></div>
   <div class="main">
     <div style="display:grid;gap:8px">
@@ -63,6 +64,14 @@
     <section style="grid-column:1/-1" id="d-trainsec" hidden><h2>Distanța între stațiile trenului metropolitan</h2>
       <div class="tbl"><table id="d-train"><thead><tr><th class="l">Stație</th><th class="l">Variantă</th><th class="l">Context</th><th class="l">Cea mai apropiată stație</th><th>Distanță pe linie</th><th class="l">Față de recomandare</th></tr></thead><tbody></tbody></table></div>
       <p class="note" style="margin-top:8px">Recomandare: 0,8–1,2 km între stații în țesutul urban dens și 1,5–3 km în zona suburbană sau periurbană. „Urban” înseamnă stație aflată în cartierele municipiului Iași sau la cel mult 300 m de ele. Distanța e măsurată pe traseul propus până la cea mai apropiată altă stație. Pentru Aroneanu, traseul extinderii spre aeroport nu e conectat în date.</p>
+    </section>
+    <section style="grid-column:1/-1" id="d-gapsec" hidden><h2>Unde rămân goluri după măsurile MPM</h2>
+      <div class="tbl"><table id="d-gap"><thead><tr><th class="l">Unitate</th><th class="l">Tip</th><th>Locuitori la peste 500 m</th><th>Din care neacoperiți<br>nici de tren (800 m)</th><th>Din populația unității</th></tr></thead><tbody></tbody></table></div>
+      <p class="note" style="margin-top:8px">Locuitorii care, și cu toate măsurile din masterplan (tren în varianta selectată), rămân la peste 500 m pe jos de orice stație; cele 12 unități cu cei mai mulți. A doua coloană scade locuitorii aflați la 500–800 m de o gară sau de o stație a trenului metropolitan. Sunt zonele roșii din vederea „Câștig față de situația existentă” și candidații pentru trasee sau stații suplimentare.</p>
+    </section>
+    <section style="grid-column:1/-1" id="d-catsec" hidden><h2>Bazinul de captare al stațiilor de tren și al punctelor intermodale</h2>
+      <div class="tbl"><table id="d-cat"><thead><tr><th class="l">Stație / punct</th><th class="l">Tip</th><th>Locuitori ≤ 500 m</th><th>Locuitori ≤ 800 m</th><th>Linii CTP la ≤ 300 m</th><th>Plecări pe oră, vârf</th><th class="l">Liniile existente pentru transfer</th></tr></thead><tbody></tbody></table></div>
+      <p class="note" style="margin-top:8px">Locuitori la distanța pe jos dată (estimare: linia dreaptă înmulțită cu factorul de ocol al rețelei din jurul fiecărei celule, median 1,31). Liniile și plecările vin din GTFS-ul CTP (zile lucrătoare, 07–09, toate liniile și sensurile din stațiile aflate la ≤ 300 m în linie dreaptă) și arată cât de bine e legat fiecare punct de rețeaua existentă. Bazinele punctelor apropiate se suprapun. Dumești și Podu Iloaiei sunt în afara ZMI, deci în afara caroiajului.</p>
     </section>
     <section style="grid-column:1/-1"><h2 id="d-uath">Pe unități administrative</h2>
       <div class="tbl"><table id="d-uat"><thead></thead><tbody></tbody></table></div>
@@ -109,7 +118,8 @@
     <p>Unde masterplanul nu are stații pe traseu (o parte din b, inelele R1 și R2), le-am generat la 400 m una de alta, distanța maximă din art. 21 lit. c). Am omis stațiile generate aflate la mai puțin de 300 m de una existentă sau propusă. Rezultă 43 de stații pe trasee, 32 pe R1 și 78 pe R2. Pe hartă au contur gol.</p>
     <p>Benzile dedicate și accesul velo rămân ca în situația existentă, pentru că nu fac parte din măsurile analizate aici.</p>
     <p><b>Distanța între stațiile de tren.</b> Stațiile propuse sunt comparate cu intervalele recomandate pentru trenul metropolitan: 1,5–3 km în zona suburbană și periurbană, 0,8–1,2 km în țesutul urban dens. Documentul MT indicat (OMT nr. 2128/25.11.2025) modifică procedural Ghidul solicitantului „Trenurile metropolitane” (PT 2021–2027, Prioritatea 6) și trimite la standardele tehnice minime din Anexa 14 a ghidului. În textul ordinului nu apar valori pentru distanța între stații, așa că intervalele vin din literatura TOD.</p>
-    <p><b>Limite.</b> Frecvența curselor nu e verificată, deci pragul de 60% din art. 21 lit. d) e evaluat doar spațial. Transportul județean nu e în baza MPM. Stațiile generate sunt o ipoteză de lucru, nu poziții din proiect.</p>
+    <p><b>Frecvența (art. 21 lit. d).</b> Din GTFS-ul CTP (zile lucrătoare), pentru fiecare stație: intervalul mediu al celei mai frecvente linii într-un sens, la vârful de dimineață (07–09) și în afara vârfului (10–14). O celulă e „deservită frecvent” dacă are la ≤ 500 m pe jos o stație cu o linie la cel mult 20 de minute. Distanța până la stațiile GTFS e estimată: linia dreaptă înmulțită cu factorul de ocol al celulei (distanța Madina pe rețea împărțită la distanța în linie dreaptă până la cea mai apropiată stație, între 1 și 2, median 1,31). Scriptul: <code>scripts/accesibilitate/frecventa.py</code>.</p>
+    <p><b>Limite.</b> Frecvența e cunoscută doar pentru liniile CTP (urbane și metropolitane); operatorii privați și transportul județean nu au date publice, așa că în comune nivelul de serviciu poate fi subestimat. Pentru măsurile propuse, masterplanul nu dă frecvențe, deci verificarea frecvenței e făcută doar pentru situația existentă. Transportul județean nu e în baza MPM. Stațiile generate sunt o ipoteză de lucru, nu poziții din proiect.</p>
   </section>
   <section>
     <h2>Prevederi din Legea nr. 155/2023 folosite în analiză</h2>

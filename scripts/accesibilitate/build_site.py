@@ -1,4 +1,7 @@
-"""Turn the artifact page (prop/page.html) into a static sub-app for mobilitate-iasi.netlify.app/accesibilitate/.
+"""ATENȚIE: pagina a fost dezvoltată ulterior direct în public/accesibilitate/ (frecvența, golurile, bazinele de
+captare); nu rulați din nou acest script, ar suprascrie modificările. Păstrat pentru istoricul conversiei.
+
+Turn the artifact page (prop/page.html) into a static sub-app for mobilitate-iasi.netlify.app/accesibilitate/.
 CSP of the site: script-src 'self' (no inline JS), style-src 'self' 'unsafe-inline', default-src 'self' (no Google Fonts).
 """
 import re, os, shutil, json

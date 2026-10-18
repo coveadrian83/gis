@@ -1,10 +1,11 @@
 /* Accesibilitatea la transportul public – Iași și ZMI.
-   Date: data/detaliu.json (caroiaj 100 m, Madina) și data/general.json (cartiere și UAT-uri). */
+   Date: data/detaliu.json (caroiaj 100 m, Madina), data/general.json (cartiere și UAT-uri) și
+   data/frecventa.json (frecvența din GTFS CTP și bazinele de captare, scripts/accesibilitate/frecventa.py). */
 (async()=>{
 'use strict';
 const load=async n=>{const r=await fetch('data/'+n,{cache:'no-cache'});if(!r.ok)throw new Error(n+': '+r.status);return r.json();};
-let DET,GEN;
-try{[DET,GEN]=await Promise.all([load('detaliu.json'),load('general.json')]);}
+let DET,GEN,FRQ;
+try{[DET,GEN,FRQ]=await Promise.all([load('detaliu.json'),load('general.json'),load('frecventa.json')]);}
 catch(e){const el=document.getElementById('loading');if(el)el.textContent='Datele nu s-au putut încărca. Reîncărcați pagina.';return;}
 document.getElementById('loading')?.remove();
 const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
@@ -46,7 +47,10 @@ function bbox(rings){let a=[1e9,1e9,-1e9,-1e9];rings.forEach(([x,y])=>{a=[Math.m
 (()=>{
   const D=DET;
   const CL=[[300,'--c1','≤ 300 m'],[500,'--c2','300–500 m'],[800,'--c3','500–800 m'],[1500,'--c4','800 m–1,5 km'],[Infinity,'--c5','peste 1,5 km']];
-  const GL=[['--g1','acces nou la ≤ 500 m'],['--g2','stație mai aproape cu ≥ 100 m'],['--g0','fără schimbare']];
+  const GL=[['--g1','acces nou la ≤ 500 m'],['--g2','mai aproape cu ≥ 100 m, tot peste 500 m'],['--weak','rămâne la peste 500 m'],['--g0','deja la ≤ 500 m']];
+  const FL=[['--c1','linie la ≤ 10 min'],['--c2','10–20 min'],['--c3','20–30 min'],['--c4','peste 30 min'],['--c5','nicio linie CTP la ≤ 500 m']];
+  const FV=FRQ.fv,FO=FRQ.fo,UN=FRQ.u;let win='v';
+  const fcls=i=>+(win==='v'?FV:FO)[i];
   const COL={existent:3,tramvai:4,metropolitan:5,propus_v1:6,propus_v2:7};
   const MODE={t:'tramvai',u:'autobuz urban',m:'autobuz metropolitan',c:'gară CF',A1:'tren metropolitan',A2:'tren metropolitan, extindere aeroport',B:'traseu TP propus',C:'inel R1',D:'inel R2',E:'punct intermodal propus'};
   const MNAME={a1:'Tren metropolitan V1',a2:'Tren metropolitan V2 (cu aeroportul)',b:'Trasee TP propuse',c:'Inel periurban R1',d:'Inel metropolitan R2',e:'Puncte intermodale propuse',propus_v1:'Toate măsurile, tren V1',propus_v2:'Toate măsurile, tren V2'};
@@ -55,6 +59,9 @@ function bbox(rings){let a=[1e9,1e9,-1e9,-1e9];rings.forEach(([x,y])=>{a=[Math.m
   let view='existent';
   const P=D.b.map(r=>pr([r[0],r[1]]));
   const ES=D.s.map(r=>{const[x,y]=pr([r[1],r[2]]);return{m:r[0],x,y,l:r[3],p:r[4],n:r[5]}});
+  const GS=FRQ.stops.map(r=>{const[x,y]=pr([r[0],r[1]]);return{x,y,n:r[2],hv:r[3],ho:r[4],l:r[5]}});
+  const hcls=h=>h<0?4:h<=10?0:h<=20?1:h<=30?2:3;
+  const hw=h=>h<0?'fără curse':'interval '+(Math.round(h*10)/10).toLocaleString('ro-RO')+' min';
   const PS=D.ps.map(r=>{const[x,y]=pr([r[1],r[2]]);return{m:r[0],x,y,g:r[3],n:r[4]}});
   const R=D.r.map(([k,c])=>({k,c:c.map(pr)}));
   const O=D.o.map(r=>r.map(pr));
@@ -62,17 +69,18 @@ function bbox(rings){let a=[1e9,1e9,-1e9,-1e9];rings.forEach(([x,y])=>{a=[Math.m
   const $=id=>document.getElementById(id);
   const cls=d=>{if(d<0)return 4;for(let i=0;i<4;i++)if(d<=CL[i][0])return i;return 4;};
   const propCol=()=>S.tren==='v1'?6:7;
-  function gcls(r){const e=r[3],n=r[propCol()];const ne=e<0?1e9:e,nn=n<0?1e9:n;if(nn<=500&&ne>500)return 0;if(ne-nn>=100)return 1;return 2;}
+  function gcls(r){const e=r[3],n=r[propCol()];const ne=e<0?1e9:e,nn=n<0?1e9:n;if(ne<=500)return 3;if(nn<=500)return 0;if(ne-nn>=100)return 1;return 2;}
   const isProp=()=>S.scen==='propus';
-  function currentView(){if(view==='cov')return 'cov';return isProp()?(view==='gain'?'gain':scenKey()):view;}
+  function currentView(){if(view==='cov')return 'cov';if(view==='frecv')return isProp()?scenKey():'frecv';return isProp()?(view==='gain'?'gain':scenKey()):view;}
   const CV=[['--c1','≤ 500 m de o stație'],['--p-train','500–800 m de o gară (tren)'],['--c5','neacoperit']];
   const allCol=()=>isProp()?propCol():3, trCol=()=>isProp()?(S.tren==='v1'?10:11):9;
   function ccls(r){const a=r[allCol()],t=r[trCol()];if(a>=0&&a<=500)return 0;if(t>=0&&t<=800)return 1;return 2;}
   function views(){
-    const el=$('d-views');const v=isProp()?[['acc','Distanța până la stație'],['cov','Acoperire: 500 m autobuz/tramvai, 800 m tren'],['gain','Câștig față de situația existentă']]:[['existent','Distanța până la orice stație'],['cov','Acoperire: 500 m autobuz/tramvai, 800 m tren'],['tramvai','Doar tramvai'],['metropolitan','Doar autobuz metropolitan']];
+    const el=$('d-views');const v=isProp()?[['acc','Distanța până la stație'],['cov','Acoperire: 500 m autobuz/tramvai, 800 m tren'],['gain','Câștig față de situația existentă']]:[['existent','Distanța până la orice stație'],['cov','Acoperire: 500 m autobuz/tramvai, 800 m tren'],['frecv','Frecvență: linie la ≤ 20 min (art. 21 lit. d)'],['tramvai','Doar tramvai'],['metropolitan','Doar autobuz metropolitan']];
     if(isProp()&&!['acc','gain','cov'].includes(view))view='acc';if(!isProp()&&['acc','gain'].includes(view))view='existent';
     el.innerHTML=v.map(([k,l])=>`<button data-v="${k}" aria-pressed="${k===view}">${l}</button>`).join('');
     el.querySelectorAll('button').forEach(b=>b.onclick=()=>{view=b.dataset.v;refresh();});
+    const w=$('d-win');w.hidden=view!=='frecv'||isProp();w.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.w===win));
   }
   const map=MapView($('d-map'),$('d-cv'),draw,null,hover);
   map.bounds=bbox(O.flat());
@@ -81,7 +89,8 @@ function bbox(rings){let a=[1e9,1e9,-1e9,-1e9];rings.forEach(([x,y])=>{a=[Math.m
     ctx.strokeStyle=css('--line');ctx.lineWidth=1.5;O.forEach(r=>{ctx.beginPath();ringPath(m,[r]);ctx.stroke();});
     const cv=currentView(),cell=Math.max(1.2,100*s);
     if(cv==='cov'){const cols=CV.map(g=>css(g[0]));for(let c=2;c>=0;c--){ctx.fillStyle=cols[c];for(let i=0;i<P.length;i++){const r=D.b[i];if(ccls(r)!==c)continue;const x=m.sx(P[i][0]),y=m.sy(P[i][1]);if(x<-9||y<-9||x>W+9||y>H+9)continue;ctx.globalAlpha=Math.min(1,.4+Math.sqrt(r[2])/12);ctx.fillRect(x-cell/2,y-cell/2,cell,cell);}}}
-    else if(cv==='gain'){const cols=GL.map(g=>css(g[0]));for(let c=2;c>=0;c--){ctx.fillStyle=cols[c];for(let i=0;i<P.length;i++){const r=D.b[i];if(gcls(r)!==c)continue;const x=m.sx(P[i][0]),y=m.sy(P[i][1]);if(x<-9||y<-9||x>W+9||y>H+9)continue;ctx.globalAlpha=c===2?.5:Math.min(1,.45+Math.sqrt(r[2])/12);ctx.fillRect(x-cell/2,y-cell/2,cell,cell);}}}
+    else if(cv==='gain'){const cols=GL.map(g=>css(g[0]));for(let c=3;c>=0;c--){ctx.fillStyle=cols[c];for(let i=0;i<P.length;i++){const r=D.b[i];if(gcls(r)!==c)continue;const x=m.sx(P[i][0]),y=m.sy(P[i][1]);if(x<-9||y<-9||x>W+9||y>H+9)continue;ctx.globalAlpha=c===3?.5:Math.min(1,.45+Math.sqrt(r[2])/12);ctx.fillRect(x-cell/2,y-cell/2,cell,cell);}}}
+    else if(cv==='frecv'){const cols=FL.map(g=>css(g[0]));for(let c=4;c>=0;c--){ctx.fillStyle=cols[c];for(let i=0;i<P.length;i++){if(fcls(i)!==c)continue;const r=D.b[i];const x=m.sx(P[i][0]),y=m.sy(P[i][1]);if(x<-9||y<-9||x>W+9||y>H+9)continue;ctx.globalAlpha=Math.min(1,.35+Math.sqrt(r[2])/12);ctx.fillRect(x-cell/2,y-cell/2,cell,cell);}}}
     else{const k=COL[cv],cols=CL.map(c=>css(c[1]));for(let c=4;c>=0;c--){ctx.fillStyle=cols[c];for(let i=0;i<P.length;i++){const r=D.b[i];if(cls(r[k])!==c)continue;const x=m.sx(P[i][0]),y=m.sy(P[i][1]);if(x<-9||y<-9||x>W+9||y>H+9)continue;ctx.globalAlpha=Math.min(1,.35+Math.sqrt(r[2])/12);ctx.fillRect(x-cell/2,y-cell/2,cell,cell);}}}
     ctx.globalAlpha=1;
     const bnd=$('g-bnd').checked;
@@ -94,7 +103,8 @@ function bbox(rings){let a=[1e9,1e9,-1e9,-1e9];rings.forEach(([x,y])=>{a=[Math.m
         ctx.beginPath();r.c.forEach(([x,y],i)=>i?ctx.lineTo(m.sx(x),m.sy(y)):ctx.moveTo(m.sx(x),m.sy(y)));ctx.stroke();}
       ctx.setLineDash([]);ctx.globalAlpha=1;}
     const showSt=$('g-stops').checked;
-    if(showSt){const rr=Math.max(2,Math.min(5,s*40));for(const st of ES){if(!isProp()&&!(view==='existent'||(view==='tramvai'&&st.m==='t')||(view==='metropolitan'&&st.m==='m')))continue;
+    if(showSt&&currentView()==='frecv'){const rr=Math.max(2.5,Math.min(6,s*45)),cols=FL.map(g=>css(g[0]));for(const st of GS){const h=win==='v'?st.hv:st.ho;ctx.fillStyle=cols[hcls(h)];ctx.strokeStyle=css('--ink');ctx.lineWidth=1;ctx.beginPath();ctx.arc(m.sx(st.x),m.sy(st.y),rr/2+1,0,6.283);ctx.fill();ctx.stroke();}}
+    else if(showSt){const rr=Math.max(2,Math.min(5,s*40));for(const st of ES){if(!isProp()&&!(view==='existent'||(view==='tramvai'&&st.m==='t')||(view==='metropolitan'&&st.m==='m')))continue;
       ctx.fillStyle=css('--stop');ctx.strokeStyle=css('--mapbg');ctx.lineWidth=1.2;ctx.globalAlpha=isProp()?.6:1;ctx.beginPath();ctx.rect(m.sx(st.x)-rr/2,m.sy(st.y)-rr/2,rr,rr);ctx.fill();ctx.stroke();}ctx.globalAlpha=1;}
     if(isProp()){const rr=Math.max(3,Math.min(6,s*55));for(const st of PS){if(st.m==='A2'&&S.tren!=='v2')continue;if(!showSt&&!st.m.startsWith('A')&&st.m!=='E')continue;
       const x=m.sx(st.x),y=m.sy(st.y),r=st.m.startsWith('A')?rr*1.3:rr;ctx.beginPath();
@@ -108,13 +118,15 @@ function bbox(rings){let a=[1e9,1e9,-1e9,-1e9];rings.forEach(([x,y])=>{a=[Math.m
   function hover(px,py){const tip=$('d-tip');if(px==null){tip.hidden=true;return;}
     const[wx,wy]=map.world(px,py),s=map.view.s;let txt=null,bd=(9/s)**2;
     if(isProp())for(const st of PS){if(st.m==='A2'&&S.tren!=='v2')continue;if(!$('g-stops').checked&&!st.m.startsWith('A')&&st.m!=='E')continue;const d=(st.x-wx)**2+(st.y-wy)**2;if(d<bd){bd=d;txt=`${st.n||'stație'} · ${MODE[st.m]}${st.g?' · generată (ipoteză)':''}`;}}
-    if(!txt&&$('g-stops').checked)for(const st of ES){const d=(st.x-wx)**2+(st.y-wy)**2;if(d<bd){bd=d;txt=`${st.n||'stație'} · ${MODE[st.m]} · ${st.l} ${st.l===1?'linie':'linii'} · ${fmt(st.p)} loc. la 500 m`;}}
+    if(!txt&&$('g-stops').checked&&currentView()==='frecv')for(const st of GS){const d=(st.x-wx)**2+(st.y-wy)**2;if(d<bd){bd=d;txt=`${st.n} · ${st.l} ${st.l===1?'linie':'linii'} · cea mai frecventă linie: vârf ${hw(st.hv)}, în afara vârfului ${hw(st.ho)}`;}}
+    if(!txt&&$('g-stops').checked&&currentView()!=='frecv')for(const st of ES){const d=(st.x-wx)**2+(st.y-wy)**2;if(d<bd){bd=d;txt=`${st.n||'stație'} · ${MODE[st.m]} · ${st.l} ${st.l===1?'linie':'linii'} · ${fmt(st.p)} loc. la 500 m`;}}
     if(!txt){bd=Math.max(60,8/s)**2;let bi=-1;for(let i=0;i<P.length;i++){const d=(P[i][0]-wx)**2+(P[i][1]-wy)**2;if(d<bd){bd=d;bi=i;}}
       if(bi>=0){const r=D.b[bi],cv=currentView();const dd=x=>x<0?'peste 1,5 km':x+' m';
-        txt=cv==='gain'?`${r[2].toFixed(0)} loc. · existent ${dd(r[3])} → propus ${dd(r[propCol()])}`:cv==='cov'?`${r[2].toFixed(0)} loc. · stație ${dd(r[allCol()])} · gară ${dd(r[trCol()])}`:`${r[2].toFixed(0)} loc. · ${dd(r[COL[cv]])} până la stație`;}}
+        const FT=['linie la ≤ 10 min','linie la 10–20 min','linie la 20–30 min','linii la peste 30 min','nicio linie CTP'];
+        txt=cv==='frecv'?`${r[2].toFixed(0)} loc. · ${FT[fcls(bi)]} la ≤ 500 m (${win==='v'?'vârf 07–09':'10–14'}) · stație ${dd(r[3])}`:cv==='gain'?`${r[2].toFixed(0)} loc. · existent ${dd(r[3])} → propus ${dd(r[propCol()])}`:cv==='cov'?`${r[2].toFixed(0)} loc. · stație ${dd(r[allCol()])} · gară ${dd(r[trCol()])}`:`${r[2].toFixed(0)} loc. · ${dd(r[COL[cv]])} până la stație`;}}
     if(!txt){tip.hidden=true;return;}tip.textContent=txt;tip.hidden=false;tip.style.left=Math.max(6,Math.min(px+12,map.W-tip.offsetWidth-6))+'px';tip.style.top=(py+12)+'px';}
   function panel(){
-    const cv=currentView(),key=(cv==='gain'||cv==='cov')?scenKey():cv,s=D.st[key],e=D.st.existent,prop=isProp();
+    const cv=currentView(),key=(cv==='gain'||cv==='cov'||cv==='frecv')?scenKey():cv,s=D.st[key],e=D.st.existent,prop=isProp();
     const dlt=(a,b,unit,inv)=>{const d=+(a-b).toFixed(1);if(!prop||!d)return prop?'<small>fără schimbare</small>':'';const good=inv?d<0:d>0;return `<small class="${good?'up':''}">${d>0?'+':''}${unit==='loc'?fmt(d):d.toLocaleString('ro-RO')}${unit==='m'?' m':unit==='pp'?' pp':''} față de existent</small>`;};
     $('d-kpis').innerHTML=[[s.med+' m','mediana distanței pe locuitor',dlt(s.med,e.med,'m',true)],[s.p500.toLocaleString('ro-RO')+'%','locuitori ≤ 500 m',dlt(s.p500,e.p500,'pp')],[s.pcov.toLocaleString('ro-RO')+'%','acoperire, tren la 800 m',dlt(s.pcov,e.pcov,'pp')],[s.p800.toLocaleString('ro-RO')+'%','locuitori ≤ 800 m',dlt(s.p800,e.p800,'pp')],[fmt(s.out),'locuitori la peste 1,5 km',dlt(s.out,e.out,'loc',true)]]
       .map(([v,l,d])=>`<div class="kpi"><b>${v}</b><span>${l}</span>${d||''}</div>`).join('');
@@ -122,15 +134,21 @@ function bbox(rings){let a=[1e9,1e9,-1e9,-1e9];rings.forEach(([x,y])=>{a=[Math.m
       $('d-legh').textContent='Acoperire cu prag pe mod de transport';$('d-legnote').textContent='Autobuz și tramvai: 500 m (Legea 155/2023, art. 21 lit. d). Tren: 800 m, raza de captare pietonală TOD (400–800 m). Procente din locuitorii ZMI.';
       $('d-legend').innerHTML=CV.map((g,i)=>`<div><i class="sw" style="background:var(${g[0]})"></i><span>${g[1]}</span><span>${(w[i]/T*100).toFixed(1).replace('.',',')}%</span></div>`).join('');
       $('d-bar').innerHTML=CV.map((g,i)=>`<i style="flex:${w[i]};background:var(${g[0]})"></i>`).join('');}
-    else if(cv==='gain'){const w=[0,0,0];let T=0;D.b.forEach(r=>{if(!r[8])return;w[gcls(r)]+=r[2];T+=r[2];});
-      $('d-legh').textContent='Câștig față de situația existentă';$('d-legnote').textContent='Număr de locuitori din ZMI, pe celule de 100 m. Comparația e cu toate stațiile existente.';
+    else if(cv==='frecv'){const w=[0,0,0,0,0];let T=0;D.b.forEach((r,i)=>{if(!r[8])return;w[fcls(i)]+=r[2];T+=r[2];});
+      let ia=0,iT=0;D.b.forEach((r,i)=>{const u=UN[i];if(u<0||D.bnd[u].t!=='cartier')return;iT+=r[2];if(fcls(i)<=1)ia+=r[2];});const pi=ia/iT*100;
+      $('d-legh').textContent='Cea mai frecventă linie la ≤ 500 m';$('d-legnote').innerHTML=`Interval mediu al celei mai frecvente linii (un sens) din stațiile aflate la ≤ 500 m pe jos, zile lucrătoare, ${win==='v'?'07–09':'10–14'}. Procente din locuitorii ZMI. <b>Municipiul Iași: ${pi.toFixed(1).replace('.',',')}% din locuitori</b> au o linie la ≤ 20 min, față de ținta de 60% din art. 21 lit. d) (${pi>=60?'atinsă':'neatinsă'}).`;
+      $('d-legend').innerHTML=FL.map((g,i)=>`<div><i class="sw" style="background:var(${g[0]})"></i><span>${g[1]}</span><span>${(w[i]/T*100).toFixed(0)}%</span></div>`).join('');
+      $('d-bar').innerHTML=FL.map((g,i)=>`<i style="flex:${w[i]};background:var(${g[0]})"></i>`).join('');}
+    else if(cv==='gain'){const w=[0,0,0,0];let T=0;D.b.forEach(r=>{if(!r[8])return;w[gcls(r)]+=r[2];T+=r[2];});
+      $('d-legh').textContent='Câștig față de situația existentă';$('d-legnote').textContent='Număr de locuitori din ZMI, pe celule de 100 m. Comparația e cu toate stațiile existente; pragul e 500 m pentru orice mod (art. 21 lit. d). Roșu: golurile rămase și după măsurile MPM.';
       $('d-legend').innerHTML=GL.map((g,i)=>`<div><i class="sw" style="background:var(${g[0]})"></i><span>${g[1]}</span><span>${fmt(w[i])}</span></div>`).join('');
       $('d-bar').innerHTML=GL.map((g,i)=>`<i style="flex:${w[i]};background:var(${g[0]})"></i>`).join('');}
     else{const k=COL[cv],w=[0,0,0,0,0];let T=0;D.b.forEach(r=>{if(!r[8])return;w[cls(r[k])]+=r[2];T+=r[2];});
       $('d-legh').textContent='Distanță pe jos până la stație';$('d-legnote').textContent='Procente din locuitorii ZMI. Fiecare punct e o celulă de 100 m locuită.';
       $('d-legend').innerHTML=CL.map((c,i)=>`<div><i class="sw" style="background:var(${c[1]})"></i><span>${c[2]}</span><span>${(w[i]/T*100).toFixed(0)}%</span></div>`).join('');
       $('d-bar').innerHTML=CL.map((c,i)=>`<i style="flex:${w[i]};background:var(${c[1]})"></i>`).join('');}
-    $('d-topsec').hidden=prop;$('d-meassec').hidden=!prop;$('d-trainsec').hidden=!prop;
+    $('d-topsec').hidden=prop;$('d-meassec').hidden=!prop;$('d-trainsec').hidden=!prop;$('d-catsec').hidden=!prop;$('d-gapsec').hidden=!prop;
+    if(prop){gaps();catchment();}
     if(prop){const VC={'în interval':'--good','sub interval':'--mid','peste interval':'--weak','fără date':'--nodata'};
       document.querySelector('#d-train tbody').innerHTML=D.train.filter(t=>S.tren==='v2'||t[1]==='V1').map(t=>`<tr><td class="l">${t[0]}</td><td class="l">${t[1]==='V1'?'V1':'V2 · aeroport'}</td><td class="l">${t[2]?'urban (0,8–1,2 km)':'suburban (1,5–3 km)'}</td><td class="l">${t[3]}</td><td>${t[4]==null?'–':t[4].toLocaleString('ro-RO')+' km'}</td><td class="l"><i class="sw" style="background:var(${VC[t[5]]});margin-right:6px;vertical-align:-1px"></i>${t[5]}</td></tr>`).join('');}
     if(!prop){const f=view==='tramvai'?'t':view==='metropolitan'?'m':null,seen=new Set();
@@ -143,10 +161,22 @@ function bbox(rings){let a=[1e9,1e9,-1e9,-1e9];rings.forEach(([x,y])=>{a=[Math.m
     $('d-rleg').innerHTML=rl.map(([c,l,d])=>`<span><i class="ln ${d}" style="background:var(${c});color:var(${c})"></i>${l}</span>`).join('')+(prop?`<span><i class="sw" style="border-radius:50%;background:var(--p-prop)"></i> stație MPM</span><span><i class="sw" style="border-radius:50%;border:2px solid var(--p-prop)"></i> stație generată</span><span><i class="sw" style="transform:rotate(45deg) scale(.8);border:2px solid var(--ink)"></i> punct intermodal propus</span>`:'');
     const ci=prop?(S.tren==='v1'?3:4):2;
     $('d-uath').textContent=prop?`Pe unități administrative, situația propusă (tren ${S.tren.toUpperCase()})`:'Pe unități administrative, situația existentă';
-    document.querySelector('#d-uat thead').innerHTML=`<tr><th class="l">UAT</th><th>Locuitori</th><th>≤ 500 m</th><th>≤ 800 m</th><th>Peste 1,5 km</th>${prop?'<th>Δ ≤ 500 m</th>':''}</tr>`;
-    document.querySelector('#d-uat tbody').innerHTML=D.ut.map(r=>{const v=r[ci],e=r[2],d=+(v[0]-e[0]).toFixed(1);return `<tr><td class="l">${r[0]}</td><td>${fmt(r[1])}</td><td><i class="pb" style="width:${v[0]*0.6}px"></i>${v[0].toFixed(0)}%</td><td>${v[1].toFixed(0)}%</td><td>${fmt(v[2])}</td>${prop?`<td class="${d>0?'up':''}">${d>0?'+'+d.toLocaleString('ro-RO')+' pp':'–'}</td>`:''}</tr>`;}).join('');
+    document.querySelector('#d-uat thead').innerHTML=`<tr><th class="l">UAT</th><th>Locuitori</th><th>≤ 500 m</th>${prop?'':'<th>≤ 500 m, linie<br>≤ 20 min (vârf)</th>'}<th>≤ 800 m</th><th>Peste 1,5 km</th>${prop?'<th>Δ ≤ 500 m</th>':''}</tr>`;
+    const fq=uatFreq();
+    document.querySelector('#d-uat tbody').innerHTML=D.ut.map(r=>{const v=r[ci],e=r[2],d=+(v[0]-e[0]).toFixed(1),f=fq[norm(r[0])];return `<tr><td class="l">${r[0]}</td><td>${fmt(r[1])}</td><td><i class="pb" style="width:${v[0]*0.6}px"></i>${v[0].toFixed(0)}%</td>${prop?'':`<td>${f==null?'–':f.toFixed(0)+'%'}</td>`}<td>${v[1].toFixed(0)}%</td><td>${fmt(v[2])}</td>${prop?`<td class="${d>0?'up':''}">${d>0?'+'+d.toLocaleString('ro-RO')+' pp':'–'}</td>`:''}</tr>`;}).join('');
   }
+  const norm=n=>n.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z]/g,'');
+  const uatOf=u=>u<0?null:D.bnd[u].t==='cartier'?'iasi':norm(D.bnd[u].n);
+  let FQ=null;
+  function uatFreq(){if(FQ)return FQ;const a={},t={};D.b.forEach((r,i)=>{const k=uatOf(UN[i]);if(!k)return;t[k]=(t[k]||0)+r[2];if(+FV[i]<=1)a[k]=(a[k]||0)+r[2];});FQ={};for(const k in t)FQ[k]=(a[k]||0)/t[k]*100;return FQ;}
+  function gaps(){const g={},t={},v={};D.b.forEach((r,i)=>{const u=UN[i];if(u<0)return;const n=D.bnd[u].n;t[n]=(t[n]||0)+r[2];const c=gcls(r);if(c===1||c===2){g[n]=(g[n]||0)+r[2];if(ccls(r)===2)v[n]=(v[n]||0)+r[2];}});
+    const rows=Object.keys(g).map(n=>[n,D.bnd.find(b=>b.n===n).t,g[n],g[n]/t[n]*100,v[n]||0]).sort((a,b)=>b[2]-a[2]).slice(0,12);
+    document.querySelector('#d-gap tbody').innerHTML=rows.map(([n,tp,v,p,nc])=>`<tr><td class="l">${n}</td><td class="l">${tp==='cartier'?'cartier':'comună'}</td><td>${fmt(v)}</td><td>${fmt(nc)}</td><td><i class="pb" style="width:${p*0.6}px;background:var(--weak)"></i>${p.toFixed(0)}%</td></tr>`).join('');}
+  function catchment(){const T={A1:'tren metropolitan',A2:'tren, extindere aeroport',E:'punct intermodal'};
+    const rows=FRQ.cat.filter(c=>c[0]!=='A2'||S.tren==='v2').sort((a,b)=>(a[0]==='E')-(b[0]==='E')||b[3]-a[3]);
+    document.querySelector('#d-cat tbody').innerHTML=rows.map(c=>`<tr><td class="l">${c[1]}</td><td class="l">${T[c[0]]}</td><td>${fmt(c[2])}</td><td><i class="pb" style="width:${Math.min(60,c[3]/300)}px"></i>${fmt(c[3])}</td><td>${c[4]||'–'}</td><td>${c[5]||'–'}</td><td class="l" style="font-size:12px;color:var(--muted)">${c[6]}</td></tr>`).join('');}
   function refresh(){views();panel();map.draw();}
+  document.querySelectorAll('#d-win button').forEach(b=>b.onclick=()=>{win=b.dataset.w;refresh();});
   ['g-routes','g-stops','g-bnd'].forEach(id=>$(id).onchange=()=>map.draw());
   $('d-zin').onclick=()=>map.zoomAt(1.4,map.W/2,map.H/2);$('d-zout').onclick=()=>map.zoomAt(1/1.4,map.W/2,map.H/2);$('d-zreset').onclick=()=>{map.fit();map.draw();};
   listeners.push(refresh);

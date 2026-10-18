@@ -343,11 +343,17 @@ ziua de azi direct din arhiva pe minut („Calculează azi, până acum”). Tes
 - Două hărți (**situația existentă** și **situația propusă** prin Masterplanul Metropolitan de Transport: tren metropolitan
   V1/V2, trasee noi, inelele R1 și R2, puncte intermodale) și două scări (caroiaj de 100 m · cartiere și UAT-uri).
   Rază de captare: 500 m pentru autobuz și tramvai, 800 m pentru tren (TOD).
+- **Frecvența** (art. 21 lit. d, complet): din GTFS-ul CTP, câți locuitori au la ≤ 500 m o linie cu interval de cel mult
+  20 de minute (vârf 07–09 și 10–14, zile lucrătoare), pe hartă și pe UAT-uri. Situația propusă are în plus harta
+  golurilor rămase după măsurile MPM și bazinele de captare ale stațiilor de tren și punctelor intermodale (locuitori la
+  500 / 800 m, liniile CTP pentru transfer). `python3 scripts/accesibilitate/frecventa.py` (doar numpy) →
+  `data/frecventa.json`; se rulează din nou când se actualizează `data/transport/gtfs/IASI_GTFS.zip`.
 - Pagină statică, fără bibliotecă externă (canvas): `public/accesibilitate/` – `index.html`, `app.js`, `style.css`,
-  `data/detaliu.json` (caroiaj, stații, trasee), `data/general.json` (indicatori pe unități).
+  `data/detaliu.json` (caroiaj, stații, trasee), `data/general.json` (indicatori pe unități), `data/frecventa.json`.
+  Pagina se editează direct (`build_site.py` a servit doar la conversia inițială).
 - **Date și calcul**: rulate în afara depozitului, pe baza de date MPM Iași (Banca Mondială), OpenStreetMap (Geofabrik) și
   WorldPop; scripturile sunt în `scripts/accesibilitate/` (Madina se instalează din GitHub și are nevoie de două
-  corecturi pentru pandas 3, descrise în `prep_zmi.py`). `build_site.py` regenerează pagina din datele exportate.
+  corecturi pentru pandas 3, descrise în `prep_zmi.py`).
 
 ---
 
