@@ -43,7 +43,7 @@ function MapView(mapEl,cv,onDraw,onClick,onHover){
   return m;
 }
 /* I6 „Acces velo” = % din locuitori la ≤ 300 m de o pistă: pistele existente (cele declarate neconforme de IPJ Iași)
-   în situația existentă, plus rețeaua velo MPM 2026 în cea propusă. Pistele neconforme se pot exclude (S.necon). Indicele și clasa se recalculează cu aceleași ponderi (I4 lipsă redistribuit); unitățile fără
+   în scenariul existent, plus rețeaua velo MPM 2026 în cel propus. Pistele neconforme se pot exclude (S.necon). Indicele și clasa se recalculează cu aceleași ponderi (I4 lipsă redistribuit); unitățile fără
    stații TP își păstrează clasa „fără date TP”. */
 const W6=[.30,.25,.15,.10,.10,.10];
 S.necon=true;
@@ -98,7 +98,7 @@ function bbox(rings){let a=[1e9,1e9,-1e9,-1e9];rings.forEach(([x,y])=>{a=[Math.m
   const allCol=()=>isProp()?propCol():3, trCol=()=>isProp()?(S.tren==='v1'?10:11):9;
   function ccls(r){const a=r[allCol()],t=r[trCol()];if(a>=0&&a<=500)return 0;if(t>=0&&t<=800)return 1;return 2;}
   function views(){
-    const el=$('d-views');const v=isProp()?[['acc','Distanța până la stație'],['cov','Acoperire: 500 m autobuz/tramvai, 800 m tren'],['gain','Câștig față de situația existentă']]:[['existent','Distanța până la orice stație'],['cov','Acoperire: 500 m autobuz/tramvai, 800 m tren'],['frecv','Frecvență: linie la ≤ 20 min (art. 21 lit. d)'],['tramvai','Doar tramvai'],['metropolitan','Doar autobuz metropolitan']];
+    const el=$('d-views');const v=isProp()?[['acc','Distanța până la stație'],['cov','Acoperire: 500 m autobuz/tramvai, 800 m tren'],['gain','Câștig față de scenariul existent']]:[['existent','Distanța până la orice stație'],['cov','Acoperire: 500 m autobuz/tramvai, 800 m tren'],['frecv','Frecvență: linie la ≤ 20 min (art. 21 lit. d)'],['tramvai','Doar tramvai'],['metropolitan','Doar autobuz metropolitan']];
     if(isProp()&&!['acc','gain','cov'].includes(view))view='acc';if(!isProp()&&['acc','gain'].includes(view))view='existent';
     el.innerHTML=v.map(([k,l])=>`<button data-v="${k}" aria-pressed="${k===view}">${l}</button>`).join('');
     el.querySelectorAll('button').forEach(b=>b.onclick=()=>{view=b.dataset.v;refresh();});
@@ -163,7 +163,7 @@ function bbox(rings){let a=[1e9,1e9,-1e9,-1e9];rings.forEach(([x,y])=>{a=[Math.m
       $('d-legend').innerHTML=FL.map((g,i)=>`<div><i class="sw" style="background:var(${g[0]})"></i><span>${g[1]}</span><span>${(w[i]/T*100).toFixed(0)}%</span></div>`).join('');
       $('d-bar').innerHTML=FL.map((g,i)=>`<i style="flex:${w[i]};background:var(${g[0]})"></i>`).join('');}
     else if(cv==='gain'){const w=[0,0,0,0];let T=0;D.b.forEach(r=>{if(!r[8])return;w[gcls(r)]+=r[2];T+=r[2];});
-      $('d-legh').textContent='Câștig față de situația existentă';$('d-legnote').textContent='Număr de locuitori din ZMI, pe celule de 100 m. Comparația e cu toate stațiile existente; pragul e 500 m pentru orice mod (art. 21 lit. d). Roșu: golurile rămase și după măsurile MPM.';
+      $('d-legh').textContent='Câștig față de scenariul existent';$('d-legnote').textContent='Număr de locuitori din ZMI, pe celule de 100 m. Comparația e cu toate stațiile existente; pragul e 500 m pentru orice mod (art. 21 lit. d). Roșu: golurile rămase și după măsurile MPM.';
       $('d-legend').innerHTML=GL.map((g,i)=>`<div><i class="sw" style="background:var(${g[0]})"></i><span>${g[1]}</span><span>${fmt(w[i])}</span></div>`).join('');
       $('d-bar').innerHTML=GL.map((g,i)=>`<i style="flex:${w[i]};background:var(${g[0]})"></i>`).join('');}
     else{const k=COL[cv],w=[0,0,0,0,0];let T=0;D.b.forEach(r=>{if(!r[8])return;w[cls(r[k])]+=r[2];T+=r[2];});
@@ -184,7 +184,7 @@ function bbox(rings){let a=[1e9,1e9,-1e9,-1e9];rings.forEach(([x,y])=>{a=[Math.m
     const rl=prop?[...vl,['--r-old','trasee existente',''],['--p-train','tren metropolitan V1',''],...(S.tren==='v2'?[['--p-train','extindere aeroport','dash']]:[]),['--p-prop','trasee TP propuse',''],['--p-r1','inel R1',''],['--p-r2','inel R2','dash']]:[['--r-tram','tramvai',''],['--r-bus','autobuz urban',''],['--r-metro','autobuz metropolitan',''],...vl];
     $('d-rleg').innerHTML=rl.map(([c,l,d])=>`<span><i class="ln ${d}" style="background:var(${c});color:var(${c})"></i>${l}</span>`).join('')+(prop?`<span><i class="sw" style="border-radius:50%;background:var(--p-prop)"></i> stație MPM</span><span><i class="sw" style="border-radius:50%;border:2px solid var(--p-prop)"></i> stație generată</span><span><i class="sw" style="transform:rotate(45deg) scale(.8);border:2px solid var(--ink)"></i> punct intermodal propus</span>`:'');
     const ci=prop?(S.tren==='v1'?3:4):2;
-    $('d-uath').textContent=prop?`Pe unități administrative, situația propusă (tren ${S.tren.toUpperCase()})`:'Pe unități administrative, situația existentă';
+    $('d-uath').textContent=prop?`Pe unități administrative, scenariul propus (tren ${S.tren.toUpperCase()})`:'Pe unități administrative, scenariul existent';
     document.querySelector('#d-uat thead').innerHTML=`<tr><th class="l">UAT</th><th>Locuitori</th><th>≤ 500 m</th>${prop?'':'<th>≤ 500 m, linie<br>≤ 20 min (vârf)</th>'}<th>≤ 800 m</th><th>Peste 1,5 km</th>${prop?'<th>Δ ≤ 500 m</th>':''}</tr>`;
     const fq=uatFreq();
     document.querySelector('#d-uat tbody').innerHTML=D.ut.map(r=>{const v=r[ci],e=r[2],d=+(v[0]-e[0]).toFixed(1),f=fq[norm(r[0])];return `<tr><td class="l">${r[0]}</td><td>${fmt(r[1])}</td><td><i class="pb" style="width:${v[0]*0.6}px"></i>${v[0].toFixed(0)}%</td>${prop?'':`<td>${f==null?'–':f.toFixed(0)+'%'}</td>`}<td>${v[1].toFixed(0)}%</td><td>${fmt(v[2])}</td>${prop?`<td class="${d>0?'up':''}">${d>0?'+'+d.toLocaleString('ro-RO')+' pp':'–'}</td>`:''}</tr>`;}).join('');
@@ -253,7 +253,7 @@ function bbox(rings){let a=[1e9,1e9,-1e9,-1e9];rings.forEach(([x,y])=>{a=[Math.m
     const c=cur(u),e=ex(u),prop=isProp(),d=+(c.idx-e.idx).toFixed(1);
     el.innerHTML=`<h2>${u.t==='cartier'?'Cartier, mun. Iași':'Comună, ZMI'}</h2><h3>${u.n}</h3><div>${pill(c.c)} <span style="font:600 22px var(--f-mono);margin-left:6px">${f1(c.idx)}</span><span class="note"> / 100</span>${prop?`<div class="note" style="margin-top:4px">existent: ${f1(e.idx)} (${e.c})${d?`, <b style="color:var(--good)">+${d.toLocaleString('ro-RO')}</b>`:''}</div>`:''}</div>
     <div class="ib">${c.I.map((v,i)=>`<span title="${ITIP[i]}">${INAME[i]} <small style="color:var(--muted)">${[30,25,15,10,10,10][i]}%</small></span><span class="v">${v==null?'–':Math.round(v)}</span><span class="bar"><i style="width:${v||0}%"></i>${prop&&e.I[i]!=null&&e.I[i]!==v?`<u style="left:${e.I[i]}%"></u>`:''}</span>`).join('')}</div>
-    ${prop?'<p class="note">Linia subțire de pe bare marchează valoarea din situația existentă.</p>':''}
+    ${prop?'<p class="note">Linia subțire de pe bare marchează valoarea din scenariul existent.</p>':''}
     <dl class="facts"><dt>% din media Iași (${f1(mean('ias'))})</dt><dd>${relTxt(u,'ias')}</dd><dt>% din media ZMI (${f1(mean('zmi'))})</dt><dd>${relTxt(u,'zmi')}</dd>${VEL.u[u.n]?`<dt>Pistă velo ≤ 300 m</dt><dd>${f1(VEL.u[u.n].pn)}% → ${f1(VEL.u[u.n].p300)}% (MPM)</dd><dt>Piste velo propuse</dt><dd>${f1(VEL.u[u.n].km)} km</dd>`:''}<dt>Locuitori</dt><dd>${fmt(u.pop)}</dd><dt>Distanța mediană</dt><dd>${c.med==null?'peste 1,5 km':fmt(c.med)+' m'}</dd><dt>Acoperire</dt><dd>${f1(c.pc)}%</dd><dt>La 500 / 800 m</dt><dd>${f1(c.p5)}% / ${f1(c.p8)}%</dd><dt>Peste 1,5 km</dt><dd>${fmt(c.out)}</dd><dt>Stații / linii distincte</dt><dd>${c.ns} / ${c.nl}</dd><dt>Noduri legate direct</dt><dd style="font-family:var(--f-display)">${c.nod||'niciunul'}</dd><dt>Dotări la ≤ 300 m</dt><dd>${c.nd?f1(c.pd)+'% din '+c.nd:'nu au fost identificate'}</dd><dt>Art. 21 lit. d)</dt><dd style="font-family:var(--f-display)">${c.p5>=60?'atins (60%)':'neatins (60%)'}</dd>${u.old!=null?`<dt>Indice 2025 (Covăsnianu)</dt><dd>${f1(u.old)}</dd>`:''}</dl>`;}
   function kpis(){const c=D.u.filter(u=>u.t==='cartier'),m=D.u.filter(u=>u.t==='comună'),pc=c.reduce((a,u)=>a+u.pop,0),pm=m.reduce((a,u)=>a+u.pop,0),prop=isProp();
     const avg=a=>a.reduce((s,u)=>s+cur(u).idx,0)/a.length,avgE=a=>a.reduce((s,u)=>s+ex(u).idx,0)/a.length;
@@ -271,7 +271,7 @@ function bbox(rings){let a=[1e9,1e9,-1e9,-1e9];rings.forEach(([x,y])=>{a=[Math.m
       [Math.round(lc)+'% · '+Math.round(lm)+'%','pop. în unități ≥ 60% la 500 m','<small>cartiere · comune, art. 21 lit. d)</small>'+(prop&&(lm-lmE>.5)?`<small class="up">comune: +${Math.round(lm-lmE)} pp</small>`:'')]
     ].map(([v,l,s])=>`<div class="kpi"><b>${v}</b><span>${l}</span>${s}</div>`).join('');}
   function table(){const prop=isProp();
-    $('a-math').textContent=prop?`Matricea de analiză, situația propusă (tren ${S.tren.toUpperCase()})`:'Matricea de analiză, situația existentă';
+    $('a-math').textContent=prop?`Matricea de analiză, scenariul propus (tren ${S.tren.toUpperCase()})`:'Matricea de analiză, scenariul existent';
     document.querySelector('#a-mat thead').innerHTML=`<tr><th class="l">Clasa</th><th class="l">Unitate</th><th>Locuitori</th><th title="I1: locuitori la ≤ 500 m de o stație de autobuz/tramvai sau ≤ 800 m de o gară (Madina)">Acoperire<br>30%</th><th title="I2: linii distincte, raportate la 30">Linii<br>25%</th><th title="I3: noduri intermodale legate direct">Noduri<br>15%</th><th title="I4: dotări la ≤ 300 m de stație">Dotări<br>10%</th><th title="I5: benzi dedicate">Benzi<br>10%</th><th title="I6: locuitori la ≤ 300 m de o pistă velo">Velo<br>10%</th><th>Indice 2026<br>(Madina)</th><th title="Indicele, în procente din media ponderată a municipiului Iași">% din<br>media Iași</th><th title="Indicele, în procente din media ponderată a ZMI">% din<br>media ZMI</th>${prop?'<th>Indice<br>existent</th><th>Δ</th>':'<th>Indice 2025<br>(Covăsnianu)</th>'}</tr>`;
     let h='';for(const t of ['cartier','comună']){h+=`<tr class="grp"><td colspan="${prop?14:13}">${t==='cartier'?'Cartierele municipiului Iași':'Comunele din Zona Metropolitană Iași'}</td></tr>`;
       D.u.filter(u=>u.t===t).sort((a,b)=>cur(b).idx-cur(a).idx).forEach(u=>{const c=cur(u),e=ex(u),d=+(c.idx-e.idx).toFixed(1),i=D.u.indexOf(u);
