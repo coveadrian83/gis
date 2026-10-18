@@ -53,6 +53,7 @@
         <label><input type="checkbox" id="g-routes" checked> Trasee</label>
         <label><input type="checkbox" id="g-stops"> Stații</label>
         <label><input type="checkbox" id="g-bnd" checked> Limite cartiere și UAT</label>
+        <label id="g-velol" hidden><input type="checkbox" id="g-velo" checked> Piste velo propuse (MPM 2026)</label>
       </div>
       <div class="toggles" id="d-rleg"></div>
     </div>
@@ -89,6 +90,7 @@
     <button data-m="pc" aria-pressed="false">Acoperire, tren la 800 m</button>
     <button data-m="p5" aria-pressed="false">Locuitori la ≤ 500 m de stație (art. 21 lit. d)</button>
     <button data-m="pd" aria-pressed="false">Dotări la ≤ 300 m de stație (art. 21 lit. b)</button>
+    <button data-m="vp" aria-pressed="false">Piste velo propuse: locuitori la ≤ 300 m</button>
     <button data-m="delta" id="a-mdelta" aria-pressed="false" hidden>Creștere a indicelui față de existent</button>
   </div>
   <div class="tren" id="a-ref" hidden><span>Media de referință (100%):</span><div class="tabs" role="group" aria-label="Media de referință"><button data-r="ias" aria-pressed="true">municipiul Iași</button><button data-r="zmi" aria-pressed="false">Zona Metropolitană Iași</button></div></div>
@@ -124,11 +126,12 @@
       <tr><td class="l">Unități</td><td class="l">cele 17 cartiere ale municipiului Iași</td><td class="l">17 cartiere și 18 comune din ZMI, în situația existentă și în cea propusă</td></tr>
     </tbody></table></div>
     <p><b>Situația existentă.</b> 109 stații de tramvai, 311 de autobuz urban, 455 de autobuz metropolitan (pe sensuri) și 11 gări CF, cu traseele lor, din baza de date MPM.</p>
-    <p><b>Situația propusă.</b> Situația existentă, plus măsurile din masterplan:</p>
+    <p><b>Situația propusă.</b> Situația existentă, plus măsurile din masterplan (a–e pentru transportul public, f pentru bicicletă):</p>
     <p>a) Trenul metropolitan, cu 26 de stații pe traseul CF existent (V1). Varianta V2 adaugă extinderea spre Aeroportul Iași, cu 4 stații.<br>b) Traseele propuse spre Lunca Cetățuii, Valea Adâncă, Ciurea, Hlincea, Vișan, Vlădiceni, Valea Lupului, Rediu, Șorogari, Dancu și Holboca: 65 de stații din MPM.<br>c) Inelul periurban prioritar R1.<br>d) Inelul metropolitan de perspectivă R2.<br>e) Cele 14 puncte intermodale propuse în MPM (Socola, Canta, Dacia, Gara Mare, Piața Unirii, Târgu Cucu, 2 Băieți, Tutora, Tomești, CUG I, Tehnopolis, Gara Nicolina, Podu Roș, Agronomie), tratate ca stații și ca noduri de transfer.</p>
     <p>În situația propusă, indicatorul I3 numără nodurile intermodale legate direct: Gara Iași, Gara Nicolina, autogările și punctele intermodale propuse. Scorul maxim se atinge de la 3 noduri.</p>
     <p>Unde masterplanul nu are stații pe traseu (o parte din b, inelele R1 și R2), le-am generat la 400 m una de alta, distanța maximă din art. 21 lit. c). Am omis stațiile generate aflate la mai puțin de 300 m de una existentă sau propusă. Rezultă 43 de stații pe trasee, 32 pe R1 și 78 pe R2. Pe hartă au contur gol.</p>
-    <p>Benzile dedicate și accesul velo rămân ca în situația existentă, pentru că nu fac parte din măsurile analizate aici.</p>
+    <p>f) Rețeaua velo propusă prin MPM 2026, care include Masterplanul de piste velo din 2023: inelele R0, R1 și R2, radialele și conexiunile (circa 333 km). O unitate traversată de cel puțin 300 m de pistă propusă primește I6 „Acces velo” = 100. Unitățile fără nicio stație de transport public nu primesc acest punctaj. Ca indicator complementar, pagina arată și locuitorii aflați la ≤ 300 m pe jos de rețea (linia dreaptă înmulțită cu factorul de ocol al celulei); în ZMI sunt 53%. Scriptul: <code>scripts/accesibilitate/velo.py</code>.</p>
+    <p>Benzile dedicate pentru transportul public rămân ca în situația existentă.</p>
     <p><b>Distanța între stațiile de tren.</b> Stațiile propuse sunt comparate cu intervalele recomandate pentru trenul metropolitan: 1,5–3 km în zona suburbană și periurbană, 0,8–1,2 km în țesutul urban dens. Documentul MT indicat (OMT nr. 2128/25.11.2025) modifică procedural Ghidul solicitantului „Trenurile metropolitane” (PT 2021–2027, Prioritatea 6) și trimite la standardele tehnice minime din Anexa 14 a ghidului. În textul ordinului nu apar valori pentru distanța între stații, așa că intervalele vin din literatura TOD.</p>
     <p><b>Frecvența (art. 21 lit. d).</b> Din GTFS-ul CTP (zile lucrătoare), pentru fiecare stație: intervalul mediu al celei mai frecvente linii într-un sens, la vârful de dimineață (07–09) și în afara vârfului (10–14). O celulă e „deservită frecvent” dacă are la ≤ 500 m pe jos o stație cu o linie la cel mult 20 de minute. Distanța până la stațiile GTFS e estimată: linia dreaptă înmulțită cu factorul de ocol al celulei (distanța Madina pe rețea împărțită la distanța în linie dreaptă până la cea mai apropiată stație, între 1 și 2, median 1,31). Scriptul: <code>scripts/accesibilitate/frecventa.py</code>.</p>
     <p><b>Limite.</b> Frecvența e cunoscută doar pentru liniile CTP (urbane și metropolitane); operatorii privați și transportul județean nu au date publice, așa că în comune nivelul de serviciu poate fi subestimat. Pentru măsurile propuse, masterplanul nu dă frecvențe, deci verificarea frecvenței e făcută doar pentru situația existentă. Transportul județean nu e în baza MPM. Stațiile generate sunt o ipoteză de lucru, nu poziții din proiect.</p>

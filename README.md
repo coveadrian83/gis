@@ -348,8 +348,13 @@ ziua de azi direct din arhiva pe minut („Calculează azi, până acum”). Tes
   golurilor rămase după măsurile MPM și bazinele de captare ale stațiilor de tren și punctelor intermodale (locuitori la
   500 / 800 m, liniile CTP pentru transfer). `python3 scripts/accesibilitate/frecventa.py` (doar numpy) →
   `data/frecventa.json`; se rulează din nou când se actualizează `data/transport/gtfs/IASI_GTFS.zip`.
+- **Rețeaua velo propusă** (MPM 2026, include Masterplanul de piste velo 2023: inelele R0–R2, radialele, conexiunile):
+  strat pe Harta 2, locuitori la ≤ 300 m de pistă pe unități și I6 „Acces velo” = 100 în situația propusă pentru
+  unitățile traversate de ≥ 300 m de pistă (indicele se recalculează în pagină).
+  `python3 scripts/accesibilitate/velo.py <folderul cu shapefile-uri>` → `data/velo.json`.
 - Pagină statică, fără bibliotecă externă (canvas): `public/accesibilitate/` – `index.html`, `app.js`, `style.css`,
-  `data/detaliu.json` (caroiaj, stații, trasee), `data/general.json` (indicatori pe unități), `data/frecventa.json`.
+  `data/detaliu.json` (caroiaj, stații, trasee), `data/general.json` (indicatori pe unități), `data/frecventa.json`,
+  `data/velo.json`.
   Pagina se editează direct (`build_site.py` a servit doar la conversia inițială).
 - **Date și calcul**: rulate în afara depozitului, pe baza de date MPM Iași (Banca Mondială), OpenStreetMap (Geofabrik) și
   WorldPop; scripturile sunt în `scripts/accesibilitate/` (Madina se instalează din GitHub și are nevoie de două
