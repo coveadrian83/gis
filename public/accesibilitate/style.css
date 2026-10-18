@@ -113,3 +113,7 @@ a{color:var(--accent)}
 .scale{display:grid;gap:20px}.scale[hidden],[hidden]{display:none!important}
 .crumb{margin:0;font-size:13px;color:var(--muted)}.crumb a{color:var(--muted)}
 .prose .tbl td,.prose .tbl th{white-space:normal;vertical-align:top}.prose .tbl td:first-child{white-space:nowrap}
+.group{display:grid;gap:10px;padding:12px;border-radius:16px}
+.group .grp-h{margin:0 2px}
+.grp-scen{border:2px solid var(--accent);background:color-mix(in srgb,var(--accent) 7%,var(--bg))}
+.grp-scale{border:1px dashed var(--muted)}

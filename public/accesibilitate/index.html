@@ -21,9 +21,11 @@
 </header>
 <p class="note" id="loading" role="status">Se încarcă datele (circa 1,7 MB)…</p>
 
-<div class="switch scen" role="tablist" aria-label="Situația analizată">
-  <button id="sc-ex" role="tab" aria-selected="true"><small>Harta 1</small><b>Situația existentă</b><span>Autobuz și tramvai urban, autobuz metropolitan, gări CF</span></button>
-  <button id="sc-pr" role="tab" aria-selected="false"><small>Harta 2</small><b>Situația propusă · MPM Iași</b><span>Tren metropolitan, trasee noi, inelele R1 și R2, puncte intermodale</span></button>
+<section class="group grp-scen" aria-label="Scenariul analizat">
+<h2 class="grp-h">Scenariul analizat</h2>
+<div class="switch scen" role="tablist" aria-label="Scenariul analizat">
+  <button id="sc-ex" role="tab" aria-selected="true"><small>Scenariul 1</small><b>Scenariul existent</b><span>Autobuz și tramvai urban, autobuz metropolitan, gări CF</span></button>
+  <button id="sc-pr" role="tab" aria-selected="false"><small>Scenariul 2</small><b>Scenariul propus · MPM Iași</b><span>Tren metropolitan, trasee noi, inelele R1 și R2, puncte intermodale</span></button>
 </div>
 <div class="tren" id="tren" hidden>
   <span>Tren metropolitan:</span>
@@ -40,11 +42,15 @@
     <button data-n="0" aria-pressed="false">nu se numără</button>
   </div>
 </div>
+</section>
 
+<section class="group grp-scale" aria-label="Scara de analiză">
+<h2 class="grp-h">Scara de analiză</h2>
 <div class="switch" role="tablist" aria-label="Scara de analiză">
   <button id="s-detail" role="tab" aria-selected="true" aria-controls="scale-detail"><small>Scara 1 · detaliu</small><b>Caroiaj de 100 m</b><span>Distanța pe jos de la fiecare locuitor la cea mai apropiată stație</span></button>
   <button id="s-general" role="tab" aria-selected="false" aria-controls="scale-general"><small>Scara 2 · generală</small><b>Cartiere și UAT-uri</b><span>Indice multicriterial și clase de accesibilitate</span></button>
 </div>
+</section>
 
 <!-- ================= SCALE 1 ================= -->
 <div class="scale" id="scale-detail" role="tabpanel">
