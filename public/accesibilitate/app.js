@@ -21,15 +21,16 @@ const listeners=[];
 function MapView(mapEl,cv,onDraw,onClick,onHover){
   const ctx=cv.getContext('2d');const m={ctx,view:{x:0,y:0,s:.02},W:0,H:0,dpr:1,fitted:false,bounds:null};
   m.sx=x=>(x-m.view.x)*m.view.s+m.W/2;m.sy=y=>(y-m.view.y)*m.view.s+m.H/2;
-  m.fit=()=>{const a=m.bounds;m.view.x=(a[0]+a[2])/2;m.view.y=(a[1]+a[3])/2;m.view.s=Math.min(m.W/(a[2]-a[0]),m.H/(a[3]-a[1]))*.95;};
+  m.fit=(a=m.bounds)=>{m.view.x=(a[0]+a[2])/2;m.view.y=(a[1]+a[3])/2;m.view.s=Math.min(m.W/(a[2]-a[0]),m.H/(a[3]-a[1]))*.95;};
   m.size=()=>{const r=mapEl.getBoundingClientRect();m.dpr=devicePixelRatio||1;m.W=r.width;m.H=r.height;cv.width=m.W*m.dpr;cv.height=m.H*m.dpr;};
   m.draw=()=>{if(!m.W)return;ctx.setTransform(m.dpr,0,0,m.dpr,0,0);onDraw(m);};
   m.zoomAt=(f,cx,cy)=>{const v=m.view,wx=(cx-m.W/2)/v.s+v.x,wy=(cy-m.H/2)/v.s+v.y;v.s=Math.max(.004,Math.min(1.5,v.s*f));v.x=wx-(cx-m.W/2)/v.s;v.y=wy-(cy-m.H/2)/v.s;m.draw();};
   m.world=(px,py)=>[(px-m.W/2)/m.view.s+m.view.x,(py-m.H/2)/m.view.s+m.view.y];
   mapEl.addEventListener('wheel',e=>{e.preventDefault();const r=mapEl.getBoundingClientRect();m.zoomAt(e.deltaY<0?1.25:.8,e.clientX-r.left,e.clientY-r.top);},{passive:false});
   const ptrs=new Map();let last=null,pinch=null,moved=0;
-  mapEl.addEventListener('pointerdown',e=>{mapEl.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,[e.clientX,e.clientY]);last=[e.clientX,e.clientY];moved=0;});
-  mapEl.addEventListener('pointerup',e=>{ptrs.delete(e.pointerId);pinch=null;if(moved<5&&!ptrs.size&&onClick){const r=mapEl.getBoundingClientRect();onClick(...m.world(e.clientX-r.left,e.clientY-r.top));}last=ptrs.size?[...ptrs.values()][0]:null;});
+  mapEl.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;  /* butoanele de zoom nu pornesc deplasarea hărții */
+    mapEl.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,[e.clientX,e.clientY]);last=[e.clientX,e.clientY];moved=0;});
+  mapEl.addEventListener('pointerup',e=>{if(!ptrs.has(e.pointerId))return;ptrs.delete(e.pointerId);pinch=null;if(moved<5&&!ptrs.size&&onClick){const r=mapEl.getBoundingClientRect();onClick(...m.world(e.clientX-r.left,e.clientY-r.top));}last=ptrs.size?[...ptrs.values()][0]:null;});
   mapEl.addEventListener('pointercancel',e=>{ptrs.delete(e.pointerId);pinch=null;});
   mapEl.addEventListener('pointermove',e=>{const r=mapEl.getBoundingClientRect();
     if(ptrs.has(e.pointerId)){ptrs.set(e.pointerId,[e.clientX,e.clientY]);if(onHover)onHover(null);
@@ -40,6 +41,7 @@ function MapView(mapEl,cv,onDraw,onClick,onHover){
   new ResizeObserver(()=>{m.size();if(!m.W)return;if(!m.fitted&&m.bounds){m.fit();m.fitted=true;}m.draw();}).observe(mapEl);
   return m;
 }
+const IASB=bbox(GEN.ias.flat().map(pr));  /* limita municipiului Iași, pentru butonul de centrare */
 const ringPath=(m,P)=>{P.forEach(r=>{r.forEach(([x,y],i)=>i?m.ctx.lineTo(m.sx(x),m.sy(y)):m.ctx.moveTo(m.sx(x),m.sy(y)));m.ctx.closePath();});};
 function bbox(rings){let a=[1e9,1e9,-1e9,-1e9];rings.forEach(([x,y])=>{a=[Math.min(a[0],x),Math.min(a[1],y),Math.max(a[2],x),Math.max(a[3],y)]});return a;}
 
@@ -178,7 +180,7 @@ function bbox(rings){let a=[1e9,1e9,-1e9,-1e9];rings.forEach(([x,y])=>{a=[Math.m
   function refresh(){views();panel();map.draw();}
   document.querySelectorAll('#d-win button').forEach(b=>b.onclick=()=>{win=b.dataset.w;refresh();});
   ['g-routes','g-stops','g-bnd'].forEach(id=>$(id).onchange=()=>map.draw());
-  $('d-zin').onclick=()=>map.zoomAt(1.4,map.W/2,map.H/2);$('d-zout').onclick=()=>map.zoomAt(1/1.4,map.W/2,map.H/2);$('d-zreset').onclick=()=>{map.fit();map.draw();};
+  $('d-zin').onclick=()=>map.zoomAt(1.4,map.W/2,map.H/2);$('d-zout').onclick=()=>map.zoomAt(1/1.4,map.W/2,map.H/2);$('d-zreset').onclick=()=>{map.fit();map.draw();};$('d-zcenter').onclick=()=>{map.fit(IASB);map.draw();};
   listeners.push(refresh);
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>map.draw());
   new MutationObserver(()=>map.draw()).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
@@ -256,7 +258,7 @@ function bbox(rings){let a=[1e9,1e9,-1e9,-1e9];rings.forEach(([x,y])=>{a=[Math.m
   function setMetric(k){metric=k;document.querySelectorAll('#a-metrics button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.m===k));$('a-ref').hidden=k!=='rel';document.querySelectorAll('#a-ref button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.r===ref));legend();map.draw();}
   document.querySelectorAll('#a-ref button').forEach(b=>b.onclick=()=>{ref=b.dataset.r;setMetric('rel');});
   document.querySelectorAll('#a-metrics button').forEach(b=>b.onclick=()=>setMetric(b.dataset.m));
-  $('a-zin').onclick=()=>map.zoomAt(1.4,map.W/2,map.H/2);$('a-zout').onclick=()=>map.zoomAt(1/1.4,map.W/2,map.H/2);$('a-zreset').onclick=()=>{map.fit();map.draw();};
+  $('a-zin').onclick=()=>map.zoomAt(1.4,map.W/2,map.H/2);$('a-zout').onclick=()=>map.zoomAt(1/1.4,map.W/2,map.H/2);$('a-zreset').onclick=()=>{map.fit();map.draw();};$('a-zcenter').onclick=()=>{map.fit(sel?bbox(sel.P.flat()):IASB);map.draw();};
   function refresh(){$('a-mdelta').hidden=!isProp();if(!isProp()&&metric==='delta')metric='idx';setMetric(metric);kpis();table();detail(sel);map.draw();}
   sel=D.u.find(u=>u.n==='Galata-Mircea');
   listeners.push(refresh);

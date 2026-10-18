@@ -112,3 +112,4 @@ a{color:var(--accent)}
 .note{font-size:13px;color:var(--muted);margin:0}
 .scale{display:grid;gap:20px}.scale[hidden],[hidden]{display:none!important}
 .crumb{margin:0;font-size:13px;color:var(--muted)}.crumb a{color:var(--muted)}
+.prose .tbl td,.prose .tbl th{white-space:normal;vertical-align:top}.prose .tbl td:first-child{white-space:nowrap}

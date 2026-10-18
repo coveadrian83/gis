@@ -46,7 +46,7 @@
   <div class="main">
     <div style="display:grid;gap:8px">
       <div class="map" id="d-map"><canvas id="d-cv"></canvas>
-        <div class="zoom"><button id="d-zin" aria-label="Mărește">+</button><button id="d-zout" aria-label="Micșorează">−</button><button id="d-zreset" aria-label="Resetează vederea">⟲</button></div>
+        <div class="zoom"><button id="d-zin" aria-label="Mărește">+</button><button id="d-zout" aria-label="Micșorează">−</button><button id="d-zcenter" aria-label="Centrează pe municipiul Iași" title="Centrează pe municipiul Iași">◎</button><button id="d-zreset" aria-label="Toată zona metropolitană" title="Toată zona metropolitană">⟲</button></div>
         <div class="tip" id="d-tip" hidden></div>
       </div>
       <div class="toggles">
@@ -94,7 +94,7 @@
   <div class="tren" id="a-ref" hidden><span>Media de referință (100%):</span><div class="tabs" role="group" aria-label="Media de referință"><button data-r="ias" aria-pressed="true">municipiul Iași</button><button data-r="zmi" aria-pressed="false">Zona Metropolitană Iași</button></div></div>
   <div class="main">
     <div class="map" id="a-map"><canvas id="a-cv"></canvas>
-      <div class="zoom"><button id="a-zin" aria-label="Mărește">+</button><button id="a-zout" aria-label="Micșorează">−</button><button id="a-zreset" aria-label="Resetează vederea">⟲</button></div>
+      <div class="zoom"><button id="a-zin" aria-label="Mărește">+</button><button id="a-zout" aria-label="Micșorează">−</button><button id="a-zcenter" aria-label="Centrează pe unitatea selectată sau pe municipiul Iași" title="Centrează pe unitatea selectată (sau pe municipiul Iași)">◎</button><button id="a-zreset" aria-label="Toată zona metropolitană" title="Toată zona metropolitană">⟲</button></div>
       <div class="oleg" id="a-legend"></div>
     </div>
     <aside><div class="card" id="a-detail"></div></aside>
@@ -113,6 +113,16 @@
     <p><b>Scara de detaliu.</b> Madina calculează, pentru fiecare celulă de 100 m locuită (WorldPop 2020), distanța pe rețeaua de străzi și drumuri (OSM, 5.029 km, nodată la intersecții) până la cea mai apropiată stație, în rază de 1,5 km.</p>
     <p><b>Raze de captare pe mod.</b> Pentru autobuz și tramvai, pragul e 500 m (art. 21 lit. d). Pentru stațiile de tren, existente sau propuse, se folosește 800 m: limita superioară a razei de mers pe jos de 400–800 m (5–10 minute) din principiile TOD, unde călătorii acceptă un drum mai lung în schimbul unui timp de parcurs mai bun. Verificarea strict legală (≤ 500 m) rămâne afișată separat.</p>
     <p><b>Scara generală.</b> Șase indicatori ponderați, după Covăsnianu (2025): acoperire pietonală, 500 m autobuz/tramvai sau 800 m tren (30%), linii distincte (25%), legătură directă cu Gara Iași, Gara Nicolina și autogări (15%), dotări la ≤ 300 m de stație (10%), benzi dedicate (10%) și acces velo (10%).</p>
+    <p><b>Indicele nou și indicele 2025 (Covăsnianu).</b> Ponderile sunt aceleași, dar indicatorii sunt măsurați altfel, ca indicele să fie calculat la fel pentru cartiere și comune și să fie comparabil între scenarii. Coloana „Indice 2025” din matrice e reper, nu o serie de timp: diferențele vin din metodă, nu din schimbări pe teren.</p>
+    <div class="tbl"><table><thead><tr><th class="l">Indicator</th><th class="l">Indice 2025 (Covăsnianu)</th><th class="l">Indicele de pe această pagină</th></tr></thead><tbody>
+      <tr><td class="l">I1 Acoperire · 30%</td><td class="l">procentul de populație acoperită din analiza 2025</td><td class="l">Madina: distanța pe rețeaua de străzi de la fiecare celulă de 100 m locuită (WorldPop) la stație; 500 m autobuz/tramvai, 800 m tren</td></tr>
+      <tr><td class="l">I2 Linii · 25%</td><td class="l">linii de autobuz și tramvai, raportate la 21</td><td class="l">linii distincte cu stații în unitate (plus 150 m de la limită), inclusiv cele metropolitane, raportate la 30 (maximul, Centru)</td></tr>
+      <tr><td class="l">I3 Noduri intermodale · 15%</td><td class="l">evaluare 0–1 din analiza 2025</td><td class="l">legătură directă (linie la ≤ 400 m) cu Gara Iași, Gara Nicolina și autogările; maximul de la 3 noduri</td></tr>
+      <tr><td class="l">I4 · 10%</td><td class="l"><b>congestia traficului</b></td><td class="l"><b>dotări la ≤ 300 m de stație</b> (școli și unități medicale, art. 21 lit. b); congestia nu e disponibilă în afara municipiului</td></tr>
+      <tr><td class="l">I5 Benzi dedicate · 10%</td><td class="l">da / nu, pe cartier</td><td class="l">la fel (preluat din 2025); comunele nu au benzi dedicate</td></tr>
+      <tr><td class="l">I6 Acces velo · 10%</td><td class="l">da / nu, pe cartier</td><td class="l">la fel pentru cartiere; pentru comune, pistele din OSM</td></tr>
+      <tr><td class="l">Unități</td><td class="l">cele 17 cartiere ale municipiului Iași</td><td class="l">17 cartiere și 18 comune din ZMI, în situația existentă și în cea propusă</td></tr>
+    </tbody></table></div>
     <p><b>Situația existentă.</b> 109 stații de tramvai, 311 de autobuz urban, 455 de autobuz metropolitan (pe sensuri) și 11 gări CF, cu traseele lor, din baza de date MPM.</p>
     <p><b>Situația propusă.</b> Situația existentă, plus măsurile din masterplan:</p>
     <p>a) Trenul metropolitan, cu 26 de stații pe traseul CF existent (V1). Varianta V2 adaugă extinderea spre Aeroportul Iași, cu 4 stații.<br>b) Traseele propuse spre Lunca Cetățuii, Valea Adâncă, Ciurea, Hlincea, Vișan, Vlădiceni, Valea Lupului, Rediu, Șorogari, Dancu și Holboca: 65 de stații din MPM.<br>c) Inelul periurban prioritar R1.<br>d) Inelul metropolitan de perspectivă R2.<br>e) Cele 14 puncte intermodale propuse în MPM (Socola, Canta, Dacia, Gara Mare, Piața Unirii, Târgu Cucu, 2 Băieți, Tutora, Tomești, CUG I, Tehnopolis, Gara Nicolina, Podu Roș, Agronomie), tratate ca stații și ca noduri de transfer.</p>
