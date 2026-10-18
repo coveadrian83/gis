@@ -148,7 +148,10 @@
    * cel pe care vehiculul avansează). */
   Tracker.prototype.match = function (v, prev) {
     if (v.ruta == null) return null;
-    var keys = v.sens != null ? [v.ruta + '_' + v.sens] : [v.ruta + '_0', v.ruta + '_1'], best = null, self = this;
+    // codurile Tranzy care nu corespund orarului GTFS → ruta din orar a liniei (alias_rute, scripts/transport_sanatate.py);
+    // sensul unei rute din alt orar nu e sigur, deci se încearcă ambele
+    var alias = this.plan.alias_rute && this.plan.alias_rute[v.ruta], ruta = alias || v.ruta;
+    var keys = v.sens != null && !alias ? [ruta + '_' + v.sens] : [ruta + '_0', ruta + '_1'], best = null, self = this;
     keys.forEach(function (k) {
       var sh = self.shapes[k];
       if (!sh) return;

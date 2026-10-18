@@ -1,5 +1,6 @@
 """Planul de referință al hărții „Sănătatea transportului public” (scripts/transport_sanatate.py), pe feedul GTFS
 din depozit. Rulare: python3 -m unittest discover -s test -p 'test_transport*.py'"""
+import json
 import sys
 import unittest
 from pathlib import Path
@@ -40,3 +41,20 @@ class Build(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Tranzy(unittest.TestCase):
+    def test_routes_and_aliases(self):
+        import tempfile
+        import transport_tranzy as T
+        rute = T.routes([{"route_id": 65, "route_short_name": "7", "route_type": 0, "route_long_name": "Canta - Tutora"},
+                         {"route_id": 8, "route_short_name": "46", "route_type": 3},
+                         {"route_id": 200, "route_short_name": "999", "route_type": 3}])
+        self.assertEqual(rute["65"], {"linie": "7", "tip": "tramvai", "nume": "Canta - Tutora"})
+        gtfs = {"8": {"route_short_name": "46", "route_type": "3"}, "14": {"route_short_name": "7", "route_type": "0"}}
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "tranzy_rute.json"
+            p.write_text(json.dumps({"rute": rute}), encoding="utf-8")
+            # 65 (tramvaiul 7 în Tranzy) → ruta 14 din orar; 8 e aceeași linie; 999 nu există în orar
+            self.assertEqual(S.aliases(gtfs, p), {"65": "14"})
+        self.assertEqual(S.aliases(gtfs, Path(d) / "lipsa.json"), {})

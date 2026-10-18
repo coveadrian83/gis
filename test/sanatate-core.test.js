@@ -183,3 +183,9 @@ test('pe stradă: tramvaiele cu rută necunoscută contează, autobuzele care ie
   assert.equal(S.v, 4);
   assert.equal(S.acoperire, 0.25);
 });
+
+test('alias_rute: un cod Tranzy necunoscut în orar se potrivește pe ruta liniei (ambele sensuri încercate)', () => {
+  const tr = new C.Tracker({ ...plan, alias_rute: { 65: '99' } });
+  tr.add({ actualizat: T, vehicule: [{ id: 1, ruta: '65', sens: '1', ts: T, tip: 'tramvai', ...at(1500) }] });
+  assert.equal(C.analyze(tr).vehicule[0].key, '99_0');
+});
