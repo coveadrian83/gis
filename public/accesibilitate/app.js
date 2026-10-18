@@ -42,16 +42,18 @@ function MapView(mapEl,cv,onDraw,onClick,onHover){
   new ResizeObserver(()=>{m.size();if(!m.W)return;if(!m.fitted&&m.bounds){m.fit();m.fitted=true;}m.draw();}).observe(mapEl);
   return m;
 }
-/* Situația propusă include rețeaua velo din MPM 2026: unitățile traversate de cel puțin 300 m de pistă propusă
-   primesc I6 = 100; indicele și clasa se recalculează (aceleași ponderi, I4 lipsă redistribuit). */
+/* I6 „Acces velo” = % din locuitori la ≤ 300 m de o pistă: pistele existente (OSM) în situația existentă,
+   existente + rețeaua velo MPM 2026 în cea propusă. Indicele și clasa se recalculează cu aceleași ponderi
+   (I4 lipsă redistribuit); unitățile fără stații TP își păstrează clasa „fără date TP”. */
 const W6=[.30,.25,.15,.10,.10,.10];
-for(const u of GEN.u)for(const k of ['propus_v1','propus_v2']){const c=u.sc[k],v=VEL.u[u.n];
-  if(!v||!v.nv||c.c==='fără date TP'||c.I[5]===100)continue;
-  c.idx0=c.idx;c.I=c.I.slice();c.I[5]=100;let n=0,d=0;c.I.forEach((x,i)=>{if(x!=null){n+=W6[i]*x;d+=W6[i];}});
-  c.idx=Math.round(n/d*10)/10;c.c=c.idx>70?'bună':c.idx>40?'medie':'slabă';c.velo=true;}
-const VR=VEL.r.map(([k,c])=>({k,c:c.map(pr)}));
+for(const u of GEN.u)for(const k of ['existent','propus_v1','propus_v2']){const c=u.sc[k],v=VEL.u[u.n];if(!v)continue;
+  c.idx0=c.idx;c.I60=c.I[5];c.I=c.I.slice();c.I[5]=k==='existent'?v.pe:v.p300;let n=0,d=0;c.I.forEach((x,i)=>{if(x!=null){n+=W6[i]*x;d+=W6[i];}});
+  c.idx=Math.round(n/d*10)/10;if(c.c!=='fără date TP')c.c=c.idx>70?'bună':c.idx>40?'medie':'slabă';}
+const VR=VEL.r.map(([k,c])=>({k,c:c.map(pr)})),VE=VEL.re.map(c=>c.map(pr));
 const VCOL={r0:'--velo',r1:'--velo',r2:'--velo',rad:'--velo',con:'--velo'},VDASH={con:[6,4]};
-function drawVelo(m,lw){const ctx=m.ctx;ctx.strokeStyle=css('--velo');ctx.lineJoin='round';ctx.globalAlpha=.95;
+function drawVelo(m,lw,prop){const ctx=m.ctx;ctx.strokeStyle=css('--velo');ctx.lineJoin='round';ctx.globalAlpha=.95;
+  ctx.lineWidth=lw*1.3;for(const r of VE){ctx.beginPath();r.forEach(([x,y],i)=>i?ctx.lineTo(m.sx(x),m.sy(y)):ctx.moveTo(m.sx(x),m.sy(y)));ctx.stroke();}
+  if(!prop){ctx.globalAlpha=1;return;}ctx.strokeStyle=css('--velo-p');
   for(const r of VR){ctx.lineWidth=['r0','r1','r2'].includes(r.k)?lw*1.6:lw;ctx.setLineDash(VDASH[r.k]||[]);ctx.beginPath();r.c.forEach(([x,y],i)=>i?ctx.lineTo(m.sx(x),m.sy(y)):ctx.moveTo(m.sx(x),m.sy(y)));ctx.stroke();}
   ctx.setLineDash([]);ctx.globalAlpha=1;}
 const IASB=bbox(GEN.ias.flat().map(pr));  /* limita municipiului Iași, pentru butonul de centrare */
@@ -117,7 +119,7 @@ function bbox(rings){let a=[1e9,1e9,-1e9,-1e9];rings.forEach(([x,y])=>{a=[Math.m
         else{ctx.strokeStyle=css(PCOL[r.k]);ctx.globalAlpha=.95;ctx.lineWidth=lw*1.5;ctx.setLineDash(r.k==='aero'?[7,4]:r.k==='r2'?[10,4]:[]);}
         ctx.beginPath();r.c.forEach(([x,y],i)=>i?ctx.lineTo(m.sx(x),m.sy(y)):ctx.moveTo(m.sx(x),m.sy(y)));ctx.stroke();}
       ctx.setLineDash([]);ctx.globalAlpha=1;}
-    if(isProp()&&$('g-velo').checked)drawVelo(m,Math.max(1,Math.min(2.5,s*30)));
+    if($('g-velo').checked)drawVelo(m,Math.max(1,Math.min(2.5,s*30)),isProp());
     const showSt=$('g-stops').checked;
     if(showSt&&currentView()==='frecv'){const rr=Math.max(2.5,Math.min(6,s*45)),cols=FL.map(g=>css(g[0]));for(const st of GS){const h=win==='v'?st.hv:st.ho;ctx.fillStyle=cols[hcls(h)];ctx.strokeStyle=css('--ink');ctx.lineWidth=1;ctx.beginPath();ctx.arc(m.sx(st.x),m.sy(st.y),rr/2+1,0,6.283);ctx.fill();ctx.stroke();}}
     else if(showSt){const rr=Math.max(2,Math.min(5,s*40));for(const st of ES){if(!isProp()&&!(view==='existent'||(view==='tramvai'&&st.m==='t')||(view==='metropolitan'&&st.m==='m')))continue;
@@ -173,8 +175,8 @@ function bbox(rings){let a=[1e9,1e9,-1e9,-1e9];rings.forEach(([x,y])=>{a=[Math.m
     else{const keys=['a1','a2','b','c','d','e',scenKey()];const lab={a1:'a)',a2:'a)',b:'b)',c:'c)',d:'d)',e:'e)',propus_v1:'Σ',propus_v2:'Σ'};
       $('d-meas').innerHTML=`<div style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em"><span></span><span>Măsura</span><span class="v">+ la ≤ 500 m · + acoperire · ies din peste 1,5 km</span></div>`+
         D.meas.filter(x=>keys.includes(x.k)&&!(x.k==='a2'&&S.tren==='v1')&&!(x.k==='a1'&&S.tren==='v2')).map(x=>`<div class="${x.k.startsWith('propus')?'tot':''}"><b>${lab[x.k]}</b><span>${MNAME[x.k]}</span><span class="v">+${fmt(x.gain)} · +${fmt(x.gcov)} · ${fmt(x.less)}</span></div>`).join('');}
-    $('g-velol').hidden=!prop;
-    const rl=prop?[...($('g-velo').checked?[['--velo','piste velo propuse (inele)','']]:[]),...($('g-velo').checked?[['--velo','conexiuni velo','dash']]:[]),['--r-old','trasee existente',''],['--p-train','tren metropolitan V1',''],...(S.tren==='v2'?[['--p-train','extindere aeroport','dash']]:[]),['--p-prop','trasee TP propuse',''],['--p-r1','inel R1',''],['--p-r2','inel R2','dash']]:[['--r-tram','tramvai',''],['--r-bus','autobuz urban',''],['--r-metro','autobuz metropolitan','']];
+    const vl=$('g-velo').checked?[['--velo','piste velo existente (OSM)',''],...(prop?[['--velo-p','piste velo propuse',''],['--velo-p','conexiuni velo propuse','dash']]:[])]:[];
+    const rl=prop?[...vl,['--r-old','trasee existente',''],['--p-train','tren metropolitan V1',''],...(S.tren==='v2'?[['--p-train','extindere aeroport','dash']]:[]),['--p-prop','trasee TP propuse',''],['--p-r1','inel R1',''],['--p-r2','inel R2','dash']]:[['--r-tram','tramvai',''],['--r-bus','autobuz urban',''],['--r-metro','autobuz metropolitan',''],...vl];
     $('d-rleg').innerHTML=rl.map(([c,l,d])=>`<span><i class="ln ${d}" style="background:var(${c});color:var(${c})"></i>${l}</span>`).join('')+(prop?`<span><i class="sw" style="border-radius:50%;background:var(--p-prop)"></i> stație MPM</span><span><i class="sw" style="border-radius:50%;border:2px solid var(--p-prop)"></i> stație generată</span><span><i class="sw" style="transform:rotate(45deg) scale(.8);border:2px solid var(--ink)"></i> punct intermodal propus</span>`:'');
     const ci=prop?(S.tren==='v1'?3:4):2;
     $('d-uath').textContent=prop?`Pe unități administrative, situația propusă (tren ${S.tren.toUpperCase()})`:'Pe unități administrative, situația existentă';
@@ -194,7 +196,7 @@ function bbox(rings){let a=[1e9,1e9,-1e9,-1e9];rings.forEach(([x,y])=>{a=[Math.m
     document.querySelector('#d-cat tbody').innerHTML=rows.map(c=>`<tr><td class="l">${c[1]}</td><td class="l">${T[c[0]]}</td><td>${fmt(c[2])}</td><td><i class="pb" style="width:${Math.min(60,c[3]/300)}px"></i>${fmt(c[3])}</td><td>${c[4]||'–'}</td><td>${c[5]||'–'}</td><td class="l" style="font-size:12px;color:var(--muted)">${c[6]}</td></tr>`).join('');}
   function refresh(){views();panel();map.draw();}
   document.querySelectorAll('#d-win button').forEach(b=>b.onclick=()=>{win=b.dataset.w;refresh();});
-  ['g-routes','g-stops','g-bnd','g-velo'].forEach(id=>$(id).onchange=()=>map.draw());
+  ['g-routes','g-stops','g-bnd'].forEach(id=>$(id).onchange=()=>map.draw());$('g-velo').onchange=()=>refresh();
   $('d-zin').onclick=()=>map.zoomAt(1.4,map.W/2,map.H/2);$('d-zout').onclick=()=>map.zoomAt(1/1.4,map.W/2,map.H/2);$('d-zreset').onclick=()=>{map.fit();map.draw();};$('d-zcenter').onclick=()=>{map.fit(IASB);map.draw();};
   listeners.push(refresh);
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>map.draw());
@@ -223,12 +225,12 @@ function bbox(rings){let a=[1e9,1e9,-1e9,-1e9];rings.forEach(([x,y])=>{a=[Math.m
     if(metric==='idx')return css(CLS[c.c]);
     if(metric==='delta'){const d=c.idx-ex(u).idx;for(const[t,col] of DSEQ)if(d<t)return css(col);}
     if(metric==='rel'){const v=rel(u,ref);for(const[t,col] of RSEQ)if(v<t)return css(col);}
-    if(metric==='vp'){const v=VEL.u[u.n]?.p300;if(v==null)return css('--nodata');for(const[t,col] of SEQ)if(v<t)return css(col);}
+    if(metric==='vp'){const v=c.I[5];if(v==null)return css('--nodata');for(const[t,col] of SEQ)if(v<t)return css(col);}
     const v=c[metric];if(v==null||(metric!=='pd'&&c.c==='fără date TP'))return css('--nodata');for(const[t,col] of SEQ)if(v<t)return css(col);}
   function draw(m){const ctx=m.ctx;ctx.fillStyle=css('--mapbg');ctx.fillRect(0,0,m.W,m.H);
     for(const u of [...D.u].sort((a,b)=>(a.t==='cartier')-(b.t==='cartier'))){ctx.beginPath();ringPath(m,u.P);ctx.fillStyle=color(u);ctx.globalAlpha=.88;ctx.fill();ctx.globalAlpha=1;ctx.strokeStyle=css('--panel');ctx.lineWidth=u.t==='cartier'?.8:1.2;ctx.stroke();}
     ctx.strokeStyle=css('--ink');ctx.lineWidth=1.6;ctx.setLineDash([5,3]);ctx.beginPath();ringPath(m,IAS);ctx.stroke();ctx.setLineDash([]);
-    if(metric==='vp')drawVelo(m,Math.max(1,Math.min(2.2,m.view.s*25)));
+    if(metric==='vp')drawVelo(m,Math.max(1,Math.min(2.2,m.view.s*25)),isProp());
     if(sel){ctx.beginPath();ringPath(m,sel.P);ctx.strokeStyle=css('--ink');ctx.lineWidth=3;ctx.stroke();}
     ctx.font='600 11px system-ui, sans-serif';ctx.textAlign='center';ctx.fillStyle=css('--ink');
     for(const u of D.u){const big=u.t==='comună'?m.view.s>.012:m.view.s>.05;if(!big)continue;let cx=0,cy=0;const r=u.P.reduce((a,b)=>b.length>a.length?b:a);r.forEach(([x,y])=>{cx+=x;cy+=y});const X=m.sx(cx/r.length),Y=m.sy(cy/r.length);ctx.lineWidth=3;ctx.strokeStyle=css('--panel');ctx.strokeText(u.n,X,Y);ctx.fillText(u.n,X,Y);}
@@ -237,15 +239,15 @@ function bbox(rings){let a=[1e9,1e9,-1e9,-1e9];rings.forEach(([x,y])=>{a=[Math.m
     if(metric==='idx'){el.innerHTML=Object.entries(CLS).map(([k,v])=>`<div><i class="sw" style="background:var(${v})"></i>${k==='fără date TP'?k:'accesibilitate '+k}</div>`).join('')+'<div><i class="sw" style="border:1.5px dashed var(--ink)"></i>limita mun. Iași</div>';return;}
     if(metric==='rel'){el.innerHTML=`<div style="font-weight:600">Indicele față de media ${ref==='ias'?'mun. Iași':'ZMI'} (${f1(mean(ref))} = 100%)</div>`+RSEQ.map(d=>`<div><i class="sw" style="background:var(${d[1]})"></i>${d[2]}</div>`).join('')+'<div><i class="sw" style="border:1.5px dashed var(--ink)"></i>limita mun. Iași</div>';return;}
     if(metric==='delta'){el.innerHTML=DSEQ.map(d=>`<div><i class="sw" style="background:var(${d[1]})"></i>${d[2].trim()}</div>`).join('');return;}
-    const lab=['sub 20%','20–40%','40–60%','60–80%','peste 80%'];el.innerHTML=(metric==='vp'?'<div style="font-weight:600">Locuitori la ≤ 300 m de o pistă velo propusă</div>':'')+SEQ.map((s,i)=>`<div><i class="sw" style="background:var(${s[1]})"></i>${lab[i]}</div>`).join('')+`<div><i class="sw" style="background:var(--nodata)"></i>fără date</div>`+(metric==='vp'?'<div><i class="ln" style="background:var(--velo)"></i>piste velo propuse (MPM 2026)</div>':'');}
+    const lab=['sub 20%','20–40%','40–60%','60–80%','peste 80%'];el.innerHTML=(metric==='vp'?`<div style="font-weight:600">Locuitori la ≤ 300 m de o pistă velo${isProp()?' (existentă sau propusă)':''}</div>`:'')+SEQ.map((s,i)=>`<div><i class="sw" style="background:var(${s[1]})"></i>${lab[i]}</div>`).join('')+`<div><i class="sw" style="background:var(--nodata)"></i>fără date</div>`+(metric==='vp'?'<div><i class="ln" style="background:var(--velo)"></i>piste existente (OSM)</div>'+(isProp()?'<div><i class="ln" style="background:var(--velo-p)"></i>piste propuse (MPM 2026)</div>':''):'');}
   const pill=c=>`<span class="pill" style="background:var(${CLS[c]});color:${c==='medie'?'#1d2421':'#fff'}">${c==='fără date TP'?c:'accesibilitate '+c}</span>`;
-  const INAME=['I1 Acoperire pietonală (500 m / tren 800 m)','I2 Linii distincte','I3 Noduri intermodale','I4 Dotări ≤ 300 m de stație','I5 Benzi dedicate','I6 Acces velo'];
+  const INAME=['I1 Acoperire pietonală (500 m / tren 800 m)','I2 Linii distincte','I3 Noduri intermodale','I4 Dotări ≤ 300 m de stație','I5 Benzi dedicate','I6 Acces velo (locuitori ≤ 300 m de pistă)'];
   function detail(u){const el=$('a-detail');if(!u){el.innerHTML='<h2>Fișa unității</h2><p class="note">Alege un cartier sau o comună pe hartă sau în tabel.</p>';return;}
     const c=cur(u),e=ex(u),prop=isProp(),d=+(c.idx-e.idx).toFixed(1);
     el.innerHTML=`<h2>${u.t==='cartier'?'Cartier, mun. Iași':'Comună, ZMI'}</h2><h3>${u.n}</h3><div>${pill(c.c)} <span style="font:600 22px var(--f-mono);margin-left:6px">${f1(c.idx)}</span><span class="note"> / 100</span>${prop?`<div class="note" style="margin-top:4px">existent: ${f1(e.idx)} (${e.c})${d?`, <b style="color:var(--good)">+${d.toLocaleString('ro-RO')}</b>`:''}</div>`:''}</div>
     <div class="ib">${c.I.map((v,i)=>`<span>${INAME[i]}</span><span class="v">${v==null?'–':Math.round(v)}</span><span class="bar"><i style="width:${v||0}%"></i>${prop&&e.I[i]!=null&&e.I[i]!==v?`<u style="left:${e.I[i]}%"></u>`:''}</span>`).join('')}</div>
     ${prop?'<p class="note">Linia subțire de pe bare marchează valoarea din situația existentă.</p>':''}
-    <dl class="facts"><dt>Față de media mun. Iași (${f1(mean('ias'))})</dt><dd>${relTxt(u,'ias')}</dd><dt>Față de media ZMI (${f1(mean('zmi'))})</dt><dd>${relTxt(u,'zmi')}</dd><dt>Piste velo propuse (MPM 2026)</dt><dd>${VEL.u[u.n]?f1(VEL.u[u.n].km)+' km · '+f1(VEL.u[u.n].p300)+'% din locuitori la ≤ 300 m':'–'}</dd>${prop&&c.velo?`<dt>I6 prin rețeaua velo propusă</dt><dd>0 → 100 (indice ${f1(c.idx0)} → ${f1(c.idx)})</dd>`:''}<dt>Locuitori (WorldPop 2020)</dt><dd>${fmt(u.pop)}</dd><dt>Mediana distanței la stație</dt><dd>${c.med==null?'peste 1,5 km':fmt(c.med)+' m'}</dd><dt>Acoperire (500 m / tren 800 m)</dt><dd>${f1(c.pc)}%</dd><dt>Locuitori ≤ 500 m / ≤ 800 m</dt><dd>${f1(c.p5)}% / ${f1(c.p8)}%</dd><dt>Locuitori la peste 1,5 km</dt><dd>${fmt(c.out)}</dd><dt>Stații / linii distincte</dt><dd>${c.ns} / ${c.nl}</dd><dt>Noduri legate direct</dt><dd style="font-family:var(--f-display)">${c.nod||'niciunul'}</dd><dt>Dotări ≤ 300 m de stație</dt><dd>${c.nd?f1(c.pd)+'% din '+c.nd:'nu au fost identificate'}</dd><dt>Art. 21 lit. d), componenta spațială</dt><dd style="font-family:var(--f-display)">${c.p5>=60?'prag de 60% atins':'sub pragul de 60%'}</dd>${u.old!=null?`<dt>Indice 2025 (Covăsnianu)</dt><dd>${f1(u.old)}</dd>`:''}</dl>`;}
+    <dl class="facts"><dt>Față de media mun. Iași (${f1(mean('ias'))})</dt><dd>${relTxt(u,'ias')}</dd><dt>Față de media ZMI (${f1(mean('zmi'))})</dt><dd>${relTxt(u,'zmi')}</dd>${VEL.u[u.n]?`<dt>Locuitori la ≤ 300 m de o pistă velo</dt><dd>${f1(VEL.u[u.n].pe)}% existent · ${f1(VEL.u[u.n].p300)}% cu MPM 2026</dd><dt>Piste velo propuse (MPM 2026)</dt><dd>${f1(VEL.u[u.n].km)} km</dd>`:''}<dt>Locuitori (WorldPop 2020)</dt><dd>${fmt(u.pop)}</dd><dt>Mediana distanței la stație</dt><dd>${c.med==null?'peste 1,5 km':fmt(c.med)+' m'}</dd><dt>Acoperire (500 m / tren 800 m)</dt><dd>${f1(c.pc)}%</dd><dt>Locuitori ≤ 500 m / ≤ 800 m</dt><dd>${f1(c.p5)}% / ${f1(c.p8)}%</dd><dt>Locuitori la peste 1,5 km</dt><dd>${fmt(c.out)}</dd><dt>Stații / linii distincte</dt><dd>${c.ns} / ${c.nl}</dd><dt>Noduri legate direct</dt><dd style="font-family:var(--f-display)">${c.nod||'niciunul'}</dd><dt>Dotări ≤ 300 m de stație</dt><dd>${c.nd?f1(c.pd)+'% din '+c.nd:'nu au fost identificate'}</dd><dt>Art. 21 lit. d), componenta spațială</dt><dd style="font-family:var(--f-display)">${c.p5>=60?'prag de 60% atins':'sub pragul de 60%'}</dd>${u.old!=null?`<dt>Indice 2025 (Covăsnianu)</dt><dd>${f1(u.old)}</dd>`:''}</dl>`;}
   function kpis(){const c=D.u.filter(u=>u.t==='cartier'),m=D.u.filter(u=>u.t==='comună'),pc=c.reduce((a,u)=>a+u.pop,0),pm=m.reduce((a,u)=>a+u.pop,0),prop=isProp();
     const avg=a=>a.reduce((s,u)=>s+cur(u).idx,0)/a.length,avgE=a=>a.reduce((s,u)=>s+ex(u).idx,0)/a.length;
     const n=(a,k)=>a.filter(u=>cur(u).c===k).length;
@@ -263,7 +265,7 @@ function bbox(rings){let a=[1e9,1e9,-1e9,-1e9];rings.forEach(([x,y])=>{a=[Math.m
     ].map(([v,l,s])=>`<div class="kpi"><b>${v}</b><span>${l}</span>${s}</div>`).join('');}
   function table(){const prop=isProp();
     $('a-math').textContent=prop?`Matricea de analiză, situația propusă (tren ${S.tren.toUpperCase()})`:'Matricea de analiză, situația existentă';
-    document.querySelector('#a-mat thead').innerHTML=`<tr><th class="l">Clasa</th><th class="l">Unitate</th><th>Locuitori</th><th>I1 Acoperire<br>500 m / tren 800 m · 30%</th><th>I2 Linii<br>distincte · 25%</th><th>I3 Noduri<br>intermodale · 15%</th><th>I4 Dotări<br>≤ 300 m · 10%</th><th>I5 Benzi<br>dedicate · 10%</th><th>I6 Velo<br>· 10%</th><th>Indice</th><th>Față de<br>media Iași</th><th>Față de<br>media ZMI</th>${prop?'<th>Indice<br>existent</th><th>Δ</th>':'<th>Indice 2025<br>(Covăsnianu)</th>'}</tr>`;
+    document.querySelector('#a-mat thead').innerHTML=`<tr><th class="l">Clasa</th><th class="l">Unitate</th><th>Locuitori</th><th>I1 Acoperire<br>500 m / tren 800 m · 30%</th><th>I2 Linii<br>distincte · 25%</th><th>I3 Noduri<br>intermodale · 15%</th><th>I4 Dotări<br>≤ 300 m · 10%</th><th>I5 Benzi<br>dedicate · 10%</th><th>I6 Velo ≤ 300 m<br>· 10%</th><th>Indice</th><th>Față de<br>media Iași</th><th>Față de<br>media ZMI</th>${prop?'<th>Indice<br>existent</th><th>Δ</th>':'<th>Indice 2025<br>(Covăsnianu)</th>'}</tr>`;
     let h='';for(const t of ['cartier','comună']){h+=`<tr class="grp"><td colspan="${prop?14:13}">${t==='cartier'?'Cartierele municipiului Iași':'Comunele din Zona Metropolitană Iași'}</td></tr>`;
       D.u.filter(u=>u.t===t).sort((a,b)=>cur(b).idx-cur(a).idx).forEach(u=>{const c=cur(u),e=ex(u),d=+(c.idx-e.idx).toFixed(1),i=D.u.indexOf(u);
         h+=`<tr data-i="${i}" tabindex="0" class="${u===sel?'sel':''}"><td class="l">${pill(c.c)}</td><td class="l">${u.n}</td><td>${fmt(u.pop)}</td>${c.I.map(v=>`<td>${v==null?'–':Math.round(v)}</td>`).join('')}<td><b>${f1(c.idx)}</b></td>${['ias','zmi'].map(r=>{const v=rel(u,r);return `<td style="color:var(${v>=110?'--good':v<90?'--weak':'--ink'})">${Math.round(v)}%</td>`;}).join('')}${prop?`<td>${f1(e.idx)}</td><td class="${d>0?'up':''}">${d>0?'+'+d.toLocaleString('ro-RO'):'–'}</td>`:`<td>${f1(u.old)}</td>`}</tr>`;});}

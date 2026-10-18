@@ -349,8 +349,8 @@ ziua de azi direct din arhiva pe minut („Calculează azi, până acum”). Tes
   500 / 800 m, liniile CTP pentru transfer). `python3 scripts/accesibilitate/frecventa.py` (doar numpy) →
   `data/frecventa.json`; se rulează din nou când se actualizează `data/transport/gtfs/IASI_GTFS.zip`.
 - **Rețeaua velo propusă** (MPM 2026, include Masterplanul de piste velo 2023: inelele R0–R2, radialele, conexiunile):
-  strat pe Harta 2, locuitori la ≤ 300 m de pistă pe unități și I6 „Acces velo” = 100 în situația propusă pentru
-  unitățile traversate de ≥ 300 m de pistă (indicele se recalculează în pagină).
+  I6 „Acces velo” = procentul de locuitori la ≤ 300 m de o pistă – pistele existente din OSM (datele hărții de
+  micromobilitate) în situația existentă, plus rețeaua MPM în cea propusă; indicele se recalculează în pagină.
   `python3 scripts/accesibilitate/velo.py <folderul cu shapefile-uri>` → `data/velo.json`.
 - Pagină statică, fără bibliotecă externă (canvas): `public/accesibilitate/` – `index.html`, `app.js`, `style.css`,
   `data/detaliu.json` (caroiaj, stații, trasee), `data/general.json` (indicatori pe unități), `data/frecventa.json`,

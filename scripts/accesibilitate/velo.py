@@ -3,11 +3,15 @@
 Straturi (shapefile, folderul „2026” din Drive-ul MPM): R0_velo, R1_velo, R2_velo (inele), Radiale,
 „Conexiuni si Alternative_velo” („(1)” e inclus integral în acesta și nu se folosește).
 
+Pistele existente: din datele hărții de micromobilitate (OSM, highway=cycleway / bicycle=designated și străzile cu
+cycleway=lane|track), public/micromobilitate/data/iasi/ – rază de 12 km în jurul Iașului; în afara ei (comunele
+exterioare) nu există piste în OSM.
+
 Calculează, pe cartiere și comune:
   - km de pistă propusă în unitate, pe categorii;
-  - locuitorii la ≤ 300 m pe jos de rețea (linia dreaptă × factorul de ocol al celulei, ca în frecventa.py);
-  - I6 „Acces velo” în situația propusă: 1 dacă unitatea are deja acces velo sau dacă o traversează cel puțin
-    300 m de pistă propusă. Pagina recalculează cu el indicele și clasa scenariilor propuse.
+  - I6 „Acces velo” = procentul de locuitori la ≤ 300 m pe jos de o pistă (linia dreaptă × factorul de ocol al
+    celulei, ca în frecventa.py): pistele existente (situația existentă) și existente + propuse (situația propusă).
+    Pagina recalculează cu el indicele și clasa.
 
 Rulare: python3 scripts/accesibilitate/velo.py <folderul cu shapefile-urile>
 Ieșire: public/accesibilitate/data/velo.json
@@ -22,7 +26,28 @@ SRC = sys.argv[1]
 DET = os.path.join(ROOT, "public/accesibilitate/data/detaliu.json")
 OUT = os.path.join(ROOT, "public/accesibilitate/data/velo.json")
 LAYERS = {"r0": "R0_velo", "r1": "R1_velo", "r2": "R2_velo", "rad": "Radiale", "con": "Conexiuni si Alternative_velo"}
-MIN_KM = 0.3
+MICRO = os.path.join(ROOT, "public/micromobilitate/data/iasi")
+CLS_CYCLEWAY, F_LANE = 0, 1   # ca în scripts/export_micro15.py
+
+
+def existing_cycleways():
+    """Segmentele cu pistă din graph.bin + micro.bin (harta de micromobilitate), în EPSG:3844."""
+    from shapely.geometry import LineString
+    b = open(os.path.join(MICRO, "graph.bin"), "rb").read()
+    _, nN, nE, nS = np.frombuffer(b, "<u4", 4)
+    o = 16
+    ll = np.frombuffer(b, "<i4", 2 * nN, o).reshape(-1, 2) / 1e5; o += 8 * nN
+    eu = np.frombuffer(b, "<u4", nE, o); o += 4 * nE
+    ev = np.frombuffer(b, "<u4", nE, o); o += 8 * nE          # sare peste lungimi
+    ss = np.frombuffer(b, "<u4", nE + 1, o); o += 4 * (nE + 1)
+    sp = np.frombuffer(b, "<i4", 2 * nS, o).reshape(-1, 2) / 1e5
+    m = open(os.path.join(MICRO, "micro.bin"), "rb").read()
+    cls = np.frombuffer(m, "u1", nE, 8); fl = np.frombuffer(m, "u1", nE, 8 + nE)
+    sel = np.flatnonzero((cls == CLS_CYCLEWAY) | (fl & F_LANE > 0))
+    geoms = [LineString([ll[eu[i]], *sp[ss[i]:ss[i + 1]], ll[ev[i]]]) for i in sel]
+    g = gpd.GeoDataFrame(geometry=geoms, crs=4326).to_crs(3844)
+    return g[g.length > 1].drop_duplicates("geometry")
+
 
 lines = []
 for k, f in LAYERS.items():
@@ -42,8 +67,12 @@ stops = gpd.GeoDataFrame(geometry=gpd.points_from_xy([s[1] for s in D["s"]], [s[
 eu_stop = cells.sjoin_nearest(stops, distance_col="d").groupby(level=0).d.min().values
 net = B[:, 3]
 detour = np.clip(np.where(net >= 0, net / np.maximum(eu_stop, 1), 1.3), 1, 2)
-eu_velo = cells.sjoin_nearest(L[["geometry"]], distance_col="d").groupby(level=0).d.min().values
-near = eu_velo * detour <= 300
+E = existing_cycleways()
+print("piste existente (OSM):", round(float(E.length.sum() / 1000), 1), "km")
+dist = lambda g: cells.sjoin_nearest(g[["geometry"]], distance_col="d").groupby(level=0).d.min().values
+eu_prop, eu_ex = dist(L), dist(E)
+near_e = eu_ex * detour <= 300
+near = near_e | (eu_prop * detour <= 300)
 pop = B[:, 2]
 
 def poly(geo):
@@ -61,19 +90,22 @@ for i, u in units.iterrows():
     km = {k: round(float(clip[clip.cat == k].length.sum() / 1000), 2) for k in LAYERS}
     idx = inside.index[inside.index_right == i]
     P = pop[idx].sum()
-    out_u[u.n] = {"km": round(sum(km.values()), 2), "kc": km,
-                  "p300": round(float(pop[idx][near[idx]].sum() / P * 100), 1) if P else None,
-                  "nv": int(sum(km.values()) >= MIN_KM)}
+    pct = lambda m: round(float(pop[idx][m[idx]].sum() / P * 100), 1) if P else 0.0
+    out_u[u.n] = {"km": round(sum(km.values()), 2), "kc": km, "pe": pct(near_e), "p300": pct(near)}
 zmi = B[:, 8] > 0
-print("ZMI: locuitori la ≤ 300 m de rețea", round(float(pop[zmi & near].sum() / pop[zmi].sum() * 100), 1), "%")
+zp = lambda m: round(float(pop[zmi & m].sum() / pop[zmi].sum() * 100), 1)
+print("ZMI: locuitori la ≤ 300 m de o pistă: existent", zp(near_e), "%, cu rețeaua propusă", zp(near), "%")
 
 L4 = L.copy()
 L4["geometry"] = L4.simplify(5)
 L4 = L4.to_crs(4326)
 routes = [[r.cat, [[round(x, 5), round(y, 5)] for x, y in r.geometry.coords]] for r in L4.itertuples() if r.geometry.geom_type == "LineString"]
-json.dump({"min_km": MIN_KM, "km": {k: round(float(L[L.cat == k].length.sum() / 1000), 1) for k in LAYERS},
-           "p300_zmi": round(float(pop[zmi & near].sum() / pop[zmi].sum() * 100), 1), "u": out_u, "r": routes},
+E4 = E.copy(); E4["geometry"] = E4.simplify(5); E4 = E4.to_crs(4326)
+ex_routes = [[[round(x, 5), round(y, 5)] for x, y in g.coords] for g in E4.geometry if g.geom_type == "LineString"]
+json.dump({"km": {k: round(float(L[L.cat == k].length.sum() / 1000), 1) for k in LAYERS},
+           "km_ex": round(float(E.length.sum() / 1000), 1), "pe_zmi": zp(near_e), "p300_zmi": zp(near),
+           "u": out_u, "r": routes, "re": ex_routes},
           open(OUT, "w"), ensure_ascii=False, separators=(",", ":"))
 print(OUT, os.path.getsize(OUT) // 1000, "KB")
 for n, v in sorted(out_u.items(), key=lambda x: -x[1]["km"]):
-    print(f"{n:28s} {v['km']:6.2f} km  p300={v['p300']}  nv={v['nv']}")
+    print(f"{n:28s} {v['km']:6.2f} km  existent={v['pe']:5.1f}%  propus={v['p300']:5.1f}%")
