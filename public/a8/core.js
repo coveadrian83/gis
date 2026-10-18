@@ -511,15 +511,16 @@
   ];
   // Ce au spus actorii publici (repere pentru grafic)
   var REPERE = [
-    { de: 2031, la: 2031, scurt: 'Program: 2030', cine: 'Programul de guvernare 2026–2028 și legea A8', text: 'Coridoarele principale TEN-T „se închid până în 2030”; legea A8 fixează 2030 pentru Târgu Mureș – Târgu Neamț.',
-      url: '' },
-    { de: 2031, la: 2034, scurt: 'MVA: 2031–2033', cine: 'Adrian Covăsnianu, Moldova Vrea Autostradă', text: 'Aug. 2025: implementare integrală în 2032–2033 („2025, un moment-cheie”). Ian. 2026: 2031–2032, dacă 2026 devine an de accelerare (proiectare riguroasă, resurse, studii geotehnice, antreprenori proactivi, beneficiar atent, societate civilă vigilentă). Aug. 2026: „anul contractelor” trebuie urmat de „anul șantierelor”.',
+    { de: 2027, la: 2027, scurt: 'Master Plan 2016: 2026', cine: 'Master Planul General de Transport (HG 666/2016)', text: 'Târgu Neamț – Iași – Ungheni (135 km, 1,13 mld. euro) în 2016–2020; Târgu Mureș – Târgu Neamț (183,8 km, 2,94 mld. euro) în 2016–2026.',
+      url: 'https://www.adrse.ro/Documente/Planificare/PDR/2014/Programe/MasterPlan_Transport_Sinteza.pdf' },
+    { de: 2031, la: 2031, scurt: 'Legea A8 și programul: 2030', cine: 'Legea 291/2018 (OUG 105/2020, aprobată în sept. 2021) și Programul de guvernare 2026–2028', text: 'Legea: Ungheni – Iași – Târgu Neamț până la 31.12.2026, Târgu Mureș – Târgu Neamț până la 31.12.2030. Programul: coridoarele principale TEN-T „se închid până în 2030”.',
+      url: 'https://economedia.ro/parlamentarii-obliga-statul-sa-termine-autostrada-unirii-pana-in-2030-cu-patru-ani-intarziere-fata-de-termenul-initial-drula-cel-mai-greu-proiect-de-infrastructura-al-romaniei.html' },
+    { de: 2031, la: 2034, scurt: 'MVA: 2031–2033', cine: 'Adrian Covăsnianu, Moldova Vrea Autostradă', text: 'Estimări fundamentate pe fișele de proiect, autorizațiile de construire și analize cartografice pe fiecare lot. Aug. 2025: implementare integrală în 2032–2033. Ian. 2026: 2031–2032, dacă 2026 devine an de accelerare (proiectare riguroasă, resurse, studii geotehnice, antreprenori proactivi, beneficiar atent, societate civilă vigilentă). Aug. 2026: „anul contractelor” trebuie urmat de „anul șantierelor”.',
       url: 'https://economedia.ro/expert-in-infrastructura-autostrada-a8-nu-poate-fi-gata-integral-pana-in-2030-in-actualul-stadiu-tehnic-si-administrativ-care-este-termenul-realist.html' },
     { de: 2033.8, la: 2034.8, scurt: 'Pro Infrastructură: 7–8 ani', cine: 'Asociația Pro Infrastructură (oct. 2026)', text: 'Nu dă un termen fix și nu vede A8 gata în următorii 7–8 ani; pe Moldova lipsesc peste 1 mld. euro (≈5,5 mld. euro de lucrări, 4,2 mld. din SAFE).',
-      url: 'https://business24.ro/infrastructura-rutiera/deficit-cincisprezece-miliarde-euro-proiecte-drumuri-1671231' },
-    { de: 2040.5, la: 2040.5, scurt: 'Împreună pentru A8: ~2040', cine: 'Asociația Împreună pentru A8, Iași (2024)', text: 'Termenul din 2030 e „irealist”; autostrada ar fi gata în jurul lui 2040.',
-      url: 'https://www.bzi.ro/ionel-apostol-presedinte-impreuna-pentru-a8-din-iasi-autostrada-se-va-finaliza-in-2040-despre-clasa-politica-din-moldova-am-numai-cuvinte-de-ocara-5053776' }
+      url: 'https://business24.ro/infrastructura-rutiera/deficit-cincisprezece-miliarde-euro-proiecte-drumuri-1671231' }
   ];
+
 
   var TINTE_CAL = {
     complet: { nume: 'A8 completă', ids: LOTURI.map(function (l) { return l.id; }) },

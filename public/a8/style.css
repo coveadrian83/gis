@@ -251,3 +251,6 @@ td small { display: block; color: var(--muted); }
 .calrow.mva { background: color-mix(in srgb, var(--ok) 7%, transparent); }
 .calrow.mva .calbar { background: color-mix(in srgb, var(--ok) 45%, transparent); }
 .calrow.mva .caldot { background: var(--ok); }
+table.strategic td small { display: block; color: var(--muted); font-size: .75rem; }
+table.strategic td:nth-child(2) { min-width: 18em; }
+table.strategic td.num { white-space: normal; min-width: 7em; }

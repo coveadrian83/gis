@@ -116,7 +116,7 @@
     <p class="sub2">Același model, rulat până la finalul lui 2040, de câte 500 de ori pentru fiecare scenariu. Trei pârghii: <b>politica</b> (alegerile din 2028, 2032 și 2036 și stabilitatea guvernelor), <b>bugetul</b> (bani naționali, SAFE, fondurile UE 2028–2034) și <b>procedurile</b> (avize, exproprieri, contestații). Banii SAFE se pot plăti doar până la finalul lui 2030, iar Programul Transport doar până la finalul lui 2029 – după aceea rămân bugetul și noul exercițiu european.</p>
     <div class="seg" id="tintaSeg" role="group" aria-label="Ce tronson"></div>
     <div id="calChart" class="calchart" aria-live="polite"><p class="note">Se calculează scenariile…</p></div>
-    <p class="note">Bara: între ce se întâmplă în 10% și în 90% dintre simulări; punctul: mediana (jumătate din simulări termină mai devreme). Liniile și benzile verticale: ce au spus actorii publici.</p>
+    <p class="note">Bara: între ce se întâmplă în 10% și în 90% dintre simulări; punctul: mediana (jumătate din simulări termină mai devreme). Liniile și benzile verticale: termenele din documentele oficiale și estimările publicate.</p>
 
     <h3>Construiește-ți scenariul</h3>
     <div class="builder" id="builder"></div>
@@ -126,6 +126,33 @@
       <summary>Tabelul scenariilor</summary>
       <div class="tablewrap"><table id="calTabel"></table></div>
     </details>
+
+    <h3>Documentele strategice: cum s-au mutat termenele</h3>
+    <p class="sub2">A8 are o bază strategică veche de zece ani. Termenele și costurile din ea s-au mutat de fiecare dată când un document nou a înlocuit unul vechi.</p>
+    <div class="tablewrap"><table class="strategic">
+      <thead><tr><th>Document</th><th>Ce prevedea pentru A8</th><th>Termen</th><th>Cost (fără TVA)</th></tr></thead>
+      <tbody>
+        <tr><td><b>Master Planul General de Transport</b><small>HG 666/2016</small></td>
+          <td>Proiect nou pe rețeaua TEN-T Core. Târgu Neamț – Iași – Ungheni: 135 km. Târgu Mureș – Târgu Neamț: 183,8 km.</td>
+          <td class="num">2016–2020<br>2016–2026</td><td class="num">1,13 + 2,94<br>≈ 4,07 mld. euro</td></tr>
+        <tr><td><b>Legea 291/2018</b><small>Autostrada Unirii; OUG 105/2020</small></td>
+          <td>Ungheni – Iași – Târgu Neamț și Târgu Mureș – Târgu Neamț, finanțate din buget, fonduri UE sau PPP.</td>
+          <td class="num">31.12.2024<br>31.12.2026</td><td class="num">–</td></tr>
+        <tr><td><b>Legea de aprobare a OUG 105/2020</b><small>Camera Deputaților, sept. 2021</small></td>
+          <td>Termenele amânate cu doi, respectiv patru ani (266 de voturi pentru).</td>
+          <td class="num">31.12.2026<br>31.12.2030</td><td class="num">–</td></tr>
+        <tr><td><b>Planul investițional 2021–2030</b><small>Actualizarea strategiei de implementare a Master Planului, MTI, oct. 2021</small></td>
+          <td>Capetele montane (Târgu Mureș – Miercurea Nirajului, 25 km; Leghin – Moțca, 34 km) trec în PNRR. Moțca – Ungheni (100,9 km) ia scorul 66,89 (locul 12 din 26) și intră în Programul Transport 2021–2027. Miercurea Nirajului – Leghin (151,9 km) ia scorul 64,12 (locul 17 din 26) și e împărțită: <b>faza 1, 1 mld. euro</b>, în Programul Transport; <b>faza 2, 4,18 mld. euro, „după 2027”</b>.</td>
+          <td class="num">2021–2030;<br>faza 2 montană<br>după 2027</td><td class="num">≈ 6,58 mld. euro<br>(munte: 34 mil. euro/km)</td></tr>
+        <tr><td><b>Ieșirea din PNRR</b><small>2025</small></td>
+          <td>Cele două capete montane pierd finanțarea PNRR și trec pe Programul Transport și buget; sectorul ieșean trece pe SAFE.</td>
+          <td class="num">fără presiunea termenului din aug. 2026</td><td class="num">–</td></tr>
+        <tr><td><b>Programul de guvernare 2026–2028</b><small>oct. 2026</small></td>
+          <td>Peste 2.000 km de autostrăzi și drumuri expres până în 2028, „prin avansul lucrărilor pe … A8”; coridoarele TEN-T închise până în 2030; SAFE pentru Târgu Mureș – Iași – Ungheni.</td>
+          <td class="num">2030</td><td class="num">≈ 9 mld. euro (contracte și estimări, 2026)</td></tr>
+      </tbody>
+    </table></div>
+    <p class="note">Criteriile de prioritizare din Planul investițional 2021–2030: eficiența economică (EIRR) 35%, reducerea emisiilor 20%, conectivitatea strategică 25%, utilizarea duală/mobilitatea militară 15%, maturitatea proiectului 5%. Chiar planul oficial din 2021 lăsa deci cea mai mare parte a secțiunii montane pentru exercițiul financiar de după 2027. De aceea, în model, banii pentru munte după 2029 depind de bugetul național și de fondurile UE 2028–2034. Surse: <a href="https://www.adrse.ro/Documente/Planificare/PDR/2014/Programe/MasterPlan_Transport_Sinteza.pdf" rel="noopener">sinteza MPGT</a>, <a href="https://www.mmediu.ro/app/webroot/uploads/files/Plan%20Investitional%20infrastructura%20de%20transport.pdf" rel="noopener">Planul investițional (documentul supus evaluării de mediu)</a>, <a href="https://economedia.ro/parlamentarii-obliga-statul-sa-termine-autostrada-unirii-pana-in-2030-cu-patru-ani-intarziere-fata-de-termenul-initial-drula-cel-mai-greu-proiect-de-infrastructura-al-romaniei.html" rel="noopener">economedia.ro (sept. 2021)</a>.</p>
 
     <h3>Ce spun bugetele, partidele și societatea civilă</h3>
     <div class="actori patru">
@@ -156,7 +183,7 @@
         <p class="note">În scenarii, aceste propuneri sunt opțiunile marcate „MVA” la politică, buget, proceduri și prioritizare.</p>
       </div>
       <div>
-        <h4>Termene anunțate (inclusiv societatea civilă)</h4>
+        <h4>Termene oficiale și estimări fundamentate</h4>
         <ul id="repere"></ul>
       </div>
     </div>

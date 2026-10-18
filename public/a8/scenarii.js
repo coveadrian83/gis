@@ -40,7 +40,7 @@
     }
     html += '</div></div>';
     // reperele declarate
-    html += '<div class="calrow repererow"><div class="callab"><small>Termene anunțate</small></div><div class="caltrack">';
+    html += '<div class="calrow repererow"><div class="callab"><small>Termene și estimări</small></div><div class="caltrack">';
     C.REPERE.forEach(function (r, i) {
       html += '<span class="replab r' + (i % 2) + '" style="left:' + poz((r.de + r.la) / 2) + '" title="' + esc(r.cine + ': ' + r.text) + '">' + esc(r.scurt) + '</span>';
     });
