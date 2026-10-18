@@ -351,6 +351,8 @@ ziua de azi direct din arhiva pe minut („Calculează azi, până acum”). Tes
 - **Rețeaua velo propusă** (MPM 2026, include Masterplanul de piste velo 2023: inelele R0–R2, radialele, conexiunile):
   I6 „Acces velo” = procentul de locuitori la ≤ 300 m de o pistă – pistele existente din OSM (datele hărții de
   micromobilitate) în situația existentă, plus rețeaua MPM în cea propusă; indicele se recalculează în pagină.
+  Pistele existente declarate neconforme de IPJ Iași (`piste_ciclabile_Iasi.shp`, al doilea argument al scriptului; Stereo 70
+  fără transformare de datum, corectat la citire) se pot include sau exclude din I6 cu comutatorul din pagină.
   `python3 scripts/accesibilitate/velo.py <folderul cu shapefile-uri>` → `data/velo.json`.
 - Pagină statică, fără bibliotecă externă (canvas): `public/accesibilitate/` – `index.html`, `app.js`, `style.css`,
   `data/detaliu.json` (caroiaj, stații, trasee), `data/general.json` (indicatori pe unități), `data/frecventa.json`,

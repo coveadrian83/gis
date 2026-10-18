@@ -13,7 +13,12 @@ Calculează, pe cartiere și comune:
     celulei, ca în frecventa.py): pistele existente (situația existentă) și existente + propuse (situația propusă).
     Pagina recalculează cu el indicele și clasa.
 
-Rulare: python3 scripts/accesibilitate/velo.py <folderul cu shapefile-urile>
+Pistele existente declarate neconforme de IPJ Iași (piste_ciclabile_Iasi.shp, 62 de căi OSM, 43 km): coordonatele sunt
+Stereo 70 calculate direct din WGS84, fără transformarea de datum (decalaj de ~110 m față de EPSG:3844), așa că se
+citesc cu elipsoidul Krasovski și datum WGS84. Situația existentă = piste OSM ∪ lista IPJ; se raportează separat
+locuitorii la ≤ 300 m de o pistă neconformă și de una conformă (OSM, la peste 20 m de cele neconforme).
+
+Rulare: python3 scripts/accesibilitate/velo.py <folderul cu shapefile-urile MPM> [<piste_ciclabile_Iasi.shp>]
 Ieșire: public/accesibilitate/data/velo.json
 """
 import json, os, sys, warnings
@@ -69,10 +74,18 @@ net = B[:, 3]
 detour = np.clip(np.where(net >= 0, net / np.maximum(eu_stop, 1), 1.3), 1, 2)
 E = existing_cycleways()
 print("piste existente (OSM):", round(float(E.length.sum() / 1000), 1), "km")
-dist = lambda g: cells.sjoin_nearest(g[["geometry"]], distance_col="d").groupby(level=0).d.min().values
-eu_prop, eu_ex = dist(L), dist(E)
-near_e = eu_ex * detour <= 300
+STEREO_FARA_DATUM = "+proj=sterea +lat_0=46 +lon_0=25 +k=0.99975 +x_0=500000 +y_0=500000 +ellps=krass +towgs84=0,0,0,0,0,0,0 +units=m"
+N = gpd.read_file(sys.argv[2]).set_crs(STEREO_FARA_DATUM, allow_override=True).to_crs(3844) if len(sys.argv) > 2 else E.iloc[:0]
+N["geometry"] = shapely.force_2d(N.geometry)
+C = E[E.distance(N.union_all()) > 20] if len(N) else E   # piste OSM care nu sunt pe lista IPJ
+print("neconforme (IPJ):", round(float(N.length.sum() / 1000), 1), "km; conforme rămase:", round(float(C.length.sum() / 1000), 1), "km")
+dist = lambda g: cells.sjoin_nearest(g[["geometry"]], distance_col="d").groupby(level=0).d.min().values if len(g) else np.full(len(cells), np.inf)
+eu_prop, eu_n, eu_c = dist(L), dist(N), dist(C)
+near_n = eu_n * detour <= 300
+near_c = eu_c * detour <= 300
+near_e = near_n | near_c
 near = near_e | (eu_prop * detour <= 300)
+near_pc = near_c | (eu_prop * detour <= 300)   # propus, fără pistele neconforme
 pop = B[:, 2]
 
 def poly(geo):
@@ -91,10 +104,12 @@ for i, u in units.iterrows():
     idx = inside.index[inside.index_right == i]
     P = pop[idx].sum()
     pct = lambda m: round(float(pop[idx][m[idx]].sum() / P * 100), 1) if P else 0.0
-    out_u[u.n] = {"km": round(sum(km.values()), 2), "kc": km, "pe": pct(near_e), "p300": pct(near)}
+    out_u[u.n] = {"km": round(sum(km.values()), 2), "kc": km, "pe": pct(near_e), "pc": pct(near_c), "pn": pct(near_n),
+                  "p300": pct(near), "ppc": pct(near_pc)}
 zmi = B[:, 8] > 0
 zp = lambda m: round(float(pop[zmi & m].sum() / pop[zmi].sum() * 100), 1)
-print("ZMI: locuitori la ≤ 300 m de o pistă: existent", zp(near_e), "%, cu rețeaua propusă", zp(near), "%")
+print("ZMI: locuitori la ≤ 300 m de o pistă: existent", zp(near_e), "% (conformă", zp(near_c), "%, neconformă", zp(near_n),
+      "%), cu rețeaua propusă", zp(near), "%")
 
 L4 = L.copy()
 L4["geometry"] = L4.simplify(5)
@@ -102,10 +117,13 @@ L4 = L4.to_crs(4326)
 routes = [[r.cat, [[round(x, 5), round(y, 5)] for x, y in r.geometry.coords]] for r in L4.itertuples() if r.geometry.geom_type == "LineString"]
 E4 = E.copy(); E4["geometry"] = E4.simplify(5); E4 = E4.to_crs(4326)
 ex_routes = [[[round(x, 5), round(y, 5)] for x, y in g.coords] for g in E4.geometry if g.geom_type == "LineString"]
+N4 = N.explode(index_parts=False); N4["geometry"] = N4.simplify(3); N4 = N4.to_crs(4326)
+nc_routes = [[[round(x, 5), round(y, 5)] for x, y in g.coords] for g in N4.geometry if g.geom_type == "LineString"]
 json.dump({"km": {k: round(float(L[L.cat == k].length.sum() / 1000), 1) for k in LAYERS},
-           "km_ex": round(float(E.length.sum() / 1000), 1), "pe_zmi": zp(near_e), "p300_zmi": zp(near),
-           "u": out_u, "r": routes, "re": ex_routes},
+           "km_ex": round(float(E.length.sum() / 1000), 1), "km_n": round(float(N.length.sum() / 1000), 1),
+           "km_c": round(float(C.length.sum() / 1000), 1), "pe_zmi": zp(near_e), "pc_zmi": zp(near_c), "pn_zmi": zp(near_n),
+           "p300_zmi": zp(near), "ppc_zmi": zp(near_pc), "u": out_u, "r": routes, "re": ex_routes, "rn": nc_routes},
           open(OUT, "w"), ensure_ascii=False, separators=(",", ":"))
 print(OUT, os.path.getsize(OUT) // 1000, "KB")
 for n, v in sorted(out_u.items(), key=lambda x: -x[1]["km"]):
-    print(f"{n:28s} {v['km']:6.2f} km  existent={v['pe']:5.1f}%  propus={v['p300']:5.1f}%")
+    print(f"{n:28s} {v['km']:6.2f} km  existent={v['pe']:5.1f}% (conf. {v['pc']:5.1f}%, neconf. {v['pn']:5.1f}%)  propus={v['p300']:5.1f}%")
