@@ -13,7 +13,7 @@
   var LUNI = ['ian.', 'feb.', 'mar.', 'apr.', 'mai', 'iun.', 'iul.', 'aug.', 'sep.', 'oct.', 'nov.', 'dec.'];
 
   var plan = null, zonesGeo = null, index = { zile: [] }, cache = {}, D = null, CMP = null;
-  var tlMetric = 1, trMetric = 'scor', mapMode = 'viteza', hmMetric = 0, selZone = null, selLine = null;
+  var tlMetric = 8, trMetric = 'strada', mapMode = 'viteza', hmMetric = 0, selZone = null, selLine = null;
 
   function dayLabel(zi, short) {
     var d = new Date(zi + 'T12:00:00Z');
@@ -101,16 +101,20 @@
       var d = a - b, s = (d > 0 ? '+' : d < 0 ? '−' : '±') + f(Math.abs(d));
       return '<em title="față de ' + esc(dayLabel(CMP.zi)) + '">' + s + '</em>';
     }
-    var items = [
-      [fmt(R.scor), 'scorul mediu al rețelei, 06–22', delta(R.scor, P && P.scor, function (x) { return fmt(x, 1); })],
+    var pp = function (x) { return Math.round(x * 100) + ' pp'; };
+    var items = (R.strada != null ? [
+      [pct(R.strada), 'vehicule pe stradă față de planificarea CTP, 06–22 (autobuze ' + pct(R.stradaAutobuz) + ', tramvaie ' + pct(R.stradaTramvai) + ')', delta(R.strada, P && P.strada, pp)],
+      [pct(R.acoperire), 'acoperirea datelor: vehicule active cu linie recunoscută', delta(R.acoperire, P && P.acoperire, pp)]
+    ] : []).concat([
+      [fmt(R.scor), 'scorul mediu al liniilor, 06–22', delta(R.scor, P && P.scor, function (x) { return fmt(x, 1); })],
       [fmt(R.scorVarf), 'scorul la vârful de dimineață, 07–09', delta(R.scorVarf, P && P.scorVarf, function (x) { return fmt(x, 1); })],
-      [pct(R.serviciu), 'din vehiculele cerute de orar au circulat cu GPS', delta(R.serviciu, P && P.serviciu, function (x) { return Math.round(x * 100) + ' pp'; })],
+      [pct(R.serviciu), 'serviciul pe linii (vehicule cu linie recunoscută / cerute)', delta(R.serviciu, P && P.serviciu, pp)],
       [fmt(R.viteza, 1) + ' km/h', 'viteza medie de avans pe traseu', delta(R.viteza, P && P.viteza, function (x) { return fmt(x, 1); })],
       [R.curse, 'curse reconstituite capăt–capăt', ''],
       [R.durataRaport == null ? '–' : fmt(R.durataRaport, 2) + '×', 'durata reală a curselor față de orar (mediana)', delta(R.durataRaport, P && P.durataRaport, function (x) { return fmt(x, 2); })],
       [fmt(R.minuteOprit / 60, 1) + ' h', 'vehicule oprite pe traseu (ore-vehicul)', delta(R.minuteOprit / 60, P && P.minuteOprit / 60, function (x) { return fmt(x, 1); })],
       [fmt(R.plutoane, 1), 'plutoane simultane, în medie', delta(R.plutoane, P && P.plutoane, function (x) { return fmt(x, 1); })]
-    ];
+    ]);
     $('kpis').innerHTML = items.map(function (k) { return '<div><b>' + k[0] + k[2] + '</b><small>' + k[1] + '</small></div>'; }).join('');
   }
 
@@ -121,13 +125,20 @@
     2: { t: 'Serviciul: vehicule cu GPS față de orar', f: function (v) { return pct(v); }, max: 1 },
     3: { t: 'Viteza medie de avans pe traseu (km/h)', f: function (v, t) { return fmt(v, t ? 1 : 0) + (t ? ' km/h' : ''); } },
     4: { t: 'Plutoane simultane (vehicule lipite pe aceeași linie)', f: function (v) { return fmt(v); } },
-    5: { t: 'Vehicule oprite pe traseu de peste 3 minute', f: function (v) { return fmt(v); } }
+    5: { t: 'Vehicule oprite pe traseu de peste 3 minute', f: function (v) { return fmt(v); } },
+    8: { t: 'Vehicule pe stradă față de planificarea CTP (rețeaua urbană)', f: function (v) { return pct(v); }, extra: [[10, 'autobuze'], [11, 'tramvaie']] },
+    9: { t: 'Acoperirea datelor: vehicule active cu linie recunoscută', f: function (v) { return pct(v); }, max: 1 }
   };
   function timeline() {
     var M = TL[tlMetric];
     $('tlTitle').textContent = M.t;
     var series = [{ name: dayLabel(D.zi), color: S1, pts: D.cronologie.map(function (r) { return [r[0], r[tlMetric]]; }) }];
     if (CMP) series.push({ name: dayLabel(CMP.zi), color: S2, pts: CMP.cronologie.map(function (r) { return [r[0], r[tlMetric]]; }) });
+    else if (M.extra) {
+      // fără zi de comparat: și defalcarea (autobuze, tramvaie), în culorile următoare din paletă
+      series[0].name = 'total';
+      M.extra.forEach(function (x, i) { series.push({ name: x[1], color: ['#199e70', '#c98500'][i], pts: D.cronologie.map(function (r) { return [r[0], r[x[0]]]; }) }); });
+    }
     $('tlLegend').innerHTML = series.length > 1 ? series.map(function (s) { return '<span><i style="background:' + s.color + '"></i>' + esc(s.name) + '</span>'; }).join('') : '';
     lineChart($('timeline'), series, { x0: 300, x1: 1440, ymax: M.max, yfmt: M.f, xfmt: G.hhmm, ticks: HOUR_TICKS, gap: 20, bands: M.bands, label: M.t });
     var worst = D.cronologie.filter(function (r) { return r[1] != null && r[0] >= 360; }).sort(function (a, b) { return a[1] - b[1]; })[0];
@@ -136,7 +147,7 @@
   }
 
   // ---------- zilele ----------
-  var TR = { scor: ['Scorul mediu', function (v) { return fmt(v); }, 100], scorVarf: ['Scorul 07–09', function (v) { return fmt(v); }, 100],
+  var TR = { strada: ['Pe stradă / planificare', function (v) { return pct(v); }], scor: ['Scorul mediu', function (v) { return fmt(v); }, 100], scorVarf: ['Scorul 07–09', function (v) { return fmt(v); }, 100],
     viteza: ['Viteza medie (km/h)', function (v, t) { return fmt(v, 1); }], durataRaport: ['Durata reală / orar', function (v) { return fmt(v, 2) + '×'; }] };
   function trend() {
     var Z = index.zile.filter(function (z) { return z.rezumat && z.rezumat[trMetric] != null; });
@@ -269,7 +280,7 @@
       Z.map(function (z) {
         return '<tr data-id="' + esc(z.id) + '"' + (selZone === z.id ? ' class="sel"' : '') + '><td>' + esc(z.nume) + '</td><td><i class="lvl" style="background:' + levelColor(z.scor) + '"></i>' + fmt(z.scor) +
           '</td><td>' + fmt(z.viteza, 1) + '</td><td>' + pct(z.oprit) + '</td><td>' + pct(z.pluton) + '</td><td>' + fmt(z.veh / 60, 0) + '</td></tr>';
-      }).join('') + '</tbody>';
+      }).join('') + (Z.length ? '' : '<tr><td colspan="6" class="note">Fără date în intervalul ales (colectarea nu acoperă aceste ore în ziua aleasă) – alegeți „toată ziua”.</td></tr>') + '</tbody>';
     $('zones').querySelectorAll('th').forEach(function (th) {
       th.addEventListener('click', function () { var k = th.dataset.k; zoneSort = { k: k, dir: zoneSort.k === k ? -zoneSort.dir : (k === 'nume' || k === 'scor' || k === 'viteza' ? 1 : -1) }; zonesTable(); });
     });

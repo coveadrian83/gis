@@ -29,6 +29,8 @@ FEED = ROOT / "data" / "transport" / "gtfs" / "IASI_GTFS.zip"
 SHAPES = ROOT / "data" / "transport" / "linii" / "rute_gtfs.geojson"
 OUT = ROOT / "public" / "data" / "transport" / "sanatate_plan.json"
 RAILS = ROOT / "data" / "transport" / "osm" / "sine.json"     # scripts/transport_osm.py
+PLANNING = ROOT / "data" / "transport" / "ctp_planificare.json"   # unitățile pe linie, din planificarea S.C.T.P.
+UAT = ROOT / "public" / "data" / "zmi_uat_web.geojson"
 TOL_M = 4.0           # toleranța simplificării formelor (Douglas–Peucker), în metri
 R_LAT, R_LON = 110540.0, 111320.0
 DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
@@ -158,7 +160,31 @@ def build(feed=FEED, shapes=SHAPES):
             rec["forma"] = [[round(x, 5), round(y, 5)] for x, y in simplify(coords)]
         out[key] = rec
     return {"sursa": "GTFS CTP Iași (Tranzy, https://tranzy.ai/opendata/)", "valabil": valid,
-            "servicii": services, "rute": out, "depouri": depots()}
+            "servicii": services, "rute": out, "depouri": depots(), "planificare": planning(), "municipiu": municipality()}
+
+
+def municipality(path=UAT):
+    """Conturul municipiului Iași (SIRUTA 95060), simplificat: un autobuz fără linie recunoscută care nu iese din el e
+    socotit pe rețeaua urbană (planificarea CTP acoperă municipiul; liniile metropolitane ies din oraș)."""
+    if not Path(path).exists():
+        return None
+    for f in json.loads(Path(path).read_text(encoding="utf-8"))["features"]:
+        if str(f["properties"].get("siruta_uat")) == "95060":
+            g = f["geometry"]
+            ring = g["coordinates"][0] if g["type"] == "Polygon" else max((p[0] for p in g["coordinates"]), key=len)
+            return [[round(x, 5), round(y, 5)] for x, y in simplify(ring, 20.0)]
+    return None
+
+
+def planning(path=PLANNING):
+    """Planificarea CTP (unități pe linie, pe tip de zi, ranforsări la vârf): referința pentru câte vehicule trebuie să
+    fie pe stradă pe fiecare linie urbană; orarul GTFS rămâne referința pentru intervale, viteze și programul liniei."""
+    if not Path(path).exists():
+        return None
+    p = json.loads(Path(path).read_text(encoding="utf-8"))
+    keep = ("tip", "linie", "familie", "am", "pm", "ranf", "sambata", "duminica")
+    return {"sursa": p["sursa"], "valabil_de_la": p["valabil_de_la"], "varf": p["varf"],
+            "linii": [{k: l[k] for k in keep if k in l} for l in p["linii"]]}
 
 
 def main(argv):

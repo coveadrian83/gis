@@ -29,6 +29,7 @@
     stopMin: 180,         // s: oprit cel puțin atât → semnalat
     parkOff: 40,          // m: oprit la peste atât de traseu → garat (depou, autobază, parcare), nu oprit pe linie
     depotOff: 25,         // m: lângă o șină de depou (și mai aproape de ea decât de traseu) → în depou
+    parkMin: 600,         // s: vehicul fără linie recunoscută, oprit de atât → garat
     speedWin: 6 * 60,     // s: fereastra pentru viteza unui vehicul
     speedMin: 3 * 60,     // s: viteza se calculează doar din cel puțin atâtea secunde de mers (altfel e zgomot de stație)
     bin: 250,             // m: lungimea tronsoanelor hărții de viteză
@@ -113,6 +114,21 @@
     return { vehicule: onRoad, interval: headway, viteza: run && route.lungime ? route.lungime / 1000 / (run / 60) : null, durata: run };
   }
 
+  /* Unitățile (vehiculele) cerute acum pe o linie din planificarea CTP: zi lucrătoare – dimineața (am) / după-amiaza
+   * (pm), plus ranforsarea în intervalele de vârf; sâmbăta; duminica. Linia circulă doar cât are curse pe traseu în
+   * orarul GTFS (gtfs > 0); la pornire (înainte de 06:00) și la retragere (după 21:00) cel mult cât arată orarul. */
+  function hm(s) { var p = String(s).split(':'); return +p[0] * 60 + +(p[1] || 0); }
+  function unitsNow(P, lt, gtfs, pf) {
+    if (!gtfs) return 0;
+    var u;
+    if (lt.dow <= 4) {
+      u = lt.min < 780 ? P.am : P.pm;
+      if (((pf && pf.varf) || []).some(function (v) { return lt.min >= hm(v[0]) && lt.min < hm(v[1]); })) u += P.ranf || 0;
+    } else u = lt.dow === 5 ? P.sambata : P.duminica;
+    if (lt.min < 360 || lt.min >= 1260) u = Math.min(u, gtfs);
+    return u;
+  }
+
   // ---------- istoricul pozițiilor ----------
   /* Tracker: păstrează pozițiile fiecărui vehicul (ultima jumătate de oră), proiectate pe traseul liniei. */
   function Tracker(plan) {
@@ -120,6 +136,13 @@
     var self = this;
     Object.keys(plan.rute).forEach(function (k) { if (plan.rute[k].forma) self.shapes[k] = prepareShape(plan.rute[k].forma); });
     this.depots = (plan.depouri || []).filter(function (c) { return c.length > 1; }).map(prepareShape);
+    // planificarea CTP (unități pe linie): linia din orar → linia din planificare (30b → 30, 43c → 43 …)
+    this.planificare = plan.planificare || null;
+    this.municipiu = plan.municipiu || null;
+    this.fam = {};
+    ((plan.planificare && plan.planificare.linii) || []).forEach(function (l) {
+      (l.familie || [l.linie]).forEach(function (x) { self.fam[l.tip + '|' + x] = l; });
+    });
   }
   /* Linia-sens a vehiculului: din sensul raportat; fără sens, sensul al cărui traseu e mai aproape (la egalitate,
    * cel pe care vehiculul avansează). */
@@ -182,6 +205,19 @@
         var p = project(dp, cur.lat, cur.lng);
         return p && p.off < CFG.depotOff && p.off < cur.off;
       });
+    } else {
+      // fără linie recunoscută (rută necunoscută în orar, în afara traseului): garat dacă stă de peste 10 minute sau
+      // e lângă o șină de depou – altfel îl socotim pe stradă
+      var since2 = cur.ts;
+      for (var q = h.length - 2; q >= 0; q--) {
+        if (dist(cur, h[q]) > CFG.stopMove) break;
+        since2 = h[q].ts;
+      }
+      st.oprit = cur.ts - since2;
+      st.depou = st.oprit >= CFG.parkMin || (depots || []).some(function (dp) {
+        var p = project(dp, cur.lat, cur.lng);
+        return p && p.off < CFG.depotOff;
+      });
     }
     st.vechime = now - cur.ts;
     return st;
@@ -220,16 +256,20 @@
       st.id = id; vehs.push(st);
       if (st.key && !st.depou) (byKey[st.key] = byKey[st.key] || []).push(st);     // cele garate nu sunt în serviciu
     });
-    var linii = {}, alerte = [], PL = {}, line = {};
-    // serviciul se judecă pe linie, cu ambele sensuri: sensul raportat de sursă e des greșit (ex. 4 vehicule „spre
-    // C.U.G.” și 1 „spre Păcurari”, când orarul cere 2 + 3 – linia are tot serviciul)
+    var linii = {}, alerte = [], PL = {}, line = {}, lineOfKey = {};
+    // serviciul se judecă pe linie, cu ambele sensuri (sensul raportat de sursă e des greșit) și cu variantele ei
+    // (30 + 30b): vehiculele cu GPS față de unitățile din planificarea CTP; liniile fără planificare (metropolitane):
+    // față de cursele aflate pe traseu în orarul GTFS
     Object.keys(plan.rute).forEach(function (k) {
-      var rid = k.slice(0, k.lastIndexOf('_')), t = line[rid] || (line[rid] = { pl: 0, v: 0 });
-      PL[k] = planned(plan.rute[k], plan.servicii, lt.dow, lt.min);
-      t.pl += PL[k].vehicule; t.v += (byKey[k] || []).length;
+      var r = plan.rute[k], P = tr.fam[r.tip + '|' + r.linie], id = P ? 'P|' + P.tip + '|' + P.linie : k.slice(0, k.lastIndexOf('_'));
+      var t = line[id] || (line[id] = { gtfs: 0, v: 0, P: P, tip: r.tip, retea: r.retea });
+      PL[k] = planned(r, plan.servicii, lt.dow, lt.min);
+      t.gtfs += PL[k].vehicule; t.v += (byKey[k] || []).length;
+      lineOfKey[k] = t;
     });
+    Object.keys(line).forEach(function (id) { var t = line[id]; t.pl = t.P ? unitsNow(t.P, lt, t.gtfs, plan.planificare) : t.gtfs; });
     Object.keys(plan.rute).forEach(function (k) {
-      var r = plan.rute[k], pl = PL[k], vs = byKey[k] || [], tot = line[k.slice(0, k.lastIndexOf('_'))];
+      var r = plan.rute[k], pl = PL[k], vs = byKey[k] || [], tot = lineOfKey[k];
       if (!pl.vehicule && !vs.length) return;                               // nu circulă acum
       var enRoute = vs.filter(function (s) { return !s.cap; }).sort(function (a, b) { return a.cur.d - b.cur.d; });
       var speeds = enRoute.map(function (s) { return s.viteza; }).filter(function (x) { return x != null; });
@@ -278,8 +318,8 @@
       });
       if (tot.pl >= 2 && !tot.v && !tot.semnalat) {                     // o singură alertă pe linie
         tot.semnalat = true;
-        alerte.push({ tip: 'lipsa', key: k, grav: 1, text: (r.tip === 'tramvai' ? 'Tramvaiul ' : 'Autobuzul ') + r.linie +
-          ': niciun vehicul cu GPS pe traseu, orarul cere ' + tot.pl + '.' });
+        alerte.push({ tip: 'lipsa', key: k, grav: 1, text: (r.tip === 'tramvai' ? 'Tramvaiul ' : 'Autobuzul ') + (tot.P ? tot.P.linie : r.linie) +
+          ': niciun vehicul cu GPS recunoscut pe linie, ' + (tot.P ? 'planificarea CTP cere ' : 'orarul cere ') + tot.pl + '.' });
       }
       opriti.forEach(function (s) {
         alerte.push({ tip: 'oprit', key: k, grav: s.oprit >= 300 ? 2 : 1, lat: s.cur.lat, lng: s.cur.lng, id: s.id,
@@ -305,11 +345,35 @@
     Object.keys(line).forEach(function (rid) { plTot += line[rid].pl; vTot += Math.min(line[rid].v, line[rid].pl); });
     var allSp = vehs.filter(function (s) { return s.key && !s.cap && !s.depou && s.viteza != null; }).map(function (s) { return s.viteza; });
     var scored = L.filter(function (l) { return l.scor != null; });
+
+    // pe stradă (rețeaua urbană din planificarea CTP): toate vehiculele active și negarate, pe mod – și cele cu rută
+    // necunoscută în orar sau fără linie –, mai puțin cele recunoscute pe linii metropolitane; acoperirea datelor =
+    // partea lor cu linie recunoscută
+    var strada = null;
+    if (tr.planificare) {
+      // autobuz: v = pe linii urbane recunoscute, nec = fără linie recunoscută, rămas în municipiu (ultima jumătate de
+      // oră); tramvai: toate (rețeaua de tramvai e urbană), nec = cele fără linie recunoscută
+      strada = { autobuz: { v: 0, nec: 0, pl: 0 }, tramvai: { v: 0, nec: 0, pl: 0 }, recunoscute: 0, active: 0, metropolitane: 0 };
+      Object.keys(line).forEach(function (id) { var t = line[id]; if (t.P) strada[t.P.tip].pl += t.pl; });
+      vehs.forEach(function (s) {
+        if (s.depou) return;
+        var r = s.key && plan.rute[s.key], tram = s.cur.tip === 'tramvai', m = strada[tram ? 'tramvai' : 'autobuz'];
+        if (r && r.retea === 'metropolitan' && !tr.fam[r.tip + '|' + r.linie]) { strada.metropolitane++; return; }
+        if (!s.key && !tram && tr.municipiu && tr.hist[s.id].some(function (p) { return !inRing(tr.municipiu, p.lng, p.lat); })) { strada.metropolitane++; return; }
+        if (s.key) { m.v++; strada.recunoscute++; } else m.nec++;
+        strada.active++;
+      });
+      strada.autobuz.total = strada.autobuz.v + strada.autobuz.nec;
+      strada.tramvai.total = strada.tramvai.v + strada.tramvai.nec;
+      strada.v = strada.autobuz.total + strada.tramvai.total; strada.pl = strada.autobuz.pl + strada.tramvai.pl;
+      strada.raport = strada.pl ? strada.v / strada.pl : null;
+      strada.acoperire = strada.active ? strada.recunoscute / strada.active : null;
+    }
     return {
       t: now, ora: lt, linii: linii, vehicule: vehs, alerte: alerte,
       retea: {
-        planificate: plTot, cuGps: vehs.filter(function (s) { return s.key && !s.depou; }).length, garate: vehs.filter(function (s) { return s.depou; }).length, faraLinie: vehs.filter(function (s) { return !s.key; }).length,
-        serviciu: plTot ? Math.min(1, vTot / plTot) : null, viteza: median(allSp),
+        planificate: plTot, cuGps: vehs.filter(function (s) { return s.key && !s.depou; }).length, garate: vehs.filter(function (s) { return s.depou; }).length, faraLinie: vehs.filter(function (s) { return !s.key && !s.depou; }).length,
+        strada: strada, serviciu: plTot ? Math.min(1, vTot / plTot) : null, viteza: median(allSp),
         pluton: L.reduce(function (a, l) { return a + l.pluton; }, 0), opriti: L.reduce(function (a, l) { return a + l.opriti; }, 0),
         scor: scored.length ? Math.round(scored.reduce(function (a, l) { return a + l.scor * Math.max(1, l.planificat.vehicule); }, 0) /
           scored.reduce(function (a, l) { return a + Math.max(1, l.planificat.vehicule); }, 0)) : null
@@ -345,6 +409,14 @@
   var SPEED_CLASSES = [[25, '#2fa66a', '> 25 km/h'], [15, '#9cc43b', '15–25'], [10, '#e5b22e', '10–15'], [5, '#e5732e', '5–10'], [0, '#d8433b', '< 5 km/h']];
   function speedColor(k) { for (var i = 0; i < SPEED_CLASSES.length; i++) if (k >= SPEED_CLASSES[i][0]) return SPEED_CLASSES[i][1]; return SPEED_CLASSES[4][1]; }
 
+  function inRing(ring, x, y) {
+    var ins = false;
+    for (var i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      var xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
+      if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) ins = !ins;
+    }
+    return ins;
+  }
   function dist(a, b) {
     return Math.hypot((a.lng - b.lng) * R_LON * Math.cos(a.lat * Math.PI / 180), (a.lat - b.lat) * R_LAT);
   }
@@ -368,7 +440,7 @@
 
   return {
     CFG: CFG, LEVELS: LEVELS, SPEED_CLASSES: SPEED_CLASSES, prepareShape: prepareShape, project: project, slice: slice,
-    localTime: localTime, planned: planned, Tracker: Tracker, vehicleState: vehicleState, score: score, level: level,
+    localTime: localTime, planned: planned, unitsNow: unitsNow, Tracker: Tracker, vehicleState: vehicleState, score: score, level: level,
     analyze: analyze, speedBins: speedBins, speedColor: speedColor, median: median, fmtMin: fmtMin, unpack: unpack
   };
 });
