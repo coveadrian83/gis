@@ -158,7 +158,12 @@
       if (slot !== lastSample) {
         lastSample = slot;
         var R = A.retea;
-        timeline.push([slot, R.scor, r3(R.serviciu), r1(R.viteza), R.pluton, R.opriti, R.cuGps, R.planificate]);
+        var St = R.strada;
+        // [minut, scor, serviciu, viteză, plutoane, opriri, cu GPS, cerute, pe stradă / planificare, acoperirea datelor,
+        //  autobuze pe stradă / planificare, tramvaie pe stradă / planificare]
+        timeline.push([slot, R.scor, r3(R.serviciu), r1(R.viteza), R.pluton, R.opriti, R.cuGps, R.planificate,
+          St ? r3(St.raport) : null, St ? r3(St.acoperire) : null,
+          St && St.autobuz.pl ? r3(St.autobuz.total / St.autobuz.pl) : null, St && St.tramvai.pl ? r3(St.tramvai.total / St.tramvai.pl) : null]);
       }
     });
 
@@ -278,6 +283,7 @@
     Object.keys(cartiere).forEach(function (z) { Object.keys(cartiere[z].ore).forEach(function (h) { stop += cartiere[z].ore[h][2] || 0; }); });
     return {
       scor: r1(mean(pick(1))), scorVarf: r1(mean(peak)), serviciu: r3(mean(pick(2))), viteza: r1(mean(pick(3))),
+      strada: r3(mean(pick(8))), acoperire: r3(mean(pick(9))), stradaAutobuz: r3(mean(pick(10))), stradaTramvai: r3(mean(pick(11))),
       plutoane: r1(mean(pick(4))), opriri: r1(mean(pick(5))), curse: trips.length,
       durataRaport: r3(quantile(ratios, 0.5)), minuteOprit: Math.round(stop), puncteNegre: puncte.length
     };
@@ -304,7 +310,7 @@
   function hhmm(min) { var h = Math.floor(min / 60), m = Math.round(min % 60); return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m; }
   var EXPORTS = {
     cronologie: function (D) {
-      return csv([['zi', 'ora', 'scor_retea', 'serviciu', 'viteza_kmh', 'plutoane', 'opriri', 'vehicule_gps', 'vehicule_orar']]
+      return csv([['zi', 'ora', 'scor_retea', 'serviciu', 'viteza_kmh', 'plutoane', 'opriri', 'vehicule_gps', 'vehicule_cerute', 'pe_strada', 'acoperire_date', 'pe_strada_autobuze', 'pe_strada_tramvaie']]
         .concat(D.cronologie.map(function (r) { return [D.zi, hhmm(r[0])].concat(r.slice(1)); })));
     },
     linii: function (D) {

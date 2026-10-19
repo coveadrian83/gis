@@ -1,0 +1,49 @@
+# Rutele curente din Tranzy (scripts/transport_tranzy.py) → corespondența codurilor de rută din pozițiile GPS cu liniile
+# din orar (alias_rute în public/data/transport/sanatate_plan.json, scripts/transport_sanatate.py), pentru harta
+# „Sănătatea transportului public”. Cere secretul TRANZY_API_KEY (Settings → Secrets and variables → Actions →
+# New repository secret); fără el nu face nimic.
+# Rulează manual (Actions → „Rute Tranzy” → Run workflow, pe branch-ul ales) și luni dimineața; face commit doar dacă
+# s-au schimbat codurile (fiecare commit pe main = o publicare Netlify, 15 credite – vezi CLAUDE.md).
+name: Rute Tranzy
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "41 3 * * 1"
+  push:
+    branches-ignore: [main]
+    paths:
+      - scripts/transport_tranzy.py
+      - .github/workflows/tranzy-rute.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tranzy-rute-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rute:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Descarcă rutele și refă planul hărții
+        env:
+          TRANZY_API_KEY: ${{ secrets.TRANZY_API_KEY }}
+        run: |
+          python scripts/transport_tranzy.py
+          python scripts/transport_sanatate.py
+      - name: Salvează în branch (doar dacă s-a schimbat ceva)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898699+github-actions[bot]@users.noreply.github.com"
+          git add data/transport/tranzy_rute.json public/data/transport/sanatate_plan.json 2>/dev/null || true
+          if git diff --cached --quiet; then echo "Rutele nu s-au schimbat."; exit 0; fi
+          git commit -m "Rute Tranzy: corespondența codurilor actualizată"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

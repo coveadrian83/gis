@@ -16,7 +16,7 @@
   <p class="sub">GPS-ul vehiculelor CTP comparat cu orarul: cât serviciu ajunge pe stradă, cât de repede și cât de regulat</p>
 
   <div id="hero">
-    <div id="score" class="score"><b>–</b><small>scorul rețelei</small></div>
+    <div id="score" class="score" title="Vehiculele pe stradă față de planificarea CTP: verde ≥ 90%, galben 75–90%, portocaliu 50–75%, roșu sub 50%"><b>–</b><small>pe stradă</small></div>
     <div id="heroText" class="note">Se încarcă orarul și pozițiile vehiculelor…</div>
   </div>
   <div id="kpis"></div>
@@ -54,12 +54,13 @@
   <details>
     <summary>Cum se calculează</summary>
     <div class="note method">
-      <p><b>Serviciul</b> (35 de puncte): vehiculele cu GPS de pe traseul liniei, față de câte cere orarul GTFS în acest minut (curse începute și neterminate), pe toată linia – ambele sensuri, pentru că sensul raportat de sursă e des greșit.</p>
+      <p><b>Pe stradă</b> (cifra principală): toate vehiculele active ale rețelei urbane – tramvaiele și autobuzele care nu ies din municipiu, inclusiv cele cu linie nerecunoscută –, fără cele garate, față de unitățile din <b>planificarea S.C.T.P. din 8 septembrie 2025</b> (zi lucrătoare dimineața / după-amiaza, plus ranforsarea la vârf – 06:30–09:00 și 15:00–18:30, ipoteză –, sâmbăta, duminica; dimineața devreme și seara după 21:00 cel mult cât arată orarul). <b>Acoperirea datelor</b> = partea vehiculelor active cu linie recunoscută: sursa GPS dă unor vehicule coduri de rută care lipsesc din orarul GTFS (ex. multe tramvaie pe „ruta 65”), iar acestea nu pot intra în scorul pe linii.</p>
+      <p>Scorul fiecărei linii are trei părți. <b>Serviciul</b> (35 de puncte): vehiculele cu linie recunoscută, pe toată linia (ambele sensuri și variantele – 30 cu 30b, 43 cu 43c), față de unitățile cerute de planificarea CTP; la liniile metropolitane, față de cursele aflate pe traseu în orarul GTFS.</p>
       <p><b>Viteza</b> (30 de puncte): cât au avansat vehiculele de-a lungul traseului în ultimele 3–6 minute, față de viteza comercială din orar la aceeași oră (lungimea traseului / durata cursei). Capetele de linie (300 m) nu intră în calcul.</p>
       <p><b>Regularitatea</b> (35 de puncte): distanțele dintre vehiculele succesive de pe traseu, transformate în minute cu viteza din orar, față de intervalul din orar. Un <b>pluton</b> = două vehicule ale aceleiași linii la mai puțin de un sfert din interval (cel puțin 2 minute); un <b>gol</b> = peste dublul intervalului.</p>
-      <p>Componentele fără date nu contează. Scor: ≥ 80 bun, 60–80 acceptabil, 40–60 slab, sub 40 critic. Scorul rețelei = media liniilor, ponderată cu vehiculele cerute de orar.</p>
+      <p>Componentele fără date nu contează. Scor: ≥ 80 bun, 60–80 acceptabil, 40–60 slab, sub 40 critic. Scorul rețelei = media liniilor, ponderată cu vehiculele cerute; cuprinde doar liniile cu vehicule recunoscute, de aceea se citește împreună cu acoperirea datelor.</p>
       <p><b>Viteza reală</b>: din pozițiile succesive ale fiecărui vehicul, viteza mediană pe tronsoane de 250 m, în ultima jumătate de oră.</p>
-      <p><b>Limite:</b> linia și sensul vin din sursa GPS; unele vehicule nu au linia atribuită, iar la unele linii apar mult mai multe vehicule decât cere orarul (atribuire probabil greșită) – acestea sunt marcate „de verificat” și nu primesc scor. Vehiculele fără semnal de peste 10 minute nu apar. Vehiculele <b>garate</b> – pe șinele unui depou (Depoul Gară, din OpenStreetMap) sau oprite la peste 40 m de traseu (autobaze, parcări) – nu sunt socotite în serviciu și nu apar la opriri, blocaje sau puncte negre.</p>
+      <p><b>Limite:</b> linia și sensul vin din sursa GPS; unele vehicule nu au linia atribuită, iar la unele linii apar mult mai multe vehicule decât cere orarul (atribuire probabil greșită) – acestea sunt marcate „de verificat” și nu primesc scor. Vehiculele fără semnal de peste 10 minute nu apar. Vehiculele <b>garate</b> – pe șinele unui depou (Depoul Gară, din OpenStreetMap) sau oprite la peste 40 m de traseu (autobaze, parcări); cele fără linie recunoscută, oprite de peste 10 minute sau lângă depou – nu sunt socotite pe stradă și nu apar la opriri, blocaje sau puncte negre.</p>
       <p>Pozițiile se arhivează la fiecare minut; din ele, <a href="../raport/">raportul zilnic</a> arată scorul pe ore și pe zile, cartierele, timpii reali ai curselor, viteza pe tronsoane și punctele negre. <a href="/live/istoric" target="_blank" rel="noopener">Orele colectate</a>.</p>
     </div>
   </details>

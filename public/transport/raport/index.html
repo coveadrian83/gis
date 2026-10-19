@@ -31,11 +31,13 @@
     <div class="head">
       <h2 id="tlTitle">Scorul rețelei de-a lungul zilei</h2>
       <div class="seg" id="tlSeg">
-        <button type="button" data-v="1" class="on">Scor</button>
+        <button type="button" data-v="8" class="on">Pe stradă</button>
+        <button type="button" data-v="1">Scorul liniilor</button>
         <button type="button" data-v="2">Serviciu</button>
         <button type="button" data-v="3">Viteză</button>
         <button type="button" data-v="4">Plutoane</button>
         <button type="button" data-v="5">Opriri</button>
+        <button type="button" data-v="9">Acoperirea datelor</button>
       </div>
     </div>
     <div id="tlLegend" class="legend"></div>
@@ -45,7 +47,8 @@
 
   <section class="card">
     <div class="head"><h2>Zilele colectate</h2><div class="seg" id="trSeg">
-      <button type="button" data-v="scor" class="on">Scor</button>
+      <button type="button" data-v="strada" class="on">Pe stradă</button>
+      <button type="button" data-v="scor">Scor</button>
       <button type="button" data-v="scorVarf">Scor 07–09</button>
       <button type="button" data-v="viteza">Viteză</button>
       <button type="button" data-v="durataRaport">Durata curselor / orar</button>
@@ -114,7 +117,7 @@
     <summary>Cum se calculează</summary>
     <div class="note method">
       <p>Pozițiile GPS ale vehiculelor CTP sunt salvate la fiecare minut. Fiecare citire trece prin aceleași calcule ca <a href="../sanatate/">harta în timp real</a>: vehiculele se potrivesc pe traseele din orarul GTFS și se calculează scorul fiecărei linii (serviciu 35 + viteză 30 + regularitate 35 de puncte) și al rețelei. Raportul zilei se refac din oră în oră; ziua precedentă se finalizează după miezul nopții.</p>
-      <p><b>Scorul zilei</b> = media citirilor dintre 06 și 22. <b>Serviciul</b> = vehiculele cu GPS față de cele cerute de orar, pe linie. <b>Viteza</b> = avansul pe traseu (fără capetele de linie).</p>
+      <p><b>Pe stradă</b> = toate vehiculele active ale rețelei urbane (tramvaiele și autobuzele care nu ies din municipiu, inclusiv cele cu linie nerecunoscută, fără cele garate), față de unitățile din <b>planificarea S.C.T.P. din 8 septembrie 2025</b> (pe linie, pe tip de zi, cu ranforsarea la vârf). <b>Acoperirea datelor</b> = partea lor cu linie recunoscută în orarul GTFS; doar acestea intră în scorul pe linii. Cifrele zilei = media citirilor dintre 06 și 22. <b>Serviciul pe linii</b> = vehiculele cu linie recunoscută față de unitățile cerute. <b>Viteza</b> = avansul pe traseu (fără capetele de linie).</p>
       <p><b>Viteza pe tronsoane</b>: pe bucăți de 250 m ale fiecărei linii și sens, viteza medie de spațiu = distanța parcursă / timpul petrecut în tronson (include oprirea în stații și la semafoare). <b>Minutele pierdute</b> = timpul petrecut în tronson peste cel necesar la viteza de referință a tronsonului (percentila 85 a vitezelor din zi, între 12 și 50 km/h) – o măsură a congestiei și a opririlor, în minute-vehicul (nu minute-călător).</p>
       <p><b>Punctele negre</b>: celule de ~150 m unde vehiculele au stat pe loc cel puțin 2 minute, pe traseu (nu la capete) – minute-vehicul adunate în zi.</p>
       <p><b>Limite</b>: linia și sensul vin din sursa GPS (unele vehicule nu au linia atribuită, iar la unele linii atribuirea pare greșită); orele fără citiri (pauze în colectare) lipsesc din rezumat – vezi „minute colectate”.</p>

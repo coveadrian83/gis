@@ -149,3 +149,43 @@ test('vehicule garate: pe o șină de depou sau oprite departe de traseu – nu 
   assert.equal(A.linii['99_0'].opriti, 1);
   assert.deepEqual(A.alerte.filter((a) => a.tip === 'oprit').map((a) => a.id), ['3']);
 });
+
+test('planificarea CTP: unitățile cerute (zi lucrătoare + ranforsare la vârf, weekend, retragerea de seară)', () => {
+  const P = { tip: 'autobuz', linie: 'X', am: 5, pm: 5, ranf: 2, sambata: 4, duminica: 3 }, pf = { varf: [['06:30', '09:00'], ['15:00', '18:30']] };
+  assert.equal(C.unitsNow(P, { dow: 3, min: 480 }, 6, pf), 7);    // joi 08:00, vârf
+  assert.equal(C.unitsNow(P, { dow: 3, min: 600 }, 6, pf), 5);    // joi 10:00
+  assert.equal(C.unitsNow(P, { dow: 5, min: 600 }, 6, pf), 4);    // sâmbătă
+  assert.equal(C.unitsNow(P, { dow: 6, min: 600 }, 6, pf), 3);    // duminică
+  assert.equal(C.unitsNow(P, { dow: 3, min: 1320 }, 2, pf), 2);   // 22:00: cel mult cât arată orarul
+  assert.equal(C.unitsNow(P, { dow: 3, min: 600 }, 0, pf), 0);    // linia nu circulă acum după orar
+});
+
+test('pe stradă: tramvaiele cu rută necunoscută contează, autobuzele care ies din municipiu nu, cele garate nu', () => {
+  const box = [[LNG0 - 0.01, LAT - 0.01], [at(4000).lng, LAT - 0.01], [at(4000).lng, LAT + 0.01], [LNG0 - 0.01, LAT + 0.01]];
+  const plan2 = { ...plan, municipiu: box, planificare: { varf: [], linii: [{ tip: 'autobuz', linie: 'X', am: 4, pm: 4, ranf: 0, sambata: 3, duminica: 3 }] } };
+  const tr = new C.Tracker(plan2);
+  for (let k = -10; k <= 0; k++) {
+    const t = T + k * 30;
+    tr.add({ actualizat: t, vehicule: [
+      { id: 1, ruta: '99', sens: '0', ts: t, tip: 'autobuz', ...at(1000 + k * 60 + 600) },     // pe linia X, în mișcare
+      { id: 2, ruta: '65', sens: null, ts: t, tip: 'tramvai', ...at(2000 + k * 50 + 500) },    // tramvai, rută necunoscută, în mișcare
+      { id: 3, ruta: '77', sens: null, ts: t, tip: 'autobuz', ...at(4500 + k * 80) },          // autobuz necunoscut, iese din municipiu
+      { id: 4, ruta: '78', sens: null, ts: t, tip: 'autobuz', ...at(1500 + k * 70 + 700) },    // autobuz necunoscut, rămâne în oraș
+      { id: 5, ruta: '65', sens: null, ts: t, tip: 'tramvai', ...at(2500) }                    // tramvai oprit 5 min: încă pe stradă
+    ] });
+  }
+  const S = C.analyze(tr).retea.strada;
+  assert.equal(S.autobuz.v, 1);
+  assert.equal(S.autobuz.nec, 1);
+  assert.equal(S.tramvai.nec, 2);
+  assert.equal(S.metropolitane, 1);
+  assert.equal(S.autobuz.pl, 4);                                  // joi 08:00, 4 unități (fără ranforsare)
+  assert.equal(S.v, 4);
+  assert.equal(S.acoperire, 0.25);
+});
+
+test('alias_rute: un cod Tranzy necunoscut în orar se potrivește pe ruta liniei (ambele sensuri încercate)', () => {
+  const tr = new C.Tracker({ ...plan, alias_rute: { 65: '99' } });
+  tr.add({ actualizat: T, vehicule: [{ id: 1, ruta: '65', sens: '1', ts: T, tip: 'tramvai', ...at(1500) }] });
+  assert.equal(C.analyze(tr).vehicule[0].key, '99_0');
+});

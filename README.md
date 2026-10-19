@@ -302,6 +302,11 @@ regulat** sunt distanțate (plutoane = două vehicule lipite, goluri = peste dub
 tramvaie oprite pe aceeași porțiune – posibilă blocare”) și harta vitezei reale pe tronsoane de 250 m, în ultima
 jumătate de oră. Metoda completă e în pagină („Cum se calculează”); calculele sunt în `public/transport/sanatate/core.js`.
 
+- **Pe stradă** (cifra principală): vehiculele active ale rețelei urbane (tramvaiele și autobuzele care nu ies din
+  municipiu, inclusiv cele cu linie nerecunoscută, fără cele garate) față de unitățile din **planificarea S.C.T.P. din
+  8 septembrie 2025** (`data/transport/ctp_planificare.json`: pe linie, zi lucrătoare / sâmbătă / duminică, ranforsarea
+  la vârf). **Acoperirea datelor** = partea vehiculelor cu linie recunoscută: sursa GPS dă multor vehicule coduri de rută
+  care lipsesc din orarul GTFS (ex. „ruta 65” la zeci de tramvaie) – doar cele recunoscute intră în scorul pe linii.
 - **Planul de referință**: `python scripts/transport_sanatate.py` → `public/data/transport/sanatate_plan.json` (formele
   traseelor din `rute_gtfs.geojson`, simplificate, și cursele din orar pe tip de zi). Rulează automat în acțiunea
   **Trasee transport public**, după `transport_gtfs.py`.

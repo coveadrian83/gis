@@ -134,21 +134,34 @@
   // ---------- panoul ----------
   function hero() {
     var R = A.retea, lv = C.level(R.scor), el = $('score');
-    el.style.borderColor = lv.culoare;
-    el.querySelector('b').textContent = R.scor == null ? '–' : R.scor;
+    // cercul: vehiculele pe stradă față de planificarea CTP (fără planificare: scorul liniilor)
+    if (R.strada && R.strada.raport != null) {
+      var x = R.strada.raport;
+      el.style.borderColor = x >= 0.9 ? '#2fa66a' : x >= 0.75 ? '#c9b52b' : x >= 0.5 ? '#e58a2e' : '#d8433b';
+      el.querySelector('b').textContent = Math.round(x * 100) + '%';
+      el.querySelector('small').textContent = 'pe stradă';
+    } else {
+      el.style.borderColor = lv.culoare;
+      el.querySelector('b').textContent = R.scor == null ? '–' : R.scor;
+    }
     var t = clock(A.t);
-    var running = Object.keys(A.linii).length;
-    $('heroText').innerHTML = 'Rețeaua e <b>' + lv.nume + '</b> acum (' + t + '): ' + running + ' linii-sens în circulație, ' +
-      '<b>' + R.cuGps + '</b> vehicule cu GPS pe traseu față de <b>' + R.planificate + '</b> cerute de orar.';
+    var S = R.strada, pctS = function (x) { return x == null ? '–' : Math.round(x * 100) + '%'; };
+    $('heroText').innerHTML = S ? 'Acum (' + t + ') sunt <b>' + S.v + '</b> vehicule pe stradă în rețeaua urbană, față de <b>' + S.pl +
+      '</b> din planificarea CTP: autobuze ' + S.autobuz.total + ' / ' + S.autobuz.pl + ', tramvaie ' + S.tramvai.total + ' / ' + S.tramvai.pl +
+      '. Scorul liniilor: <b>' + (R.scor == null ? '–' : R.scor) + '</b> (' + lv.nume + ').'
+      : 'Rețeaua e <b>' + lv.nume + '</b> acum (' + t + '): <b>' + R.cuGps + '</b> vehicule cu GPS pe traseu față de <b>' + R.planificate + '</b> cerute.';
     var lipsa = A.alerte.filter(function (a) { return a.tip === 'lipsa'; }).length;
-    $('kpis').innerHTML = [
-      [R.serviciu == null ? '–' : Math.round(R.serviciu * 100) + '%', 'din serviciul din orar e pe stradă, cu GPS'],
+    $('kpis').innerHTML = (S ? [
+      [pctS(S.raport), 'pe stradă față de planificarea CTP (autobuze ' + pctS(S.autobuz.pl ? S.autobuz.total / S.autobuz.pl : null) + ', tramvaie ' + pctS(S.tramvai.pl ? S.tramvai.total / S.tramvai.pl : null) + ')'],
+      [pctS(S.acoperire), 'acoperirea datelor: vehicule active cu linie recunoscută (' + (S.autobuz.nec + S.tramvai.nec) + ' fără)']
+    ] : []).concat([
+      [R.serviciu == null ? '–' : Math.round(R.serviciu * 100) + '%', 'serviciul pe linii: vehicule cu linie recunoscută față de unitățile cerute'],
       [fmt(R.viteza) + ' km/h', 'viteza mediană de avans pe traseu (fără capete)'],
       [R.pluton, R.pluton === 1 ? 'pluton (vehicule lipite pe aceeași linie)' : 'plutoane (vehicule lipite pe aceeași linie)'],
       [R.opriti, 'vehicule oprite de peste 3 minute pe traseu'],
-      [lipsa, lipsa === 1 ? 'linie fără niciun vehicul cu GPS (orarul cere ≥ 2)' : 'linii fără niciun vehicul cu GPS (orarul cere ≥ 2)'],
-      [R.faraLinie + (R.garate ? ' · ' + R.garate : ''), 'vehicule fără linie' + (R.garate ? ' · garate (depou, autobază, departe de traseu)' : '')]
-    ].map(function (k) { return '<div><b>' + k[0] + '</b><small>' + k[1] + '</small></div>'; }).join('');
+      [lipsa, lipsa === 1 ? 'linie fără niciun vehicul recunoscut (se cer ≥ 2)' : 'linii fără niciun vehicul recunoscut (se cer ≥ 2)'],
+      [R.garate + (S ? ' · ' + S.metropolitane : ''), 'garate (depou, autobază, oprite îndelung)' + (S ? ' · pe linii metropolitane' : '')]
+    ]).map(function (k) { return '<div><b>' + k[0] + '</b><small>' + k[1] + '</small></div>'; }).join('');
   }
 
   var ALERT_LBL = { blocaj: 'blocaj', pluton: 'pluton', gol: 'gol', oprit: 'oprit', lipsa: 'lipsă' };

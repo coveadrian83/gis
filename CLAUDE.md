@@ -16,4 +16,11 @@
   datele se generează pe branch-ul PR-ului. Nu adăuga commit-uri automate pe `main`.
 - `netlify.toml` → `ignore`: publicarea se sare dacă nu se schimbă `public/`, `netlify/`, `server/`, `config/`,
   `netlify.toml` sau dependențele.
-- Cota cheii Tranzy: 5.000 de cereri pe zi (colectarea GPS 1.440 + `/live/vehicule` cel mult 2.880).
+- Cota cheii Tranzy: 5.000 de cereri pe zi (colectarea GPS 1.440 + `/live/vehicule` cel mult 2.880; acțiunea
+  „Rute Tranzy” – o cerere pe săptămână).
+
+## Harta sănătății – referințe
+- Câte vehicule trebuie pe stradă: `data/transport/ctp_planificare.json` (planificarea S.C.T.P. din 8 sept. 2025),
+  nu orarul GTFS (care cere ~170 de vehicule toată ziua). Intervalele de ranforsare sunt o ipoteză (06:30–09:00, 15:00–18:30).
+- Codurile de rută din GPS pot lipsi din orarul GTFS: `scripts/transport_tranzy.py` (secretul GitHub `TRANZY_API_KEY`)
+  descarcă rutele curente, iar `transport_sanatate.py` face corespondența (`alias_rute`).
