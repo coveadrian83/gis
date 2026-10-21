@@ -207,6 +207,12 @@ de Consiliul Local Iași din 2016 până azi, pe hartă, peste cele 17 zone MVA�
 
 ## Transport public – Iași și Zona Metropolitană (`/transport/`)
 
+> **Pe pauză din 21.10.2026** (`netlify/lib/pauza.mjs`): proiectul nu e încă de promovat public, iar creditele Netlify
+> merg spre studiul de mobilitate. Colectarea GPS și raportul orar nu mai rulează (fără program), `/live/vehicule`
+> răspunde 503 fără să contacteze Tranzy, iar `/transport/*` și `/live/*` nu sunt indexate și nu mai au linkuri din
+> celelalte pagini. Arhiva GPS strânsă până atunci rămâne în Netlify Blobs (`/live/istoric`). Repornire: `PAUZA = false`
+> și programele din `gps-colectare.mjs` (`* * * * *`) și `raport-zilnic.mjs` (`7 * * * *`).
+
 Hartă în stilul hărților de volum de pasageri (cercuri proporționale, animație lună cu lună): traseele liniilor
 CTP și titlurile de călătorie vândute în comunele ZMI deservite de CTP, ianuarie 2023 – decembrie 2025.
 
