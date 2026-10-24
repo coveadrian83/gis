@@ -12,3 +12,5 @@ data/transport/*.xlsx
 data/chestionar_velo/
 # exportul Poliției cu accidentele (are numărul fișei și data exactă) – se publică doar punctele reduse (public/micromobilitate/data/accidente.json)
 data/accidente/
+# fișierele de lucru ale Masterplanului velo (DXF de 18 MB) – se publică doar rețeaua propusă convertită (public/micromobilitate/data/retea_propusa.geojson)
+data/masterplan/

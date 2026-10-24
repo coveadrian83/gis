@@ -149,6 +149,9 @@ cu aceeași deplasare **fără restricții** și cu mersul pe jos.
   (`scripts/accidente_velo.py`; exportul brut rămâne local în `data/accidente/`, ignorat de git); pistele existente
   neconforme din Masterplanul Velo 2023 (8 trasee, 26,5 km, `data/piste_masterplan.json`) nu contează ca infrastructură
   bună în rețeaua confortabilă / sigură, în scorul de risc și în lipsurile din rețea.
+- **Rețeaua velo propusă (Masterplan)**: planșa DXF convertită (`scripts/retea_velo_propusa.py`, `data/retea_propusa.geojson`),
+  strat pe hartă, scenariul „rețeaua propusă construită” (toate calculele, cu diferența față de acum) și acoperirea
+  lipsurilor din rețea de către propuneri.
 - **Linia de comandă**: `node scripts/analiza-micro15.js [--vehicle scooter --kmh 18 --min 15 --ref free --out var/zone.csv]`.
 - Metodologia și **cadrul legal** (definiții, reguli, RCA din 16.11.2025, proiecte în curs): `public/micromobilitate/metodologie.html`.
 

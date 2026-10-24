@@ -288,3 +288,31 @@ test('pistele neconforme (Masterplan 2023): după nume sau lângă strada din in
   assert.equal(M.comfortable(g, 3), false);
   g.mflag[0] &= ~M.F_LANE; g.nonconf = null;
 });
+
+test('rețeaua propusă: segmentele de-a lungul traseului; scenariul le face piste bune (risc 1, legale în ambele sensuri)', () => {
+  // o linie „primară” de-a lungul bulevardului 0 → 1 (la 4 m) și una „locală” de-a lungul străzii 1 → 3
+  const off = (p, dy) => [p[0], p[1] + dy * DLAT];
+  const geo = { features: [
+    { geometry: { type: 'LineString', coordinates: [off(NODES[0], 4), off(NODES[1], 4)] }, properties: { cat: 'primara' } },
+    { geometry: { type: 'LineString', coordinates: [NODES[1], NODES[3]] }, properties: { cat: 'locala' } },
+    { geometry: { type: 'Point', coordinates: NODES[5] }, properties: { cat: 'rastel' } }
+  ] };
+  M.markProposed(g, geo, 15);
+  assert.equal(g.prop[0], M.PROP_CODE.primara);
+  assert.equal(g.prop[2], M.PROP_CODE.locala);
+  assert.equal(g.prop[3], 0);
+  M.useScenario(g, false);
+  assert.equal(g.risk[0], 5);
+  assert.equal(M.legalMode(g, 0, V.scooter, true), M.PUSH);       // trotineta, 60 km/h fără pistă
+  M.useScenario(g, true);
+  assert.equal(g.risk[0], 1);
+  assert.equal(M.legalMode(g, 0, V.scooter, true), M.RIDE);       // pista propusă
+  assert.ok(g.risk[2] <= 2);
+  // sensul unic 3 → 1 rămâne pentru strada locală (doar trafic calmat), dar nu și pentru pista separată
+  const t = M.edgeTimes(g, V.bike, { v0: V.bike.v0, legal: true });
+  assert.equal(t.mf[2], M.PUSH);
+  assert.equal(t.mf[0], M.RIDE); assert.equal(t.mb[0], M.RIDE);
+  M.useScenario(g, false);
+  assert.equal(g.risk[0], 5);                                    // revenirea la situația actuală
+  delete g.prop; delete g._riskNow; delete g._riskScen; delete g.risk; g.scen = false;
+});

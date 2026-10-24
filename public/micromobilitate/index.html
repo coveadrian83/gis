@@ -122,6 +122,14 @@
     <div id="riskValidation"></div>
   </details>
 
+  <details id="propBox" hidden>
+    <summary>Rețeaua velo propusă (Masterplan)</summary>
+    <p class="note">„Ierarhizare rețea velo propusă” din Masterplanul Piste Velo Iași. Expres, primară și secundară: piste separate fizic de mașini și de pietoni, min. 2 m pe sens; terțiară și locală: carosabil comun cu trafic calmat. Scenariul tratează segmentele rețelei OSM de-a lungul acestor trasee ca și cum ar fi construite (risc 1, respectiv cel mult 2; pistele separate legale în ambele sensuri). Traseele noi, fără drum în OSM (de exemplu pe malurile râurilor), nu pot fi încă parcurse în calcul.</p>
+    <label><input type="checkbox" id="showProp"> Arată rețeaua propusă <span class="propkey" id="propKey"></span></label>
+    <label><input type="checkbox" id="scen"> Scenariu: rețeaua propusă construită</label>
+    <p class="note">Cu scenariul bifat, toate calculele (accesibilitatea, zonele, lipsurile, scorul de risc) folosesc rețeaua propusă; sub statistici apare diferența față de situația actuală. În „Lipsuri în rețea”, coloana „Masterplan” arată dacă segmentul e acoperit de o propunere.</p>
+  </details>
+
   <details id="gapsBox">
     <summary>Lipsuri în rețea</summary>
     <p class="note">Unde ar ajuta cel mai mult o pistă, o bandă sau un contrasens pentru biciclete? Din puncte pe o grilă în cele 17 zone se caută drumurile cele mai rapide <i>fără restricții</i> până la facilitățile atinse în timpul ales. Fiecare segment de pe aceste drumuri pe care vehiculul ales nu poate circula legal (sau în rețeaua confortabilă, dacă e bifată) primește un punct pentru fiecare facilitate. Scorul este media pe punctele grilei.</p>

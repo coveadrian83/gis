@@ -47,7 +47,9 @@
   var MODE_RISK = { 3: 2, 4: 3 };
   var MODE_LABEL = { 2: 'rețeaua confortabilă', 3: 'rețeaua sigură (risc 1–2)', 4: 'risc cel mult 3' };
   var RISK_COLORS = ['#1a9850', '#91cf60', '#fee08b', '#fc8d59', '#d73027'];
-  var ACC = null, ACC_EDGE = null, MASTERPLAN = null;
+  var ACC = null, ACC_EDGE = null, MASTERPLAN = null, PROP = null;
+  var PROP_COLORS = { expres: '#6a3d9a', expres_cf: '#cab2d6', primara: '#e31a1c', secundara: '#ff7f00', tertiara: '#1f78b4', locala: '#33a02c', agrement: '#b15928' };
+  var PROP_ORDER = ['expres', 'expres_cf', 'primara', 'secundara', 'tertiara', 'locala', 'agrement'];
   var SURVEY_CLASSES = [[1, '#b2182b', 1], [11, '#f46d43', 2], [31, '#fdae61', 3], [61, '#e6e600', 3.5], [121, '#a6d96a', 4.5], [251, '#4d9221', 6]];
   var ZONES = null, zoneLayer = null, zoneResults = null, zoneRunning = false;
   var origin = L.latLng(47.16485, 27.58186), state = null, queued = false;
@@ -109,16 +111,21 @@
   /* timpii pe segmente pentru un vehicul (păstrați până se schimbă setările);
    * mode: 0 = fără restricții, 1 = după Codul rutier, 2 = doar rețeaua confortabilă, 3 / 4 = doar segmentele cu
    * risc cel mult 2 / 3 (MODE_RISK) */
-  function times(k, v0, mode, slope) {
-    var key = k + '|' + v0.toFixed(4) + '|' + mode + '|' + (slope ? 1 : 0);
+  // scenariul „rețeaua propusă (Masterplan) construită”
+  function scenOn() { return !!(PROP && $('scen').checked); }
+  function times(k, v0, mode, slope, scen) {
+    if (scen === undefined) scen = scenOn();
+    var key = k + '|' + v0.toFixed(4) + '|' + mode + '|' + (slope ? 1 : 0) + '|' + (scen ? 1 : 0);
     if (!timesCache[key]) {
-      if (Object.keys(timesCache).length > 24) timesCache = {};
+      if (Object.keys(timesCache).length > 32) timesCache = {};
+      if (k !== 'walk') M.useScenario(G, scen);
       timesCache[key] = k === 'walk' ? M.walkTimes(G, WALK, slope)
         : M.edgeTimes(G, M.VEHICLES[k], { v0: v0, legal: mode > 0, comfort: mode === 2, maxRisk: MODE_RISK[mode] || 0, slope: slope });
+      M.useScenario(G, scenOn());
     }
     return timesCache[key];
   }
-  function profileFor(k, v0, mode, slope) { return M.coreProfile(times(k, v0, mode, slope), 1.2); }
+  function profileFor(k, v0, mode, slope, scen) { return M.coreProfile(times(k, v0, mode, slope, scen), 1.2); }
   function describe(s) {
     return veh().name + ', ' + fmt(s.v0 * 3.6) + ' km/h' + (MODE_LABEL[s.mode] ? ', ' + MODE_LABEL[s.mode] : s.legal ? ', după Codul rutier' : ', fără restricții') +
       (s.slope ? ', cu pantă' : ', teren plat') + (s.onlyPark ? ', doar facilitățile cu parcare' : '');
@@ -211,7 +218,7 @@
       '<table><thead><tr><th></th><th>Vehicul</th><th>Fără restr.</th><th>Pe jos</th></tr></thead><tbody>' + rows +
       '<tr><td><b>Total facilități</b></td><td><b>' + cA.amen + '</b></td><td>' + cF.amen + '</td><td>' + cW.amen + '</td></tr>' + extra + '</tbody></table>' +
       '<div class="note">' + cA.present + ' din 5 categorii prezente. ' + (gain !== null ? 'De ' + fmt(gain, 1) + ' ori mai multe facilități decât pe jos (1,4 m/s)' : '') +
-      (s.legal && lost > 0 ? '; regulile de circulație și lipsa pistelor reduc numărul cu ' + lost + '% față de varianta fără restricții.' : '.') + '</div>' + parkLine(cA);
+      (s.legal && lost > 0 ? '; regulile de circulație și lipsa pistelor reduc numărul cu ' + lost + '% față de varianta fără restricții.' : '.') + '</div>' + propLine(snap, s.T, s, cA.amen) + parkLine(cA);
   }
 
   // câte dintre facilitățile atinse au o parcare de biciclete la cel mult PARK_RADIUS metri
@@ -316,7 +323,8 @@
       ctx.globalAlpha = 1;
     }
     if (SURVEY && $('showSurvey').checked && z >= 11) drawSurvey(ctx, X, Y, box, z);
-    if (G.risk && $('showRisk').checked && z >= 11) drawRisk(ctx, X, Y, box, z);
+    if (G.risk && $('showRisk').checked && z >= 11) { M.useScenario(G, scenOn()); drawRisk(ctx, X, Y, box, z); }
+    if (PROP && $('showProp').checked) drawProposed(ctx, X, Y, z);
     // lipsurile din rețea: grosimea și opacitatea după scor
     if (GAPS && $('showGaps').checked && z >= 11) {
       var top = GAPS.top, max = GAPS.max;
@@ -383,13 +391,69 @@
     drawAccidents(ctx, X, Y, size, z);
   }
 
+
+  // ---------------------------------------------------------------- rețeaua propusă (Masterplan)
+  function propOf(edges) {
+    var best = 0, len = 0, cov = 0;
+    edges.forEach(function (e) { len += G.elen[e]; if (G.prop[e]) { cov += G.elen[e]; if (!best || G.prop[e] < best) best = G.prop[e]; } });
+    return best ? M.PROP_NAME[best] + (cov < len * 0.9 ? ' (parțial)' : '') : '<span class="miss">nu</span>';
+  }
+  function drawProposed(ctx, X, Y, z) {
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    PROP_ORDER.slice().reverse().forEach(function (cat) {
+      ctx.beginPath(); ctx.strokeStyle = PROP_COLORS[cat]; ctx.globalAlpha = 0.85;
+      ctx.lineWidth = Math.max(2, Math.min(8, (z - 10) * (cat === 'expres' || cat === 'primara' ? 1.1 : 0.8)));
+      if (cat === 'expres_cf') ctx.setLineDash([6, 5]);
+      PROP.features.forEach(function (f) {
+        if (f.geometry.type !== 'LineString' || f.properties.cat !== cat) return;
+        f.geometry.coordinates.forEach(function (c, i) {
+          var m = C.merc(c[0], c[1]);
+          if (i) ctx.lineTo(X(m[0]), Y(m[1])); else ctx.moveTo(X(m[0]), Y(m[1]));
+        });
+      });
+      ctx.stroke(); ctx.setLineDash([]);
+    });
+    ctx.globalAlpha = 1;
+  }
+  // de câte facilități te apropie rețeaua propusă, din punctul ales, cu setările curente
+  function propLine(snap, T, s, current) {
+    if (!PROP || s.mode === 0) return '';
+    var other = profileFor(vehicle, s.v0, s.mode, s.slope, !scenOn());
+    var d = C.dijkstra(G, snap.node, snap.dist / other.access, other, T, wsC);
+    var o = C.countReach(state.pois, d, other, T, false).amen;
+    var before = scenOn() ? o : current, after = scenOn() ? current : o;
+    return '<div class="note propnote"><b>Rețeaua propusă (Masterplan)</b>: cu ea construită ' + after + ' facilități, acum ' + before +
+      (before ? ' (' + (after >= before ? '+' : '') + fmt((after / before - 1) * 100) + '%)' : '') + ' – ' + (MODE_LABEL[s.mode] || 'după Codul rutier') + '.</div>';
+  }
+  // ce parte din „lipsuri” (scor × lungime) se află pe rețeaua propusă
+  function propCoverage() {
+    if (!PROP || !GAPS) return '';
+    var all = 0, cov = 0;
+    for (var e = 0; e < G.nE; e++) {
+      var w = GAPS.score[e] * G.elen[e];
+      if (!w) continue;
+      all += w; if (G.prop[e]) cov += w;
+    }
+    return all ? ' Rețeaua propusă în Masterplan acoperă ' + fmt(cov / all * 100) + '% din lipsuri (ponderat cu scorul și lungimea).' : '';
+  }
+  $('showProp').addEventListener('change', draw);
+  $('scen').addEventListener('change', function () { timesCache = {}; M.useScenario(G, scenOn()); renderRiskValidation(); schedule(); });
+
   // ---------------------------------------------------------------- siguranța
-  function initSafety(tram, acc, mp) {
+  function initSafety(tram, acc, mp, prop) {
     MASTERPLAN = mp;
+    if (prop) {
+      PROP = prop;
+      M.markProposed(G, prop);
+      $('propBox').hidden = false;
+      $('propKey').innerHTML = PROP_ORDER.map(function (c) {
+        return '<span style="background:' + PROP_COLORS[c] + '"></span>' + M.PROP_NAME[M.PROP_CODE[c]];
+      }).join(' ');
+    }
     if (mp) {   // pistele neconforme au nevoie de denumirile străzilor (edges.json)
       loadNames().then(function (names) {
         M.markNonconforming(G, names, mp);
-        M.riskBands(G);
+        M.resetRisk(G);
         timesCache = {};
         renderRiskValidation();
         schedule();
@@ -397,7 +461,7 @@
     }
     if (tram) M.markTram(G, tram.linii);
     if (TRANSIT) M.markBus(G, TRANSIT);
-    M.riskBands(G);
+    M.resetRisk(G);
     timesCache = {};
     $('riskKey').innerHTML = RISK_COLORS.map(function (c, i) { return '<span style="background:' + c + '"></span>' + (i + 1); }).join(' ');
     if (acc) {
@@ -632,7 +696,7 @@
       $('runGaps').disabled = false; $('csvGaps').disabled = !top.length;
       $('gapToggle').hidden = !top.length;
       $('gapsStatus').textContent = 'Calculat în ' + fmt((Date.now() - t0) / 1000, 1) + ' s din ' + origins.length + ' puncte: ' + describe(s) + ', ' + s.minutes +
-        ' min. Scor = facilități pe punct pentru care drumul cel mai rapid trece pe acolo fără să poată fi parcurs legal pe vehicul.';
+        ' min. Scor = facilități pe punct pentru care drumul cel mai rapid trece pe acolo fără să poată fi parcurs legal pe vehicul.' + propCoverage();
       loadNames().then(renderGaps);
       draw();
     }
@@ -687,10 +751,12 @@
     var list = gapGroups().slice(0, 25);
     GAPS.groups = list;
     $('gapTable').innerHTML = '<thead><tr><th>Stradă / segment</th><th>Motiv</th><th>m</th><th>Scor</th>' +
-      (SURVEY ? '<th title="Respondenți care au numit strada: parcursă cel mai des / dorită pentru biciclete și pietoni">Chest.</th>' : '') + '</tr></thead><tbody>' +
+      (SURVEY ? '<th title="Respondenți care au numit strada: parcursă cel mai des / dorită pentru biciclete și pietoni">Chest.</th>' : '') +
+      (PROP ? '<th title="Rețeaua velo propusă în Masterplan care acoperă segmentul">Masterplan</th>' : '') + '</tr></thead><tbody>' +
       list.map(function (g, k) {
         return '<tr data-k="' + k + '"><td>' + esc(g.name) + '</td><td>' + esc(g.reason) + '</td><td>' + fmt(g.len) + '</td><td>' + fmt(g.score, 1) + '</td>' +
-          (SURVEY ? '<td>' + (g.demand ? g.parcurse + ' / ' + g.dorite : '–') + '</td>' : '') + '</tr>';
+          (SURVEY ? '<td>' + (g.demand ? g.parcurse + ' / ' + g.dorite : '–') + '</td>' : '') +
+          (PROP ? '<td>' + propOf(g.edges) + '</td>' : '') + '</tr>';
       }).join('') + '</tbody>';
   }
   $('gapTable').addEventListener('click', function (ev) {
@@ -793,7 +859,7 @@
       var s = settings();
       var q = new URLSearchParams({ lat: origin.lat.toFixed(5), lng: origin.lng.toFixed(5), min: s.minutes, v: vehicle,
         kmh: $('speed').value, lg: s.legal ? 1 : 0, net: $('network').value, tp: $('transit').checked ? 1 : 0,
-        pk: $('onlyPark').checked ? 1 : 0, pa: $('slope').checked ? 1 : 0, z: map.getZoom() });
+        pk: $('onlyPark').checked ? 1 : 0, sc: scenOn() ? 1 : 0, pa: $('slope').checked ? 1 : 0, z: map.getZoom() });
       try { history.replaceState(null, '', '#' + q.toString()); } catch (e) { /* unele browsere limitează */ }
     }, 300);
   }
@@ -810,6 +876,7 @@
     if (/^[1-4]$/.test(q.get('net') || '')) $('network').value = q.get('net');
     if (q.get('tp') === '1') $('transit').checked = true;
     if (q.get('pk') === '1') $('onlyPark').checked = true;
+    if (q.get('sc') === '1') $('scen').checked = true;
     if (q.get('pa') === '0') $('slope').checked = false;
     labels();
     var z = num('z', 10, 19);
@@ -847,7 +914,8 @@
     fetch('data/chestionar.json').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
     fetch('data/tramvai.json').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
     fetch('data/accidente.json').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
-    fetch('data/piste_masterplan.json').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })]).then(function (res) {
+    fetch('data/piste_masterplan.json').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
+    fetch('data/retea_propusa.geojson').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })]).then(function (res) {
     var meta = res[0];
     G = C.parseGraph(res[1]); grid = C.buildGrid(G);
     M.parseMicro(res[2], G);
@@ -863,7 +931,7 @@
     POIS_PARK = poisView(res[3].cats, pts, POIS_ALL.snap, function (p, i) { return p[2] > 4 || PARKFLAG[i]; });
     if (res[5]) { TRANSIT = M.prepareTransit(res[5], G, grid, C.nearestNode); $('transitBox').hidden = false; }
     if (res[6]) initSurvey(res[6]);
-    initSafety(res[7], res[8], res[9]);
+    initSafety(res[7], res[8], res[9], res[10]);
     origin = L.latLng(meta.start[0], meta.start[1]);
     var h = applyHash(meta);
     if (!h.hadOrigin) {

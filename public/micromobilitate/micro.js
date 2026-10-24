@@ -78,6 +78,7 @@
    * străzile locale, străzile cu bandă / pistă și străzile terțiare cu limita etichetată de cel mult 30 km/h. */
   function comfortable(g, e) {
     var c = g.cls[e];
+    if (upgraded(g, e)) return true;   // scenariul „rețeaua propusă construită”
     if (g.nonconf && g.nonconf[e]) return false;   // pistă neconformă (Masterplan 2023): nu contează ca infrastructură bună
     if (c === CLS.CYCLEWAY || c === CLS.SHARED || c === CLS.PATH || c === CLS.LOCAL) return true;
     if (c > CLS.LOCAL && c <= CLS.TRUNK) return !!(g.mflag[e] & F_LANE) || (c === CLS.TERTIARY && g.maxspeed[e] > 0 && g.maxspeed[e] <= 30);
@@ -92,9 +93,10 @@
     if (c === CLS.MOTORWAY) return NO;
     if (c === CLS.STEPS) return veh.carry ? PUSH : NO;
     if (!legal) return RIDE;
+    if (separatedUpgrade(g, e)) return RIDE;   // pistă nouă, separată (expres / primară / secundară propusă)
     var push = walkable ? PUSH : NO;
     if (comfort === true && !comfortable(g, e)) return push;
-    if (typeof comfort === 'number' && g.risk && g.risk[e] > comfort && (c !== CLS.CYCLEWAY || (g.nonconf && g.nonconf[e]))) return push;
+    if (typeof comfort === 'number' && g.risk && g.risk[e] > comfort && (c !== CLS.CYCLEWAY || (g.nonconf && g.nonconf[e] && !upgraded(g, e)))) return push;
     if (c === CLS.CYCLEWAY) return RIDE;
     if (veh.rules === 'bicycle') {
       if (c === CLS.SHARED || c === CLS.PATH) return RIDE;
@@ -176,7 +178,7 @@
         var surf = surfaceFactor(g, e, veh);
         var rf = rideTime(veh, pw, L, slope ? g.up[e] : 0, slope ? g.dn[e] : 0, surf);
         var rb = rideTime(veh, pw, L, slope ? g.dn[e] : 0, slope ? g.up[e] : 0, surf);
-        var ow = opt.legal ? oneway(g, e) : 0;
+        var ow = opt.legal && !separatedUpgrade(g, e) ? oneway(g, e) : 0;
         if (ow === 2) rf = Infinity;
         if (ow === 1) rb = Infinity;
         // pe o pantă foarte abruptă (sau în contrasens) e mai repede / singura opțiune să mergi pe jos
@@ -369,6 +371,70 @@
     return flag;
   }
 
+
+  // ---------------------------------------------------------------- rețeaua propusă (Masterplan)
+  /* Categoriile din retea_propusa.geojson (scripts/retea_velo_propusa.py). Expres, primară și secundară: piste separate
+   * fizic de mașini și de pietoni, min. 2 m pe sens (cerințele Masterplanului); terțiară, locală, agrement: carosabil
+   * comun cu trafic calmat sau alei. */
+  var PROP_CODE = { expres: 1, primara: 2, secundara: 3, tertiara: 4, locala: 5, agrement: 6, expres_cf: 7 };
+  var PROP_NAME = ['', 'expres', 'primară', 'secundară', 'terțiară', 'locală', 'agrement', 'expres CF (draft)'];
+  var SEPARATED = { 1: true, 2: true, 3: true, 7: true };
+  function upgraded(g, e) { return g.scen && g.prop ? g.prop[e] : 0; }
+  function separatedUpgrade(g, e) { var u = upgraded(g, e); return u && SEPARATED[u]; }
+
+  /* Segmentele rețelei care urmează o linie propusă: puncte la 10 m de-a lungul liniei; o muchie la cel mult maxM
+   * metri și aproape paralelă (|cos| ≥ 0,7) primește o „atingere”; e marcată dacă atingerile acoperă ≥ 40 % din ea
+   * (sau măcar una, sub 25 m). La suprapuneri rămâne categoria superioară (expres < primară < …). */
+  function markProposed(g, geo, maxM) {
+    maxM = maxM || 15;
+    var hits = new Float32Array(g.nE), best = new Uint8Array(g.nE), eg = edgeGrid(g, 120);
+    var rank = function (c) { return c === 7 ? 1.5 : c; };
+    geo.features.forEach(function (f) {
+      if (f.geometry.type !== 'LineString') return;
+      var code = PROP_CODE[f.properties.cat];
+      if (!code) return;
+      var cs = f.geometry.coordinates, seen = {};
+      for (var i = 1; i < cs.length; i++) {
+        var a = cs[i - 1], b = cs[i], k = Math.cos(a[1] * Math.PI / 180) * 111320;
+        var dx = (b[0] - a[0]) * k, dy = (b[1] - a[1]) * 110540, L = Math.hypot(dx, dy), n = Math.max(1, Math.ceil(L / 10));
+        for (var j = 0; j < n; j++) {
+          var lon = a[0] + (b[0] - a[0]) * (j + 0.5) / n, lat = a[1] + (b[1] - a[1]) * (j + 0.5) / n;
+          eg.near(lon, lat, 1).forEach(function (e) {
+            var c = g.cls[e];
+            if (c === CLS.STEPS || c === CLS.MOTORWAY) return;
+            if (distToLine(lon, lat, edgeLonLat(g, e)) > maxM) return;
+            var ex = (g.lon[g.ev[e]] - g.lon[g.eu[e]]) * k, ey = (g.lat[g.ev[e]] - g.lat[g.eu[e]]) * 110540, EL = Math.hypot(ex, ey);
+            if (EL > 1 && L > 1 && Math.abs((ex * dx + ey * dy) / (EL * L)) < 0.7) return;
+            var key = e + ':' + i + ':' + j;
+            if (seen[key]) return;
+            seen[key] = 1;
+            hits[e] += L / n;
+            if (!best[e] || rank(code) < rank(best[e])) best[e] = code;
+          });
+        }
+      }
+    });
+    var prop = new Uint8Array(g.nE);
+    for (var e = 0; e < g.nE; e++) {
+      if (!best[e]) continue;
+      if (hits[e] >= 0.4 * g.elen[e] || (g.elen[e] < 25 && hits[e] > 0)) prop[e] = best[e];
+    }
+    g.prop = prop;
+    return prop;
+  }
+
+  /* Comută scenariul „rețeaua propusă construită” și scorul de risc corespunzător (calculat o dată pe stare). */
+  function useScenario(g, on) {
+    on = !!(on && g.prop);
+    if (g.scen === on && g.risk) return;
+    g.scen = on;
+    var key = on ? '_riskScen' : '_riskNow';
+    if (!g[key]) { g[key] = riskBands(g); }
+    g.risk = g[key];
+  }
+  // după schimbarea factorilor (șine, autobuze, piste neconforme) scorurile se recalculează
+  function resetRisk(g) { delete g._riskScen; delete g._riskNow; var on = g.scen; g.scen = null; g.risk = null; useScenario(g, on); }
+
   // ---------------------------------------------------------------- siguranța: scorul de risc pe segmente
   /* Scorul descrie GRAVITATEA probabilă a unui accident pe segment (energia la impact: viteza și volumul traficului
    * motorizat), nu probabilitatea lui – vezi Rotariu (2026), „Severity Without Frequency”: un scor de acest tip a
@@ -379,7 +445,8 @@
   var RISK_BASE = [0, 1, 1, 1, 2, 3, 4, 5, 6, 1, 1, 1];   // pe clase CLS (trotuarul / scările: parcurse pe jos)
   var RISK_BANDS = [1, 2, 3, 3, 4, 4, 5];                  // puncte → clasă 1–5 (≥ 6 → 5)
   function riskPoints(g, e) {
-    var c = g.cls[e], f = g.mflag[e], p = RISK_BASE[c];
+    var c = g.cls[e], f = g.mflag[e], p = RISK_BASE[c], up = upgraded(g, e);
+    if (up && SEPARATED[up]) return 0;   // pistă propusă separată fizic, min. 2 m (Masterplan): ca o pistă bună
     // pistă pe trotuar neconformă: conflicte cu pietonii, intersecții neamenajate (sidepath – nefavorabil în Rotariu 2026)
     if (g.nonconf && g.nonconf[e] && (c === CLS.CYCLEWAY || c === CLS.SHARED)) p = 2;
     if (c >= CLS.LOCAL && c <= CLS.TRUNK) {
@@ -392,6 +459,7 @@
       if (g.bus && g.bus[e] >= 12) p += 1;      // ≥ 12 autobuze / oră la vârf: trafic greu, opriri peste bicicletă
     }
     if (f & F_SETT) p += 1;                     // piatră cubică: căderi
+    if (up) p = Math.min(p, 1);          // terțiară / locală / agrement propusă: trafic calmat, carosabil comun
     return Math.max(0, p);
   }
   function riskBand(g, e) { return RISK_BANDS[Math.min(RISK_BANDS.length - 1, riskPoints(g, e))]; }
@@ -528,7 +596,8 @@
     parseMicro: parseMicro, speedLimit: speedLimit, comfortable: comfortable, legalMode: legalMode,
     parkingNearby: parkingNearby, prepareTransit: prepareTransit, transitArrivals: transitArrivals, transitSources: transitSources,
     dijkstraPred: dijkstraPred, gapScores: gapScores, RISK_BASE: RISK_BASE, riskPoints: riskPoints, riskBand: riskBand,
-    riskBands: riskBands, distToLine: distToLine, markNonconforming: markNonconforming, markTram: markTram, markBus: markBus, snapAccidents: snapAccidents, riskTable: riskTable, oneway: oneway, powers: powers,
+    riskBands: riskBands, distToLine: distToLine, markNonconforming: markNonconforming, PROP_CODE: PROP_CODE, PROP_NAME: PROP_NAME,
+    markProposed: markProposed, useScenario: useScenario, resetRisk: resetRisk, upgraded: upgraded, markTram: markTram, markBus: markBus, snapAccidents: snapAccidents, riskTable: riskTable, oneway: oneway, powers: powers,
     speedOnGrade: speedOnGrade, rideTime: rideTime, edgeTimes: edgeTimes, walkTimes: walkTimes, coreProfile: coreProfile
   };
 });
