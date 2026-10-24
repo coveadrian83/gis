@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand / primary -->
+    <color name="primary">#5C6BC0</color>         <!-- Indigo 400 -->
+    <color name="primary_dark">#3949AB</color>     <!-- Indigo 600 -->
+    <color name="primary_light">#E8EAF6</color>   <!-- Indigo 50 -->
+
+    <!-- Backgrounds -->
+    <color name="background">#F3F4F8</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="info_bg">#EEF2FF</color>          <!-- Very light indigo -->
+
+    <!-- Text -->
+    <color name="text_primary">#1A1A2E</color>
+    <color name="text_secondary">#6B7280</color>
+
+    <!-- App-specific accent colours -->
+    <color name="facebook_color">#1877F2</color>
+    <color name="whatsapp_color">#25D366</color>
+
+    <!-- Status bar (used by theme) -->
+    <color name="status_bar_color">#3949AB</color>
+</resources>

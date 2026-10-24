@@ -1,0 +1,33 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ "claude/android-social-media-tracker-C7T7I", "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Build APK
+        working-directory: SocialMediaTracker
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon 2>&1
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: FaraEcrane-APK
+          path: SocialMediaTracker/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30

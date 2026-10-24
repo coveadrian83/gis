@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App -->
+    <string name="app_name">Fără Ecrane!</string>
+    <string name="app_title">📵 Fără Ecrane!</string>
+
+    <!-- Permission screen -->
+    <string name="permission_title">Permisiune necesară</string>
+    <string name="permission_description">
+        Această aplicație are nevoie de acces la statisticile de utilizare pentru a afișa
+        timpul petrecut pe Facebook și WhatsApp.\n\nApăsați butonul de mai jos, găsiți
+        „Fără Ecrane!" în listă și activați permisiunea.
+    </string>
+    <string name="open_settings">Deschide Setări Acces</string>
+
+    <!-- Main content -->
+    <string name="total_today">TOTAL AZI</string>
+    <string name="combined_apps">Facebook + WhatsApp</string>
+    <string name="details_per_app">Detalii pe aplicație</string>
+    <string name="facebook">Facebook</string>
+    <string name="facebook_package">com.facebook.katana</string>
+    <string name="whatsapp">WhatsApp</string>
+    <string name="whatsapp_package">com.whatsapp</string>
+    <string name="info_note">
+        Datele reflectă timpul de utilizare activă din ziua curentă (de la miezul nopții până acum).
+    </string>
+    <string name="refresh">🔄 Actualizează</string>
+    <string name="last_updated">Actualizat la: %1$s</string>
+</resources>
