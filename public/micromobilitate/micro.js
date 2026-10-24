@@ -78,6 +78,7 @@
    * străzile locale, străzile cu bandă / pistă și străzile terțiare cu limita etichetată de cel mult 30 km/h. */
   function comfortable(g, e) {
     var c = g.cls[e];
+    if (g.nonconf && g.nonconf[e]) return false;   // pistă neconformă (Masterplan 2023): nu contează ca infrastructură bună
     if (c === CLS.CYCLEWAY || c === CLS.SHARED || c === CLS.PATH || c === CLS.LOCAL) return true;
     if (c > CLS.LOCAL && c <= CLS.TRUNK) return !!(g.mflag[e] & F_LANE) || (c === CLS.TERTIARY && g.maxspeed[e] > 0 && g.maxspeed[e] <= 30);
     return false;
@@ -93,7 +94,7 @@
     if (!legal) return RIDE;
     var push = walkable ? PUSH : NO;
     if (comfort === true && !comfortable(g, e)) return push;
-    if (typeof comfort === 'number' && g.risk && g.risk[e] > comfort && c !== CLS.CYCLEWAY) return push;
+    if (typeof comfort === 'number' && g.risk && g.risk[e] > comfort && (c !== CLS.CYCLEWAY || (g.nonconf && g.nonconf[e]))) return push;
     if (c === CLS.CYCLEWAY) return RIDE;
     if (veh.rules === 'bicycle') {
       if (c === CLS.SHARED || c === CLS.PATH) return RIDE;
@@ -344,6 +345,30 @@
   }
 
 
+
+  /* Pistele neconforme din Masterplanul Velo 2023 (piste_masterplan.json: trasee cu listele de străzi): o pistă
+   * (highway=cycleway / alee comună) sau o stradă cu bandă primește marcajul dacă poartă numele uneia dintre străzi
+   * sau dacă stă la cel mult maxM metri de o astfel de stradă (pistele fără nume de lângă bulevard). */
+  function markNonconforming(g, names, mp, maxM) {
+    maxM = maxM || 30;
+    var want = {}, flag = new Uint8Array(g.nE), eg = edgeGrid(g, 120);
+    mp.trasee.forEach(function (t) { t.strazi.forEach(function (n) { want[n] = t.id; }); });
+    var isInfra = function (e) { var c = g.cls[e]; return c === CLS.CYCLEWAY || c === CLS.SHARED || ((g.mflag[e] & F_LANE) && c >= CLS.LOCAL && c <= CLS.TRUNK); };
+    for (var e = 0; e < g.nE; e++) {
+      if (!isInfra(e)) continue;
+      if (names[e] && want[names[e]]) { flag[e] = want[names[e]]; continue; }
+      var mlon = (g.lon[g.eu[e]] + g.lon[g.ev[e]]) / 2, mlat = (g.lat[g.eu[e]] + g.lat[g.ev[e]]) / 2, best = Infinity, id = 0;
+      eg.near(mlon, mlat, 1).forEach(function (r) {
+        if (!names[r] || !want[names[r]] || r === e) return;
+        var d = distToLine(mlon, mlat, edgeLonLat(g, r));
+        if (d < best) { best = d; id = want[names[r]]; }
+      });
+      if (best <= maxM) flag[e] = id;
+    }
+    g.nonconf = flag;
+    return flag;
+  }
+
   // ---------------------------------------------------------------- siguranța: scorul de risc pe segmente
   /* Scorul descrie GRAVITATEA probabilă a unui accident pe segment (energia la impact: viteza și volumul traficului
    * motorizat), nu probabilitatea lui – vezi Rotariu (2026), „Severity Without Frequency”: un scor de acest tip a
@@ -355,12 +380,14 @@
   var RISK_BANDS = [1, 2, 3, 3, 4, 4, 5];                  // puncte → clasă 1–5 (≥ 6 → 5)
   function riskPoints(g, e) {
     var c = g.cls[e], f = g.mflag[e], p = RISK_BASE[c];
+    // pistă pe trotuar neconformă: conflicte cu pietonii, intersecții neamenajate (sidepath – nefavorabil în Rotariu 2026)
+    if (g.nonconf && g.nonconf[e] && (c === CLS.CYCLEWAY || c === CLS.SHARED)) p = 2;
     if (c >= CLS.LOCAL && c <= CLS.TRUNK) {
       var v = g.maxspeed[e];
       if (v >= 60) p += 2;
       else if (v > 0 && v <= 30) p -= 1;
       if (g.lanes && g.lanes[e] >= 4) p += 1;   // 4+ benzi în total (2+ pe sens)
-      if (f & F_LANE) p -= 1;                   // bandă / pistă pe stradă: protecție parțială
+      if ((f & F_LANE) && !(g.nonconf && g.nonconf[e])) p -= 1;   // bandă / pistă: protecție parțială (nu și cea neconformă)
       if (g.tram && g.tram[e]) p += 1;          // șine de tramvai pe sau lângă carosabil
       if (g.bus && g.bus[e] >= 12) p += 1;      // ≥ 12 autobuze / oră la vârf: trafic greu, opriri peste bicicletă
     }
@@ -501,7 +528,7 @@
     parseMicro: parseMicro, speedLimit: speedLimit, comfortable: comfortable, legalMode: legalMode,
     parkingNearby: parkingNearby, prepareTransit: prepareTransit, transitArrivals: transitArrivals, transitSources: transitSources,
     dijkstraPred: dijkstraPred, gapScores: gapScores, RISK_BASE: RISK_BASE, riskPoints: riskPoints, riskBand: riskBand,
-    riskBands: riskBands, distToLine: distToLine, markTram: markTram, markBus: markBus, snapAccidents: snapAccidents, riskTable: riskTable, oneway: oneway, powers: powers,
+    riskBands: riskBands, distToLine: distToLine, markNonconforming: markNonconforming, markTram: markTram, markBus: markBus, snapAccidents: snapAccidents, riskTable: riskTable, oneway: oneway, powers: powers,
     speedOnGrade: speedOnGrade, rideTime: rideTime, edgeTimes: edgeTimes, walkTimes: walkTimes, coreProfile: coreProfile
   };
 });

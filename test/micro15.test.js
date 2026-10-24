@@ -266,3 +266,25 @@ test('șinele de tramvai, accidentele legate de stradă și tabelul de validare'
   assert.equal(M.riskTable(g, pts, sn, (p) => p[3] === 2).find((r) => r.band === 5).acc, 0);
   delete g.risk; g.tram = null;
 });
+
+test('pistele neconforme (Masterplan 2023): după nume sau lângă strada din inventar; nu mai contează ca protecție', () => {
+  const names = new Array(g.nE);
+  names[0] = 'Bulevardul X';
+  // pista 2 → 3 nu are nume și nu e lângă Bulevardul X; o declarăm în inventar după nume
+  const mp = { trasee: [{ id: 7, strazi: ['Bulevardul X'] }] };
+  g.mflag[0] |= M.F_LANE;
+  M.markNonconforming(g, names, mp, 30);
+  assert.equal(g.nonconf[0], 7);      // banda de pe Bulevardul X
+  assert.equal(g.nonconf[3], 0);      // pista 2 → 3 e departe
+  // fără marcaj banda scade riscul, cu marcaj nu
+  const tmp = g.nonconf; g.nonconf = null;
+  const withLane = M.riskPoints(g, 0);
+  g.nonconf = tmp;
+  assert.equal(M.riskPoints(g, 0), withLane + 1);
+  assert.equal(M.comfortable(g, 0), false);
+  names[3] = 'Bulevardul X'; M.markNonconforming(g, names, mp, 30);
+  assert.equal(g.nonconf[3], 7);
+  assert.equal(M.riskBand(g, 3), 3);  // pistă pe trotuar neconformă: clasa 3, nu 1
+  assert.equal(M.comfortable(g, 3), false);
+  g.mflag[0] &= ~M.F_LANE; g.nonconf = null;
+});

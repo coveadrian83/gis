@@ -1,0 +1,23 @@
+{
+ "sursa": "Masterplan Piste Velo Iași, versiunea draft 2023 (v6), cap. 3 „Situația existentă”, Tabelul nr. 21",
+ "evaluare": "Piste amenajate pe trotuare: nu sunt delimitate de traficul pietonal, nu au amenajări în intersecții, lățimi insuficiente, obstacole pe traseu; „în cea mai mare parte impracticabile”. IPJ Iași a constatat deficiențe de semnalizare și obstacole.",
+ "latime_standard_m": "min. 2,00 (sens unic) / 3,00 (dublu sens) pentru rețelele expres, primară și secundară propuse",
+ "trasee": [
+  {"id": 1, "nume": "DJ 282 (limita municipiului) – Aleea Mihail Sadoveanu – Rond Agronomie", "km": 3.4, "partea": "stânga / dreapta", "latime_m": "1,00", "strat": "pavaj",
+   "strazi": ["Aleea Mihail Sadoveanu"]},
+  {"id": 2, "nume": "Rond Agronomie – Piața Mihai Eminescu", "km": 2.6, "partea": "stânga", "latime_m": "1,50–1,60", "strat": "asfalt",
+   "strazi": ["Bulevardul Carol I", "Pista Copou"]},
+  {"id": 3, "nume": "B-dul Independenței – str. Sărărie – str. Elena Doamna", "km": 1.6, "partea": "stânga / dreapta", "latime_m": "1,00", "strat": "pavaj",
+   "strazi": ["Bulevardul Independenței", "Strada Elena Doamna"]},
+  {"id": 4, "nume": "Splai Bahlui – mal stâng: B-dul Regele Ferdinand I – B-dul Dimitrie Mangeron – B-dul Chimiei", "km": 5.4, "partea": "stânga / dreapta", "latime_m": "1,00–2,00", "strat": "pavaj",
+   "strazi": ["Splai Bahlui Mal Stâng", "Bulevardul Regele Ferdinand I al României", "Bulevardul Profesor Dimitrie Mangeron", "Bulevardul Chimiei"]},
+  {"id": 5, "nume": "Splai Bahlui – mal drept: B-dul Regele Mihai I – B-dul Chimiei", "km": 5.4, "partea": "stânga / dreapta", "latime_m": "1,00", "strat": "pavaj",
+   "strazi": ["Splai Bahlui Mal Drept", "Bulevardul Regele Mihai I al României", "Bulevardul Chimiei"]},
+  {"id": 6, "nume": "Bulevardul Primăverii – Bulevardul Țuțora", "km": 1.1, "partea": "stânga / dreapta", "latime_m": "0,90–1,10", "strat": "pavaj",
+   "strazi": ["Bulevardul Primăverii", "Bulevardul Țuțora"]},
+  {"id": 7, "nume": "Podu Roș – Strada Nicolina / Șoseaua Nicolina – CUG", "km": 3.9, "partea": "stânga / dreapta", "latime_m": "1,00", "strat": "asfalt",
+   "strazi": ["Strada Nicolina", "Șoseaua Nicolina"]},
+  {"id": 8, "nume": "Strada Păcurari / Șoseaua Păcurari", "km": 3.1, "partea": "stânga / dreapta", "latime_m": "1,00", "strat": "pavaj",
+   "strazi": ["Strada Păcurari", "Șoseaua Păcurari"]}
+ ]
+}

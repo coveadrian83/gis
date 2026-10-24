@@ -10,7 +10,7 @@
   var CAT_COLORS = ['#5b9a3c', '#d9534f', '#7b5ea7', '#2e8b57', '#e8a13a', '#0f6e8c', '#15171a', '#d6336c'];
   var PARK = 5, STATION = C.STATION, RENTAL = 7;
   var PALETTE = ['#0b4f6c', '#1f9e9a', '#9bc53d', '#f2c14e', '#e8743b'];
-  var INFRA = { cycleway: '#1a9850', lane: '#91cf60', fast: '#d73027', foot: '#9e9e9e' };
+  var INFRA = { cycleway: '#1a9850', lane: '#91cf60', fast: '#d73027', foot: '#9e9e9e', nonconf: '#8c510a' };
 
   var $ = function (id) { return document.getElementById(id); };
   var statusEl = $('status');
@@ -47,7 +47,7 @@
   var MODE_RISK = { 3: 2, 4: 3 };
   var MODE_LABEL = { 2: 'rețeaua confortabilă', 3: 'rețeaua sigură (risc 1–2)', 4: 'risc cel mult 3' };
   var RISK_COLORS = ['#1a9850', '#91cf60', '#fee08b', '#fc8d59', '#d73027'];
-  var ACC = null, ACC_EDGE = null;
+  var ACC = null, ACC_EDGE = null, MASTERPLAN = null;
   var SURVEY_CLASSES = [[1, '#b2182b', 1], [11, '#f46d43', 2], [31, '#fdae61', 3], [61, '#e6e600', 3.5], [121, '#a6d96a', 4.5], [251, '#4d9221', 6]];
   var ZONES = null, zoneLayer = null, zoneResults = null, zoneRunning = false;
   var origin = L.latLng(47.16485, 27.58186), state = null, queued = false;
@@ -271,6 +271,7 @@
   }
   function infraClass(e) {
     var c = G.cls[e], f = G.mflag[e];
+    if (G.nonconf && G.nonconf[e]) return 'nonconf';
     if (c === M.CLS.CYCLEWAY) return 'cycleway';
     if (c >= M.CLS.LOCAL && c <= M.CLS.TRUNK) {
       if (f & M.F_LANE) return 'lane';
@@ -302,12 +303,12 @@
       strokeEdges(ctx, X, Y, all); ctx.stroke();
     }
     if ($('showInfra').checked && z >= 12) {
-      var groups = { foot: [], fast: [], lane: [], cycleway: [] };
+      var groups = { foot: [], fast: [], lane: [], cycleway: [], nonconf: [] };
       for (e = 0; e < G.nE; e++) {
         var k = infraClass(e);
         if (k && inView(e, box)) groups[k].push({ e: e });
       }
-      ['foot', 'fast', 'lane', 'cycleway'].forEach(function (k) {
+      ['foot', 'fast', 'lane', 'cycleway', 'nonconf'].forEach(function (k) {
         ctx.beginPath(); ctx.strokeStyle = INFRA[k]; ctx.globalAlpha = k === 'foot' ? 0.45 : 0.75;
         ctx.lineWidth = Math.max(3, Math.min(8, 2 + (z - 12) * 1.1));
         strokeEdges(ctx, X, Y, groups[k]); ctx.stroke();
@@ -383,7 +384,17 @@
   }
 
   // ---------------------------------------------------------------- siguranța
-  function initSafety(tram, acc) {
+  function initSafety(tram, acc, mp) {
+    MASTERPLAN = mp;
+    if (mp) {   // pistele neconforme au nevoie de denumirile străzilor (edges.json)
+      loadNames().then(function (names) {
+        M.markNonconforming(G, names, mp);
+        M.riskBands(G);
+        timesCache = {};
+        renderRiskValidation();
+        schedule();
+      });
+    }
     if (tram) M.markTram(G, tram.linii);
     if (TRANSIT) M.markBus(G, TRANSIT);
     M.riskBands(G);
@@ -638,6 +649,7 @@
   // de ce nu se poate circula legal pe segment (pentru vehiculul și setările lipsurilor)
   function gapReason(e) {
     var c = G.cls[e], v = M.VEHICLES[GAPS.s.vehicle];
+    if (G.nonconf && G.nonconf[e]) return 'pistă neconformă (Masterplan 2023, traseul ' + G.nonconf[e] + ')';
     if (c === M.CLS.FOOTWAY || c === M.CLS.NOBIKE) return 'trotuar / zonă pietonală';
     if (c === M.CLS.STEPS) return 'scări';
     if (M.oneway(G, e)) {
@@ -834,7 +846,8 @@
     fetch('data/transit.json').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
     fetch('data/chestionar.json').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
     fetch('data/tramvai.json').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
-    fetch('data/accidente.json').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })]).then(function (res) {
+    fetch('data/accidente.json').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
+    fetch('data/piste_masterplan.json').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })]).then(function (res) {
     var meta = res[0];
     G = C.parseGraph(res[1]); grid = C.buildGrid(G);
     M.parseMicro(res[2], G);
@@ -850,7 +863,7 @@
     POIS_PARK = poisView(res[3].cats, pts, POIS_ALL.snap, function (p, i) { return p[2] > 4 || PARKFLAG[i]; });
     if (res[5]) { TRANSIT = M.prepareTransit(res[5], G, grid, C.nearestNode); $('transitBox').hidden = false; }
     if (res[6]) initSurvey(res[6]);
-    initSafety(res[7], res[8]);
+    initSafety(res[7], res[8], res[9]);
     origin = L.latLng(meta.start[0], meta.start[1]);
     var h = applyHash(meta);
     if (!h.hadOrigin) {

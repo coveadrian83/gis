@@ -146,7 +146,9 @@ cu aceeași deplasare **fără restricții** și cu mersul pe jos.
 - **Siguranța**: scor de risc pe segmente (gravitatea probabilă, 5 clase: tipul drumului, limita de viteză, benzile, șinele
   de tramvai, autobuzele, banda pentru biciclete, piatra cubică), rețeaua „sigură” (risc 1–2) în calculul accesibilității
   și al lipsurilor, accidentele cu bicicletă / trotinetă ale Poliției (2022–2026) pe hartă și pe clase de risc
-  (`scripts/accidente_velo.py`; exportul brut rămâne local în `data/accidente/`, ignorat de git).
+  (`scripts/accidente_velo.py`; exportul brut rămâne local în `data/accidente/`, ignorat de git); pistele existente
+  neconforme din Masterplanul Velo 2023 (8 trasee, 26,5 km, `data/piste_masterplan.json`) nu contează ca infrastructură
+  bună în rețeaua confortabilă / sigură, în scorul de risc și în lipsurile din rețea.
 - **Linia de comandă**: `node scripts/analiza-micro15.js [--vehicle scooter --kmh 18 --min 15 --ref free --out var/zone.csv]`.
 - Metodologia și **cadrul legal** (definiții, reguli, RCA din 16.11.2025, proiecte în curs): `public/micromobilitate/metodologie.html`.
 
