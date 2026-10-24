@@ -69,13 +69,16 @@
       lon[i] = ll[2 * i] / 1e5; lat[i] = ll[2 * i + 1] / 1e5;
       m = merc(lon[i], lat[i]); mx[i] = m[0]; my[i] = m[1];
     }
-    var smx = new Float64Array(nS), smy = new Float64Array(nS);
-    for (i = 0; i < nS; i++) { m = merc(sp[2 * i] / 1e5, sp[2 * i + 1] / 1e5); smx[i] = m[0]; smy[i] = m[1]; }
+    var smx = new Float64Array(nS), smy = new Float64Array(nS), slon = new Float64Array(nS), slat = new Float64Array(nS);
+    for (i = 0; i < nS; i++) {
+      slon[i] = sp[2 * i] / 1e5; slat[i] = sp[2 * i + 1] / 1e5;
+      m = merc(slon[i], slat[i]); smx[i] = m[0]; smy[i] = m[1];
+    }
     var elen = new Float32Array(nE), eflag = new Uint8Array(nE);
     for (e = 0; e < nE; e++) { elen[e] = (elf[e] >>> 2) / 10; eflag[e] = elf[e] & 3; }
     var adj = buildAdjacency(nN, nE, eu, ev);
     return { nN: nN, nE: nE, lon: lon, lat: lat, mx: mx, my: my, eu: eu, ev: ev, elen: elen, eflag: eflag,
-      sst: sst, smx: smx, smy: smy, adjStart: adj.adjStart, adjEdge: adj.adjEdge };
+      sst: sst, smx: smx, smy: smy, slon: slon, slat: slat, adjStart: adj.adjStart, adjEdge: adj.adjEdge };
   }
 
   /* elev.bin (scris de scripts/elevatie_15min.py): lungimile echivalente pe teren plat în ambele sensuri,

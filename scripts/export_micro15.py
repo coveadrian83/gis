@@ -100,6 +100,19 @@ def tag(data, key):
     return (w15.first_str(data.get(key)) or "").strip().lower()
 
 
+def parse_lanes(value):
+    """Eticheta OSM lanes (numărul total de benzi pentru vehicule) → 0–20; 0 = neetichetat. La segmentele unite
+    cu valori diferite (listă) se ia maximul."""
+    values = value if isinstance(value, (list, tuple)) else [value]
+    best = 0
+    for v in values:
+        try:
+            best = max(best, int(float(str(v).split(";")[0])))
+        except (TypeError, ValueError):
+            pass
+    return max(0, min(20, best))
+
+
 def parse_maxspeed(value):
     """Eticheta OSM maxspeed → km/h (0 = necunoscută). Acceptă „50”, „30 mph”, „RO:urban”, „RO:rural”, „walk”."""
     v = (value or "").strip().lower()
@@ -216,11 +229,12 @@ def build_arrays(G, simplify_tol_deg=3e-5):
             if a > b:
                 interior.reverse()
         speed = parse_maxspeed(tag(data, "maxspeed"))
+        lanes = parse_lanes(data.get("lanes"))
         # aceeași pereche de noduri poate apărea de două ori (ex. două căi OSM suprapuse): se păstrează ambele
         # dacă diferă clasa sau sensul unic, altfel cea mai scurtă
         key = (min(a, b), max(a, b), kind, cls, ow, flags)
         if key not in best or length < best[key][0]:
-            best[key] = (float(length), interior, speed)
+            best[key] = (float(length), interior, speed, lanes)
         info = tags.setdefault(key, {})
         name = w15.first_str(data.get("name"))
         if name and "name" not in info:
@@ -240,29 +254,30 @@ def build_arrays(G, simplify_tol_deg=3e-5):
     keys = sorted(best)
     n = len(keys)
     eu, ev, lf = np.zeros(n, "<u4"), np.zeros(n, "<u4"), np.zeros(n, "<u4")
-    cls_arr, flag_arr, spd_arr = np.zeros(n, "u1"), np.zeros(n, "u1"), np.zeros(n, "u1")
+    cls_arr, flag_arr, spd_arr, lane_arr = np.zeros(n, "u1"), np.zeros(n, "u1"), np.zeros(n, "u1"), np.zeros(n, "u1")
     shape_start = np.zeros(n + 1, "<u4")
     shape_pts = []
     for i, key in enumerate(keys):
         a, b, kind, cls, ow, flags = key
-        length, interior, speed = best[key]
+        length, interior, speed, lanes = best[key]
         eu[i], ev[i] = a, b
         lf[i] = (min(int(round(length * 10)), (1 << 30) - 1) << 2) | kind
-        cls_arr[i], flag_arr[i], spd_arr[i] = cls, flags | (ow << ONEWAY_SHIFT), speed
+        cls_arr[i], flag_arr[i], spd_arr[i], lane_arr[i] = cls, flags | (ow << ONEWAY_SHIFT), speed, lanes
         shape_pts.extend(interior)
         shape_start[i + 1] = len(shape_pts)
     return {"lonlat": lonlat, "eu": eu, "ev": ev, "lf": lf, "shape_start": shape_start,
             "shape_arr": np.array(shape_pts, dtype="<i4").reshape(-1, 2), "tags": [tags[k] for k in keys],
-            "cls": cls_arr, "flags": flag_arr, "maxspeed": spd_arr}
+            "cls": cls_arr, "flags": flag_arr, "maxspeed": spd_arr, "lanes": lane_arr}
 
 
 def write_micro_bin(a, out_path):
-    """micro.bin, little endian: antet 2 × uint32 (versiune 1, muchii), apoi pentru fiecare muchie (aceeași ordine
-    ca în graph.bin): clasa (uint8, CLS_*), flaguri (uint8: F_* și, pe biții 5–6, sensul unic pentru vehicule)
-    și limita de viteză din OSM (uint8, km/h; 0 = neetichetată)."""
+    """micro.bin, little endian: antet 2 × uint32 (versiune 2, muchii), apoi pentru fiecare muchie (aceeași ordine
+    ca în graph.bin): clasa (uint8, CLS_*), flaguri (uint8: F_* și, pe biții 5–6, sensul unic pentru vehicule),
+    limita de viteză din OSM (uint8, km/h; 0 = neetichetată) și numărul total de benzi (uint8, OSM lanes; 0 =
+    neetichetat). Versiunea 1 nu avea benzile; pagina le citește pe amândouă."""
     with open(out_path, "wb") as f:
-        f.write(struct.pack("<2I", 1, len(a["cls"])))
-        for arr in (a["cls"], a["flags"], a["maxspeed"]):
+        f.write(struct.pack("<2I", 2, len(a["cls"])))
+        for arr in (a["cls"], a["flags"], a["maxspeed"], a["lanes"]):
             f.write(arr.astype("u1").tobytes())
 
 
@@ -371,7 +386,7 @@ def main():
     print("Facilități:", len(pts), dict(zip(CATS, counts)))
 
     differ = ["highway", "ramp:wheelchair", "incline", "step_count", "bicycle", "foot", "oneway", "oneway:bicycle",
-              "cycleway", "cycleway:left", "cycleway:right", "cycleway:both", "maxspeed", "surface", "junction"]
+              "cycleway", "cycleway:left", "cycleway:right", "cycleway:both", "maxspeed", "surface", "junction", "lanes"]
     G = ox.simplify_graph(G, edge_attrs_differ=differ)
     arrays = build_arrays(G)
     stats = w15.graph_summary(arrays)

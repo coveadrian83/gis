@@ -18,3 +18,9 @@ table.law td, table.law th { text-align: left !important; white-space: normal !i
 .surveykey span { display: inline-block; width: 14px; border-radius: 2px; }
 #showSurvey + select, #surveyKind { padding: 2px 4px; font-size: 12px; }
 #surveySummary table td:first-child { white-space: normal; }
+.riskkey, .acckey { display: inline-flex; flex-wrap: wrap; gap: 3px; align-items: center; font-size: 11px; color: var(--muted); margin-left: 4px; }
+.riskkey span { display: inline-block; width: 14px; height: 4px; border-radius: 2px; }
+.acckey span { display: inline-block; border-radius: 50%; border: 1px solid #fff; }
+.acckey .a0 { width: 6px; height: 6px; background: #f28e2b; } .acckey .a1 { width: 9px; height: 9px; background: #d62728; } .acckey .a2 { width: 11px; height: 11px; background: #15171a; }
+#riskValidation table td, #riskValidation table th { font-size: 12px; }
+#safetyBox label, #gapsBox > label { display: block; margin: 4px 0; }

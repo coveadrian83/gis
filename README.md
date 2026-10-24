@@ -143,6 +143,10 @@ cu aceeași deplasare **fără restricții** și cu mersul pe jos.
 - **Chestionarul velo al Masterplanului** (2022–2023, 1.413 chestionare): străzile parcurse și dorite, potrivite cu rețeaua OSM
   (strat pe hartă și pondere în prioritizarea lipsurilor), bicicliștii pe zone de domiciliu și indicatorii de opinie –
   doar agregate, prin `scripts/chestionar_velo.py` (răspunsurile brute stau local în `data/chestionar_velo/`, ignorat de git).
+- **Siguranța**: scor de risc pe segmente (gravitatea probabilă, 5 clase: tipul drumului, limita de viteză, benzile, șinele
+  de tramvai, autobuzele, banda pentru biciclete, piatra cubică), rețeaua „sigură” (risc 1–2) în calculul accesibilității
+  și al lipsurilor, accidentele cu bicicletă / trotinetă ale Poliției (2022–2026) pe hartă și pe clase de risc
+  (`scripts/accidente_velo.py`; exportul brut rămâne local în `data/accidente/`, ignorat de git).
 - **Linia de comandă**: `node scripts/analiza-micro15.js [--vehicle scooter --kmh 18 --min 15 --ref free --out var/zone.csv]`.
 - Metodologia și **cadrul legal** (definiții, reguli, RCA din 16.11.2025, proiecte în curs): `public/micromobilitate/metodologie.html`.
 
@@ -340,6 +344,7 @@ scripts/elevatie_15min.py   panta: elevația Copernicus GLO-30 pe fiecare segmen
 scripts/export_micro15.py   rețeaua pentru micromobilitate: piste, limite de viteză, sens unic (osmnx)
 scripts/transit_micro15.py  orarul CTP (GTFS) compact pentru varianta bicicletă + transport public
 scripts/chestionar_velo.py  agregatele chestionarului velo (străzi, zone, opinii) pentru harta micromobilității
+scripts/accidente_velo.py   accidentele cu bicicletă / trotinetă (Poliția) și șinele de tramvai pentru stratul de siguranță
 scripts/analiza-micro15.js  analiza micromobilității pe puncte și pe zone din linia de comandă
 scripts/analiza-15min.js    analiza pe puncte și pe zone din linia de comandă (--scari: scările și străzile abrupte)
 test/                       teste automate (date geografice sintetice)

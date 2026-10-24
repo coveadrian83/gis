@@ -219,3 +219,50 @@ test('lipsurile: segmentele interzise pe drumul cel mai rapid fără restricții
   const bikeRules = M.edgeTimes(g, V.bike, { v0: V.bike.v0, legal: true });
   assert.equal(M.gapScores(g, M.edgeTimes(g, V.bike, { v0: V.bike.v0, legal: false }), bikeRules, [[0, 0]], pois, 3600, { cats: [0] })[0], 0);
 });
+
+test('scorul de risc: tipul drumului, viteza, benzile, șinele, autobuzele, banda pentru biciclete', () => {
+  const save = { mflag: g.mflag.slice(), maxspeed: g.maxspeed.slice() };
+  g.lanes = new Uint8Array(g.nE); g.tram = new Uint8Array(g.nE); g.bus = new Float32Array(g.nE);
+  // bulevardul (primary, 60 km/h): 4 + 2 = 6 puncte → clasa 5
+  assert.equal(M.riskPoints(g, 0), 6);
+  assert.equal(M.riskBand(g, 0), 5);
+  g.maxspeed[0] = 50; assert.equal(M.riskBand(g, 0), 4);          // 4 puncte
+  g.mflag[0] |= M.F_LANE; assert.equal(M.riskPoints(g, 0), 3);    // bandă: −1
+  g.tram[0] = 1; g.bus[0] = 20; g.lanes[0] = 4; assert.equal(M.riskPoints(g, 0), 6);
+  assert.equal(M.riskBand(g, 3), 1);                               // pistă
+  assert.equal(M.riskBand(g, 1), 2);                               // stradă locală
+  g.maxspeed[1] = 30; assert.equal(M.riskBand(g, 1), 1);           // zonă de 30 km/h
+  g.mflag.set(save.mflag); g.maxspeed.set(save.maxspeed);
+  g.lanes = null; g.tram = null; g.bus = null;
+});
+
+test('rețeaua sigură: segmentele peste pragul de risc se parcurg pe jos (pistele rămân)', () => {
+  M.riskBands(g);
+  assert.equal(g.risk[0], 5);
+  assert.equal(M.legalMode(g, 0, V.bike, true, 2), M.PUSH);
+  assert.equal(M.legalMode(g, 1, V.bike, true, 2), M.RIDE);
+  assert.equal(M.legalMode(g, 3, V.bike, true, 2), M.RIDE);
+  const t = M.edgeTimes(g, V.bike, { v0: V.bike.v0, legal: true, maxRisk: 2 });
+  assert.equal(t.mf[0], M.PUSH);
+  delete g.risk;
+});
+
+test('șinele de tramvai, accidentele legate de stradă și tabelul de validare', () => {
+  // o șină de-a lungul bulevardului 0 → 1, la 3 m
+  M.markTram(g, [[[NODES[0][0], NODES[0][1] + 3 * DLAT], [NODES[1][0], NODES[1][1] + 3 * DLAT]]], 8);
+  assert.equal(g.tram[0], 1);
+  assert.equal(g.tram[1], 0);
+  // accidente: unul la 5 m de bulevard (grav), unul la 5 m de strada locală, unul departe
+  const mid = (a, b, dy) => [(NODES[a][0] + NODES[b][0]) / 2, (NODES[a][1] + NODES[b][1]) / 2 + dy * DLAT];
+  const pts = [mid(0, 1, 5).concat([2024, 1, 1, 0, 0]), mid(0, 2, 0).concat([2025, 2, 0, 0, 0]), [27.7, 47.3, 2024, 1, 0, 0, 0]];
+  const sn = M.snapAccidents(g, pts, 30);
+  assert.deepEqual(Array.from(sn), [0, 1, -1]);
+  M.riskBands(g);
+  const rows = M.riskTable(g, pts, sn);
+  const by = (b) => rows.find((r) => r.band === b);
+  assert.equal(by(5).acc, 1); assert.equal(by(5).ksi, 1);
+  assert.equal(by(2).acc, 1);
+  assert.ok(Math.abs(by(5).km - 0.4) < 1e-6);
+  assert.equal(M.riskTable(g, pts, sn, (p) => p[3] === 2).find((r) => r.band === 5).acc, 0);
+  delete g.risk; g.tram = null;
+});

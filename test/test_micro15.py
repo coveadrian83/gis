@@ -28,7 +28,7 @@ NODES[2] = (LON0 + 2 * STEP, LAT0 + 0.0003)   # punct intermediar pe strada A (d
 # căi: (id, noduri, etichete)
 WAYS = [
     (101, [1, 2, 3], {"highway": "residential", "name": "Strada A", "maxspeed": "50"}),
-    (102, [3, 4], {"highway": "primary", "name": "Bulevardul B", "maxspeed": "60"}),
+    (102, [3, 4], {"highway": "primary", "name": "Bulevardul B", "maxspeed": "60", "lanes": "4"}),
     (103, [4, 5], {"highway": "primary", "name": "Bulevardul C", "maxspeed": "60", "cycleway:right": "track"}),
     (104, [5, 6], {"highway": "residential", "oneway": "yes"}),
     (105, [6, 7], {"highway": "residential", "oneway": "-1"}),
@@ -70,6 +70,12 @@ def osm_xml():
 
 
 class ClassifyTest(unittest.TestCase):
+    def test_lanes(self):
+        self.assertEqual(M.parse_lanes("4"), 4)
+        self.assertEqual(M.parse_lanes(["2", "3"]), 3)
+        self.assertEqual(M.parse_lanes(None), 0)
+        self.assertEqual(M.parse_lanes("2;3"), 2)
+
     def test_maxspeed(self):
         self.assertEqual(M.parse_maxspeed("50"), 50)
         self.assertEqual(M.parse_maxspeed("RO:urban"), 50)
@@ -137,12 +143,12 @@ class ExportTest(unittest.TestCase):
         osm_id = [by_pos[(ll[2 * k], ll[2 * k + 1])] for k in range(nN)]
         mb = (cls.out / "micro.bin").read_bytes()
         ver, n = struct.unpack_from("<2I", mb, 0)
-        assert ver == 1 and n == nE
+        assert ver == 2 and n == nE
         cls.edges = {}
         for e in range(nE):
             a, b = osm_id[eu[e]], osm_id[ev[e]]
             cls.edges[(min(a, b), max(a, b))] = {
-                "cls": mb[8 + e], "flags": mb[8 + nE + e], "maxspeed": mb[8 + 2 * nE + e], "kind": lf[e] & 3,
+                "cls": mb[8 + e], "flags": mb[8 + nE + e], "maxspeed": mb[8 + 2 * nE + e], "lanes": mb[8 + 3 * nE + e], "kind": lf[e] & 3,
                 # sensul permis vehiculelor, exprimat în id-uri OSM: (de la, la) sau None
                 "oneway": None if not (mb[8 + nE + e] >> M.ONEWAY_SHIFT) & 3 else
                 ((osm_id[eu[e]], osm_id[ev[e]]) if ((mb[8 + nE + e] >> M.ONEWAY_SHIFT) & 3) == 1 else (osm_id[ev[e]], osm_id[eu[e]])),
@@ -164,6 +170,7 @@ class ExportTest(unittest.TestCase):
         self.assertEqual(e[(1, 3)]["maxspeed"], 50)
         self.assertEqual((e[(3, 4)]["cls"], e[(3, 4)]["maxspeed"], e[(3, 4)]["flags"] & M.F_LANE), (M.CLS_PRIMARY, 60, 0))
         self.assertEqual(e[(4, 5)]["flags"] & M.F_LANE, M.F_LANE)
+        self.assertEqual((e[(3, 4)]["lanes"], e[(4, 5)]["lanes"]), (4, 0))
         self.assertEqual(e[(8, 9)]["cls"], M.CLS_FOOTWAY)
         self.assertEqual(e[(9, 10)]["cls"], M.CLS_CYCLEWAY)
         self.assertEqual((e[(10, 11)]["cls"], e[(10, 11)]["kind"]), (M.CLS_STEPS, 1))

@@ -10,3 +10,5 @@ __pycache__/
 data/transport/*.xlsx
 # răspunsurile individuale ale chestionarului velo – se publică doar agregatele (public/micromobilitate/data/chestionar.json)
 data/chestionar_velo/
+# exportul Poliției cu accidentele (are numărul fișei și data exactă) – se publică doar punctele reduse (public/micromobilitate/data/accidente.json)
+data/accidente/

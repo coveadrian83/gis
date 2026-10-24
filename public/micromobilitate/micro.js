@@ -53,15 +53,17 @@
   var WALK_PUSH = 1.1;   // m/s, mersul pe jos cu vehiculul de mână
   var CARRY_STEPS = 1.5; // timpul pe scări crește cu 50 % când cari vehiculul
 
-  // micro.bin: antet 2 × uint32 (versiune 1, muchii), apoi clasa, flagurile și limita de viteză (uint8 fiecare)
+  /* micro.bin: antet 2 × uint32 (versiune, muchii), apoi clasa, flagurile și limita de viteză (uint8 fiecare);
+   * versiunea 2 adaugă numărul total de benzi de circulație (uint8, 0 = neetichetat). */
   function parseMicro(buf, g) {
     var h = new Uint32Array(buf, 0, 2);
-    if (h[0] !== 1) throw new Error('Versiune necunoscută a fișierului micro.bin');
+    if (h[0] !== 1 && h[0] !== 2) throw new Error('Versiune necunoscută a fișierului micro.bin');
     if (h[1] !== g.nE) throw new Error('micro.bin nu corespunde rețelei');
     var nE = h[1];
     g.cls = new Uint8Array(buf, 8, nE);
     g.mflag = new Uint8Array(buf, 8 + nE, nE);
     g.maxspeed = new Uint8Array(buf, 8 + 2 * nE, nE);
+    g.lanes = h[0] >= 2 ? new Uint8Array(buf, 8 + 3 * nE, nE) : null;
     return g;
   }
 
@@ -90,7 +92,8 @@
     if (c === CLS.STEPS) return veh.carry ? PUSH : NO;
     if (!legal) return RIDE;
     var push = walkable ? PUSH : NO;
-    if (comfort && !comfortable(g, e)) return push;
+    if (comfort === true && !comfortable(g, e)) return push;
+    if (typeof comfort === 'number' && g.risk && g.risk[e] > comfort && c !== CLS.CYCLEWAY) return push;
     if (c === CLS.CYCLEWAY) return RIDE;
     if (veh.rules === 'bicycle') {
       if (c === CLS.SHARED || c === CLS.PATH) return RIDE;
@@ -162,7 +165,7 @@
     var nE = g.nE, pw = powers(veh, opt.v0), slope = !!(opt.slope && g.up);
     var tf = new Float64Array(nE), tb = new Float64Array(nE), mf = new Uint8Array(nE), mb = new Uint8Array(nE);
     for (var e = 0; e < nE; e++) {
-      var mode = legalMode(g, e, veh, opt.legal, opt.legal && opt.comfort), L = g.elen[e];
+      var mode = legalMode(g, e, veh, opt.legal, opt.legal && (opt.maxRisk ? opt.maxRisk : !!opt.comfort)), L = g.elen[e];
       var walkable = !(g.mflag[e] & F_NOFOOT) && g.cls[e] !== CLS.MOTORWAY && (veh.carry || !(g.eflag[e] & 1));
       // pe jos cu vehiculul de mână (lungimea echivalentă pe teren plat include panta și scările)
       var pf = walkable ? (slope ? g.lfw[e] : L) / WALK_PUSH : Infinity;
@@ -340,12 +343,165 @@
     return score;
   }
 
+
+  // ---------------------------------------------------------------- siguranța: scorul de risc pe segmente
+  /* Scorul descrie GRAVITATEA probabilă a unui accident pe segment (energia la impact: viteza și volumul traficului
+   * motorizat), nu probabilitatea lui – vezi Rotariu (2026), „Severity Without Frequency”: un scor de acest tip a
+   * prezis consistent rănirile grave / decesele raportate la expunere, nu și frecvența accidentelor. Factorii și
+   * semnele lor urmează literatura (LTS – Mekuria, Furth & Nixon 2012; auditul pe factori din articolul citat);
+   * punctele sunt alese transparent și se pot recalibra pe accidentele din Iași. Scara are 5 clase (articolul arată
+   * că datele nu susțin mai multe). */
+  var RISK_BASE = [0, 1, 1, 1, 2, 3, 4, 5, 6, 1, 1, 1];   // pe clase CLS (trotuarul / scările: parcurse pe jos)
+  var RISK_BANDS = [1, 2, 3, 3, 4, 4, 5];                  // puncte → clasă 1–5 (≥ 6 → 5)
+  function riskPoints(g, e) {
+    var c = g.cls[e], f = g.mflag[e], p = RISK_BASE[c];
+    if (c >= CLS.LOCAL && c <= CLS.TRUNK) {
+      var v = g.maxspeed[e];
+      if (v >= 60) p += 2;
+      else if (v > 0 && v <= 30) p -= 1;
+      if (g.lanes && g.lanes[e] >= 4) p += 1;   // 4+ benzi în total (2+ pe sens)
+      if (f & F_LANE) p -= 1;                   // bandă / pistă pe stradă: protecție parțială
+      if (g.tram && g.tram[e]) p += 1;          // șine de tramvai pe sau lângă carosabil
+      if (g.bus && g.bus[e] >= 12) p += 1;      // ≥ 12 autobuze / oră la vârf: trafic greu, opriri peste bicicletă
+    }
+    if (f & F_SETT) p += 1;                     // piatră cubică: căderi
+    return Math.max(0, p);
+  }
+  function riskBand(g, e) { return RISK_BANDS[Math.min(RISK_BANDS.length - 1, riskPoints(g, e))]; }
+  function riskBands(g) {
+    var out = new Uint8Array(g.nE);
+    for (var e = 0; e < g.nE; e++) out[e] = riskBand(g, e);
+    g.risk = out;
+    return out;
+  }
+
+  // distanța în metri de la un punct la o polilinie [lon, lat, lon, lat, …] (proiecție locală)
+  function distToLine(lon, lat, line) {
+    var k = Math.cos(lat * Math.PI / 180) * 111320, best = Infinity;
+    for (var i = 2; i < line.length; i += 2) {
+      var ax = (line[i - 2] - lon) * k, ay = (line[i - 1] - lat) * 110540, bx = (line[i] - lon) * k, by = (line[i + 1] - lat) * 110540;
+      var dx = bx - ax, dy = by - ay, L2 = dx * dx + dy * dy, t = L2 > 0 ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / L2)) : 0;
+      var d = Math.hypot(ax + t * dx, ay + t * dy);
+      if (d < best) best = d;
+    }
+    return best;
+  }
+  // geometria unei muchii ca [lon, lat, …] (nodurile și punctele intermediare)
+  function edgeLonLat(g, e) {
+    var u = g.eu[e], v = g.ev[e], out = [g.lon[u], g.lat[u]];
+    if (g.slon) for (var s = g.sst[e]; s < g.sst[e + 1]; s++) out.push(g.slon[s], g.slat[s]);
+    out.push(g.lon[v], g.lat[v]);
+    return out;
+  }
+  // grilă simplă pe mijloacele muchiilor (căutare rapidă a muchiilor din jurul unui punct)
+  function edgeGrid(g, cellM) {
+    var cell = cellM / 111000, cells = {};
+    for (var e = 0; e < g.nE; e++) {
+      var x = Math.floor((g.lon[g.eu[e]] + g.lon[g.ev[e]]) / 2 / cell), y = Math.floor((g.lat[g.eu[e]] + g.lat[g.ev[e]]) / 2 / cell);
+      (cells[x + ',' + y] || (cells[x + ',' + y] = [])).push(e);
+    }
+    return { cell: cell, cells: cells, near: function (lon, lat, r) {
+      var cx = Math.floor(lon / cell), cy = Math.floor(lat / cell), out = [];
+      for (var dx = -r; dx <= r; dx++) for (var dy = -r; dy <= r; dy++) {
+        var l = cells[(cx + dx) + ',' + (cy + dy)];
+        if (l) out.push.apply(out, l);
+      }
+      return out;
+    } };
+  }
+
+  /* Șinele de tramvai (tramvai.json: linii [[lon, lat], …]): o stradă primește factorul dacă jumătatea ei de mijloc
+   * este la cel mult maxM metri de o șină (șina în ax sau pe carosabil, inclusiv traversările lungi). */
+  function markTram(g, lines, maxM) {
+    maxM = maxM || 8;
+    var flag = new Uint8Array(g.nE), eg = edgeGrid(g, 120);
+    lines.forEach(function (ln) {
+      var flat = [];
+      ln.forEach(function (p) { flat.push(p[0], p[1]); });
+      for (var i = 0; i < ln.length; i++) {
+        // puncte la ~20 m de-a lungul șinei
+        var a = ln[i], b = ln[Math.min(i + 1, ln.length - 1)];
+        var n = Math.max(1, Math.ceil(Math.hypot((b[0] - a[0]) * 75000, (b[1] - a[1]) * 111000) / 20));
+        for (var k = 0; k < n; k++) {
+          var lon = a[0] + (b[0] - a[0]) * k / n, lat = a[1] + (b[1] - a[1]) * k / n;
+          eg.near(lon, lat, 1).forEach(function (e) {
+            var c = g.cls[e];
+            if (flag[e] || c < CLS.LOCAL || c > CLS.TRUNK) return;
+            var mlon = (g.lon[g.eu[e]] + g.lon[g.ev[e]]) / 2, mlat = (g.lat[g.eu[e]] + g.lat[g.ev[e]]) / 2;
+            if (distToLine(mlon, mlat, flat) <= maxM) flag[e] = 1;
+          });
+        }
+      }
+    });
+    g.tram = flag;
+    return flag;
+  }
+
+  /* Autobuzele (transit.json pregătit cu prepareTransit): curse pe oră la vârf în stațiile de lângă stradă,
+   * atribuite străzilor la cel mult maxM metri de stație. Aproximează volumul traficului greu. */
+  function markBus(g, tp, maxM) {
+    maxM = maxM || 25;
+    var perStop = new Float32Array(tp.stops.length), bus = new Float32Array(g.nE), eg = edgeGrid(g, 120);
+    tp.patterns.forEach(function (p) { if (p.m === 3) p.s.forEach(function (st) { perStop[st] += 3600 / p.h; }); });
+    tp.stops.forEach(function (s, i) {
+      if (!perStop[i]) return;
+      eg.near(s[0], s[1], 1).forEach(function (e) {
+        var c = g.cls[e];
+        if (c < CLS.LOCAL || c > CLS.TRUNK) return;
+        if (distToLine(s[0], s[1], edgeLonLat(g, e)) <= maxM && perStop[i] > bus[e]) bus[e] = perStop[i];
+      });
+    });
+    g.bus = bus;
+    return bus;
+  }
+
+  /* Accidentele (accidente.json, puncte [lon, lat, an, cat, gravitate, intersecție, mod]) legate de cea mai apropiată
+   * stradă / pistă la cel mult maxM metri; la distanțe apropiate (≤ 10 m în plus) se preferă carosabilul și pistele,
+   * nu trotuarele cartografiate separat. Întoarce Int32Array (muchia sau -1). */
+  function snapAccidents(g, pts, maxM) {
+    maxM = maxM || 30;
+    var eg = edgeGrid(g, 120), out = new Int32Array(pts.length).fill(-1);
+    pts.forEach(function (p, i) {
+      var best = -1, bestD = Infinity, bestRoad = -1, bestRoadD = Infinity;
+      eg.near(p[0], p[1], 1).forEach(function (e) {
+        var d = distToLine(p[0], p[1], edgeLonLat(g, e));
+        if (d < bestD) { bestD = d; best = e; }
+        var c = g.cls[e];
+        if ((c === CLS.CYCLEWAY || (c >= CLS.LOCAL && c <= CLS.TRUNK)) && d < bestRoadD) { bestRoadD = d; bestRoad = e; }
+      });
+      if (bestRoad >= 0 && bestRoadD <= maxM && bestRoadD <= bestD + 10) out[i] = bestRoad;
+      else if (best >= 0 && bestD <= maxM) out[i] = best;
+    });
+    return out;
+  }
+
+  /* Validarea scorului: pe clase de risc, km de rețea (doar unde se circulă pe vehicul: piste, alei, străzi) și
+   * accidentele legate de ele. filter(p) alege accidentele (ex. doar bicicletele, doar cele grave). */
+  function riskTable(g, pts, snapped, filter) {
+    var rows = [1, 2, 3, 4, 5].map(function (b) { return { band: b, km: 0, acc: 0, ksi: 0 }; });
+    for (var e = 0; e < g.nE; e++) {
+      var c = g.cls[e];
+      if (c === CLS.FOOTWAY || c === CLS.STEPS || c === CLS.MOTORWAY || c === CLS.NOBIKE) continue;
+      rows[g.risk[e] - 1].km += g.elen[e] / 1000;
+    }
+    pts.forEach(function (p, i) {
+      var e = snapped[i];
+      if (e < 0 || (filter && !filter(p))) return;
+      var r = rows[g.risk[e] - 1];
+      r.acc++;
+      if (p[4] > 0) r.ksi++;
+    });
+    rows.forEach(function (r) { r.accPer100 = r.km ? r.acc / r.km * 100 : null; r.ksiPer100 = r.km ? r.ksi / r.km * 100 : null; r.ksiShare = r.acc ? r.ksi / r.acc * 100 : null; });
+    return rows;
+  }
+
   return {
     CLS: CLS, F_LANE: F_LANE, F_NOFOOT: F_NOFOOT, F_SETT: F_SETT, F_UNPAVED: F_UNPAVED, NO: NO, RIDE: RIDE, PUSH: PUSH,
     URBAN_LIMIT: URBAN_LIMIT, VEHICLES: VEHICLES, ORDER: ORDER, WALK_PUSH: WALK_PUSH,
     parseMicro: parseMicro, speedLimit: speedLimit, comfortable: comfortable, legalMode: legalMode,
     parkingNearby: parkingNearby, prepareTransit: prepareTransit, transitArrivals: transitArrivals, transitSources: transitSources,
-    dijkstraPred: dijkstraPred, gapScores: gapScores, oneway: oneway, powers: powers,
+    dijkstraPred: dijkstraPred, gapScores: gapScores, RISK_BASE: RISK_BASE, riskPoints: riskPoints, riskBand: riskBand,
+    riskBands: riskBands, distToLine: distToLine, markTram: markTram, markBus: markBus, snapAccidents: snapAccidents, riskTable: riskTable, oneway: oneway, powers: powers,
     speedOnGrade: speedOnGrade, rideTime: rideTime, edgeTimes: edgeTimes, walkTimes: walkTimes, coreProfile: coreProfile
   };
 });

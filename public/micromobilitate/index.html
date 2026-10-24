@@ -31,8 +31,14 @@
   <div class="ctl">
     <label><input type="checkbox" id="legal" checked> Respectă regulile de circulație (Codul rutier)</label>
     <div class="note" id="ruleNote"></div>
-    <label><input type="checkbox" id="comfort"> Doar rețeaua confortabilă (piste și străzi liniștite)</label>
-    <div class="note">Fără bulevarde și străzi principale fără pistă: acolo vehiculul se împinge pe trotuar. Pentru începători, copii de peste 14 ani, oricine evită traficul.</div>
+    <label class="inline">Rețeaua folosită
+      <select id="network">
+        <option value="1">toate drumurile permise</option>
+        <option value="2">confortabilă (piste și străzi liniștite)</option>
+        <option value="3">sigură: risc 1–2</option>
+        <option value="4">risc cel mult 3</option>
+      </select></label>
+    <div class="note" id="networkNote">Pe drumurile excluse vehiculul se împinge pe trotuar. Rețeaua confortabilă și cea sigură sunt pentru începători, copii de peste 14 ani, oricine evită traficul; riscul este explicat la „Siguranță”.</div>
     <label id="transitBox" hidden><input type="checkbox" id="transit"> + transport public (lași vehiculul la stație)</label>
     <label><input type="checkbox" id="onlyPark"> Numără doar facilitățile cu parcare de biciclete la ≤ 100 m</label>
     <label id="slopeBox" hidden><input type="checkbox" id="slope" checked> Ține cont de pantă (relief)</label>
@@ -103,6 +109,17 @@
       <div class="tablewrap"><table id="zoneTable"></table></div>
       <p class="note">Apăsați pe un rând pentru a vedea zona pe hartă. „5/5” = proporția punctelor din care se ajunge la toate cele 5 categorii.</p>
     </div>
+  </details>
+
+  <details id="safetyBox">
+    <summary>Siguranță: riscul pe segmente și accidentele</summary>
+    <p class="note">Scorul de risc descrie <b>cât de grav</b> ar fi probabil un accident pe acel segment (viteza și volumul traficului motorizat), nu cât de des se produc accidente – așa a fost validat un scor de acest tip pe 1.169 de accidente grave din cinci țări (Rotariu, 2026). Puncte: tipul drumului, limita de viteză, 4+ benzi, șine de tramvai, ≥ 12 autobuze/oră, piatră cubică; o bandă sau o pistă le scade. <a href="metodologie.html#siguranta">Detalii</a>.</p>
+    <label><input type="checkbox" id="showRisk"> Riscul pe segmente
+      <span class="riskkey" id="riskKey"></span></label>
+    <label id="accToggle" hidden><input type="checkbox" id="showAcc"> Accidente (Poliția, 2022–2026)
+      <select id="accKind"><option value="0">bicicletă și trotinetă</option><option value="1">bicicletă</option><option value="2">trotinetă</option></select>
+      <span class="acckey"><span class="a0"></span>ușor <span class="a1"></span>grav <span class="a2"></span>mort</span></label>
+    <div id="riskValidation"></div>
   </details>
 
   <details id="gapsBox">

@@ -44,6 +44,10 @@
   var PARK_RADIUS = 100, PARK_AND_RIDE = 60;   // m; s pentru legarea vehiculului la stație
   var wsA = null, wsB = null, wsC = null, wsD = null, GAPS = null, SURVEY = null, SURVEY_EDGE = null;
   // clasele stratului „străzi din chestionar” (respondenți care au numit strada), ca în harta Masterplanului
+  var MODE_RISK = { 3: 2, 4: 3 };
+  var MODE_LABEL = { 2: 'rețeaua confortabilă', 3: 'rețeaua sigură (risc 1–2)', 4: 'risc cel mult 3' };
+  var RISK_COLORS = ['#1a9850', '#91cf60', '#fee08b', '#fc8d59', '#d73027'];
+  var ACC = null, ACC_EDGE = null;
   var SURVEY_CLASSES = [[1, '#b2182b', 1], [11, '#f46d43', 2], [31, '#fdae61', 3], [61, '#e6e600', 3.5], [121, '#a6d96a', 4.5], [251, '#4d9221', 6]];
   var ZONES = null, zoneLayer = null, zoneResults = null, zoneRunning = false;
   var origin = L.latLng(47.16485, 27.58186), state = null, queued = false;
@@ -84,9 +88,9 @@
   function hasSlope() { return !!(G && G.up); }
   function settings() {
     return { T: $('minutes').value * 60, minutes: +$('minutes').value, v0: $('speed').value / 3.6,
-      legal: $('legal').checked, comfort: $('legal').checked && $('comfort').checked, slope: hasSlope() && $('slope').checked,
+      legal: $('legal').checked, comfort: $('legal').checked && $('network').value === '2', slope: hasSlope() && $('slope').checked,
       transit: !!TRANSIT && $('transit').checked, onlyPark: $('onlyPark').checked, vehicle: vehicle,
-      mode: !$('legal').checked ? 0 : $('comfort').checked ? 2 : 1 };
+      mode: !$('legal').checked ? 0 : (G && G.risk ? +$('network').value : Math.min(2, +$('network').value)) };
   }
   // facilitățile numărate: toate sau doar cele cu parcare de biciclete în apropiere
   function activePois() { return $('onlyPark').checked && POIS_PARK ? POIS_PARK : POIS_ALL; }
@@ -103,19 +107,20 @@
     return v;
   }
   /* timpii pe segmente pentru un vehicul (păstrați până se schimbă setările);
-   * mode: 0 = fără restricții, 1 = după Codul rutier, 2 = doar rețeaua confortabilă */
+   * mode: 0 = fără restricții, 1 = după Codul rutier, 2 = doar rețeaua confortabilă, 3 / 4 = doar segmentele cu
+   * risc cel mult 2 / 3 (MODE_RISK) */
   function times(k, v0, mode, slope) {
     var key = k + '|' + v0.toFixed(4) + '|' + mode + '|' + (slope ? 1 : 0);
     if (!timesCache[key]) {
       if (Object.keys(timesCache).length > 24) timesCache = {};
       timesCache[key] = k === 'walk' ? M.walkTimes(G, WALK, slope)
-        : M.edgeTimes(G, M.VEHICLES[k], { v0: v0, legal: mode > 0, comfort: mode === 2, slope: slope });
+        : M.edgeTimes(G, M.VEHICLES[k], { v0: v0, legal: mode > 0, comfort: mode === 2, maxRisk: MODE_RISK[mode] || 0, slope: slope });
     }
     return timesCache[key];
   }
   function profileFor(k, v0, mode, slope) { return M.coreProfile(times(k, v0, mode, slope), 1.2); }
   function describe(s) {
-    return veh().name + ', ' + fmt(s.v0 * 3.6) + ' km/h' + (s.mode === 2 ? ', rețeaua confortabilă' : s.legal ? ', după Codul rutier' : ', fără restricții') +
+    return veh().name + ', ' + fmt(s.v0 * 3.6) + ' km/h' + (MODE_LABEL[s.mode] ? ', ' + MODE_LABEL[s.mode] : s.legal ? ', după Codul rutier' : ', fără restricții') +
       (s.slope ? ', cu pantă' : ', teren plat') + (s.onlyPark ? ', doar facilitățile cu parcare' : '');
   }
   function labels() {
@@ -236,7 +241,7 @@
         var r = run(profileFor(k, v0, legal ? (s.mode || 1) : 0, s.slope));
         var cur = k === vehicle && legal === s.legal;
         var cls = (cur ? 'cur ' : '') + (legal ? '' : 'free');
-        rows.push('<tr' + (cls.trim() ? ' class="' + cls.trim() + '"' : '') + '><td>' + esc(v.name) + ' · ' + fmt(v0 * 3.6) + ' km/h' + (legal ? (s.mode === 2 ? ' <small>confortabil</small>' : '') : ' <small>fără restricții</small>') +
+        rows.push('<tr' + (cls.trim() ? ' class="' + cls.trim() + '"' : '') + '><td>' + esc(v.name) + ' · ' + fmt(v0 * 3.6) + ' km/h' + (legal ? (MODE_LABEL[s.mode] ? ' <small>' + MODE_LABEL[s.mode] + '</small>' : '') : ' <small>fără restricții</small>') +
           '</td><td>' + r.amen + '</td><td>' + (walk.amen ? fmt(r.amen / walk.amen, 1) + '×' : '–') + '</td><td>' + r.cats[STATION] + '</td></tr>');
       });
     });
@@ -310,6 +315,7 @@
       ctx.globalAlpha = 1;
     }
     if (SURVEY && $('showSurvey').checked && z >= 11) drawSurvey(ctx, X, Y, box, z);
+    if (G.risk && $('showRisk').checked && z >= 11) drawRisk(ctx, X, Y, box, z);
     // lipsurile din rețea: grosimea și opacitatea după scor
     if (GAPS && $('showGaps').checked && z >= 11) {
       var top = GAPS.top, max = GAPS.max;
@@ -322,7 +328,7 @@
       });
       ctx.globalAlpha = 1;
     }
-    if (!state) return;
+    if (!state) { drawAccidents(ctx, X, Y, size, z); return; }
     var width = Math.max(1.5, Math.min(5, 1.2 + (z - 12) * 0.5));
     // fără restricții, în gri: doar unde vehiculul, cu regulile alese, nu ajunge
     if (state.legal) {
@@ -373,7 +379,77 @@
         ctx.fillStyle = CAT_COLORS[c]; ctx.globalAlpha = 0.9; ctx.fill(); ctx.globalAlpha = 1;
       }
     }
+    drawAccidents(ctx, X, Y, size, z);
   }
+
+  // ---------------------------------------------------------------- siguranța
+  function initSafety(tram, acc) {
+    if (tram) M.markTram(G, tram.linii);
+    if (TRANSIT) M.markBus(G, TRANSIT);
+    M.riskBands(G);
+    timesCache = {};
+    $('riskKey').innerHTML = RISK_COLORS.map(function (c, i) { return '<span style="background:' + c + '"></span>' + (i + 1); }).join(' ');
+    if (acc) {
+      ACC = acc;
+      ACC_EDGE = M.snapAccidents(G, acc.puncte, 30);
+      $('accToggle').hidden = false;
+    }
+    renderRiskValidation();
+  }
+  function drawRisk(ctx, X, Y, box, z) {
+    var groups = [[], [], [], [], []];
+    for (var e = 0; e < G.nE; e++) {
+      var c = G.cls[e];
+      if (c === M.CLS.FOOTWAY || c === M.CLS.STEPS || c === M.CLS.NOBIKE || c === M.CLS.MOTORWAY) continue;
+      if (c === M.CLS.PATH && z < 14) continue;   // aleile și drumurile de pământ doar de aproape
+      if (inView(e, box)) groups[G.risk[e] - 1].push({ e: e });
+    }
+    groups.forEach(function (list, k) {
+      if (!list.length) return;
+      ctx.beginPath(); ctx.strokeStyle = RISK_COLORS[k]; ctx.globalAlpha = 0.8;
+      ctx.lineWidth = Math.max(2, Math.min(7, 1 + (z - 11) * (0.6 + k * 0.15)));
+      strokeEdges(ctx, X, Y, list); ctx.stroke();
+    });
+    ctx.globalAlpha = 1;
+  }
+  function drawAccidents(ctx, X, Y, size, z) {
+    if (!ACC || !$('showAcc').checked || z < 11) return;
+    var kind = +$('accKind').value, r0 = Math.max(2, (z - 10) * 0.8);
+    [0, 1, 2].forEach(function (sev) {   // cele grave deasupra
+      ACC.puncte.forEach(function (p) {
+        if (p[4] !== sev || (kind && p[3] !== kind)) return;
+        var m = C.merc(p[0], p[1]), x = X(m[0]), y = Y(m[1]);
+        if (x < -10 || y < -10 || x > size.x + 10 || y > size.y + 10) return;
+        ctx.beginPath(); ctx.arc(x, y, r0 * [1, 1.6, 2][sev], 0, 6.2832);
+        ctx.fillStyle = ['#f28e2b', '#d62728', '#15171a'][sev]; ctx.globalAlpha = sev ? 0.95 : 0.7; ctx.fill();
+        ctx.globalAlpha = 1; ctx.lineWidth = 1; ctx.strokeStyle = '#fff'; ctx.stroke();
+      });
+    });
+  }
+  function renderRiskValidation() {
+    if (!G.risk) return;
+    var kind = ACC ? +$('accKind').value : 0;
+    var rows = ACC ? M.riskTable(G, ACC.puncte, ACC_EDGE, function (p) { return !kind || p[3] === kind; })
+      : M.riskTable(G, [], new Int32Array(0));
+    var km = rows.reduce(function (a, r) { return a + r.km; }, 0);
+    var html = '<table><thead><tr><th>Risc</th><th>km</th><th>% rețea</th>' + (ACC ? '<th>Accidente</th><th>la 100 km</th><th>grave+mortale</th>' : '') + '</tr></thead><tbody>' +
+      rows.map(function (r) {
+        return '<tr><td><span class="dot" style="background:' + RISK_COLORS[r.band - 1] + '"></span>' + r.band + '</td><td>' + fmt(r.km) + '</td><td>' + fmt(r.km / km * 100, 1) + '%</td>' +
+          (ACC ? '<td>' + r.acc + '</td><td>' + fmt(r.accPer100, 1) + '</td><td>' + r.ksi + (r.acc ? ' (' + fmt(r.ksiShare) + '%)' : '') + '</td>' : '') + '</tr>';
+      }).join('') + '</tbody></table>';
+    if (ACC) {
+      var R = ACC.rezumat, b = R['Bicicletă'], t = R['Trotinetă'];
+      var falls = function (x) { return x.mod['cadere din vehicul'] || 0; };
+      html += '<p class="note"><b>Cum se citește</b>: km de piste, alei și străzi pe fiecare clasă (în tot pătratul exportat, inclusiv drumurile de câmp) și accidentele legate de cea mai apropiată stradă (≤ 30 m). <b>Fără expunere</b> (câți bicicliști trec pe acolo) tabelul nu este un risc: clasa 2 are mulți km de drumuri liniștite pe care se circulă puțin, clasa 5 drumuri mari pe care bicicliștii le evită. Accidentele grave sunt prea puține (' +
+        rows.reduce(function (a, r) { return a + r.ksi; }, 0) + ') pentru o validare statistică.</p>' +
+        '<p class="note"><b>Limita datelor Poliției</b>: exportul nu are categoria vehiculelor, deci un accident apare aici doar dacă biciclistul / trotinetistul a fost găsit vinovat (cauza „abateri bicicliști” / „abateri conducători trotinete”). Accidentele în care un șofer a lovit un biciclist lipsesc. Din cele găsite, căderile sunt ' +
+        fmt(falls(b) / b.total * 100) + '% la bicicletă și ' + fmt(falls(t) / t.total * 100) + '% la trotinetă – ele spun mai mult despre starea pistelor și a carosabilului (șine, borduri, gropi) decât despre trafic. ' +
+        b.total + ' accidente cu bicicletă și ' + t.total + ' cu trotinetă în ' + ACC.perioada[0].slice(0, 4) + '–' + ACC.perioada[1].slice(0, 4) + ' (până la ' + ACC.perioada[1].split('-').reverse().join('.') + ').</p>';
+    }
+    $('riskValidation').innerHTML = html;
+  }
+  ['showRisk', 'showAcc'].forEach(function (id) { $(id).addEventListener('change', draw); });
+  $('accKind').addEventListener('change', function () { renderRiskValidation(); draw(); });
 
   // ---------------------------------------------------------------- zonele MVA–MVI
   var METRICS = {
@@ -565,11 +641,12 @@
     if (c === M.CLS.FOOTWAY || c === M.CLS.NOBIKE) return 'trotuar / zonă pietonală';
     if (c === M.CLS.STEPS) return 'scări';
     if (M.oneway(G, e)) {
-      var mode = M.legalMode(G, e, v, true, GAPS.s.mode === 2);
+      var mode = M.legalMode(G, e, v, true, GAPS.s.mode === 2 ? true : (MODE_RISK[GAPS.s.mode] || false));
       if (mode === M.RIDE) return 'sens unic fără contrasens';
     }
     if (v.rules === 'scooter' && c >= M.CLS.LOCAL && c <= M.CLS.TRUNK && M.speedLimit(G, e) > M.URBAN_LIMIT) return '> 50 km/h fără pistă';
     if (GAPS.s.mode === 2 && !M.comfortable(G, e)) return CLS_LABEL[c] + ' fără pistă';
+    if (MODE_RISK[GAPS.s.mode] && G.risk && G.risk[e] > MODE_RISK[GAPS.s.mode]) return 'risc ' + G.risk[e] + ' (' + CLS_LABEL[c] + ')';
     if (c === M.CLS.SHARED || c === M.CLS.PATH) return 'alee (nu e pistă)';
     return CLS_LABEL[c];
   }
@@ -625,7 +702,7 @@
     var blob = new Blob(['﻿' + lines.join('\n') + '\n'], { type: 'text/csv;charset=utf-8' });
     var a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'iasi_micro15_lipsuri_' + GAPS.s.vehicle + (GAPS.s.mode === 2 ? '_confortabil' : '') + '_' + GAPS.s.minutes + 'min.csv';
+    a.download = 'iasi_micro15_lipsuri_' + GAPS.s.vehicle + (GAPS.s.mode === 2 ? '_confortabil' : MODE_RISK[GAPS.s.mode] ? '_risc' + MODE_RISK[GAPS.s.mode] : '') + '_' + GAPS.s.minutes + 'min.csv';
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
   });
@@ -703,7 +780,7 @@
     hashTimer = setTimeout(function () {
       var s = settings();
       var q = new URLSearchParams({ lat: origin.lat.toFixed(5), lng: origin.lng.toFixed(5), min: s.minutes, v: vehicle,
-        kmh: $('speed').value, lg: s.legal ? 1 : 0, cf: $('comfort').checked ? 1 : 0, tp: $('transit').checked ? 1 : 0,
+        kmh: $('speed').value, lg: s.legal ? 1 : 0, net: $('network').value, tp: $('transit').checked ? 1 : 0,
         pk: $('onlyPark').checked ? 1 : 0, pa: $('slope').checked ? 1 : 0, z: map.getZoom() });
       try { history.replaceState(null, '', '#' + q.toString()); } catch (e) { /* unele browsere limitează */ }
     }, 300);
@@ -717,7 +794,8 @@
     var sp = num('kmh', 5, 30); if (sp !== null) { $('speed').value = sp; setVehicle(vehicle, true); }
     var m = num('min', 5, 30); if (m !== null) $('minutes').value = Math.round(m);
     if (q.get('lg') === '0') $('legal').checked = false;
-    if (q.get('cf') === '1') $('comfort').checked = true;
+    if (q.get('cf') === '1') $('network').value = '2';   // linkurile vechi
+    if (/^[1-4]$/.test(q.get('net') || '')) $('network').value = q.get('net');
     if (q.get('tp') === '1') $('transit').checked = true;
     if (q.get('pk') === '1') $('onlyPark').checked = true;
     if (q.get('pa') === '0') $('slope').checked = false;
@@ -733,7 +811,7 @@
 
   // ---------------------------------------------------------------- evenimente
   ['minutes', 'speed'].forEach(function (id) { $(id).addEventListener('input', schedule); });
-  ['legal', 'slope', 'comfort', 'transit', 'onlyPark'].forEach(function (id) { $(id).addEventListener('change', schedule); });
+  ['legal', 'slope', 'network', 'transit', 'onlyPark'].forEach(function (id) { $(id).addEventListener('change', schedule); });
   ['showAm', 'showSt', 'showPark', 'showPush', 'showInfra', 'showGaps'].forEach(function (id) { $(id).addEventListener('change', draw); });
   $('vehicles').addEventListener('click', function (ev) {
     var b = ev.target.closest('button');
@@ -754,7 +832,9 @@
   var elevReq = fetch(DATA_DIR + 'elev.bin').then(function (r) { return r.ok ? r.arrayBuffer() : null; }).catch(function () { return null; });
   Promise.all([getOk('meta.json', 'json'), getOk('graph.bin', 'arrayBuffer'), getOk('micro.bin', 'arrayBuffer'), getOk('pois.json', 'json'), elevReq,
     fetch('data/transit.json').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
-    fetch('data/chestionar.json').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })]).then(function (res) {
+    fetch('data/chestionar.json').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
+    fetch('data/tramvai.json').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
+    fetch('data/accidente.json').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })]).then(function (res) {
     var meta = res[0];
     G = C.parseGraph(res[1]); grid = C.buildGrid(G);
     M.parseMicro(res[2], G);
@@ -770,6 +850,7 @@
     POIS_PARK = poisView(res[3].cats, pts, POIS_ALL.snap, function (p, i) { return p[2] > 4 || PARKFLAG[i]; });
     if (res[5]) { TRANSIT = M.prepareTransit(res[5], G, grid, C.nearestNode); $('transitBox').hidden = false; }
     if (res[6]) initSurvey(res[6]);
+    initSafety(res[7], res[8]);
     origin = L.latLng(meta.start[0], meta.start[1]);
     var h = applyHash(meta);
     if (!h.hadOrigin) {
