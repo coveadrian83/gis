@@ -54,13 +54,126 @@ CANDIDATI = ['POP107D', 'POP105A', 'LOC101B', 'LOC103B', 'GOS106B', 'GOS107A', '
              'SAN102C', 'SAN103B', 'SAN104B', 'TUR101C', 'TUR102C', 'TUR104E', 'SCL101C', 'SCL102C', 'ART101B',
              'ART104A', 'ART113A', 'FOM104D']
 
+# matricea → opțiunile alese pe dimensiunile care nu sunt județ / localitate / an / UM (potrivire pe începutul etichetei,
+# fără spații; None = toate opțiunile)
+MATRICE = {
+    'POP107D': {'Varste si grupe de varsta': ['Total'], 'Sexe': ['Total']},   # populația după domiciliu, 1 ianuarie
+    'LOC101B': {'Forme de proprietate': ['Total']},                               # locuințe existente
+    'GOS104A': {},                                                                # lungimea străzilor orășenești
+    'GOS105A': {},                                                                # străzi orășenești modernizate
+    'GOS106B': {},                                                                # rețeaua de distribuție a apei
+    'GOS110A': {},                                                                # conductele de canalizare
+    'GOS103A': {},                                                                # spațiile verzi (municipii și orașe)
+    'GOS108A': {'Destinatia  apei distribuite': None},                           # apa distribuită (total, uz casnic)
+    'GOS109A': {},                                                                # energia termică distribuită
+    'GOS116A': {},                                                                # rețeaua de gaze
+    'GOS118A': {'Destinatia gazelor naturale distribuite': None},                 # gaze distribuite (total, uz casnic)
+    'SAN102C': {'Categorii de unitati sanitare': ['In spitale'], 'Forme de proprietate': None},   # paturi în spitale
+    'SAN104B': {'Categorii de cadre medico-sanitare': ['Medici'], 'Forme de proprietate': None},  # medici
+    'SCL101C': {'Niveluri de educatie': None},                                    # unități de învățământ pe niveluri
+    'TUR102C': {'Tipuri de structuri de primire turistica': ['Total', 'Hoteluri']},  # locuri de cazare
+    'ART101B': {'Categorii de biblioteci': None},                                 # biblioteci (total, publice)
+    'ART103B': None,                                                              # instituții de spectacole
+    'ART104A': None,                                                              # muzee
+    'SCL107C': {'Niveluri de educatie': ['Total']},                               # săli de gimnastică
+    'SCL110B': {'Niveluri de educatie': ['Total']},                               # terenuri de sport
+}
+ANI = 3   # ultimii ani disponibili (indicatorul folosește cel mai recent an cu valoare)
+
+def opt(o):
+    return {'label': o['label'], 'nomItemId': o['nomItemId'], 'offset': o['offset'], 'parentId': o['parentId']}
+
+def norm(t):
+    return ' '.join(str(t).split()).lower()
+
+def descarca():
+    os.makedirs(os.path.join(OUT, 'tempo'), exist_ok=True)
+    for code, alege in MATRICE.items():
+        dest = os.path.join(OUT, 'tempo', f'{code}.csv')
+        try:
+            meta = req(f'/matrix/{code}')
+        except RuntimeError:
+            print(code, 'metadate indisponibile'); continue
+        det = meta['details']
+        dims = meta['dimensionsMap']
+        iJ, iL, iT = det['nomJud'] - 1, det['nomLoc'] - 1, det['matTime'] - 1
+        sel = []
+        for i, d in enumerate(dims):
+            if i in (iJ, iL):
+                sel.append(None)
+            elif i == iT:
+                sel.append([opt(o) for o in d['options'][-ANI:]])
+            elif d['label'].startswith('UM'):
+                sel.append([opt(o) for o in d['options']])
+            else:
+                want = (alege or {}).get(d['label'].strip()) if alege is not None else None
+                if want is None and alege is not None and d['label'].strip() not in alege:
+                    want = ['Total']
+                os_ = [o for o in d['options'] if want is None or any(norm(o['label']).startswith(norm(w)) for w in want)]
+                if not os_:
+                    os_ = d['options'][:1]
+                sel.append([opt(o) for o in os_])
+        rows, header = [], None
+        for j in dims[iJ]['options']:
+            if j['label'].strip().upper() == 'TOTAL':
+                continue
+            locs = [o for o in dims[iL]['options'] if o['parentId'] == j['nomItemId']]
+            if not locs:
+                continue
+            arr = list(sel)
+            arr[iJ] = [opt(j)]
+            # cereri de cel mult ~150 de localități (limita de celule a serverului)
+            for k in range(0, len(locs), 150):
+                arr[iL] = [opt(o) for o in locs[k:k + 150]]
+                body = {'language': 'ro', 'arr': arr, 'matrixName': meta['matrixName'], 'matrixDetails': det}
+                try:
+                    t = req('/pivot', body, raw=True)
+                except RuntimeError:
+                    print(code, j['label'], 'eșuat'); continue
+                lines = [l for l in t.splitlines() if l.strip()]
+                if not lines:
+                    continue
+                if header is None:
+                    header = lines[0]
+                rows += lines[1:]
+            time.sleep(0.3)
+        if header:
+            open(dest, 'w').write('\n'.join([header] + rows) + '\n')
+        print(code, len(rows), 'rânduri')
+
+SONDE = {
+    'lege_351_2001.html': 'https://legislatie.just.ro/Public/DetaliiDocument/29780',
+    'lege_351_2001_afis.html': 'https://legislatie.just.ro/Public/DetaliiDocumentAfis/29780',
+    'lege_100_2007.html': 'https://legislatie.just.ro/Public/DetaliiDocument/81574',
+    'observator.html': 'https://observatorulteritorial.ro/',
+    'insse_rpl.html': 'https://insse.ro/cms/ro/content/rezultate-definitive-ale-recens%C4%83m%C3%A2ntului-popula%C8%9Biei-%C8%99i-locuin%C8%9Belor-runda-2021',
+}
+
+def sondeaza():
+    """Paginile surselor inaccesibile din alte rețele: le salvăm pentru verificare (texte de lege, portaluri)."""
+    d = os.path.join(OUT, 'sonde')
+    os.makedirs(d, exist_ok=True)
+    for name, url in SONDE.items():
+        try:
+            r = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            with urllib.request.urlopen(r, timeout=60) as f:
+                open(os.path.join(d, name), 'wb').write(f.read())
+            print(name, 'ok')
+        except Exception as e:  # noqa: BLE001
+            print(name, e)
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--catalog', action='store_true')
     ap.add_argument('--descarca', action='store_true')
+    ap.add_argument('--sonde', action='store_true')
     a = ap.parse_args()
     if a.catalog:
         catalog()
+    if a.descarca:
+        descarca()
+    if a.sonde:
+        sondeaza()
 
 if __name__ == '__main__':
     main()

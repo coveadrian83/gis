@@ -29,8 +29,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Catalogul TEMPO
-        run: python scripts/urban_tempo.py --catalog
+      - name: Paginile surselor (lege, portaluri)
+        run: python scripts/urban_tempo.py --sonde
       - name: Descarcă matricele pe localități
         run: python scripts/urban_tempo.py --descarca
       - name: Salvează datele în branch
