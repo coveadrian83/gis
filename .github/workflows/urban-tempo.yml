@@ -35,8 +35,8 @@ jobs:
           path: cache/urban
           key: urban-${{ github.run_id }}
           restore-keys: urban-
-      - name: Paginile surselor (lege, portaluri)
-        run: python scripts/urban_tempo.py --sonde
+      - name: Depanare (formatul cererii TEMPO)
+        run: python scripts/urban_tempo.py --depanare
       - name: Descarcă matricele pe localități
         run: python scripts/urban_tempo.py --descarca
       - name: Salvează datele în branch
