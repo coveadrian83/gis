@@ -1,6 +1,7 @@
 # Descarcă din INS TEMPO-Online datele pe localități pentru harta „Rețeaua urbană – Legea 351/2001” (/urban/)
-# cu scripts/urban_tempo.py, apoi recalculează indicatorii cu scripts/urban_351.py. Serverul TEMPO nu e accesibil
-# din orice rețea, de aceea descărcarea se face aici. Rulează la modificarea scripturilor și manual
+# cu scripts/urban_tempo.py (data/urban/tempo/*.csv). Serverul TEMPO nu e accesibil din orice rețea, de aceea
+# descărcarea se face aici; indicatorii se calculează apoi cu scripts/urban_351.py (recensamantromania.ro, folosit
+# de acesta, nu răspunde serverelor GitHub). Rulează la modificarea scripturilor și manual
 # (Actions → „Date urbane (Legea 351/2001)” → Run workflow).
 name: Date urbane (Legea 351/2001)
 
@@ -38,15 +39,11 @@ jobs:
         run: python scripts/urban_tempo.py --sonde
       - name: Descarcă matricele pe localități
         run: python scripts/urban_tempo.py --descarca
-      - name: Calculează indicatorii (RPL 2021 + TEMPO + limitele UAT)
-        run: |
-          pip install -q openpyxl pyogrio shapely
-          python scripts/urban_351.py
       - name: Salvează datele în branch
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898699+github-actions[bot]@users.noreply.github.com"
-          git add data/urban public/data/urban
+          git add data/urban
           if git diff --cached --quiet; then echo "Datele nu s-au schimbat."; exit 0; fi
           git commit -m "Date urbane: descărcare INS TEMPO"
           git pull --rebase origin "${GITHUB_REF_NAME}"

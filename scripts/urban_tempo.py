@@ -86,12 +86,33 @@ def opt(o):
 def norm(t):
     return ' '.join(str(t).split()).lower()
 
+FORMAT = []   # varianta de cerere care a funcționat (detectată la prima cerere)
+
+def pivot(meta, arr):
+    """Cererea de date: varianta actuală a TEMPO (encQuery – nomItemId-urile alese, separate prin „,” în interiorul
+    unei dimensiuni și prin „:” între dimensiuni) sau varianta veche (arr + matrixDetails)."""
+    det = meta['details']
+    enc = ':'.join(','.join(str(o['nomItemId']) for o in d) for d in arr)
+    variante = {
+        'enc': {'encQuery': enc, 'language': 'ro', 'matCode': meta.get('code') or meta['_code'], 'matMaxDim': det['matMaxDim'],
+                'matUMSpec': det['matUMSpec'], 'matRegJ': det.get('matRegJ', 0)},
+        'arr': {'language': 'ro', 'arr': arr, 'matrixName': meta['matrixName'], 'matrixDetails': det},
+    }
+    for v in (FORMAT or ['enc', 'arr']):
+        t = req('/pivot', variante[v], raw=True, tries=2, timeout=90)
+        if t.strip():
+            if not FORMAT:
+                FORMAT.append(v); print('formatul cererii:', v, flush=True)
+            return t
+    return ''
+
 def descarca():
     os.makedirs(os.path.join(OUT, 'tempo'), exist_ok=True)
     for code, alege in MATRICE.items():
         dest = os.path.join(OUT, 'tempo', f'{code}.csv')
         try:
             meta = req(f'/matrix/{code}')
+            meta['_code'] = code
         except RuntimeError:
             print(code, 'metadate indisponibile'); continue
         det = meta['details']
@@ -113,8 +134,10 @@ def descarca():
                 if not os_:
                     os_ = d['options'][:1]
                 sel.append([opt(o) for o in os_])
-        rows, header, esecuri = [], None, 0
+        rows, header, esecuri, judete = [], None, 0, 0
         for j in dims[iJ]['options']:
+            if header is None and judete >= 3:
+                print(code, 'abandonat: răspunsuri goale', flush=True); break
             if esecuri >= 3:
                 print(code, 'abandonat după 3 eșecuri la rând', flush=True); break
             if j['label'].strip().upper() == 'TOTAL':
@@ -122,19 +145,19 @@ def descarca():
             locs = [o for o in dims[iL]['options'] if o['parentId'] == j['nomItemId']]
             if not locs:
                 continue
+            judete += 1
             arr = list(sel)
             arr[iJ] = [opt(j)]
             # cereri de cel mult ~150 de localități (limita de celule a serverului)
             for k in range(0, len(locs), 150):
                 arr[iL] = [opt(o) for o in locs[k:k + 150]]
-                body = {'language': 'ro', 'arr': arr, 'matrixName': meta['matrixName'], 'matrixDetails': det}
                 try:
-                    t = req('/pivot', body, raw=True, tries=2, timeout=90)
+                    t = pivot(meta, arr)
                     esecuri = 0
                 except RuntimeError:
                     esecuri += 1
                     print(code, j['label'], 'eșuat', flush=True); continue
-                if header is None:
+                if header is None and t.strip():
                     print(code, 'primul răspuns:', t[:300].replace('\n', ' | '), flush=True)
                 lines = [l for l in t.splitlines() if l.strip()]
                 if not lines:
