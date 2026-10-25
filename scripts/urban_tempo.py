@@ -192,50 +192,34 @@ def sondeaza():
             print(name, e)
 
 def depanare():
-    """Caută în aplicația web TEMPO (tempo-online) apelul către /pivot, ca să reproducem exact cererea; încearcă
-    o cerere mică și salvează tot în data/urban/depanare.txt."""
+    """Depanarea cererii /pivot: codul aplicației web (main.js) din jurul apelului și câteva cereri de probă,
+    cu răspunsul complet, în data/urban/depanare.txt."""
     import re as _re
     out = []
     root = 'http://statistici.insse.ro:8077/tempo-online/'
     try:
-        idx = urllib.request.urlopen(urllib.request.Request(root, headers={'User-Agent': 'Mozilla/5.0'}), timeout=60).read().decode('utf-8', 'replace')
+        js = urllib.request.urlopen(urllib.request.Request(root + 'main.js', headers={'User-Agent': 'Mozilla/5.0'}), timeout=60).read().decode('utf-8', 'replace')
+        for m in _re.finditer(r'pivot|encQuery', js):
+            out.append('--- main.js @%d: %s' % (m.start(), js[max(0, m.start() - 900):m.start() + 600]))
     except Exception as e:  # noqa: BLE001
-        idx = ''; out.append('index: %s' % e)
-    scripts = _re.findall(r'src="([^"]+\.js)"', idx)
-    out.append('scripturi: %s' % scripts)
-    for sc in scripts:
-        try:
-            js = urllib.request.urlopen(urllib.request.Request(root + sc, headers={'User-Agent': 'Mozilla/5.0'}), timeout=60).read().decode('utf-8', 'replace')
-        except Exception as e:  # noqa: BLE001
-            out.append('%s: %s' % (sc, e)); continue
-        for m in _re.finditer(r'pivot|encQuery|matrixDetails', js):
-            out.append('--- %s @%d: %s' % (sc, m.start(), js[max(0, m.start() - 700):m.start() + 500]))
-            if len(out) > 60:
-                break
-    # o cerere mică, cu răspunsul complet
-    try:
-        meta = req('/matrix/GOS103A')
-        out.append('META details: %s' % json.dumps(meta['details']))
-        d = meta['dimensionsMap']
-        arr = [[opt(d[0]['options'][1])], [opt(d[1]['options'][1])], [opt(d[2]['options'][-1])], [opt(d[3]['options'][0])]]
-        for v, body in [('arr', {'language': 'ro', 'arr': arr, 'matrixName': meta['matrixName'], 'matrixDetails': meta['details']}),
-                        ('enc', {'encQuery': ':'.join(str(a[0]['nomItemId']) for a in arr), 'language': 'ro', 'matCode': 'GOS103A',
-                                 'matMaxDim': meta['details']['matMaxDim'], 'matUMSpec': meta['details']['matUMSpec'], 'matRegJ': 0})]:
-            data = json.dumps(body).encode()
-            r = urllib.request.Request(BASE + '/pivot', data=data, headers={'Content-Type': 'application/json', 'Accept': '*/*',
-                                       'User-Agent': 'Mozilla/5.0', 'Origin': 'http://statistici.insse.ro:8077',
-                                       'Referer': root})
-            try:
-                with urllib.request.urlopen(r, timeout=90) as f:
-                    out.append('%s → %s %s | %r' % (v, f.status, dict(f.headers), f.read()[:800]))
-            except urllib.error.HTTPError as e:
-                out.append('%s → HTTP %s %r' % (v, e.code, e.read()[:800]))
-            out.append('corp trimis: %s' % data[:600])
-    except Exception as e:  # noqa: BLE001
-        out.append('cerere: %s' % e)
-    os.makedirs(OUT, exist_ok=True)
+        out.append('main.js: %s' % e)
+    meta = req('/matrix/GOS103A')
+    d = meta['dimensionsMap']
+    ani = d[2]['options']
+    probe = [
+        ('un an vechi', [d[0]['options'][1]], [d[1]['options'][1]], [ani[-4]]),
+        ('toți anii', [d[0]['options'][1]], [d[1]['options'][1]], ani[-6:]),
+        ('total județ', [d[0]['options'][1]], [o for o in d[1]['options'] if o['parentId'] == d[0]['options'][1]['nomItemId']][:5], ani[-6:]),
+    ]
+    for nume, j, l, a_ in probe:
+        arr = [j, l, a_, d[3]['options']]
+        enc = ':'.join(','.join(str(o['nomItemId']) for o in x) for x in arr)
+        body = {'encQuery': enc, 'language': 'ro', 'matCode': 'GOS103A', 'matMaxDim': meta['details']['matMaxDim'],
+                'matUMSpec': meta['details']['matUMSpec'], 'matRegJ': 0}
+        t = req('/pivot', body, raw=True, tries=1)
+        out.append('%s | enc=%s | %d octeți | %r' % (nume, enc, len(t), t[:600]))
     open(os.path.join(OUT, 'depanare.txt'), 'w').write('\n'.join(out))
-    print('\n'.join(o[:400] for o in out[:20]))
+    print('\n'.join(o[:600] for o in out[-3:]))
 
 def main():
     ap = argparse.ArgumentParser()
