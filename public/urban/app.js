@@ -44,6 +44,15 @@
     ['c3', 'atinge pragul', '#2e8b57']
   ];
 
+  var PUG = [
+    ['vg', 'În vigoare, cu date spațiale (Ordinul 904/2023)', '#1d6b3a'],
+    ['v', 'În vigoare', '#63b06e'],
+    ['a', 'Necesită actualizare', '#e8a13a'],
+    ['x', 'Anulat în instanță', '#9e1b1b'],
+    ['n', 'Stadiu necunoscut', '#cfcabe']
+  ];
+  var PUG_ST = { v: 'în vigoare', a: 'necesită actualizare', x: 'anulat în instanță', n: 'stadiu necunoscut' };
+  function pugKey(u) { var p = u.pug; if (!p) return 'n'; return p.st === 'v' && p.g ? 'vg' : p.st; }
   var D = null, IND = [], INDX = {}, UAT = {}, LIST = [], view = 'eval';
 
   // ---------------------------------------------------------------- harta
@@ -115,11 +124,12 @@
   function colorOf(u) {
     if (view === 'eval') return ST[u.ev.st].color;
     if (view === 'retea') return u.t === 'M' ? '#d9c3e3' : u.t === 'O' ? '#f5d8b0' : '#f6f3ec';
+    if (view === 'pug') { var pk = pugKey(u); for (var q = 0; q < PUG.length; q++) if (PUG[q][0] === pk) return PUG[q][2]; }
     var k = indClass(u);
     for (var i = 0; i < IND_CLASSES.length; i++) if (IND_CLASSES[i][0] === k) return IND_CLASSES[i][2];
     return '#ccc';
   }
-  function keyOf(u) { return view === 'eval' ? u.ev.st : view === 'retea' ? u.t : indClass(u); }
+  function keyOf(u) { return view === 'eval' ? u.ev.st : view === 'retea' ? u.t : view === 'pug' ? pugKey(u) : indClass(u); }
   function isGap(u) { return $('gapShow').checked && u.t === 'C' && u.du >= +$('gapKm').value; }
   function inSel(u) {
     var j = $('judSel').value, t = $('tipSel').value;
@@ -179,7 +189,7 @@
     return c;
   }
   function legend() {
-    var items = view === 'eval' ? STATUS : view === 'retea' ? RETEA : IND_CLASSES, c = counts(), h = '';
+    var items = view === 'eval' ? STATUS : view === 'retea' ? RETEA : view === 'pug' ? PUG : IND_CLASSES, c = counts(), h = '';
     if (view === 'ind') {
       var ind = INDX[$('indSel').value], cat = $('indPrag').value;
       h += '<div class="note">Pragul pentru ' + (cat === 'oras' ? 'oraș' : 'municipiu') + ': <b>' + esc(prag(ind, cat)) + '</b>' + (ind.sursa ? ' · ' + esc(ind.sursa) : '') + '</div>';
@@ -187,6 +197,9 @@
     items.forEach(function (it) {
       h += '<div class="it' + (hidden[view + ':' + it[0]] ? ' off' : '') + '" data-k="' + it[0] + '"><span class="sw" style="background:' + it[2] + '"></span>' + esc(it[1]) + '<span class="n">' + fmt(c[it[0]] || 0) + '</span></div>';
     });
+    if (view === 'pug') {
+      h += '<div class="note" style="margin-top:6px">Planurile urbanistice generale din registrul MDLPA „Date Locale” (stadiul legal declarat în registru). Datele spațiale conforme cu Ordinul MDLPA nr. 904/2023 (zonificarea funcțională, intravilanul, reglementările) permit, în timp, calculul direct al unor indicatori ai Legii 351/2001 (spații verzi, străzi, echipare edilitară).</div>';
+    }
     if (view === 'retea') {
       h += '<div class="note" style="margin-top:6px">Puncte (rangul din Legea 351/2001): ● negru – capitala (rang 0), ● violet închis – municipii de rang I, ● violet – municipii de rang II (mai mari: reședințele de județ), ● portocaliu – orașe (rang III), · gri – reședințe de comună (rang IV, de la zoom 7,5). Satele componente (rang V) apar în fișa fiecărui UAT.</div>';
     }
@@ -261,6 +274,12 @@
       (u.ns ? ' · ' + u.ns + ' localități componente' : '') +
       (u.nu ? '<br>Cel mai apropiat municipiu / oraș: ' + esc(u.nu) + ', ' + fmt(u.du, 0) + ' km în linie dreaptă' + (u.t === 'C' && u.du >= 25 ? ' – <b>zonă fără oraș pe 25 km</b>' : '') : '') + '</div>';
     h += verdict(u);
+    if (u.pug) {
+      var p = u.pug, yr = function (d) { return d ? d.slice(0, 4) : ''; };
+      h += '<div class="meta">PUG: ' + esc(PUG_ST[p.st] || '') + (p.a ? ', aprobat ' + yr(p.a) : '') + (p.p ? ', prelungit ' + yr(p.p) : '') +
+        (p.v ? ', valabil până în ' + yr(p.v) : '') + (p.g ? ', cu date spațiale' : '') +
+        (p.u ? ' · <a href="https://datelocale.mdlpa.ro' + esc(p.u) + '" target="_blank" rel="noopener">fișa din registrul MDLPA</a>' : '') + '</div>';
+    }
     h += '<table><thead><tr><th>Indicator (* = de bază)</th><th>valoare</th><th>prag oraș</th><th>prag mun.</th></tr></thead><tbody>';
     IND.forEach(function (ind) {
       var v = value(u, ind.id, r), co = u.ev.oras.rows[ind.id], cm = u.ev.municipiu.rows[ind.id];

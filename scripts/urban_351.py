@@ -449,7 +449,38 @@ def calculeaza():
             rec['xy'] = u['xy']; rec['km2'] = u['km2']
         out.append(rec)
     distante(out)
+    pug(out)
     return out, AN
+
+
+def pug(out):
+    """PUG-ul fiecărui UAT din registrul MDLPA „Date Locale” (data/urban/pug_registru.csv, scripts/urban_pug.py)."""
+    p = os.path.join(ROOT, 'data', 'urban', 'pug_registru.csv')
+    if not os.path.exists(p):
+        return
+    reg = {}
+    for r in csv.DictReader(open(p, encoding='utf-8')):
+        try:
+            reg[int(r['siruta'])] = r
+        except ValueError:
+            pass
+    cod = {'În vigoare': 'v', 'Necesită actualizare': 'a', 'Anulat în instanță': 'x', 'Necunoscut': 'n'}
+    n = 0
+    for u in out:
+        r = reg.get(u['s'])
+        if not r:
+            continue
+        d = {'st': cod.get(r['stadiu'], 'n')}
+        if r['date_spatiale'] == 'Disponibile':
+            d['g'] = 1
+        for k, c in (('hcl_aprobare', 'a'), ('hcl_prelungire', 'p'), ('valabil_pana', 'v')):
+            if r.get(k):
+                d[c] = r[k]
+        if r.get('detalii'):
+            d['u'] = r['detalii'].replace('https://datelocale.mdlpa.ro', '')
+        u['pug'] = d
+        n += 1
+    print('PUG din registrul MDLPA:', n)
 
 
 def distante(out, raza=25):
