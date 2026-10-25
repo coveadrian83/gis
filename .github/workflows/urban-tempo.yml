@@ -1,0 +1,44 @@
+# Descarcă din INS TEMPO-Online datele pe localități pentru harta „Rețeaua urbană – Legea 351/2001” (/urban/)
+# cu scripts/urban_tempo.py, apoi recalculează indicatorii cu scripts/urban_351.py. Serverul TEMPO nu e accesibil
+# din orice rețea, de aceea descărcarea se face aici. Rulează la modificarea scripturilor și manual
+# (Actions → „Date urbane (Legea 351/2001)” → Run workflow).
+name: Date urbane (Legea 351/2001)
+
+on:
+  workflow_dispatch:
+  push:
+    # pe main nu rulează la push (fiecare commit automat pe main = o publicare de 15 credite)
+    branches-ignore: [main]
+    paths:
+      - scripts/urban_tempo.py
+      - .github/workflows/urban-tempo.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: urban-tempo-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tempo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Catalogul TEMPO
+        run: python scripts/urban_tempo.py --catalog
+      - name: Descarcă matricele pe localități
+        run: python scripts/urban_tempo.py --descarca
+      - name: Salvează datele în branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898699+github-actions[bot]@users.noreply.github.com"
+          git add data/urban
+          if git diff --cached --quiet; then echo "Datele nu s-au schimbat."; exit 0; fi
+          git commit -m "Date urbane: descărcare INS TEMPO"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
