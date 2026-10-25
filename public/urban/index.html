@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rețeaua urbană a României – Legea 351/2001</title>
+  <meta name="author" content="dr. geogr. Adrian Covăsnianu">
+  <meta name="description" content="Rețeaua de localități a României prin filtrul indicatorilor minimali de definire a localităților urbane (Legea 351/2001, anexa II, modificată prin Legea 100/2007): ce municipii și orașe îi îndeplinesc, ce orașe și comune s-ar putea califica.">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<aside id="panel">
+  <h1>Rețeaua<br><span>urbană</span></h1>
+  <p class="sub">Municipiile, orașele și comunele României prin filtrul indicatorilor minimali de definire a localităților urbane – Legea 351/2001, anexa II (modificată prin Legea 100/2007)</p>
+  <p class="note">Fiecare unitate administrativ-teritorială (UAT) e comparată cu pragurile legii pentru <b>oraș</b> și pentru <b>municipiu</b>, cu cele mai recente date publice: Recensământul populației și locuințelor 2021 și INS TEMPO-Online (pe localități). Apăsați pe hartă pentru fișa UAT-ului, cu fiecare indicator. <a href="metodologie.html">Metodologie, surse și limite</a>.</p>
+
+  <div class="ctl">
+    <div class="lbl">Ce arată harta</div>
+    <div class="seg" id="viewSeg" role="group" aria-label="Ce arată harta">
+      <button type="button" data-v="eval" class="on">Evaluarea după lege</button>
+      <button type="button" data-v="retea">Rețeaua de localități</button>
+      <button type="button" data-v="ind">Un indicator</button>
+    </div>
+  </div>
+
+  <div class="ctl" id="indCtl" hidden>
+    <label class="col">Indicatorul
+      <select id="indSel"></select></label>
+    <label class="col">Pragul pentru
+      <select id="indPrag">
+        <option value="oras">oraș</option>
+        <option value="municipiu">municipiu</option>
+      </select></label>
+  </div>
+
+  <details id="ruleBox" open>
+    <summary>Regula de calificare</summary>
+    <div class="row">
+      <label>Populația
+        <select id="popSrc">
+          <option value="pop2021">rezidentă, RPL 2021</option>
+          <option value="popDom">după domiciliu, 1 ianuarie (INS)</option>
+        </select></label>
+      <label>Indicatori neîndepliniți acceptați
+        <select id="tol">
+          <option value="0">niciunul (litera legii)</option>
+          <option value="1">cel mult 1</option>
+          <option value="2">cel mult 2</option>
+          <option value="3">cel mult 3</option>
+        </select></label>
+    </div>
+    <label class="inline"><input type="checkbox" id="baseReq" checked> Indicatorii de bază (1–5, marcați cu * în lege) sunt obligatorii</label>
+    <label class="inline"><input type="checkbox" id="useEst" checked> Folosește estimările pentru indicatorii fără date pe UAT (3–5, 12–13 la comune)</label>
+    <p class="note" id="ruleNote"></p>
+  </details>
+
+  <div id="summary"></div>
+  <div id="legend"></div>
+
+  <div class="ctl row">
+    <label>Județul
+      <select id="judSel"><option value="">toată țara</option></select></label>
+    <label>Tipul
+      <select id="tipSel">
+        <option value="">toate</option>
+        <option value="M">municipii</option>
+        <option value="O">orașe</option>
+        <option value="C">comune</option>
+      </select></label>
+  </div>
+  <div class="ctl"><label class="inline">Caută <input type="search" id="q" placeholder="localitate…" list="qList"></label><datalist id="qList"></datalist></div>
+
+  <details id="tableBox" open>
+    <summary>Tabel</summary>
+    <div class="row">
+      <label>Arată
+        <select id="tableMode">
+          <option value="urban">municipiile și orașele</option>
+          <option value="cand">candidații (comune → oraș, orașe → municipiu)</option>
+          <option value="sel">toată selecția</option>
+        </select></label>
+    </div>
+    <div class="tablewrap"><table id="tbl"></table></div>
+    <p class="note">Apăsați pe un rând pentru a vedea UAT-ul pe hartă; pe antet, pentru sortare.</p>
+  </details>
+
+  <div class="ctl"><button id="csv" type="button">Descarcă CSV (selecția curentă)</button></div>
+
+  <p class="note" id="dataInfo"></p>
+  <p class="note"><b>Prelucrarea și integrarea datelor:</b> dr. geogr. Adrian Covăsnianu. Metoda pornește de la Covăsnianu A., Covăsnianu L.-E. (2014), <i>An Urban Perspective upon Moldavian Settlements. From Political Desideratum to Territorial Reality</i>, Romanian Review of Regional Studies X(2), extinsă la toată țara.</p>
+  <p class="note">Surse: INS – Recensământul populației și locuințelor 2021 (rezultate definitive), TEMPO-Online; limitele UAT: © EuroGeographics / Eurostat GISCO (LAU 2024); fundal © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">contribuitorii OpenStreetMap</a>. <a href="../puz/">Harta PUZ</a> · <a href="../15min/">Harta 15 minute</a> · <a href="../transport/">Transport public</a> · <a href="../">Studiul O–D</a></p>
+  <p class="note" id="baseNote"></p>
+</aside>
+<div id="map"></div>
+
+<script src="../vendor/leaflet/leaflet.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

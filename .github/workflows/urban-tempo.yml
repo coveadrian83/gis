@@ -29,15 +29,24 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - uses: actions/cache@v4
+        with:
+          path: cache/urban
+          key: urban-${{ github.run_id }}
+          restore-keys: urban-
       - name: Paginile surselor (lege, portaluri)
         run: python scripts/urban_tempo.py --sonde
       - name: Descarcă matricele pe localități
         run: python scripts/urban_tempo.py --descarca
+      - name: Calculează indicatorii (RPL 2021 + TEMPO + limitele UAT)
+        run: |
+          pip install -q openpyxl pyogrio shapely
+          python scripts/urban_351.py
       - name: Salvează datele în branch
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898699+github-actions[bot]@users.noreply.github.com"
-          git add data/urban
+          git add data/urban public/data/urban
           if git diff --cached --quiet; then echo "Datele nu s-au schimbat."; exit 0; fi
           git commit -m "Date urbane: descărcare INS TEMPO"
           git pull --rebase origin "${GITHUB_REF_NAME}"
