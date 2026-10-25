@@ -1,3 +1,12 @@
-un an vechi | enc=3064:113:4855:9427 | 0 octeți | ''
-toți anii | enc=3064:113:4817,4836,4855,4874,4893,4912:9427 | 0 octeți | ''
-total județ | enc=3064:113,116,117,121,115:4817,4836,4855,4874,4893,4912:9427 | 0 octeți | ''
+.ngstyle.js: HTTP Error 404: Not Found
+.ngfactory.js: HTTP Error 404: Not Found
+module: ['.ngfactory.js', '.ngstyle.js', 'main.js', 'polyfills.js', 'runtime.js', 'scripts.js', 'styles.js', 'vendor.js']
+cookie: []
+enc /pivot → 200 0 octeți b''
+enc /pivot/ → 200 0 octeți b''
+enc+offset /pivot → 200 0 octeți b''
+enc+offset /pivot/ → 200 0 octeți b''
+enc+details /pivot → 200 0 octeți b''
+enc+details /pivot/ → 200 0 octeți b''
+arr /pivot → 200 0 octeți b''
+arr /pivot/ → 200 0 octeți b''
