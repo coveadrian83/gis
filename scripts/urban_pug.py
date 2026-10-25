@@ -6,10 +6,11 @@ spațiale conforme cu Ordinul MDLPA nr. 904/2023.
   python scripts/urban_pug.py   → data/urban/pug_registru.csv
 Fișele individuale se păstrează în cache/urban/pug/ (rularea următoare descarcă doar ce lipsește).
 """
-import csv, html, os, re, sys, time, urllib.request
+import csv, html, os, re, socket, sys, time, urllib.request
 from datetime import datetime
 
 BASE = 'https://datelocale.mdlpa.ro'
+socket.setdefaulttimeout(60)   # serverul lasă uneori conexiunea deschisă fără răspuns
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 CACHE = os.path.join(ROOT, 'cache', 'urban', 'pug')
 OUT = os.path.join(ROOT, 'data', 'urban', 'pug_registru.csv')

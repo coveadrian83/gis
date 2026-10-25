@@ -243,35 +243,40 @@ def locuinte_uat(uat):
 
 # ------------------------------------------------------------------ INS TEMPO (data/urban/tempo/*.csv)
 def tempo(code):
-    """{siruta: {categorie: {an: valoare}}} din răspunsul brut al serverului (CSV cu antet)."""
-    p = os.path.join(TEMPO, code + '.csv')
-    out = {}
-    if not os.path.exists(p):
+    """{siruta: {categorie: {an: valoare}}} din CSV-ul matricei: răspunsul serverului (scripts/urban_tempo.py) sau
+    exportul „CSV” din interfața TEMPO-Online, salvat în data/urban/tempo/ cu codul matricei în nume
+    (ex. GOS105A.csv, TEMPO_GOS105A_25_10_2026.csv). Separatorul („,” „;” sau tab) se detectează."""
+    import glob
+    fis = sorted(glob.glob(os.path.join(TEMPO, '*%s*.csv' % code)))
+    if not fis:
         return None
-    with open(p, encoding='utf-8') as f:
-        rd = csv.reader(f)
-        header = next(rd, None)
-        for r in rd:
+    out = {}
+    for p in fis:
+        raw = open(p, encoding='utf-8-sig', errors='replace').read()
+        if not raw.strip():
+            continue
+        prima = next((l for l in raw.splitlines() if 'Anul' in l), raw.splitlines()[0])
+        delim = max([',', ';', '\t'], key=prima.count)
+        for r in csv.reader(raw.splitlines(), delimiter=delim):
             r = [x.strip() for x in r]
             if len(r) < 3:
                 continue
             sir = an = None
             cats = []
             for x in r[:-1]:
-                m = re.match(r'^(\d+) [A-ZĂÂÎȘȚ]', x)
+                m = re.match(r'^(\d+) [A-ZĂÂÎȘȚŞŢ]', x)
                 y = re.match(r'^Anul (\d{4})$', x)
                 if m and sir is None:
                     sir = int(m.group(1))
                 elif y:
                     an = int(y.group(1))
-                elif x and not x.startswith('UM') and x not in r[:1]:
+                elif x and not x.startswith('UM'):
                     cats.append(x)
             v = num(r[-1])
             if sir is None or an is None or v is None:
                 continue
-            # ultimele categorii sunt UM-ul (ex. „Kilometri”) – le păstrăm în cheie, nu deranjează
-            out.setdefault(sir, {}).setdefault(' | '.join(cats), {})[an] = v
-    return out
+            out.setdefault(sir, {}).setdefault(' | '.join(cats) or '-', {})[an] = v
+    return out or None
 
 
 def ultim_an(T):
@@ -294,7 +299,7 @@ def suma(T, s, an, test=lambda c: True):
         return None
     tot = 0.0
     for c, ys in T.get(s, {}).items():
-        if test(c.lower()):
+        if any(test(part.strip()) for part in c.lower().split(' | ')):
             tot += ys.get(an) or 0
     return tot
 
