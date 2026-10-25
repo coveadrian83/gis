@@ -192,34 +192,70 @@ def sondeaza():
             print(name, e)
 
 def depanare():
-    """Depanarea cererii /pivot: codul aplicației web (main.js) din jurul apelului și câteva cereri de probă,
-    cu răspunsul complet, în data/urban/depanare.txt."""
-    import re as _re
+    """Depanarea cererii /pivot: modulele aplicației web (inclusiv cele încărcate la cerere) din jurul apelului și
+    cereri de probă cu sesiune (cookie) și în mai multe variante, în data/urban/depanare.txt."""
+    import re as _re, http.cookiejar
     out = []
+    cj = http.cookiejar.CookieJar()
+    op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
+    H = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120 Safari/537.36'}
     root = 'http://statistici.insse.ro:8077/tempo-online/'
+    def get(u):
+        return op.open(urllib.request.Request(u, headers=H), timeout=60).read().decode('utf-8', 'replace')
+    seen = set()
     try:
-        js = urllib.request.urlopen(urllib.request.Request(root + 'main.js', headers={'User-Agent': 'Mozilla/5.0'}), timeout=60).read().decode('utf-8', 'replace')
-        for m in _re.finditer(r'pivot|encQuery', js):
-            out.append('--- main.js @%d: %s' % (m.start(), js[max(0, m.start() - 900):m.start() + 600]))
+        idx = get(root)
+        todo = _re.findall(r'src="([^"]+\.js)"', idx)
+        while todo and len(seen) < 40:
+            sc = todo.pop(0)
+            if sc in seen:
+                continue
+            seen.add(sc)
+            try:
+                js = get(root + sc)
+            except Exception as e:  # noqa: BLE001
+                out.append('%s: %s' % (sc, e)); continue
+            # modulele încărcate la cerere (webpack): nume de fișiere .js menționate în runtime/main
+            for c in _re.findall(r'"([\w.-]+\.js)"', js):
+                if c not in seen:
+                    todo.append(c)
+            for m in _re.finditer(r'tempo-ins|/pivot|"pivot"|encQuery', js):
+                if sc.startswith(('scripts', 'vendor', 'polyfills')):
+                    break
+                out.append('--- %s @%d: %s' % (sc, m.start(), js[max(0, m.start() - 600):m.start() + 600]))
+        out.append('module: %s' % sorted(seen))
     except Exception as e:  # noqa: BLE001
-        out.append('main.js: %s' % e)
-    meta = req('/matrix/GOS103A')
+        out.append('index: %s' % e)
+    meta = json.loads(get(BASE + '/matrix/GOS103A'))
+    out.append('cookie: %s' % [c.name for c in cj])
     d = meta['dimensionsMap']
-    ani = d[2]['options']
-    probe = [
-        ('un an vechi', [d[0]['options'][1]], [d[1]['options'][1]], [ani[-4]]),
-        ('toți anii', [d[0]['options'][1]], [d[1]['options'][1]], ani[-6:]),
-        ('total județ', [d[0]['options'][1]], [o for o in d[1]['options'] if o['parentId'] == d[0]['options'][1]['nomItemId']][:5], ani[-6:]),
+    j = d[0]['options'][1]
+    locs = [o for o in d[1]['options'] if o['parentId'] == j['nomItemId']][:3]
+    ani = d[2]['options'][-6:]
+    arr = [[j], locs, ani, d[3]['options']]
+    enc = ':'.join(','.join(str(o['nomItemId']) for o in x) for x in arr)
+    base = {'language': 'ro', 'matCode': 'GOS103A', 'matMaxDim': 4, 'matUMSpec': 0, 'matRegJ': 0}
+    variante = [
+        ('enc', dict(base, encQuery=enc)),
+        ('enc+offset', dict(base, encQuery=':'.join(','.join(str(o['offset']) for o in x) for x in arr))),
+        ('enc+details', dict(base, encQuery=enc, matrixDetails=meta['details'])),
+        ('arr', {'language': 'ro', 'arr': [[opt(o) for o in x] for x in arr], 'matrixName': meta['matrixName'], 'matrixDetails': meta['details']}),
     ]
-    for nume, j, l, a_ in probe:
-        arr = [j, l, a_, d[3]['options']]
-        enc = ':'.join(','.join(str(o['nomItemId']) for o in x) for x in arr)
-        body = {'encQuery': enc, 'language': 'ro', 'matCode': 'GOS103A', 'matMaxDim': meta['details']['matMaxDim'],
-                'matUMSpec': meta['details']['matUMSpec'], 'matRegJ': 0}
-        t = req('/pivot', body, raw=True, tries=1)
-        out.append('%s | enc=%s | %d octeți | %r' % (nume, enc, len(t), t[:600]))
+    for nume, body in variante:
+        for path in ('/pivot', '/pivot/'):
+            r = urllib.request.Request(BASE + path, data=json.dumps(body).encode(),
+                                       headers=dict(H, **{'Content-Type': 'application/json', 'Accept': 'application/json, text/plain, */*',
+                                                          'Origin': 'http://statistici.insse.ro:8077', 'Referer': root}))
+            try:
+                with op.open(r, timeout=90) as f:
+                    t = f.read()
+                    out.append('%s %s → %s %d octeți %r' % (nume, path, f.status, len(t), t[:500]))
+            except urllib.error.HTTPError as e:
+                out.append('%s %s → HTTP %s %r' % (nume, path, e.code, e.read()[:300]))
+            except Exception as e:  # noqa: BLE001
+                out.append('%s %s → %s' % (nume, path, e))
     open(os.path.join(OUT, 'depanare.txt'), 'w').write('\n'.join(out))
-    print('\n'.join(o[:600] for o in out[-3:]))
+    print('\n'.join(o[:500] for o in out[-10:]))
 
 def main():
     ap = argparse.ArgumentParser()
