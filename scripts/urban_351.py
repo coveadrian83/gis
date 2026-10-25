@@ -448,7 +448,33 @@ def calculeaza():
         if u.get('xy'):
             rec['xy'] = u['xy']; rec['km2'] = u['km2']
         out.append(rec)
+    distante(out)
     return out, AN
+
+
+def distante(out, raza=25):
+    """Distanța (în linie dreaptă, între punctele reprezentative ale UAT-urilor) până la cel mai apropiat municipiu
+    sau oraș – pentru „zonele lipsite de orașe pe o rază de circa 25–30 km” din PATN, Secțiunea a IV-a (anexa II),
+    reluate de Strategia de Dezvoltare Teritorială a României (SDTR, 2016)."""
+    import math
+    urb = [u for u in out if u['t'] != 'C' and u.get('xy')]
+    for u in out:
+        if not u.get('xy'):
+            continue
+        x, y = u['xy']
+        best, nm = 1e9, None
+        for v in urb:
+            if v is u:
+                continue
+            dx = (v['xy'][0] - x) * 111.32 * math.cos(math.radians(y))
+            dy = (v['xy'][1] - y) * 110.57
+            d = math.hypot(dx, dy)
+            if d < best:
+                best, nm = d, v['n']
+        u['du'] = round(best, 1)
+        u['nu'] = nm
+    n = sum(1 for u in out if u['t'] == 'C' and u.get('du', 0) >= raza)
+    print('comune la cel puțin %d km de orice municipiu sau oraș: %d' % (raza, n))
 
 
 def scrie(out, AN):

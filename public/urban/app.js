@@ -120,6 +120,7 @@
     return '#ccc';
   }
   function keyOf(u) { return view === 'eval' ? u.ev.st : view === 'retea' ? u.t : indClass(u); }
+  function isGap(u) { return $('gapShow').checked && u.t === 'C' && u.du >= +$('gapKm').value; }
   function inSel(u) {
     var j = $('judSel').value, t = $('tipSel').value;
     return (!j || u.j === j) && (!t || u.t === t);
@@ -129,6 +130,7 @@
     if (!u) return { stroke: false, fillOpacity: 0 };
     var vis = inSel(u) && !hidden[view + ':' + keyOf(u)];
     var urban = u.t !== 'C';
+    if (isGap(u) && vis) return { renderer: renderer, color: '#15171a', weight: 1.6, opacity: 0.9, dashArray: '3,2', fillColor: colorOf(u), fillOpacity: view === 'retea' ? 0.7 : 0.85 };
     return {
       renderer: renderer, color: urban ? '#444' : '#9a968c', weight: urban ? 0.8 : 0.25, opacity: vis ? 0.9 : 0.15,
       fillColor: colorOf(u), fillOpacity: vis ? (view === 'retea' ? 0.7 : 0.85) : 0.08
@@ -208,6 +210,10 @@
     ];
     $('summary').innerHTML = cards.map(function (k) { return '<div><b>' + k[0] + '</b><small>' + esc(k[1]) + '</small></div>'; }).join('');
     var r = rule();
+    var km = +$('gapKm').value, gaps = sel.filter(function (u) { return u.t === 'C' && u.du >= km; });
+    var gc = gaps.filter(function (u) { return u.ev.st === 'C_oras' || u.ev.st === 'C_aproape'; });
+    $('gapNote').innerHTML = '<b>' + fmt(gaps.length) + '</b> comune (' + fmt(gaps.reduce(function (a, u) { return a + u.p21; }, 0)) + ' locuitori) sunt la cel puțin ' + km + ' km de un municipiu sau oraș; dintre ele, ' + fmt(gc.length) + ' ar îndeplini sau se apropie de criteriile de oraș' +
+      (gc.length ? ': ' + gc.sort(function (a, b) { return b.p21 - a.p21; }).slice(0, 12).map(function (u) { return esc(u.n) + ' (' + esc(u.j) + ')'; }).join(', ') + (gc.length > 12 ? '…' : '') : '') + '.';
     $('ruleNote').textContent = 'Un UAT „îndeplinește” criteriile unei categorii dacă atinge pragul de populație' +
       (r.baseReq ? ', toți indicatorii de bază evaluabili (1–5)' : '') +
       (r.tol ? ' și are cel mult ' + r.tol + ' indicator' + (r.tol > 1 ? 'i' : '') + ' neîndeplinit' + (r.tol > 1 ? 'i' : '') : ' și toți ceilalți indicatori evaluabili') +
@@ -252,7 +258,8 @@
     h += '<div class="meta">' + esc(TIP[u.t]) + ', județul ' + esc(u.j) + (u.rj ? ' · reședință de județ' : '') + ' · rang ' + esc(RANG[u.r]) +
       '<br>SIRUTA ' + u.s + (u.km2 ? ' · ' + fmt(u.km2, 1) + ' km²' : '') +
       (u.loc ? ' · ' + (u.t === 'C' ? 'reședința: ' : 'localitatea de reședință: ') + esc(u.loc) + ' (' + fmt(u.lp) + ' loc.)' : '') +
-      (u.ns ? ' · ' + u.ns + ' localități componente' : '') + '</div>';
+      (u.ns ? ' · ' + u.ns + ' localități componente' : '') +
+      (u.nu ? '<br>Cel mai apropiat municipiu / oraș: ' + esc(u.nu) + ', ' + fmt(u.du, 0) + ' km în linie dreaptă' + (u.t === 'C' && u.du >= 25 ? ' – <b>zonă fără oraș pe 25 km</b>' : '') : '') + '</div>';
     h += verdict(u);
     h += '<table><thead><tr><th>Indicator (* = de bază)</th><th>valoare</th><th>prag oraș</th><th>prag mun.</th></tr></thead><tbody>';
     IND.forEach(function (ind) {
@@ -280,6 +287,7 @@
     return LIST.filter(function (u) {
       if (!inSel(u) || hidden[view + ':' + keyOf(u)]) return false;
       if (mode === 'urban') return u.t !== 'C';
+      if (mode === 'gap') return u.t === 'C' && u.du >= +$('gapKm').value;
       if (mode === 'cand') return u.ev.st === 'C_oras' || u.ev.st === 'C_aproape' || u.ev.st === 'O_mun';
       return true;
     });
@@ -291,10 +299,11 @@
       p: function (u) { return value(u, 'i1', rule()); },
       ok: function (u) { var e = u.ev[catFor(u)]; return e.met - e.n / 100; },
       score: function (u) { return u.ev[catFor(u)].score; },
+      d: function (u) { return u.du || 0; },
       st: function (u) { return STATUS.findIndex(function (s) { return s[0] === u.ev.st; }); }
     };
     rows.sort(function (a, b) { var x = get[sortKey](a), y = get[sortKey](b); return (x > y ? 1 : x < y ? -1 : 0) * sortDir; });
-    var head = [['n', 'UAT'], ['j', 'Județ'], ['p', 'Populație'], ['ok', 'Îndepl.'], ['score', 'Scor']];
+    var head = [['n', 'UAT'], ['j', 'Județ'], ['p', 'Populație'], ['ok', 'Îndepl.'], ['score', 'Scor'], ['d', 'Oraș la']];
     var h = '<thead><tr>' + head.map(function (c) { return '<th data-k="' + c[0] + '">' + c[1] + (sortKey === c[0] ? (sortDir > 0 ? ' ▲' : ' ▼') : '') + '</th>'; }).join('') + '</tr></thead><tbody>';
     rows.slice(0, 600).forEach(function (u) {
       var e = u.ev[catFor(u)];
@@ -327,11 +336,11 @@
   $('csv').addEventListener('click', function () {
     var r = rule();
     var cols = ['siruta', 'uat', 'judet', 'tip', 'rang', 'statut_evaluare'].concat(IND.map(function (i) { return 'ind' + i.nr; }))
-      .concat(['oras_indeplinite', 'oras_evaluabili', 'oras_scor', 'municipiu_indeplinite', 'municipiu_evaluabili', 'municipiu_scor']);
+      .concat(['oras_indeplinite', 'oras_evaluabili', 'oras_scor', 'municipiu_indeplinite', 'municipiu_evaluabili', 'municipiu_scor', 'cel_mai_apropiat_oras', 'distanta_km']);
     var lines = [cols.join(';')];
     LIST.filter(function (u) { return inSel(u) && !hidden[view + ':' + keyOf(u)]; }).forEach(function (u) {
       var row = [u.s, u.n, u.j, TIP[u.t], u.r, ST[u.ev.st].label].concat(IND.map(function (i) { var v = value(u, i.id, r); return v === null ? '' : String(v).replace('.', ','); }))
-        .concat([u.ev.oras.met, u.ev.oras.n, u.ev.oras.score.toFixed(1).replace('.', ','), u.ev.municipiu.met, u.ev.municipiu.n, u.ev.municipiu.score.toFixed(1).replace('.', ',')]);
+        .concat([u.ev.oras.met, u.ev.oras.n, u.ev.oras.score.toFixed(1).replace('.', ','), u.ev.municipiu.met, u.ev.municipiu.n, u.ev.municipiu.score.toFixed(1).replace('.', ','), u.nu || '', u.du === undefined ? '' : String(u.du).replace('.', ',')]);
       lines.push(row.map(function (c) { c = String(c); return /[;"\n]/.test(c) ? '"' + c.replace(/"/g, '""') + '"' : c; }).join(';'));
     });
     var blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
@@ -342,7 +351,7 @@
   // ---------------------------------------------------------------- controale
   function reclassify() { var r = rule(); LIST.forEach(function (u) { classify(u, r); }); restyle(); }
   ['tol', 'baseReq', 'useEst', 'popSrc'].forEach(function (id) { $(id).addEventListener('change', reclassify); });
-  ['judSel', 'tipSel', 'tableMode', 'indSel', 'indPrag'].forEach(function (id) { $(id).addEventListener('change', function () {
+  ['judSel', 'tipSel', 'tableMode', 'indSel', 'indPrag', 'gapShow', 'gapKm'].forEach(function (id) { $(id).addEventListener('change', function () {
     if (id === 'judSel') zoomJud();
     restyle();
   }); });

@@ -56,6 +56,14 @@
     <p class="note" id="ruleNote"></p>
   </details>
 
+  <details id="gapBox" open>
+    <summary>Zone fără oraș (PATN / SDTR)</summary>
+    <label class="inline"><input type="checkbox" id="gapShow" checked> Conturează comunele aflate la cel puțin
+      <select id="gapKm"><option>20</option><option selected>25</option><option>30</option></select> km de orice municipiu sau oraș</label>
+    <p class="note">Legea 351/2001 (anexa II) delimitează „zonele lipsite de orașe pe o rază de circa 25–30 km, care necesită acțiuni prioritare pentru dezvoltarea de localități cu rol de servire intercomunală”; Strategia de Dezvoltare Teritorială a României (2016) constată că prevederea „nu a fost urmată decât parțial”. Distanța e calculată în linie dreaptă, între centrele UAT-urilor. Comunele din aceste zone care se apropie de criteriile de oraș sunt primele candidate la rolul de centru de servire intercomunală.</p>
+    <p class="note" id="gapNote"></p>
+  </details>
+
   <div id="summary"></div>
   <div id="legend"></div>
 
@@ -79,6 +87,7 @@
         <select id="tableMode">
           <option value="urban">municipiile și orașele</option>
           <option value="cand">candidații (comune → oraș, orașe → municipiu)</option>
+          <option value="gap">comunele din zonele fără oraș</option>
           <option value="sel">toată selecția</option>
         </select></label>
     </div>
