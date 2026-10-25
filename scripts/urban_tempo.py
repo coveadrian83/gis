@@ -12,7 +12,7 @@ import argparse, json, os, sys, time, urllib.request, urllib.error
 BASE = 'http://statistici.insse.ro:8077/tempo-ins'
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'urban')
 
-def req(path, body=None, tries=4, raw=False):
+def req(path, body=None, tries=4, raw=False, timeout=180):
     url = BASE + path
     data = json.dumps(body).encode() if body is not None else None
     for i in range(tries):
@@ -20,7 +20,7 @@ def req(path, body=None, tries=4, raw=False):
             r = urllib.request.Request(url, data=data, headers={
                 'Content-Type': 'application/json', 'Accept': 'application/json, text/plain, */*',
                 'User-Agent': 'Mozilla/5.0 (analiza-urbana; github.com/coveadrian83/gis)'})
-            with urllib.request.urlopen(r, timeout=180) as f:
+            with urllib.request.urlopen(r, timeout=timeout) as f:
                 t = f.read().decode('utf-8', 'replace')
                 return t if raw else json.loads(t)
         except Exception as e:  # noqa: BLE001 – serverul INS cade des; reîncercăm
@@ -113,8 +113,10 @@ def descarca():
                 if not os_:
                     os_ = d['options'][:1]
                 sel.append([opt(o) for o in os_])
-        rows, header = [], None
+        rows, header, esecuri = [], None, 0
         for j in dims[iJ]['options']:
+            if esecuri >= 3:
+                print(code, 'abandonat după 3 eșecuri la rând', flush=True); break
             if j['label'].strip().upper() == 'TOTAL':
                 continue
             locs = [o for o in dims[iL]['options'] if o['parentId'] == j['nomItemId']]
@@ -127,9 +129,13 @@ def descarca():
                 arr[iL] = [opt(o) for o in locs[k:k + 150]]
                 body = {'language': 'ro', 'arr': arr, 'matrixName': meta['matrixName'], 'matrixDetails': det}
                 try:
-                    t = req('/pivot', body, raw=True)
+                    t = req('/pivot', body, raw=True, tries=2, timeout=90)
+                    esecuri = 0
                 except RuntimeError:
-                    print(code, j['label'], 'eșuat'); continue
+                    esecuri += 1
+                    print(code, j['label'], 'eșuat', flush=True); continue
+                if header is None:
+                    print(code, 'primul răspuns:', t[:300].replace('\n', ' | '), flush=True)
                 lines = [l for l in t.splitlines() if l.strip()]
                 if not lines:
                     continue
@@ -139,7 +145,7 @@ def descarca():
             time.sleep(0.3)
         if header:
             open(dest, 'w').write('\n'.join([header] + rows) + '\n')
-        print(code, len(rows), 'rânduri')
+        print(code, len(rows), 'rânduri', flush=True)
 
 SONDE = {
     'lege_351_2001.html': 'https://legislatie.just.ro/Public/DetaliiDocument/29780',
