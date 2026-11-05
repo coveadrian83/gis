@@ -58,7 +58,7 @@
   <ul>
     <li><b>1. Locuitori</b> – implicit populația <b>rezidentă</b> la RPL 2021 (cea folosită de lege și de statistica europeană); se poate alege populația <b>după domiciliu</b> la 1 ianuarie (TEMPO POP107D), care e mai mare acolo unde emigrația e importantă.</li>
     <li><b>2. Populația ocupată în activități neagricole</b> – RPL 2021, tabelul 5.30: 100 × (1 − ocupați în agricultură, silvicultură și pescuit / total ocupați), pe locul de reședință al persoanelor (nu pe locul de muncă).</li>
-    <li><b>6. Paturi în spitale</b> – paturile pentru internare continuă din spitale (inclusiv centrele de sănătate cu paturi de spital), toate formele de proprietate, la 1.000 de locuitori rezidenți (RPL 2021).</li>
+    <li><b>6. Paturi în spitale</b> – paturile pentru internare continuă din spitale (inclusiv centrele de sănătate cu paturi de spital), toate formele de proprietate, la 1.000 de locuitori rezidenți (RPL 2021). Fără datele TEMPO, UAT-urile în care registrul ANMCS al unităților sanitare (prin „Unde locuiesc românii?”) nu are nicio unitate primesc 0 paturi – indicator sigur neîndeplinit; pentru celelalte, numărul paturilor rămâne necunoscut. Fișa UAT-ului arată numărul unităților ANMCS (spitale, dar și clinici, centre de dializă etc.).</li>
     <li><b>7. Medici</b> – medicii din toate formele de proprietate (inclusiv medicii de familie), la 1.000 de locuitori rezidenți.</li>
     <li><b>8. Învățământ</b> – oraș: cel puțin o unitate de nivel liceal sau profesional (învățământ secundar superior); municipiu: cel puțin o unitate de nivel postliceal (sau universitar).</li>
     <li><b>9. Dotări culturale și sportive</b> – oraș: bibliotecă publică și bază sportivă (sală de gimnastică sau teren de sport, din statistica școlară); municipiu: în plus, cel puțin o instituție de spectacole sau concerte. Sălile de spectacol ale caselor de cultură, stadioanele și sălile de sport ne-școlare nu apar în statistica pe localități, deci indicatorul e o aproximare.</li>
@@ -78,6 +78,7 @@
   <div class="formula">ind. 5 = [termoficare (județ × mediu) × energia termică distribuită (UAT) / (județ × mediu)<br>
   &nbsp;&nbsp;+ centrale proprii pe gaze din rețea (județ × mediu) × gazele casnice (UAT) / (județ × mediu)<br>
   &nbsp;&nbsp;+ celelalte centrale (lemn, alte combustibili) repartizate după locuințele rămase] / locuințele UAT-ului</div>
+  <p>Cât timp consumurile de gaze și de energie termică pe localități nu sunt disponibile din TEMPO, termoficarea și centralele pe gaze se repartizează împreună după <b>populația din localitățile cu acces la rețeaua de gaze</b> (branșate sau branșabile – atribut pe localitate din intravilanul ANCPI/CNGCFT, agregat pe grila RPL 2021 de 1 km în proiectul geo-spatial.org <a href="https://github.com/geospatialorg/unde-locuiesc-romanii" target="_blank" rel="noopener">„Unde locuiesc românii?”</a>). Accesul la rețea nu înseamnă utilizare: în orașele mici cu rețea de gaze, dar cu multe case încălzite cu lemne, indicatorul 5 este <b>supraestimat</b>.</p>
   <p class="warn">Estimările sunt bune pentru comparații și ordin de mărime, nu pentru o decizie individuală: presupun că o locuință racordată consumă la fel în tot județul. Subestimează locuințele cu centrală pe lemne în comunele fără rețea de gaze și pot supraestima UAT-urile cu consum casnic mare (case de vacanță, turism). Pe hartă se pot exclude („Folosește estimările” debifat), caz în care indicatorii 3–5 nu intră în evaluare.</p>
 
   <h2>5. Regula de calificare</h2>
@@ -115,6 +116,8 @@
     <li>INS – Recensământul populației și locuințelor 2021, rezultate definitive (<a href="https://www.recensamantromania.ro/rezultate-rpl-2021/" target="_blank" rel="noopener">recensamantromania.ro</a>): tabelele 1.22, 5.30, 7.12, 8.9, 8.13, 8.22.</li>
     <li>INS – TEMPO-Online (<a href="http://statistici.insse.ro:8077/tempo-online/" target="_blank" rel="noopener">statistici.insse.ro</a>), matricele pe localități: POP107D, GOS103A–GOS110A, GOS108A, GOS109A, GOS118A, SAN102C, SAN104B, SCL101C, SCL107C, SCL110B, TUR102C, ART101B, ART103B.</li>
     <li>Ministerul Dezvoltării Regionale și Administrației Publice (2016), <i>Strategia de Dezvoltare Teritorială a României – România policentrică 2035</i>, anexa 1.</li>
+    <li>geo-spatial.org, <i>Unde locuiesc românii?</i> (<a href="https://github.com/geospatialorg/unde-locuiesc-romanii" target="_blank" rel="noopener">github.com/geospatialorg/unde-locuiesc-romanii</a>): grila RPL 2021 de 1 km cu intravilanul ANCPI/CNGCFT și accesul la gaze pe localitate, registrul ANMCS al unităților sanitare.</li>
+    <li>MDLPA, platforma <a href="https://datelocale.mdlpa.ro/ro/planning/registru-pug/" target="_blank" rel="noopener">Date Locale</a> – registrul documentațiilor de urbanism (PUG).</li>
     <li>Eurostat GISCO – Local Administrative Units 2024 (© EuroGeographics pentru limitele administrative).</li>
     <li>Covăsnianu A., Covăsnianu L.-E. (2014), <i>An Urban Perspective upon Moldavian Settlements. From Political Desideratum to Territorial Reality</i>, Romanian Review of Regional Studies, X(2), 39–46.</li>
   </ul>

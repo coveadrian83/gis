@@ -314,6 +314,23 @@ def titlu(s):
     return ''.join(out)
 
 
+def ulr_uat():
+    """data/urban/ulr_uat.csv (scripts/urban_ulr.py): populația cu acces la gaze și spitalele ANMCS pe UAT; sectoarele
+    Bucureștiului se adună la municipiu (179132)."""
+    p = os.path.join(ROOT, 'data', 'urban', 'ulr_uat.csv')
+    if not os.path.exists(p):
+        return None
+    out = {}
+    for r in csv.DictReader(open(p, encoding='utf-8')):
+        s = int(r['siruta'])
+        if 179141 <= s <= 179196:
+            s = 179132
+        o = out.setdefault(s, {'pop_acces_gaz': 0, 'spitale_anmcs': 0})
+        o['pop_acces_gaz'] += int(r['pop_acces_gaz'])
+        o['spitale_anmcs'] += int(r['spitale_anmcs'])
+    return out
+
+
 def calculeaza():
     uat, ordine = citeste_rpl()
     locuinte_uat(uat)
@@ -334,6 +351,13 @@ def calculeaza():
     gaz = cons('GOS118A', lambda c: 'casnic' in c)
     termo = cons('GOS109A')
     med = lambda u: 'U' if u['tip'] in 'MO' else 'R'
+    ulr = ulr_uat()
+    # fără gazele casnice din TEMPO: populația din localitățile cu acces la rețeaua de gaze (intravilanul ANCPI, prin
+    # „Unde locuiesc românii?”); termoficarea se repartizează atunci împreună cu centralele pe gaze, după aceeași pondere
+    gaz_sursa = 'GOS118A' if gaz else None
+    if not gaz and ulr:
+        gaz = {s: ulr.get(s, {}).get('pop_acces_gaz', 0) for s in uat}
+        gaz_sursa = 'ULR'
 
     # sumele pe județ (apă) și pe județ × mediu (încălzire), pentru alocarea totalurilor RPL 2021
     def grup(key):
@@ -357,14 +381,20 @@ def calculeaza():
                 i3 = min(100.0, 100 * (P[s] + max(S, 0)) / dw) if dw else None
                 est.setdefault(s, {})['i3'] = i3
                 est[s]['i4'] = i3 * ratio['URBAN' if med(uat[s]) == 'U' else 'RURAL'] if i3 is not None else None
-    if gaz and termo:
+    if gaz:
         for (j, m), ss in GJM.items():
             h = H.get((j, m)) or (H.get((j, 'T')) if j == 'BUCURESTI' else None)
             if not h or 'central' not in h:
                 continue
-            G, E = sum(gaz[s] for s in ss), sum(termo[s] for s in ss)
-            Tu = {s: min(uat[s]['dw2021'], h.get('termo', 0) * termo[s] / E) if E else 0 for s in ss}
-            Gu = {s: min(uat[s]['dw2021'] - Tu[s], h.get('gaz', 0) * gaz[s] / G) if G else 0 for s in ss}
+            G = sum(gaz[s] for s in ss)
+            E = sum(termo[s] for s in ss) if termo else 0
+            if E:
+                Tu = {s: min(uat[s]['dw2021'], h.get('termo', 0) * termo[s] / E) for s in ss}
+                ng = h.get('gaz', 0)
+            else:
+                Tu = {s: 0 for s in ss}
+                ng = h.get('gaz', 0) + h.get('termo', 0)
+            Gu = {s: min(uat[s]['dw2021'] - Tu[s], ng * gaz[s] / G) if G else 0 for s in ss}
             other = max(h['central'] - h.get('termo', 0) - h.get('gaz', 0), 0)
             rest = sum(uat[s]['dw2021'] - Tu[s] - Gu[s] for s in ss)
             for s in ss:
@@ -388,6 +418,11 @@ def calculeaza():
         b = suma(T['SAN102C'], s, AN['SAN102C'], lambda c: 'spitale' in c and 'continua' in c)
         if b is not None:
             v['i6'] = round(1000 * b / p, 2); an['i6'] = AN['SAN102C']
+        elif ulr and s in ulr and not ulr[s]['spitale_anmcs']:
+            # fără niciun spital în registrul ANMCS → 0 paturi în spitale (sigur sub prag)
+            v['i6'] = 0; an['i6'] = 'ANMCS'
+        if ulr and s in ulr:
+            u['_spitale'] = ulr[s]['spitale_anmcs']
         # 7. medici ‰ (toate formele de proprietate)
         m = suma(T['SAN104B'], s, AN['SAN104B'], lambda c: c.startswith('medici') and 'familie' not in c)
         if m is not None:
@@ -441,6 +476,8 @@ def calculeaza():
                'p21': p, 'v': v}
         if pd:
             rec['pd'] = int(pd)
+        if '_spitale' in u:
+            rec['sp'] = u['_spitale']
         if rj:
             rec['rj'] = 1
         if x:
@@ -520,8 +557,8 @@ def scrie(out, AN):
         'i2': 'INS, RPL 2021, tabelul 5.30 (populația ocupată pe activități ale economiei naționale)',
         'i3': 'Estimare: RPL 2021 (tabelul 8.22, pe județ) repartizat pe UAT după apa distribuită pentru uz casnic (TEMPO GOS108A)',
         'i4': 'Estimare: indicatorul 3 × raportul „baie și WC în locuință / apă în locuință” din RPL 2021 (tabelul 8.13, pe medii)',
-        'i5': 'Estimare: RPL 2021 (tabelul 8.9, pe județ și mediu) repartizat după energia termică (GOS109A) și gazele casnice (GOS118A)',
-        'i6': 'INS TEMPO SAN102C – paturi în spitale, internare continuă',
+        'i5': 'Estimare: RPL 2021 (tabelul 8.9, pe județ și mediu) repartizat după energia termică (GOS109A) și gazele casnice (GOS118A) sau, în lipsa lor, după populația din localitățile cu acces la gaze (intravilanul ANCPI, prin geo-spatial.org „Unde locuiesc românii?”)',
+        'i6': 'INS TEMPO SAN102C – paturi în spitale, internare continuă; în lipsa lor, 0 pentru UAT-urile fără nicio unitate în registrul ANMCS',
         'i7': 'INS TEMPO SAN104B – medici (toate formele de proprietate)',
         'i8': 'INS TEMPO SCL101C – unități de învățământ pe niveluri',
         'i9': 'INS TEMPO ART101B (biblioteci publice), ART103B (instituții de spectacole), SCL107C/SCL110B (săli de gimnastică și terenuri de sport școlare)',

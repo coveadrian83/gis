@@ -271,7 +271,7 @@
     h += '<div class="meta">' + esc(TIP[u.t]) + ', județul ' + esc(u.j) + (u.rj ? ' · reședință de județ' : '') + ' · rang ' + esc(RANG[u.r]) +
       '<br>SIRUTA ' + u.s + (u.km2 ? ' · ' + fmt(u.km2, 1) + ' km²' : '') +
       (u.loc ? ' · ' + (u.t === 'C' ? 'reședința: ' : 'localitatea de reședință: ') + esc(u.loc) + ' (' + fmt(u.lp) + ' loc.)' : '') +
-      (u.ns ? ' · ' + u.ns + ' localități componente' : '') +
+      (u.ns ? ' · ' + u.ns + ' localități componente' : '') + (u.sp !== undefined ? ' · ' + u.sp + ' unități sanitare în registrul ANMCS' : '') +
       (u.nu ? '<br>Cel mai apropiat municipiu / oraș: ' + esc(u.nu) + ', ' + fmt(u.du, 0) + ' km în linie dreaptă' + (u.t === 'C' && u.du >= 25 ? ' – <b>zonă fără oraș pe 25 km</b>' : '') : '') + '</div>';
     h += verdict(u);
     if (u.pug) {
