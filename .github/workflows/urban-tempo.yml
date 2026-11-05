@@ -35,10 +35,8 @@ jobs:
           path: cache/urban
           key: urban-${{ github.run_id }}
           restore-keys: urban-
-      - name: Depanare (formatul cererii TEMPO)
-        run: echo "depanarea nu mai e necesară"
       - name: Descarcă matricele pe localități
-        run: python scripts/urban_tempo.py --descarca --doar POP107D,GOS103A,GOS108A,GOS109A,GOS118A,SAN102C,SAN104B,SCL101C,TUR102C,ART101B,ART103B,SCL107C,SCL110B
+        run: python scripts/urban_tempo.py --descarca
       - name: Salvează datele în branch
         run: |
           git config user.name "github-actions[bot]"
