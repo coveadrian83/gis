@@ -25,7 +25,7 @@
       if (k === 'program') refProgram = r;
       html += '<div class="strat"><div class="strathead"><b>' + esc(s.nume) + '</b><span class="big">' + pct(r.complet) + '</span></div>' +
         '<p class="note">' + esc(s.descriere) + '</p>' +
-        bara('A8 completă (302 km)', r.complet) + bara('Est: Târgu Neamț – Ungheni', r.est) + bara('Iași – Ungheni', r.iasiUngheni) +
+        bara('A8 completă (302 km)', r.complet) + bara('Târgu Neamț – Iași – Ungheni', r.est) + bara('Târgu Neamț – Târgu Mureș', r.vest) +
         '<p class="small">În medie <b>' + Math.round(r.kmMediu) + ' km</b> deschiși (între ' + Math.round(r.kmP10) + ' și ' + Math.round(r.kmP90) + ' în 80% din cazuri) · deficit sub 3% în 2030: ' + pct(r.subTrei) + '</p></div>';
     });
     $('strategii').innerHTML = html;
@@ -130,7 +130,7 @@
     var r = estim;
     $('sanseNota').textContent = N_SIM + ' simulări, fără decizii noi';
     $('sanse').innerHTML = '<div class="hero"><span class="big">' + pct(r.complet) + '</span><span>A8 completă, Târgu Mureș – Ungheni, la 31.12.2030</span></div>' +
-      bara('Est: Târgu Neamț – Ungheni', r.est) + bara('Târgu Neamț – Iași', r.tgNeamtIasi) + bara('Iași – Ungheni (Prut)', r.iasiUngheni) + bara('Deficit sub 3% în 2030', r.subTrei) +
+      bara('Târgu Neamț – Iași – Ungheni', r.est) + bara('Târgu Neamț – Târgu Mureș', r.vest) + bara('Iași – Ungheni (Prut)', r.iasiUngheni) + bara('Deficit sub 3% în 2030', r.subTrei) +
       '<p class="small">Kilometri deschiși până la final: în medie <b>' + Math.round(r.kmMediu) + '</b> din ' + Math.round(C.KM_TOTAL) + ' (între ' + Math.round(r.kmP10) + ' și ' + Math.round(r.kmP90) + ' în 80% din simulări).</p>';
   }
 

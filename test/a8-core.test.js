@@ -42,6 +42,7 @@ test('strategiile: mai multe pârghii => mai mulți km; A8 completă până în 
   assert.ok(i.kmMediu < p.kmMediu && p.kmMediu < t.kmMediu);
   assert.ok(p.complet < 0.05);
   assert.ok(t.iasiUngheni > i.iasiUngheni);
+  assert.ok(t.vest >= i.vest);
 });
 
 test('calendarul: scenariile pesimiste termină mai târziu decât cele optimiste', () => {

@@ -22,7 +22,9 @@
   var ALEGERI = [3, 11, 19];        // alegeri parlamentare: dec. 2028, dec. 2032, dec. 2036
   var BAZA_NATIONAL = 1.5;          // mld. lei/semestru din bugetul național pentru A8, presupus deja în traiectorie
   var SAFE_COR = 4.2 * EUR_LEI;     // cota SAFE pentru coridoare (≈4,2 mld. euro), împărțită A8 / A7 Pașcani – Siret
-                                    // A7 Pașcani – Suceava (contracte SAFE din 1.05.2026) ≈1,16 mld. euro + Suceava – Siret → A8 ≈ 67%
+                                    // necesar SAFE (oct. 2026): A8 Est ≈16,9 mld. lei (≈3,3 mld. euro); A7 Pașcani – Suceava
+                                    // ≈1,16 mld. euro + DEx Suceava – Siret ≈4,9 mld. lei (≈1 mld. euro) → ≈5,4 mld. euro
+                                    // pentru 4,2 disponibili; proporțional, A8 primește ≈61%
   var PT_A8 = 6;                    // ipoteză: bani din Programul Transport 2021–2027 rămași pentru A8 (eligibili până la 31.12.2029)
   var ULTIMUL_AN_PT = 2029;
   var ULTIMUL_AN_SAFE = 2030;       // plățile SAFE se fac până la finalul lui 2030
@@ -65,7 +67,7 @@
     { id: 'T2', mva: 'Minimum 48 de luni de la semnare (2 + 10 + 36); în scenariile prudente, 2031 (MVA, nov. 2026).', nume: 'Târgu Frumos – Lețcani', sectiune: 'Est', km: 28.6, cost: 4.57, parte: 1, ramas: 8,
       stare: 'neatribuit', sursa: 'SAFE', munte: false, constructor: '— (oferta Danlin XXL în reevaluare)', info: 'Fără contract. Hotărârea definitivă a Curții de Apel București din 13.10.2026 impune reevaluarea ofertei asocierii Danlin XXL (4,57 mld. lei); termen pentru chestiunile rămase: 11.11.2026. Urmează atribuirea, semnarea și ordinul de începere. Nod prioritar Podu Iloaiei: 3,9 km.' },
     { id: 'T3', mva: 'Proiectarea s-a oprit după 2 luni; reluarea depinde de instanță; în scenariile prudente, 2031 (MVA, nov. 2026).', nume: 'Lețcani – Iași (DN24)', sectiune: 'Est', km: 17.7, cost: 3.93, parte: 1, ramas: 7,
-      stare: 'suspendat', sursa: 'SAFE', munte: false, constructor: 'FCC Construcción (Spania)', info: 'Contract 29.05.2026 (3,93 mld. lei), proiectare din 24.08.2026. La 28.10.2026, Curtea de Apel București a suspendat executarea contractului până la soluționarea cauzei (contestația în anulare a Concelex); termen 18.11.2026. Termenul nu garantează reluarea proiectării.' },
+      stare: 'suspendat', sursa: 'SAFE', munte: false, constructor: 'FCC Construcción (Spania)', info: 'Contract 29.05.2026 (3,93 mld. lei), proiectare din 24.08.2026. La 28.10.2026, Curtea de Apel București a suspendat executarea contractului până la soluționarea cauzei (contestația în anulare a Concelex); termen 18.11.2026. Termenul nu garantează reluarea proiectării. La 26.10.2026, un creditor a depus la Tribunalul București o cerere de insolvență împotriva FCC Construcción (cererea nu înseamnă deschiderea procedurii).' },
     { id: 'T4', mva: 'Calendar incert până la reevaluare; în scenariile prudente, 2031 (MVA, nov. 2026). Golăiești – pod: 6 luni de proiectare + 12 de execuție.', nume: 'Iași (DN24) – Vama Ungheni', sectiune: 'Est', km: 15.5, cost: 3.57, parte: 1, ramas: 7,
       etapa: { km: 2.77, la: 0.4, nume: 'nodul Golăiești – podul peste Prut' },
       stare: 'suspendat', sursa: 'SAFE', munte: false, constructor: 'Itinera – Saipem – ICM (Italia)', info: 'Contract iul. 2026 (3,57 mld. lei; 15,47 km în România + ≈5 km în R. Moldova), suspendat de instanță la 5.08.2026. Hotărârea definitivă din 13.10.2026: CNIR reevaluează oferta Itinera în 20 de zile de la primirea deciziei (Construcții Erbașu era la 0,06 puncte). Podul de la Ungheni: 56% progres fizic la 20.10.2026, termen dec. 2027.' },
@@ -87,7 +89,7 @@
       efect: 'Bugetul acoperă automat până la 1,5 mld. lei/semestru din lipsa de bani – fără arierate, dar cu deficit mai mare. Capital +2.' },
     { id: 'contestatii', tip: 'a8', titlu: 'Contestații judecate accelerat (CNSC + instanță)', ref: 'Nu e în program', permanent: true,
       efect: 'Șansa de a debloca Târgu Frumos – Lețcani și Iași – Ungheni crește mult. Capital −6.' },
-    { id: 'safeA8', tip: 'a8', titlu: 'Mai mult SAFE pentru A8, mai puțin pentru Pașcani – Siret', ref: 'Program – Finanțe M2; Transporturi M11', permanent: false,
+    { id: 'safeA8', tip: 'a8', titlu: 'Mai mult SAFE pentru A8, mai puțin pentru A7 Pașcani – Siret', ref: 'Program – Finanțe M2; Transporturi M11', permanent: false,
       efect: 'Cota A8 din banii SAFE pentru coridoare +15 puncte. Capital −5 (parlamentarii din Suceava și Botoșani).' },
     { id: 'bei', tip: 'a8', titlu: 'Împrumut BEI de 5 mld. lei pentru secțiunea montană', ref: 'Program – Finanțe M4; Transporturi M2', permanent: true,
       efect: '+5 mld. lei pentru loturile de pe munte, din semestrul următor. Banii cheltuiți intră în deficit.' },
@@ -151,7 +153,7 @@
       loturi: LOTURI.map(function (l) {
         return { id: l.id, left: l.ramas, cost: Math.round(l.cost * l.parte * 100) / 100, stare: l.stare, intarziere: 0, blocat: 0, deschis: null, semnat: null, etapa: null };
       }),
-      national: BAZA_NATIONAL, safeA8: 0.67, safeFolosit: 0, pt: PT_A8, bei: 0, beiDe: 99, cef: 0, cefDe: null, mff: 0, mffSem: 1.5, mffDe: 2030,
+      national: BAZA_NATIONAL, safeA8: 0.61, safeFolosit: 0, pt: PT_A8, bei: 0, beiDe: 99, cef: 0, cefDe: null, mff: 0, mffSem: 1.5, mffDe: 2030,
       carti: {}, prioritate: 'prorata', fiscal: [], natCheltuit: {}, soc: {}, deficit: { 2026: 6.0 }, datorie: 60.4,
       rating: 1, avertismente: 0, aniLaTinta: 0, capital: 55, ajustare: 0, interimat: 0, reevaluare: 0,
       cheltuitA8: 0, stiri: [], terminat: false
@@ -299,7 +301,11 @@
       } else if (l.stare === 'suspendat' && rng() < pReluare) {
         // Iași – Ungheni: reevaluarea ofertei Itinera poate schimba câștigătorul (Erbașu era la 0,06 puncte)
         if (inf.id === 'T4' && rng() < 0.25) { l.stare = 'neatribuit'; stire(st, 'După reevaluare, ' + inf.nume + ' are alt câștigător: contractul se reface de la zero.', 'rau'); }
-        else { l.stare = 'proiectare'; l.semnat = st.sem; stire(st, 'Instanța ridică suspendarea: pe ' + inf.nume + ' proiectarea se reia.', 'bun'); }
+        else {
+          l.stare = 'proiectare'; l.semnat = st.sem; stire(st, 'Instanța ridică suspendarea: pe ' + inf.nume + ' proiectarea se reia.', 'bun');
+          // Lețcani – Iași: cererea de insolvență împotriva FCC (26.10.2026)
+          if (inf.id === 'T3' && rng() < 0.15) { l.blocat = 2; stire(st, inf.nume + ': cererea de insolvență împotriva constructorului oprește din nou lucrările pentru un an.', 'rau'); }
+        }
       }
     }
     l = lot(st, '2C');
@@ -416,7 +422,7 @@
     function gata(ids) { return ids.every(function (id) { return lot(st, id).deschis != null; }); }
     return {
       km: Math.round(km * 10) / 10, deschise: deschise, complet: deschise === LOTURI.length,
-      est: gata(EST), iasiUngheni: gata(['T4']), tgNeamtIasi: gata(['T1', 'T2', 'T3']),
+      est: gata(EST), iasiUngheni: gata(['T4']), tgNeamtIasi: gata(['T1', 'T2', 'T3']), vest: gata(['I', '1B', '1C', '1D', '2A', '2B', '2C', 'III']),
       deficit2030: st.deficit[2030], subTrei: st.deficit[2030] != null && st.deficit[2030] < 3, rating: st.rating, datorie: st.datorie
     };
   }
@@ -426,7 +432,7 @@
   /* Monte Carlo: rulează restul mandatului de n ori, fără decizii noi. */
   function estimeaza(st, n, seed) {
     n = n || 400;
-    var acc = { complet: 0, est: 0, iasiUngheni: 0, tgNeamtIasi: 0, subTrei: 0, km: 0, kmLista: [], lot: {} };
+    var acc = { complet: 0, est: 0, iasiUngheni: 0, tgNeamtIasi: 0, vest: 0, subTrei: 0, km: 0, kmLista: [], lot: {} };
     LOTURI.forEach(function (l) { acc.lot[l.id] = 0; });
     for (var i = 0; i < n; i++) {
       var s = clona(st);
@@ -438,6 +444,7 @@
       if (r.complet) acc.complet++;
       if (r.est) acc.est++;
       if (r.iasiUngheni) acc.iasiUngheni++;
+      if (r.vest) acc.vest++;
       if (r.tgNeamtIasi) acc.tgNeamtIasi++;
       if (r.subTrei) acc.subTrei++;
       acc.km += r.km; acc.kmLista.push(r.km);
@@ -445,7 +452,7 @@
     }
     acc.kmLista.sort(function (a, b) { return a - b; });
     var out = {
-      n: n, complet: acc.complet / n, est: acc.est / n, iasiUngheni: acc.iasiUngheni / n, tgNeamtIasi: acc.tgNeamtIasi / n,
+      n: n, complet: acc.complet / n, est: acc.est / n, iasiUngheni: acc.iasiUngheni / n, tgNeamtIasi: acc.tgNeamtIasi / n, vest: acc.vest / n,
       subTrei: acc.subTrei / n, kmMediu: acc.km / n,
       kmP10: acc.kmLista[Math.floor(n * 0.1)], kmP90: acc.kmLista[Math.min(n - 1, Math.floor(n * 0.9))], lot: {}
     };
@@ -488,12 +495,12 @@
     buget: {
       generos: { nume: 'Bani din belșug', descriere: '3 mld. lei/semestru din buget, 85% din SAFE pe A8, fonduri UE 2028–2034 consistente de la 2029 (2,5 mld. lei/semestru), cerere CEF.',
         national: 3, safeA8: 0.85, mffDe: 2029, mffSem: 2.5, soc: 0, carti: ['bei', 'cef', 'plata30'] },
-      program: { nume: 'Ca în program', descriere: '1,5 mld. lei/semestru din buget, 67% din SAFE pe A8 (restul pe A7), fonduri UE 2028–2034 de la 2030 (1,5 mld. lei/semestru), plata în 30 de zile.',
-        national: 1.5, safeA8: 0.67, mffDe: 2030, mffSem: 1.5, soc: 0, carti: ['plata30'] },
+      program: { nume: 'Ca în program', descriere: '1,5 mld. lei/semestru din buget, 61% din SAFE pe A8 (proporțional cu necesarul; restul pe A7 și Suceava – Siret), fonduri UE 2028–2034 de la 2030 (1,5 mld. lei/semestru), plata în 30 de zile.',
+        national: 1.5, safeA8: 0.61, mffDe: 2030, mffSem: 1.5, soc: 0, carti: ['plata30'] },
       mva: { nume: 'Necesarul MVA', descriere: 'Moldova Vrea Autostradă: ≈800–900 mil. euro pe an pentru A8 (≈2,2 mld. lei pe semestru din toate sursele), resurse bugetare multianuale pentru Ungheni – Iași – Târgu Neamț și A8 prioritară în CFM 2028–2034.',
         national: 2.5, safeA8: 0.75, mffDe: 2029, mffSem: 2.5, soc: 0, carti: ['plata30', 'cfm'] },
-      austeritate: { nume: 'Austeritate', descriere: '1 mld. lei/semestru, Pașcani – Siret ia mai mult din SAFE (60% A8), fonduri UE noi abia din 2031, derapaje de deficit și plafonări.',
-        national: 1, safeA8: 0.6, mffDe: 2031, mffSem: 1, soc: 0.3, carti: [] }
+      austeritate: { nume: 'Austeritate', descriere: '1 mld. lei/semestru, A7 și Suceava – Siret iau mai mult din SAFE (55% A8), fonduri UE noi abia din 2031, derapaje de deficit și plafonări.',
+        national: 1, safeA8: 0.55, mffDe: 2031, mffSem: 1, soc: 0.3, carti: [] }
     },
     prioritate: PRIORITATI,
     procedural: {
@@ -533,8 +540,8 @@
   var TINTE_CAL = {
     complet: { nume: 'A8 completă', ids: LOTURI.map(function (l) { return l.id; }) },
     est: { nume: 'Târgu Neamț – Iași – Ungheni', ids: EST },
-    iasiUngheni: { nume: 'Iași – Ungheni (Prut)', ids: ['T4'] },
-    munte: { nume: 'Secțiunea montană', ids: ['1B', '1C', '1D', '2A', '2B', '2C'] }
+    vest: { nume: 'Târgu Neamț – Târgu Mureș', ids: ['I', '1B', '1C', '1D', '2A', '2B', '2C', 'III'] },
+    iasiUngheni: { nume: 'Iași – Ungheni (Prut)', ids: ['T4'], ascuns: true }
   };
 
   function stareCalendar(politic, buget, procedural, seed, prioritate) {

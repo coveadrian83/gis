@@ -98,13 +98,13 @@
       tau = calc(alegere.politic, alegere.buget, alegere.procedural, alegere.prioritate);
       var c = tau.complet, e = tau.est, iu = tau.iasiUngheni;
       $('calTau').innerHTML = '<div class="tauhero"><span class="big">' + esc(C.dataGata(c.p50)) + '</span><span>A8 completă, în mediana scenariului tău<br><small>10–90%: ' + esc(C.dataGata(c.p10)) + ' – ' + esc(C.dataGata(c.p90)) + ' · gata până în 2030: ' + pct(c.pana2030) + ' · până în 2032: ' + pct(c.pana2032) + '</small></span></div>' +
-        '<p class="small">Târgu Neamț – Iași – Ungheni: <b>' + esc(C.dataGata(e.p50)) + '</b> (10–90%: ' + esc(C.dataGata(e.p10)) + ' – ' + esc(C.dataGata(e.p90)) + ') · Iași – Ungheni: <b>' + esc(C.dataGata(iu.p50)) + '</b> · secțiunea montană: <b>' + esc(C.dataGata(tau.munte.p50)) + '</b></p>';
+        '<p class="small">Târgu Neamț – Iași – Ungheni: <b>' + esc(C.dataGata(e.p50)) + '</b> (10–90%: ' + esc(C.dataGata(e.p10)) + ' – ' + esc(C.dataGata(e.p90)) + ') · Iași – Ungheni: <b>' + esc(C.dataGata(iu.p50)) + '</b> · Târgu Neamț – Târgu Mureș: <b>' + esc(C.dataGata(tau.vest.p50)) + '</b></p>';
       grafic(); tabel();
     }, 20);
   }
 
   function seg() {
-    $('tintaSeg').innerHTML = Object.keys(C.TINTE_CAL).map(function (k) {
+    $('tintaSeg').innerHTML = Object.keys(C.TINTE_CAL).filter(function (k) { return !C.TINTE_CAL[k].ascuns; }).map(function (k) {
       return '<button type="button" data-k="' + k + '" class="' + (k === tinta ? 'on' : '') + '" aria-pressed="' + (k === tinta) + '">' + esc(C.TINTE_CAL[k].nume) + '</button>';
     }).join('');
     Array.prototype.forEach.call(document.querySelectorAll('#tintaSeg button'), function (b) {
