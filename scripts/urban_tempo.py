@@ -192,70 +192,24 @@ def sondeaza():
             print(name, e)
 
 def depanare():
-    """Depanarea cererii /pivot: modulele aplicației web (inclusiv cele încărcate la cerere) din jurul apelului și
-    cereri de probă cu sesiune (cookie) și în mai multe variante, în data/urban/depanare.txt."""
-    import re as _re, http.cookiejar
-    out = []
-    cj = http.cookiejar.CookieJar()
-    op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
-    H = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120 Safari/537.36'}
+    """Salvează aplicația web TEMPO (index + modulele JS) în data/urban/depanare/, ca formatul cererii /pivot să poată
+    fi citit din cod."""
+    import re as _re
+    d = os.path.join(OUT, 'depanare')
+    os.makedirs(d, exist_ok=True)
     root = 'http://statistici.insse.ro:8077/tempo-online/'
-    def get(u):
-        return op.open(urllib.request.Request(u, headers=H), timeout=60).read().decode('utf-8', 'replace')
-    seen = set()
-    try:
-        idx = get(root)
-        todo = _re.findall(r'src="([^"]+\.js)"', idx)
-        while todo and len(seen) < 40:
-            sc = todo.pop(0)
-            if sc in seen:
-                continue
-            seen.add(sc)
-            try:
-                js = get(root + sc)
-            except Exception as e:  # noqa: BLE001
-                out.append('%s: %s' % (sc, e)); continue
-            # modulele încărcate la cerere (webpack): nume de fișiere .js menționate în runtime/main
-            for c in _re.findall(r'"([\w.-]+\.js)"', js):
-                if c not in seen:
-                    todo.append(c)
-            for m in _re.finditer(r'tempo-ins|/pivot|"pivot"|encQuery', js):
-                if sc.startswith(('scripts', 'vendor', 'polyfills')):
-                    break
-                out.append('--- %s @%d: %s' % (sc, m.start(), js[max(0, m.start() - 600):m.start() + 600]))
-        out.append('module: %s' % sorted(seen))
-    except Exception as e:  # noqa: BLE001
-        out.append('index: %s' % e)
-    meta = json.loads(get(BASE + '/matrix/GOS103A'))
-    out.append('cookie: %s' % [c.name for c in cj])
-    d = meta['dimensionsMap']
-    j = d[0]['options'][1]
-    locs = [o for o in d[1]['options'] if o['parentId'] == j['nomItemId']][:3]
-    ani = d[2]['options'][-6:]
-    arr = [[j], locs, ani, d[3]['options']]
-    enc = ':'.join(','.join(str(o['nomItemId']) for o in x) for x in arr)
-    base = {'language': 'ro', 'matCode': 'GOS103A', 'matMaxDim': 4, 'matUMSpec': 0, 'matRegJ': 0}
-    variante = [
-        ('enc', dict(base, encQuery=enc)),
-        ('enc+offset', dict(base, encQuery=':'.join(','.join(str(o['offset']) for o in x) for x in arr))),
-        ('enc+details', dict(base, encQuery=enc, matrixDetails=meta['details'])),
-        ('arr', {'language': 'ro', 'arr': [[opt(o) for o in x] for x in arr], 'matrixName': meta['matrixName'], 'matrixDetails': meta['details']}),
-    ]
-    for nume, body in variante:
-        for path in ('/pivot', '/pivot/'):
-            r = urllib.request.Request(BASE + path, data=json.dumps(body).encode(),
-                                       headers=dict(H, **{'Content-Type': 'application/json', 'Accept': 'application/json, text/plain, */*',
-                                                          'Origin': 'http://statistici.insse.ro:8077', 'Referer': root}))
-            try:
-                with op.open(r, timeout=90) as f:
-                    t = f.read()
-                    out.append('%s %s → %s %d octeți %r' % (nume, path, f.status, len(t), t[:500]))
-            except urllib.error.HTTPError as e:
-                out.append('%s %s → HTTP %s %r' % (nume, path, e.code, e.read()[:300]))
-            except Exception as e:  # noqa: BLE001
-                out.append('%s %s → %s' % (nume, path, e))
-    open(os.path.join(OUT, 'depanare.txt'), 'w').write('\n'.join(out))
-    print('\n'.join(o[:500] for o in out[-10:]))
+    H = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120 Safari/537.36'}
+    idx = urllib.request.urlopen(urllib.request.Request(root, headers=H), timeout=60).read().decode('utf-8', 'replace')
+    open(os.path.join(d, 'index.html'), 'w').write(idx)
+    for sc in _re.findall(r'src="([^"]+\.js)"', idx):
+        if sc.startswith(('vendor', 'polyfills', 'styles', 'scripts')):
+            continue
+        try:
+            js = urllib.request.urlopen(urllib.request.Request(root + sc, headers=H), timeout=60).read()
+            open(os.path.join(d, os.path.basename(sc)), 'wb').write(js)
+            print(sc, len(js))
+        except Exception as e:  # noqa: BLE001
+            print(sc, e)
 
 def main():
     ap = argparse.ArgumentParser()
@@ -263,10 +217,15 @@ def main():
     ap.add_argument('--descarca', action='store_true')
     ap.add_argument('--sonde', action='store_true')
     ap.add_argument('--depanare', action='store_true')
+    ap.add_argument('--doar', help='doar matricele date (coduri separate prin virgulă)')
     a = ap.parse_args()
     if a.catalog:
         catalog()
     if a.descarca:
+        if a.doar:
+            for c in list(MATRICE):
+                if c not in a.doar.split(','):
+                    del MATRICE[c]
         descarca()
     if a.sonde:
         sondeaza()

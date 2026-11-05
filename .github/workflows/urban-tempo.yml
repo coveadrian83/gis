@@ -38,7 +38,7 @@ jobs:
       - name: Depanare (formatul cererii TEMPO)
         run: python scripts/urban_tempo.py --depanare
       - name: Descarcă matricele pe localități
-        run: python scripts/urban_tempo.py --descarca
+        run: python scripts/urban_tempo.py --descarca --doar GOS103A
       - name: Salvează datele în branch
         run: |
           git config user.name "github-actions[bot]"
