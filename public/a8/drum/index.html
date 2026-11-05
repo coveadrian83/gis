@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Drumul Unirii</title>
+  <meta name="author" content="dr. geogr. Adrian Covăsnianu">
+  <meta name="description" content="Joc: conduci de la Ungheni la Târgu Mureș pe traseul Autostrăzii Unirii A8, lot cu lot, ocolind contestațiile, suspendările și autorizațiile lipsă. La final afli în ce lună ai ajuns.">
+  <link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+  <style>
+    /* Drum de noapte cu marcaj galben: șoseaua e scena, restul paginii tace. */
+    :root {
+      --bg: #eef1ea; --panel: #ffffff; --ink: #1b2420; --muted: #5c6a63; --line: #d5dcd4;
+      --accent: #0b5ea8; --accent-ink: #ffffff; --ok: #1f8a4c; --bad: #c0392b; --warn: #c27c0e;
+      --camp: #b9cf8f; --camp2: #a6c27a; --munte: #8fa58c; --munte2: #6f8a72; --stanca: #9a9a8c;
+      --asfalt: #3a3f44; --santier: #8a7a63; --blocat: #a8865a; --marcaj: #f2f2f2; --galben: #f5c518;
+      --masina: #0b5ea8; --geam: #cfe3f5;
+      --font: "Archivo", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --font-disp: "Archivo Black", "Archivo", system-ui, sans-serif;
+      color-scheme: light;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #111614; --panel: #1a211e; --ink: #e6ece8; --muted: #9aa8a1; --line: #2c3632;
+        --accent: #5aa9f0; --accent-ink: #0d1116; --ok: #48c27a; --bad: #f07167; --warn: #e0b04f;
+        --camp: #2f4a2c; --camp2: #284026; --munte: #2c3b33; --munte2: #22302a; --stanca: #4b514c;
+        --asfalt: #2a2e32; --santier: #5d5243; --blocat: #6b5536; --marcaj: #d9d9d9; --galben: #e8b80f;
+        --masina: #5aa9f0; --geam: #1d3a55;
+        color-scheme: dark;
+      }
+    }
+    :root[data-theme="dark"] {
+      --bg: #111614; --panel: #1a211e; --ink: #e6ece8; --muted: #9aa8a1; --line: #2c3632;
+      --accent: #5aa9f0; --accent-ink: #0d1116; --ok: #48c27a; --bad: #f07167; --warn: #e0b04f;
+      --camp: #2f4a2c; --camp2: #284026; --munte: #2c3b33; --munte2: #22302a; --stanca: #4b514c;
+      --asfalt: #2a2e32; --santier: #5d5243; --blocat: #6b5536; --marcaj: #d9d9d9; --galben: #e8b80f;
+      --masina: #5aa9f0; --geam: #1d3a55;
+      color-scheme: dark;
+    }
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 var(--font); }
+    a { color: var(--accent); }
+    .wrap { max-width: 1060px; margin: 0 auto; padding-block: 18px 30px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+    .kicker { text-transform: uppercase; letter-spacing: .1em; font-size: .72rem; color: var(--muted); margin: 0; }
+    h1 { font-family: var(--font-disp); font-size: clamp(1.7rem, 5vw, 2.5rem); margin: .1em 0 .2em; letter-spacing: -.01em; text-wrap: balance; }
+    .sub { color: var(--muted); margin: 0 0 14px; max-width: 70ch; }
+    .joc { display: grid; grid-template-columns: minmax(0, 480px) minmax(0, 1fr); gap: 18px; align-items: start; }
+    @media (max-width: 860px) { .joc { grid-template-columns: 1fr; } }
+    .scena { position: relative; border-radius: 14px; overflow: hidden; background: var(--asfalt); box-shadow: 0 2px 14px rgba(0,0,0,.18); touch-action: none; user-select: none; -webkit-user-select: none; }
+    canvas { display: block; width: 100%; height: auto; }
+    .hud { position: absolute; left: 0; right: 0; top: 0; padding: 8px 10px; display: flex; justify-content: space-between; gap: 8px; pointer-events: none; }
+    .hud .box { background: rgba(10, 14, 12, .72); color: #fff; border-radius: 8px; padding: 4px 9px; font-size: .78rem; line-height: 1.25; }
+    .hud .box b { display: block; font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+    .hud .lot { max-width: 60%; }
+    .hud .lot small { display: block; opacity: .8; }
+    .toast { position: absolute; left: 10px; right: 10px; bottom: 10px; background: rgba(10, 14, 12, .85); color: #fff; border-radius: 10px; padding: 8px 11px; font-size: .84rem; border-left: 5px solid var(--bad); opacity: 0; transform: translateY(8px); transition: opacity .2s, transform .2s; pointer-events: none; }
+    .toast.on { opacity: 1; transform: none; }
+    .toast.bun { border-left-color: var(--ok); }
+    .toast b { display: block; }
+    .overlay { position: absolute; inset: 0; background: rgba(10, 14, 12, .82); color: #fff; display: flex; flex-direction: column; justify-content: center; gap: 10px; padding: 22px; overflow-y: auto; }
+    .overlay h2 { font-family: var(--font-disp); margin: 0; font-size: 1.5rem; }
+    .overlay p { margin: 0; color: #dfe7e2; }
+    .overlay .mare { font-family: var(--font-disp); font-size: 2.3rem; color: var(--galben); line-height: 1.05; }
+    .scen { display: grid; gap: 6px; }
+    .scen button { font: inherit; text-align: left; background: rgba(255,255,255,.08); color: #fff; border: 1px solid rgba(255,255,255,.25); border-radius: 9px; padding: 8px 10px; cursor: pointer; }
+    .scen button.on { border-color: var(--galben); background: rgba(245,197,24,.16); }
+    .scen button small { display: block; color: #cfd8d3; }
+    .btn { font: inherit; font-weight: 700; background: var(--galben); color: #1b1b1b; border: 0; border-radius: 9px; padding: 10px 16px; cursor: pointer; }
+    .btn.sec { background: rgba(255,255,255,.12); color: #fff; font-weight: 600; }
+    .btns { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn:focus-visible, .scen button:focus-visible, .ctrl button:focus-visible { outline: 3px solid var(--galben); outline-offset: 2px; }
+    .ctrl { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+    .ctrl button { font: inherit; font-weight: 700; font-size: 1.2rem; padding: 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); touch-action: manipulation; }
+    @media (hover: hover) and (pointer: fine) { .ctrl { display: none; } }
+    .panou { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; min-width: 0; }
+    .panou h2 { font-size: 1rem; margin: 0 0 8px; }
+    .harta { display: flex; height: 14px; border-radius: 7px; overflow: hidden; gap: 2px; margin: 4px 0 4px; position: relative; }
+    .harta i { display: block; height: 100%; }
+    .harta .pin { position: absolute; top: -4px; width: 4px; height: 22px; background: var(--ink); border-radius: 2px; transform: translateX(-2px); transition: left .2s linear; }
+    .capete { position: relative; height: 2.6em; font-size: .75rem; color: var(--muted); }
+    .capete span { position: absolute; top: 0; white-space: nowrap; }
+    .capete span.mij { top: 1.3em; transform: translateX(-50%); }
+    .leg { display: flex; flex-wrap: wrap; gap: 10px; font-size: .78rem; color: var(--muted); margin: 6px 0 12px; }
+    .leg span::before { content: ""; display: inline-block; width: 12px; height: 8px; border-radius: 2px; margin-right: 4px; background: var(--c); }
+    .lista { list-style: none; margin: 0; padding: 0; font-size: .85rem; max-height: 300px; overflow-y: auto; }
+    .lista li { display: flex; justify-content: space-between; gap: 8px; padding: 4px 0; border-bottom: 1px dashed var(--line); }
+    .lista li b { font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .lista li.bun b { color: var(--ok); } .lista li.rau b { color: var(--bad); }
+    .note { font-size: .82rem; color: var(--muted); }
+    .repere { display: grid; gap: 4px; font-size: .85rem; margin: 6px 0; }
+    .repere div { display: flex; justify-content: space-between; gap: 10px; }
+    .repere b { font-variant-numeric: tabular-nums; }
+    kbd { font: .78rem var(--font); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; }
+    @media (prefers-reduced-motion: reduce) { .toast, .harta .pin { transition: none; } }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <p class="kicker">MVAmarket · Autostrada Unirii A8 · Ungheni → Târgu Mureș · 302 km</p>
+  <h1>Drumul Unirii</h1>
+  <p class="sub">Pornești de pe podul de la Ungheni și conduci lot cu lot până la Târgu Mureș. Obstacolele sunt blocajele reale ale fiecărui lot, la 30.10.2026: contestații, suspendări, autorizații și ordine de începere lipsă. Bonusurile sunt soluțiile. Fiecare obstacol lovit împinge data la care ajungi. Fără niciun obstacol, ajungi în decembrie 2030, cum promite programul de guvernare.</p>
+
+  <div class="joc">
+    <div>
+      <div class="scena" id="scena">
+        <canvas id="c" width="480" height="720" aria-label="Șoseaua A8, văzută de sus" role="img"></canvas>
+        <div class="hud" aria-hidden="true">
+          <div class="box lot"><span id="hudLot">Ungheni</span><small id="hudStare"></small></div>
+          <div class="box"><b id="hudData">nov. 2026</b><span id="hudKm">302 km</span></div>
+        </div>
+        <div class="toast" id="toast" aria-live="polite"></div>
+        <div class="overlay" id="start">
+          <h2>Alege scenariul</h2>
+          <p>Scenariul schimbă cât de dese sunt blocajele și cât de des apar soluțiile.</p>
+          <div class="scen" id="scenarii"></div>
+          <p class="note" style="color:#cfd8d3">Taste: <kbd>←</kbd> <kbd>→</kbd> sau <kbd>A</kbd> <kbd>D</kbd> pentru bandă, <kbd>P</kbd> pauză. Pe telefon: atinge stânga sau dreapta șoselei.</p>
+          <div class="btns"><button type="button" class="btn" id="porneste">Pornește de la Ungheni</button></div>
+        </div>
+        <div class="overlay" id="final" hidden></div>
+      </div>
+      <div class="ctrl"><button type="button" id="stg" aria-label="Banda din stânga">◀</button><button type="button" id="dr" aria-label="Banda din dreapta">▶</button></div>
+    </div>
+
+    <div class="panou">
+      <h2>Unde ești pe A8</h2>
+      <div class="harta" id="harta" aria-hidden="true"></div>
+      <div class="capete" id="capete"><span style="left:0">Ungheni</span><span style="right:0">Târgu Mureș</span></div>
+      <div class="leg">
+        <span style="--c: var(--ok)">în execuție</span>
+        <span style="--c: var(--accent)">în proiectare</span>
+        <span style="--c: var(--bad)">blocat</span>
+      </div>
+      <h2>Jurnalul de drum</h2>
+      <ul class="lista" id="jurnal"><li><span>Încă nu ai plecat.</span></li></ul>
+      <p class="note">Reperele de la final: programul de guvernare (2030), estimările Moldova Vrea Autostradă (2031–2033), Pro Infrastructură (încă 7–8 ani). Stadiul loturilor vine din modelul jocului principal. <a href="../">Înapoi la MVAmarket</a></p>
+    </div>
+  </div>
+</div>
+<script src="../core.js"></script>
+<script src="drum.js"></script>
+</body>
+</html>

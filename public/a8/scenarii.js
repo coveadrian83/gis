@@ -118,13 +118,37 @@
     }).join('');
   }
 
+  /* MVAmarket: contracte în stilul piețelor de predicții; prețul DA = probabilitatea din model. */
+  var PIETE = [
+    ['A8 completă până la 31.12.2030?', 'complet', 'pana2030'],
+    ['Târgu Neamț – Iași – Ungheni gata până la 31.12.2030?', 'est', 'pana2030'],
+    ['Iași – Ungheni (Prut) gata până la 31.12.2030?', 'iasiUngheni', 'pana2030'],
+    ['A8 completă până la 31.12.2032?', 'complet', 'pana2032'],
+    ['Târgu Neamț – Târgu Mureș gata până la 31.12.2032?', 'vest', 'pana2032'],
+    ['A8 completă până la 31.12.2035?', 'complet', 'pana2035']
+  ];
+  function cent(p) { var c = Math.round(p * 100); return p > 0 && c < 1 ? '<1¢' : c > 99 && p < 1 ? '>99¢' : c + '¢'; }
+  function piete() {
+    var el = $('piete'); if (!el) return;
+    var real = C.SCENARII.filter(function (x) { return x.id === 'realist'; })[0], mva = C.SCENARII.filter(function (x) { return x.id === 'mva'; })[0];
+    var rr = rezultate[cheie(real.politic, real.buget, real.procedural, real.prioritate)], rm = rezultate[cheie(mva.politic, mva.buget, mva.procedural, mva.prioritate)];
+    if (!rr || !rm) return;
+    el.innerHTML = PIETE.map(function (q) {
+      var p = rr[q[1]][q[2]], pm = rm[q[1]][q[2]];
+      return '<div class="piata"><span class="intr">' + esc(q[0]) + '</span>' +
+        '<div class="pret"><span class="da">DA <b>' + cent(p) + '</b></span><span class="nu">NU <b>' + cent(1 - p) + '</b></span></div>' +
+        '<span class="bara"><i style="width:' + Math.max(p * 100, p > 0 ? 1.5 : 0).toFixed(1) + '%"></i></span>' +
+        '<span class="cumva">Cu agenda MVA: DA <b>' + cent(pm) + '</b></span></div>';
+    }).join('');
+  }
+
   // Scenariile se calculează pe rând, ca pagina să rămână fluidă
   function porneste() {
     seg(); repere(); builder();
     var i = 0;
     (function urm() {
       if (i < C.SCENARII.length) { var s = C.SCENARII[i++]; calc(s.politic, s.buget, s.procedural, s.prioritate); grafic(); setTimeout(urm, 10); }
-      else { tabel(); calculeazaTau(); }
+      else { tabel(); calculeazaTau(); piete(); }
     })();
   }
   setTimeout(porneste, 200);
