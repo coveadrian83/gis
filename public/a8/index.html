@@ -14,9 +14,9 @@
   <div class="wrap">
     <p class="kicker">Bursa termenelor Autostrăzii Unirii · Târgu Mureș – Iași – Ungheni · 302 km · date la 5 noiembrie 2026</p>
     <h1>MVAmarket</h1>
-    <p class="sub">Cât valorează azi promisiunea „A8 gata în 2030”? Fiecare contract de mai jos e o întrebare cu termen. Prețul lui „DA” e probabilitatea dată de model: 9¢ înseamnă 9% șanse. Mai jos poți guverna tu opt semestre sau poți conduce mașinuța de la Ungheni la Târgu Mureș.</p>
+    <p class="sub">Cât valorează azi promisiunea „A8 gata în 2030”? Fiecare contract de mai jos e o întrebare cu termen. Prețul lui „DA” e partea din simulările modelului în care evenimentul se întâmplă: 9¢ înseamnă 9% din simulări, în ipotezele modelului. Mai jos poți guverna tu opt semestre sau poți conduce mașinuța de la Ungheni la Târgu Mureș.</p>
     <div class="piete" id="piete" aria-live="polite"><p class="note">Se calculează cotele…</p></div>
-    <p class="note">Prețuri din scenariul „Realist” (500 de simulări), cu prețul aceluiași contract dacă se aplică agenda Moldova Vrea Autostradă. Fără bani reali și fără pariuri: e o bursă a argumentelor.</p>
+    <p class="note">Prețuri din scenariul „Realist” (500 de simulări), cu prețul aceluiași contract dacă se aplică agenda Moldova Vrea Autostradă. Sunt frecvențe din simulări, condiționate de ipotezele modelului, nu probabilități verificate; „≈0¢” înseamnă că nicio simulare n-a ajuns acolo, nu că e imposibil. Fără bani reali și fără pariuri.</p>
     <div class="jocuri">
       <a class="joclink" href="#intro"><b>Cabinetul A8</b><span>Joc de strategie: guvernezi 2027–2030 cu cifrele programului de guvernare, între deficit și șantiere.</span></a>
       <a class="joclink" href="drum/"><b>Drumul Unirii →</b><span>Joc arcade: conduci de la Ungheni la Târgu Mureș, lot cu lot, ocolind contestațiile, suspendările și autorizațiile lipsă.</span></a>
@@ -135,6 +135,11 @@
       <div class="tablewrap"><table id="calTabel"></table></div>
     </details>
 
+    <h3>Ce aduce fiecare pârghie</h3>
+    <p class="sub2">Agenda MVA schimbă patru lucruri deodată. Ca să se vadă contribuția fiecăruia, pornim de la scenariul „Realist” și schimbăm o singură pârghie, apoi pornim de la agenda MVA și scoatem câte una. Ultimul rând aplică aceeași agendă cu un plafon strict de ≈850 mil. euro pe an din toate sursele.</p>
+    <div class="tablewrap"><table id="descompunere"><tbody><tr><td class="note">Se calculează…</td></tr></tbody></table></div>
+    <p class="note" id="cheltuieliMva"></p>
+
     <h3>Documentele strategice: cum s-au mutat termenele</h3>
     <p class="sub2">A8 are o bază strategică veche de zece ani. Termenele și costurile din ea s-au mutat de fiecare dată când un document nou a înlocuit unul vechi.</p>
     <div class="tablewrap"><table class="strategic">
@@ -221,9 +226,11 @@
     <details>
       <summary>Cum funcționează modelul (și ce e inventat)</summary>
       <ul>
-        <li>Fiecare lot are un număr de <b>semestre de lucru rămase</b> la ritmul din contract. În fiecare semestru avansează cu un ritm aleator (în medie sub cel contractual, ca în istoria recentă a autostrăzilor românești), înmulțit cu efectul deciziilor (cel mult +15%), cu iarna, geotehnica, arheologia și contestațiile.</li>
+        <li>Fiecare lot trece prin etape distincte: <b>proiectare → autorizație de construire → execuție</b>. Execuția nu începe fără autorizație; când proiectarea se încheie, autorizația vine la timp cu o probabilitate dată de scenariu (50% pe semestru „ca acum”, 75% cu avize rapide), altfel lotul așteaptă. În fiecare semestru, lucrul avansează cu un ritm aleator (în medie sub cel contractual, ca în istoria recentă a autostrăzilor românești), înmulțit cu efectul deciziilor (cel mult +15%), cu iarna, geotehnica, arheologia și contestațiile.</li>
+        <li><b>Contabilitatea</b>: fiecare lot ține separat lucrările rămase de executat, lucrările executate și facturile neplătite. Facturile neplătite rămân datorie și după deschiderea circulației și se plătesc în semestrele următoare, înaintea lucrărilor noi. Scumpirile (materiale +8%, trei schimburi +12%) se aplică o singură dată lucrărilor rămase.</li>
         <li><b>Banii</b>: loturile de Est se plătesc din SAFE (cota A8 pornește de la 61% din 21,4 mld. lei: banii SAFE pentru coridoare se împart proporțional cu necesarul A8 Est, A7 Pașcani – Suceava și DEx Suceava – Siret) și, eventual, CEF; celelalte din Programul Transport (ipoteză: 6 mld. lei pentru A8, doar până la finalul lui 2029) și BEI. Ce lipsește vine din bugetul național; dacă nici acolo nu sunt bani, apar arierate, constructorii încetinesc și unii intră în insolvență.</li>
-        <li><b>Deficitul</b> = ținta din program + efectele deciziilor tale + banii naționali pentru A8 peste 1,5 mld. lei pe semestru + un șoc aleator. Banii SAFE și cei europeni sunt presupuși deja incluși în traiectorie.</li>
+        <li><b>Deficitul</b> = ținta din program + efectele deciziilor tale + banii naționali pentru A8 peste 1,5 mld. lei pe semestru + banii din împrumutul BEI + un șoc aleator. Banii SAFE și granturile europene sunt presupuși deja incluși în traiectorie. Un registru pe ani ține separat sursele: SAFE, CEF, Programul Transport, BEI, fonduri UE 2028–2034, buget.</li>
+        <li><b>SAFE după 2030</b>: plățile din împrumut pot fi aprobate doar până la 31.12.2030 (art. 12 din regulament). Modelul presupune că lucrările de după 2030 nu mai pot fi plătite din SAFE și trec pe buget și pe fondurile UE noi; e o ipoteză, nu o regulă citită din contracte.</li>
         <li>Evenimentele, personajele, probabilitățile și formulele sunt simplificate sau inventate. Jocul nu e o prognoză oficială, ci o modalitate de a vedea care sunt pârghiile și cât de strâns e calendarul.</li>
         <li>Inspirat de <a href="https://guverneazadacapoti.ro" rel="noopener">guverneazadacapoti.ro</a>.</li>
       </ul>

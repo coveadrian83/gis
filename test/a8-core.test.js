@@ -66,12 +66,14 @@ test('prioritizarea: în planul MVA, banii naționali merg întâi la Est', () =
   s.prioritate = 'mva';
   for (const id of ['T2', 'T3', 'T4']) C.lot(s, id).stare = 'proiectare';
   s.safeA8 = 0; s.pt = 0; s.national = 0.5;          // bani puțini: doar 0,5 mld. lei pe semestru
-  const rng = C.rngStare(s);
+  const rng = C.rngStare(s), suma = (id) => C.lot(s, id).cost + C.lot(s, id).costP;
+  const t4 = suma('T4'), c1 = suma('1C'), b2 = suma('2B');
   C.pas(s, rng);
-  // T4 e primul în ordinea MVA și primește banii; ultimele loturi montane rămân neplătite
-  assert.ok(C.lot(s, 'T4').cost < 3.57);
-  assert.equal(C.lot(s, '1C').cost, 4.5);
-  assert.equal(C.lot(s, '2B').cost, 5.97);
+  // T4 e primul în ordinea MVA și primește banii; ultimele loturi montane rămân cu facturi neplătite
+  assert.ok(suma('T4') < t4);
+  assert.ok(C.lot(s, '1C').facturi > 0 || suma('1C') === c1);
+  assert.ok(C.lot(s, '2B').facturi > 0 || suma('2B') === b2);
+  assert.equal(C.lot(s, 'T4').facturi, 0);
 });
 
 test('segmentele prioritare se numără la km deschiși înainte de finalul lotului', () => {
@@ -85,4 +87,41 @@ test('scenariul MVA termină mai devreme decât scenariul realist', () => {
   const a = C.calendar(mva.politic, mva.buget, mva.procedural, 150, 9, mva.prioritate);
   const b = C.calendar('alternanta', 'program', 'actual', 150, 9);
   assert.ok(a.complet.p50 < b.complet.p50);
+});
+
+// Bilanțul banilor: tot ce era de plătit + scumpirile = ce s-a plătit + lucrări rămase + facturi neplătite
+function bilant(s, initial) {
+  const ramas = s.loturi.reduce((a, l) => a + l.cost + l.costP + l.facturi, 0);
+  return Math.abs(initial + (s.majorari || 0) - s.cheltuitA8 - ramas);
+}
+test('banii nu dispar: facturile neplătite rămân datorie și după deschiderea circulației', () => {
+  for (const seed of [1, 2, 3, 4, 5]) {
+    const s = C.stareCalendar('alternanta', 'austeritate', 'actual', seed);
+    const initial = s.loturi.reduce((a, l) => a + l.cost + l.costP + l.facturi, 0) - (s.majorari || 0);
+    const rng = C.rngStare(s);
+    while (s.sem < s.orizont) C.pas(s, rng);
+    assert.ok(bilant(s, initial + (s.majorari || 0) - (s.majorari || 0)) < 1e-6, 'seed ' + seed);
+  }
+});
+
+test('lucrul în trei schimburi scumpește lucrările rămase o singură dată cu 12%', () => {
+  const s = C.stareInitiala(1), inainte = C.lot(s, '1D').cost;
+  C.aplicaCarte(s, 'schimburi', C.rngStare(s));
+  assert.ok(Math.abs(C.lot(s, '1D').cost - inainte * 1.12) < 1e-9);
+});
+
+test('banii BEI intră în deficit', () => {
+  const s = C.stareInitiala(3);
+  const d0 = C.deficitAn(s, 2029);
+  s.beiCheltuit[2029] = 24.832;   // ≈1% din PIB
+  assert.ok(Math.abs(C.deficitAn(s, 2029) - d0 - 1) < 0.02);
+});
+
+test('execuția nu începe fără autorizație de construire', () => {
+  const s = C.stareCalendar('stabil', 'generos', 'actual', 7);
+  s.scen.pAC = 0;                                  // nicio autorizație nu se emite
+  const rng = C.rngStare(s), left0 = C.lot(s, '1B').left;
+  for (let i = 0; i < 4; i++) C.pas(s, rng);
+  assert.equal(C.lot(s, '1B').stare, 'autorizare');
+  assert.ok(C.lot(s, '1B').left >= left0 - 1e-9);
 });

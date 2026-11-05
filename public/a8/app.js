@@ -2,16 +2,17 @@
 (function () {
   'use strict';
   var C = window.A8Core, $ = function (id) { return document.getElementById(id); };
-  var CHEIE = 'a8-joc-v1', MAX_STAMPILE = 2, N_SIM = 400;
+  var CHEIE = 'a8-joc-v2', MAX_STAMPILE = 2, N_SIM = 400;
   var st = null, alese = [], estim = null, lotSel = null, refProgram = null;
 
   var RATING = ['BB+ · sub nivelul investițional', 'BBB− · perspectivă negativă', 'BBB− · perspectivă stabilă'];
-  var STARE = { executie: 'în execuție', proiectare: 'în proiectare', neatribuit: 'neatribuit – contestații', suspendat: 'suspendat în instanță', neactivat: 'semnat, fără ordin de începere', deschis: 'deschis circulației', blocat: 'oprit – insolvență' };
+  var STARE = { executie: 'în execuție', proiectare: 'în proiectare', neatribuit: 'neatribuit – contestații', suspendat: 'suspendat în instanță', neactivat: 'semnat, fără ordin de începere', autorizare: 'proiectat, așteaptă autorizația', deschis: 'deschis circulației', blocat: 'oprit – insolvență' };
 
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function f1(x) { return C.fmt(x); }
   function f2(x) { return (Math.round(x * 100) / 100).toFixed(2).replace('.', ','); }
-  function pct(p) { if (p > 0 && p < 0.005) return '<1%'; if (p < 1 && p > 0.995) return '>99%'; return Math.round(p * 100) + '%'; }
+  // Procent din simulări; 0 din N nu înseamnă imposibil, de aceea „≈0%”
+  function pct(p) { if (p === 0) return '≈0%'; if (p > 0 && p < 0.005) return '<1%'; if (p < 1 && p > 0.995) return '>99%'; return Math.round(p * 100) + '%'; }
   function salveaza() { try { localStorage.setItem(CHEIE, JSON.stringify(st)); } catch (e) { /* fără stocare */ } }
   function sterge() { try { localStorage.removeItem(CHEIE); } catch (e) { /* fără stocare */ } }
   function incarca() { try { var s = localStorage.getItem(CHEIE); return s ? JSON.parse(s) : null; } catch (e) { return null; } }
@@ -52,6 +53,7 @@
       var a = pts[i], b = pts[i + 1], inf = C.LOTURI[i], stare = stareLot(l);
       var gata = l.deschis != null ? 1 : Math.max(0, Math.min(1, 1 - l.left / inf.ramas));
       if (l.stare === 'neatribuit' || l.stare === 'suspendat' || l.stare === 'neactivat') gata = 0;
+      if (l.stare === 'autorizare') gata = Math.max(0, 1 - l.left / inf.ramas);
       var d = 'M' + a[0].toFixed(1) + ',' + a[1].toFixed(1) + 'L' + b[0].toFixed(1) + ',' + b[1].toFixed(1);
       s += '<g class="lot s-' + stare + (lotSel === l.id ? ' sel' : '') + '" data-id="' + l.id + '" tabindex="0" role="button" aria-label="' + esc(inf.nume + ': ' + STARE[stare]) + '">' +
         '<title>' + esc(inf.nume + ' · ' + f1(inf.km) + ' km · ' + STARE[stare]) + '</title>' +
@@ -92,7 +94,8 @@
       (inf.etapa ? '<p class="small">Segment prioritar: ' + esc(f1(inf.etapa.km) + ' km, ' + inf.etapa.nume) + (l.etapa != null ? ' – deschis în ' + C.eticheta(l.etapa) : '') + '.</p>' : '') +
       (inf.mva ? '<p class="small"><b>Estimarea MVA</b> (bilanț aug. 2026): ' + esc(inf.mva) + '</p>' : '') +
       '<p class="small">Constructor: ' + esc(inf.constructor) + ' · Valoare: ' + f2(inf.cost) + ' mld. lei' + (inf.est ? ' (est.)' : '') + ' · Bani: ' + (inf.sursa === 'SAFE' ? 'SAFE' : 'Programul Transport / BEI') + ' + buget</p>' +
-      '<p class="small">' + (l.deschis != null ? 'Deschis în ' + C.SEMESTRE[l.deschis] + '.' : 'Rămas: ≈' + f1(Math.max(0, l.left)) + ' semestre de lucru la ritm contractual, ' + f2(l.cost) + ' mld. lei de plătit' + (p != null ? ' · șanse să fie gata până la final: <b>' + pct(p) + '</b>' : '') + '.') + '</p>';
+      (l.facturi > 0.005 ? '<p class="small">Facturi neplătite: <b>' + f2(l.facturi) + ' mld. lei</b> (rămân datorie și după deschidere).</p>' : '') +
+      '<p class="small">' + (l.deschis != null ? 'Deschis în ' + C.eticheta(l.deschis) + '.' : 'Rămas: ≈' + f1(Math.max(0, l.leftP)) + ' semestre de proiectare și ' + f1(Math.max(0, l.left - l.leftP)) + ' de execuție la ritm contractual; lucrări de ' + f2(l.cost + l.costP) + ' mld. lei' + (p != null ? ' · șanse să fie gata până la final: <b>' + pct(p) + '</b>' : '') + '.') + '</p>';
   }
 
   function tabel() {
@@ -101,7 +104,7 @@
       var inf = C.LOTURI[i], stare = stareLot(l);
       h += '<tr><td>' + esc(inf.nume) + '<small>' + esc(inf.sectiune) + ' · ' + (inf.sursa === 'SAFE' ? 'SAFE' : 'PT/BEI') + '</small></td><td class="num">' + f1(inf.km) + '</td>' +
         '<td><span class="pill s-' + stare + '">' + STARE[stare] + '</span></td>' +
-        '<td class="num">' + (l.deschis != null ? C.SEMESTRE[l.deschis] : f1(Math.max(0, l.left)) + ' sem. · ' + f1(l.cost) + ' mld.') + '</td>' +
+        '<td class="num">' + (l.deschis != null ? C.eticheta(l.deschis) + (l.facturi > 0.005 ? ' · datorii ' + f1(l.facturi) : '') : f1(Math.max(0, l.left)) + ' sem. · ' + f1(l.cost + l.costP + l.facturi) + ' mld.') + '</td>' +
         '<td class="num">' + (l.deschis != null ? '✓' : estim ? pct(estim.lot[l.id]) : '–') + '</td><td class="mvacol">' + esc(inf.mva || '') + '</td></tr>';
     });
     $('loturi').innerHTML = h + '</tbody>';
@@ -237,7 +240,8 @@
       kpi('Deficit 2030', r.deficit2030 != null ? f1(r.deficit2030) + '%' : '–', r.subTrei ? 'sub 3%: ieșim din procedură' : 'peste 3%: procedura continuă', r.subTrei ? 'bun' : 'rau') +
       kpi('Datorie', f1(r.datorie) + '%', 'din PIB', r.datorie > 64 ? 'rau' : 'neutru') +
       kpi('Rating', RATING[r.rating].split(' · ')[0], RATING[r.rating].split(' · ')[1], r.rating === 0 ? 'rau' : 'neutru') +
-      kpi('Cheltuit pe A8', f1(st.cheltuitA8), 'mld. lei, 2027–2030', 'neutru') + '</div>' +
+      kpi('Cheltuit pe A8', f1(st.cheltuitA8), 'mld. lei, 2027–2030', 'neutru') +
+      kpi('Facturi neplătite', f1(r.datorii), 'mld. lei rămași datorie', r.datorii > 0.05 ? 'rau' : 'neutru') + '</div>' +
       '<ul class="bilant">' + randuri + '</ul></div>' +
       '<div class="profil"><h3>Profilul tău: ' + esc(pr.titlu) + '</h3>' +
       '<svg viewBox="0 0 120 120" class="busola" role="img" aria-label="Busola deciziilor"><rect x="10" y="10" width="100" height="100" rx="6"/><line x1="60" y1="10" x2="60" y2="110"/><line x1="10" y1="60" x2="110" y2="60"/>' +
@@ -268,7 +272,7 @@
     st = stare || C.stareInitiala((Date.now() ^ Math.floor(Math.random() * 1e9)) >>> 0);
     alese = []; lotSel = null;
     $('intro').hidden = true; $('final').hidden = true; $('joc').hidden = false;
-    $('national').oninput = natText;
+    $('national').oninput = function () { st.national = +$('national').value; salveaza(); natText(); };
     randeaza(); recalculeaza();
     $('joc').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }

@@ -7,7 +7,7 @@
   var DIM_NUME = { politic: 'Politica', buget: 'Bugetul', procedural: 'Procedurile', prioritate: 'Prioritizarea' };
 
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
-  function pct(p) { if (p > 0 && p < 0.005) return '<1%'; if (p < 1 && p > 0.995) return '>99%'; return Math.round(p * 100) + '%'; }
+  function pct(p) { if (p === 0) return '≈0%'; if (p > 0 && p < 0.005) return '<1%'; if (p < 1 && p > 0.995) return '>99%'; return Math.round(p * 100) + '%'; }
   function poz(x) { return ((Math.min(isFinite(x) ? x : X1, X1 - 0.15) - X0) / (X1 - X0) * 100).toFixed(2) + '%'; }
   function cheie(p, b, r, o) { return p + '|' + b + '|' + r + '|' + (o || 'prorata'); }
 
@@ -127,7 +127,7 @@
     ['Târgu Neamț – Târgu Mureș gata până la 31.12.2032?', 'vest', 'pana2032'],
     ['A8 completă până la 31.12.2035?', 'complet', 'pana2035']
   ];
-  function cent(p) { var c = Math.round(p * 100); return p > 0 && c < 1 ? '<1¢' : c > 99 && p < 1 ? '>99¢' : c + '¢'; }
+  function cent(p) { var c = Math.round(p * 100); if (p === 0) return '≈0¢'; return p > 0 && c < 1 ? '<1¢' : c > 99 && p < 1 ? '>99¢' : c + '¢'; }
   function piete() {
     var el = $('piete'); if (!el) return;
     var real = C.SCENARII.filter(function (x) { return x.id === 'realist'; })[0], mva = C.SCENARII.filter(function (x) { return x.id === 'mva'; })[0];
@@ -142,13 +142,49 @@
     }).join('');
   }
 
+  /* Contribuția fiecărei pârghii: de la „Realist” schimbăm câte una; de la agenda MVA scoatem câte una. */
+  var NUME_PARGHIE = { politic: 'politica', buget: 'bugetul', procedural: 'procedurile', prioritate: 'prioritizarea' };
+  function descompunere() {
+    var el = $('descompunere'); if (!el) return;
+    var real = C.SCENARII.filter(function (x) { return x.id === 'realist'; })[0], mva = C.SCENARII.filter(function (x) { return x.id === 'mva'; })[0];
+    var baza = { politic: real.politic, buget: real.buget, procedural: real.procedural, prioritate: real.prioritate || 'prorata' };
+    var tinta = { politic: mva.politic, buget: mva.buget, procedural: mva.procedural, prioritate: mva.prioritate || 'prorata' };
+    var randuri = [['Realist', baza, 'baza']];
+    Object.keys(NUME_PARGHIE).forEach(function (k) { var o = Object.assign({}, baza); o[k] = tinta[k]; randuri.push(['Realist + ' + NUME_PARGHIE[k] + ' MVA', o, '']); });
+    Object.keys(NUME_PARGHIE).forEach(function (k) { var o = Object.assign({}, tinta); o[k] = baza[k]; randuri.push(['Agenda MVA fără ' + NUME_PARGHIE[k], o, '']); });
+    randuri.push(['Agenda MVA', tinta, 'mva']);
+    var strict = Object.assign({}, tinta, { buget: 'mva850' });
+    randuri.push(['Agenda MVA cu plafon de 850 mil. €/an', strict, '']);
+    var i = 0, h = '<thead><tr><th>Varianta</th><th>A8 completă (mediana)</th><th>Gata până în 2032</th><th>… 2035</th></tr></thead><tbody>';
+    (function urm() {
+      if (i < randuri.length) {
+        var r = randuri[i++], o = r[1], c = calc(o.politic, o.buget, o.procedural, o.prioritate).complet;
+        h += '<tr class="' + r[2] + '"><td>' + esc(r[0]) + '</td><td><b>' + esc(C.dataGata(c.p50)) + '</b></td><td class="num">' + pct(c.pana2032) + '</td><td class="num">' + pct(c.pana2035) + '</td></tr>';
+        el.innerHTML = h + '</tbody>';
+        setTimeout(urm, 10);
+      } else cheltuieli(tinta);
+    })();
+  }
+  // Cât cheltuie, în medie, agenda MVA pe an (toate sursele)
+  function cheltuieli(o) {
+    var n = 120, tot = {};
+    for (var i = 0; i < n; i++) {
+      var s = C.stareCalendar(o.politic, o.buget, o.procedural, (2027 + i * 104729) >>> 0, o.prioritate), r = C.rngStare(s);
+      while (s.sem < s.orizont) { C.pas(s, r); s.stiri.length = 0; }
+      Object.keys(s.registru).forEach(function (y) { var g = s.registru[y]; tot[y] = (tot[y] || 0) + (g.safe + g.cef + g.pt + g.bei + g.mff + g.nat) / n; });
+    }
+    var ani = ['2028', '2029', '2030'].map(function (y) { return (tot[y] || 0) / C.EUR_LEI; });
+    var max = Math.max.apply(null, ani), min = Math.min.apply(null, ani);
+    $('cheltuieliMva').textContent = 'Agenda MVA cheltuie în medie între ' + min.toFixed(1).replace('.', ',') + ' și ' + max.toFixed(1).replace('.', ',') + ' mld. euro pe an în 2028–2030, din toate sursele (' + n + ' simulări). Cu plafonul de ≈850 mil. euro pe an, aceleași măsuri împing finalizarea cu câțiva ani.';
+  }
+
   // Scenariile se calculează pe rând, ca pagina să rămână fluidă
   function porneste() {
     seg(); repere(); builder();
     var i = 0;
     (function urm() {
       if (i < C.SCENARII.length) { var s = C.SCENARII[i++]; calc(s.politic, s.buget, s.procedural, s.prioritate); grafic(); setTimeout(urm, 10); }
-      else { tabel(); calculeazaTau(); piete(); }
+      else { tabel(); calculeazaTau(); piete(); setTimeout(descompunere, 30); }
     })();
   }
   setTimeout(porneste, 200);

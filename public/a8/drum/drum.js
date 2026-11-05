@@ -83,7 +83,7 @@
     return 'blocat';
   }
   var STARE_TXT = { executie: 'în execuție', proiectare: 'în proiectare', blocat: 'blocat' };
-  var STARE_LOT = { executie: 'în execuție', proiectare: 'în proiectare', neatribuit: 'fără contract', suspendat: 'suspendat în instanță', neactivat: 'fără ordin de începere' };
+  var STARE_LOT = { executie: 'în execuție', proiectare: 'în proiectare', autorizare: 'așteaptă autorizația', neatribuit: 'fără contract', suspendat: 'suspendat în instanță', neactivat: 'fără ordin de începere' };
 
   /* Generator determinist, ca un traseu să poată fi rejucat. */
   function rng(seed) {

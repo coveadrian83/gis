@@ -42,43 +42,47 @@
 
   /* Loturile, la începutul lui 2027. Stadiul de bază: bilanțul A. Covăsnianu (Moldova Vrea Autostradă), Ziarul de Iași,
    * situație la 29.08.2026, actualizat cu analiza din 2.11.2026 (date la 30.10.2026) și presa de specialitate.
-   * ramas = semestre de lucru rămase la ritmul din contract; parte = partea din cost încă neplătită; est = cost estimat;
+   * ramasP / ramasE = semestre de proiectare / de execuție rămase la ritmul din contract (execuția începe doar după
+   * autorizația de construire); parte = partea din cost încă neplătită; est = cost estimat;
    * etapa = segment care se poate deschide înainte de restul lotului (la = fracțiunea din lucrare); lent = mobilizare slabă. */
   var LOTURI = [
-    { id: 'I', mva: 'Deschidere în prima parte a lui 2027 (reper prudent); predicția 2025 – plauzibilă.', nume: 'Târgu Mureș – Miercurea Nirajului', sectiune: 'Vest', km: 24.4, cost: 2.46, parte: 0.3, ramas: 1.1,
+    { id: 'I', mva: 'Deschidere în prima parte a lui 2027 (reper prudent); predicția 2025 – plauzibilă.', nume: 'Târgu Mureș – Miercurea Nirajului', sectiune: 'Vest', km: 24.4, cost: 2.46, parte: 0.3, ramasP: 0, ramasE: 1.1,
       stare: 'executie', sursa: 'PT', munte: false, constructor: 'Nurol (Turcia)', info: 'Lot 1A. ≈66% progres fizic în oct. 2026 (60% la 31.07.2026); CNAIR anunță finalizarea în 2027. Reper prudent MVA: prima parte a lui 2027.' },
-    { id: '1B', mva: '2028 (estimarea din 2025) – întârziată; autorizația așteptată de ≈6 luni.', nume: 'Miercurea Nirajului – Sărățeni', sectiune: 'Montană', km: 23.4, cost: 2.98, parte: 1, ramas: 5.5,
-      stare: 'proiectare', sursa: 'PT', munte: true, constructor: 'Özaltın – Infravis', info: 'Constructorul așteaptă autorizația de construire de ≈6 luni; la 5.10.2026 CNAIR spunea că proiectarea nu e încheiată, iar autorizația e legată de rectificarea bugetară. Apoi: 24 de luni de execuție.' },
-    { id: '1C', mva: 'Execuție 2027–2032; finalizare 2031/2032 – predicție confirmată până acum.', nume: 'Sărățeni – Joseni', sectiune: 'Montană', km: 32.4, cost: 4.5, est: true, parte: 1, ramas: 9,
+    { id: '1B', mva: '2028 (estimarea din 2025) – întârziată; autorizația așteptată de ≈6 luni.', nume: 'Miercurea Nirajului – Sărățeni', sectiune: 'Montană', km: 23.4, cost: 2.98, parte: 1, ramasP: 0, ramasE: 4,
+      stare: 'autorizare', sursa: 'PT', munte: true, constructor: 'Özaltın – Infravis', info: 'Constructorul așteaptă autorizația de construire de ≈6 luni; la 5.10.2026 CNAIR spunea că proiectarea nu e încheiată, iar autorizația e legată de rectificarea bugetară. Apoi: 24 de luni de execuție.' },
+    { id: '1C', mva: 'Execuție 2027–2032; finalizare 2031/2032 – predicție confirmată până acum.', nume: 'Sărățeni – Joseni', sectiune: 'Montană', km: 32.4, cost: 4.5, est: true, parte: 1, ramasP: 1.5, ramasE: 7,
       stare: 'proiectare', sursa: 'PT', munte: true, constructor: 'SA&PE – Euro-Asfalt – Tehnostrade – Spedition UMB', info: 'Contract 26.11.2025, proiectare din 30.03.2026 (14 luni; campaniile de teren pot prelungi etapa). Circa jumătate din traseu sunt lucrări de artă; execuție estimată 2027–2032.' },
-    { id: '1D', mva: '2028 – devansat.', nume: 'Joseni – Ditrău', sectiune: 'Montană', km: 14.4, cost: 1.8, est: true, parte: 0.85, ramas: 3.5,
+    { id: '1D', mva: '2028 – devansat.', nume: 'Joseni – Ditrău', sectiune: 'Montană', km: 14.4, cost: 1.8, est: true, parte: 0.85, ramasP: 0, ramasE: 3.5,
       stare: 'executie', sursa: 'PT', munte: true, constructor: 'Danlin XXL – Groma Hold – Intertranscom', info: 'Devansat: autorizație 10.07.2026 (717 mil. lei), lucrări din 17.08.2026, ≈10% după prima lună. Termen ≈ august 2028.' },
-    { id: '2A', mva: '2031/2032 – încă posibil, marja s-a redus.', nume: 'Ditrău – Grințieș', sectiune: 'Montană', km: 37.9, cost: 5.5, est: true, parte: 1, ramas: 6.5,
-      stare: 'proiectare', sursa: 'PT', munte: true, constructor: 'SA&PE – Tehnostrade – Spedition UMB – Euro-Asfalt', info: 'Cel mai lung lot. Proiectare din 30.06.2025 (14 luni), PAC netransmis la 22.07.2026; contract de 54 de luni. Estimare MVA: 2031/2032.' },
-    { id: '2B', mva: 'Nu înainte de 2032, posibil 2033.', nume: 'Grințieș – Pipirig', sectiune: 'Montană', km: 31.5, cost: 5.97, parte: 1, ramas: 8.5,
+    { id: '2A', mva: '2031/2032 – încă posibil, marja s-a redus.', nume: 'Ditrău – Grințieș', sectiune: 'Montană', km: 37.9, cost: 6.14, parte: 1, ramasP: 0, ramasE: 6,
+      stare: 'autorizare', sursa: 'PT', munte: true, constructor: 'SA&PE – Tehnostrade – Spedition UMB – Euro-Asfalt', info: 'Cel mai lung lot. Contract de 6,14 mld. lei fără TVA (CNIR, la semnare), 54 de luni; proiectare din 30.06.2025 (14 luni), proiectul pentru autorizație (PAC) netransmis la 22.07.2026. Estimare MVA: 2031/2032.' },
+    { id: '2B', mva: 'Nu înainte de 2032, posibil 2033.', nume: 'Grințieș – Pipirig', sectiune: 'Montană', km: 31.5, cost: 5.97, parte: 1, ramasP: 1.5, ramasE: 7,
       stare: 'proiectare', sursa: 'PT', munte: true, constructor: 'SA&PE – Euro-Asfalt – Tehnostrade – Spedition UMB', info: 'Cel mai dificil lot (≈70% lucrări de artă, tuneluri). Contract 31.10.2025 (5,97 mld. lei, 54 de luni), proiectare din 30.03.2026, investigații de teren în curs. Estimare MVA: nu înainte de 2032, posibil 2033.' },
-    { id: '2C', mva: 'Sfârșitul lui 2029 / începutul lui 2030 (estimarea din 2025) – întârziat > 1 an.', nume: 'Pipirig – Leghin', sectiune: 'Montană', km: 19.3, cost: 3.0, est: true, parte: 1, ramas: 8,
+    { id: '2C', mva: 'Sfârșitul lui 2029 / începutul lui 2030 (estimarea din 2025) – întârziat > 1 an.', nume: 'Pipirig – Leghin', sectiune: 'Montană', km: 19.3, cost: 3.0, est: true, parte: 1, ramasP: 2, ramasE: 6,
       stare: 'neactivat', sursa: 'PT', munte: true, constructor: 'SA&PE – Spedition UMB – Tehnostrade – Euro-Asfalt', info: 'Contract semnat la 29.04.2025, dar ordinul de începere a proiectării nu era emis la 29.08.2026 (întârziere > 1 an). După ordin: 12 luni de proiectare, apoi execuția.' },
-    { id: 'III', mva: '2027 (estimarea din 2025) – risc confirmat; e nevoie de un program de recuperare.', nume: 'Leghin – Târgu Neamț (Moțca)', sectiune: 'Vest', km: 29.9, cost: 1.56, parte: 0.85, ramas: 4, lent: true,
+    { id: 'III', mva: '2027 (estimarea din 2025) – risc confirmat; e nevoie de un program de recuperare.', nume: 'Leghin – Târgu Neamț (Moțca)', sectiune: 'Vest', km: 29.9, cost: 1.56, parte: 0.85, ramasP: 0, ramasE: 4, lent: true,
       stare: 'executie', sursa: 'PT', munte: false, constructor: 'SA&PE – Spedition UMB – Tehnostrade', info: 'Lot 2D. Scos din PNRR; progres fizic 12% (aug. 2026) după o mobilizare slabă; ritmul actual nu susține termenul. Necesită un program realist de recuperare.' },
-    { id: 'T1', mva: 'Proiectare din 24.08.2026, autorizare înscrisă pentru aug. 2027; fișele CNIR: iunie 2030. Accesul pentru arheologie se discuta la Prefectură (8.10.2026).', nume: 'Târgu Neamț (Moțca) – Târgu Frumos', sectiune: 'Est', km: 27.0, cost: 4.8, parte: 1, ramas: 7,
-      etapa: { km: 5.5, la: 0.45, nume: 'legătura cu A7 și DN2' },
+    { id: 'T1', mva: 'Proiectare din 24.08.2026, autorizare înscrisă pentru aug. 2027; fișele CNIR: iunie 2030. Accesul pentru arheologie se discuta la Prefectură (8.10.2026).', nume: 'Târgu Neamț (Moțca) – Târgu Frumos', sectiune: 'Est', km: 27.0, cost: 4.8, parte: 1, ramasP: 1.3, ramasE: 6,
+      etapa: { km: 5.5, la: 0.33, nume: 'legătura cu A7 și DN2' },
       stare: 'proiectare', sursa: 'SAFE', munte: false, constructor: 'SA&PE – Tehnostrade – Spedition UMB – Euro-Asfalt', info: 'Singurul tronson ieșean cu proiectarea în curs (oct. 2026). Contract SAFE 29.05.2026 (4,8 mld. lei); 87 de zile până la ordinul de proiectare (24.08.2026). 5,5 km prioritari spre A7 și DN2: 10 luni de proiectare + 12 de execuție. Fișa CNIR: 10 luni de proiectare + 36 de execuție, final iunie 2030.' },
-    { id: 'T2', mva: 'Minimum 48 de luni de la semnare (2 + 10 + 36); în scenariile prudente, 2031 (MVA, nov. 2026).', nume: 'Târgu Frumos – Lețcani', sectiune: 'Est', km: 28.6, cost: 4.57, parte: 1, ramas: 8,
+    { id: 'T2', mva: 'Minimum 48 de luni de la semnare (2 + 10 + 36); în scenariile prudente, 2031 (MVA, nov. 2026).', nume: 'Târgu Frumos – Lețcani', sectiune: 'Est', km: 28.6, cost: 4.57, parte: 1, ramasP: 2, ramasE: 6,
       stare: 'neatribuit', sursa: 'SAFE', munte: false, constructor: '— (oferta Danlin XXL în reevaluare)', info: 'Fără contract. Hotărârea definitivă a Curții de Apel București din 13.10.2026 impune reevaluarea ofertei asocierii Danlin XXL (4,57 mld. lei); termen pentru chestiunile rămase: 11.11.2026. Urmează atribuirea, semnarea și ordinul de începere. Nod prioritar Podu Iloaiei: 3,9 km.' },
-    { id: 'T3', mva: 'Proiectarea s-a oprit după 2 luni; reluarea depinde de instanță; în scenariile prudente, 2031 (MVA, nov. 2026).', nume: 'Lețcani – Iași (DN24)', sectiune: 'Est', km: 17.7, cost: 3.93, parte: 1, ramas: 7,
+    { id: 'T3', mva: 'Proiectarea s-a oprit după 2 luni; reluarea depinde de instanță; în scenariile prudente, 2031 (MVA, nov. 2026).', nume: 'Lețcani – Iași (DN24)', sectiune: 'Est', km: 17.7, cost: 3.93, parte: 1, ramasP: 1.4, ramasE: 6,
       stare: 'suspendat', sursa: 'SAFE', munte: false, constructor: 'FCC Construcción (Spania)', info: 'Contract 29.05.2026 (3,93 mld. lei), proiectare din 24.08.2026. La 28.10.2026, Curtea de Apel București a suspendat executarea contractului până la soluționarea cauzei (contestația în anulare a Concelex); termen 18.11.2026. Termenul nu garantează reluarea proiectării. La 26.10.2026, un creditor a depus la Tribunalul București o cerere de insolvență împotriva FCC Construcción (cererea nu înseamnă deschiderea procedurii).' },
-    { id: 'T4', mva: 'Calendar incert până la reevaluare; în scenariile prudente, 2031 (MVA, nov. 2026). Golăiești – pod: 6 luni de proiectare + 12 de execuție.', nume: 'Iași (DN24) – Vama Ungheni', sectiune: 'Est', km: 15.5, cost: 3.57, parte: 1, ramas: 7,
-      etapa: { km: 2.77, la: 0.4, nume: 'nodul Golăiești – podul peste Prut' },
+    { id: 'T4', mva: 'Calendar incert până la reevaluare; în scenariile prudente, 2031 (MVA, nov. 2026). Golăiești – pod: 6 luni de proiectare + 12 de execuție.', nume: 'Iași (DN24) – Vama Ungheni', sectiune: 'Est', km: 15.5, cost: 3.57, parte: 1, ramasP: 1.7, ramasE: 6,
+      etapa: { km: 2.77, la: 0.33, nume: 'nodul Golăiești – podul peste Prut' },
       stare: 'suspendat', sursa: 'SAFE', munte: false, constructor: 'Itinera – Saipem – ICM (Italia)', info: 'Contract iul. 2026 (3,57 mld. lei; 15,47 km în România + ≈5 km în R. Moldova), suspendat de instanță la 5.08.2026. Hotărârea definitivă din 13.10.2026: CNIR reevaluează oferta Itinera în 20 de zile de la primirea deciziei (Construcții Erbașu era la 0,06 puncte). Podul de la Ungheni: 56% progres fizic la 20.10.2026, termen dec. 2027.' },
   ];
+  // ramasP = semestre de proiectare rămase, ramasE = semestre de execuție; între ele, autorizația de construire
+  LOTURI.forEach(function (l) { l.ramas = l.ramasP + l.ramasE; });
+  var COTA_PROIECTARE = 0.03;      // partea din contract plătită pentru proiectare
   var KM_TOTAL = LOTURI.reduce(function (s, l) { return s + l.km; }, 0);
   var EST = ['T1', 'T2', 'T3', 'T4'];
 
   /* Cărțile de decizie. ref = de unde vine măsura; permanent = rămâne activă după ce e aleasă. */
   var CARTI = [
     { id: 'avize', tip: 'a8', titlu: 'Platformă unică de avize, aprobare tacită', ref: 'Program – Transporturi, M13', permanent: true,
-      efect: 'Ritm +6% pe toate loturile, de semestrul următor. Capital −2.' },
+      efect: 'Ritm +6% pe toate loturile și autorizații de construire mai rapide (75% pe semestru în loc de 50%), de semestrul următor. Capital −2.' },
     { id: 'exproprieri', tip: 'a8', titlu: 'Exproprieri pe tot coridorul înainte de lucrări', ref: 'Program – Transporturi, M13', permanent: true,
       efect: 'Surprizele geotehnice și de teren pe munte scad la jumătate. 0,6 mld. lei din buget, capital −3.' },
     { id: 'uip', tip: 'a8', titlu: 'Unități de implementare cu ingineri plătiți competitiv', ref: 'Program – Transporturi, M13', permanent: true,
@@ -96,11 +100,11 @@
     { id: 'cef', tip: 'a8', titlu: 'Cerere CEF – mobilitate militară pentru A8 Est', ref: 'Program – Transporturi, M11', permanent: true,
       efect: 'Peste un an, 50% șanse să primești 2,5 mld. lei pentru Târgu Neamț – Ungheni.' },
     { id: 'schimburi', tip: 'a8', titlu: 'Lucru în trei schimburi, bonus de accelerare', ref: 'Nu e în program', permanent: true,
-      efect: 'Ritm +12% pe toate loturile, dar totul costă cu 12% mai mult. Capital +3.' },
+      efect: 'Ritm +12% pe toate loturile; lucrările rămase se scumpesc o singură dată cu 12%. Capital +3.' },
     { id: 'ppp', tip: 'a8', titlu: 'Parteneriat public-privat pentru secțiunea montană', ref: 'Program – Transporturi, M14', permanent: true,
       efect: 'Sună bine. Capital +2. Efectul real pe A8 până în 2030 îl afli după ce semnezi.' },
     { id: 'deblocari', tip: 'a8', titlu: 'Deblocările cerute pentru 2026: ordin 2C, autorizație 1B, PAC 2A', ref: 'Propunere MVA (bilanț aug. 2026)', permanent: true,
-      efect: 'Pipirig – Leghin primește ordinul de începere; Miercurea Nirajului – Sărățeni și Ditrău – Grințieș câștigă câte o jumătate de semestru. Capital −1.' },
+      efect: 'Pipirig – Leghin primește ordinul de începere, Miercurea Nirajului – Sărățeni autorizația de construire, iar Ditrău – Grințieș își depune PAC (autorizația vine mai repede). Capital −1.' },
     { id: 'recuperare', tip: 'a8', titlu: 'Program de recuperare pentru Leghin – Moțca', ref: 'Propunere MVA (bilanț aug. 2026)', permanent: true,
       efect: 'Lotul cu 12% progres fizic iese din mobilizarea slabă (ritm +25% pe acest lot). Capital +1.' },
     { id: 'raportare', tip: 'a8', titlu: 'Raportare publică lunară, unitară, pe fiecare lot', ref: 'Propunere MVA (bilanț aug. 2026)', permanent: true,
@@ -151,20 +155,29 @@
     return {
       sem: 0, orizont: SEMESTRE.length, scen: null, seed: (seed == null ? 20270101 : seed) >>> 0,
       loturi: LOTURI.map(function (l) {
-        return { id: l.id, left: l.ramas, cost: Math.round(l.cost * l.parte * 100) / 100, stare: l.stare, intarziere: 0, blocat: 0, deschis: null, semnat: null, etapa: null };
+        var total = l.cost * l.parte, costP = l.ramasP > 0 ? total * COTA_PROIECTARE : 0;
+        return { id: l.id, left: l.ramas, leftP: l.ramasP, cost: Math.round((total - costP) * 100) / 100, costP: Math.round(costP * 1000) / 1000,
+          facturi: 0, stare: l.stare, intarziere: 0, blocat: 0, deschis: null, semnat: null, etapa: null };
       }),
       national: BAZA_NATIONAL, safeA8: 0.61, safeFolosit: 0, pt: PT_A8, bei: 0, beiDe: 99, cef: 0, cefDe: null, mff: 0, mffSem: 1.5, mffDe: 2030,
-      carti: {}, prioritate: 'prorata', fiscal: [], natCheltuit: {}, soc: {}, deficit: { 2026: 6.0 }, datorie: 60.4,
+      carti: {}, prioritate: 'prorata', plafon: null, fiscal: [], natCheltuit: {}, beiCheltuit: {}, registru: {}, soc: {}, deficit: { 2026: 6.0 }, datorie: 60.4,
       rating: 1, avertismente: 0, aniLaTinta: 0, capital: 55, ajustare: 0, interimat: 0, reevaluare: 0,
       cheltuitA8: 0, stiri: [], terminat: false
     };
+  }
+
+  // Scumpește lucrările rămase ale unui lot; majorările se țin separat, ca să se poată verifica bilanțul banilor
+  function majoreaza(st, l, factor) {
+    var inainte = l.cost + l.costP;
+    l.cost = l.cost * factor; l.costP = l.costP * factor;
+    st.majorari = (st.majorari || 0) + (l.cost + l.costP - inainte);
   }
 
   function stire(st, text, tip) { st.stiri.push({ sem: st.sem, text: text, tip: tip || 'neutru' }); }
   function limCapital(st) { st.capital = Math.max(0, Math.min(100, st.capital)); }
   function lot(st, id) { for (var i = 0; i < st.loturi.length; i++) if (st.loturi[i].id === id) return st.loturi[i]; return null; }
   function info(id) { for (var i = 0; i < LOTURI.length; i++) if (LOTURI[i].id === id) return LOTURI[i]; return null; }
-  function activ(l) { return l.deschis == null && l.stare !== 'neatribuit' && l.stare !== 'suspendat' && l.stare !== 'neactivat' && l.blocat === 0; }
+  function activ(l) { return l.deschis == null && (l.stare === 'proiectare' || l.stare === 'executie') && l.blocat === 0; }
 
   /* Ordinea de plată când banii naționali, europeni noi și BEI nu ajung pentru toate loturile. */
   var PRIORITATI = {
@@ -214,13 +227,15 @@
       case 'cef': st.cefDe = st.sem + 2; break;
       case 'deblocari':
         var l2c = lot(st, '2C'); if (l2c.stare === 'neactivat') { l2c.stare = 'proiectare'; l2c.semnat = st.sem; }
-        lot(st, '1B').left = Math.max(0.5, lot(st, '1B').left - 0.5); lot(st, '2A').left = Math.max(0.5, lot(st, '2A').left - 0.5);
+        var l1b = lot(st, '1B'); if (l1b.stare === 'autorizare') { l1b.stare = 'executie'; l1b.semnat = st.sem; }
         st.capital -= 1; break;
       case 'recuperare': st.capital += 1; break;
       case 'raportare': st.capital += 2; break;
       case 'securitate': st.capital += 3; break;
       case 'cfm': st.mffDe = Math.min(st.mffDe, 2029); st.mffSem += 1; break;
-      case 'schimburi': st.capital += 3; break;
+      case 'schimburi':   // lucrările rămase se scumpesc o singură dată cu 12%
+        st.loturi.forEach(function (x) { if (x.deschis == null) majoreaza(st, x, 1.12); });
+        st.capital += 3; break;
       case 'ppp': st.capital += 2; break;
       case 'pensii': st.fiscal.push({ de: y, pp: 0.35 }); st.capital += 10; break;
       case 'spending': st.fiscal.push({ de: st.sem % 2 === 0 ? y : y + 1, pp: -0.3 }); st.capital -= 8; break;
@@ -244,6 +259,7 @@
     var d = tintaAn(y), i;
     for (i = 0; i < st.fiscal.length; i++) if (st.fiscal[i].de <= y) d += st.fiscal[i].pp;
     d += ((st.natCheltuit[y] || 0) - 2 * BAZA_NATIONAL) / pibAn(y) * 100;
+    d += (st.beiCheltuit[y] || 0) / pibAn(y) * 100;   // împrumutul BEI finanțează cheltuieli noi, în afara traiectoriei
     d += st.soc[y] || 0;
     if (st.rating === 0) d += 0.3;   // dobânzi mai mari după retrogradare
     return Math.round(d * 100) / 100;
@@ -296,13 +312,13 @@
     for (i = 0; i < st.loturi.length; i++) {
       l = st.loturi[i]; inf = LOTURI[i];
       if (l.stare === 'neatribuit' && rng() < pSemn) {
-        l.stare = 'proiectare'; l.semnat = st.sem; l.left = inf.ramas;
+        l.stare = l.leftP > 0 || inf.ramasP > 0 ? 'proiectare' : 'executie'; l.semnat = st.sem; l.left = inf.ramas; l.leftP = inf.ramasP;
         stire(st, 'S-a semnat contractul pentru ' + inf.nume + '. Urmează ordinul de începere și 46 de luni de proiectare și execuție.', 'bun');
       } else if (l.stare === 'suspendat' && rng() < pReluare) {
         // Iași – Ungheni: reevaluarea ofertei Itinera poate schimba câștigătorul (Erbașu era la 0,06 puncte)
         if (inf.id === 'T4' && rng() < 0.25) { l.stare = 'neatribuit'; stire(st, 'După reevaluare, ' + inf.nume + ' are alt câștigător: contractul se reface de la zero.', 'rau'); }
         else {
-          l.stare = 'proiectare'; l.semnat = st.sem; stire(st, 'Instanța ridică suspendarea: pe ' + inf.nume + ' proiectarea se reia.', 'bun');
+          l.stare = l.leftP > 0 ? 'proiectare' : 'autorizare'; l.semnat = st.sem; stire(st, 'Instanța ridică suspendarea: pe ' + inf.nume + ' proiectarea se reia.', 'bun');
           // Lețcani – Iași: cererea de insolvență împotriva FCC (26.10.2026)
           if (inf.id === 'T3' && rng() < 0.15) { l.blocat = 2; stire(st, inf.nume + ': cererea de insolvență împotriva constructorului oprește din nou lucrările pentru un an.', 'rau'); }
         }
@@ -318,77 +334,140 @@
     }
     if (st.carti.ppp === st.sem) stire(st, 'Unitatea PPP e înființată. Primul ei raport: un PPP pentru autostrada montană nu poate fi pregătit, licitat și construit până în 2030; contractele mari vizate până în 2028 sunt Terminalul 2 Otopeni și porturile.', 'neutru');
     if (rng() < 0.12) {
-      for (i = 0; i < st.loturi.length; i++) st.loturi[i].cost = Math.round(st.loturi[i].cost * 1.08 * 100) / 100;
+      for (i = 0; i < st.loturi.length; i++) majoreaza(st, st.loturi[i], 1.08);
       stire(st, 'Prețurile la bitum, oțel și ciment cresc: devizele loturilor se ajustează cu 8%.', 'rau');
     }
     if (rng() < 0.08) { st.soc[y] = (st.soc[y] || 0) + 0.3; st.capital -= 4; stire(st, 'Recesiune în zona euro: încasările scad, deficitul pe ' + y + ' urcă cu circa 0,3 pp.', 'rau'); }
     if (st.sem === 1 && rng() < 0.7) { st.fiscal.push({ de: 2028, pp: -0.1 }); stire(st, 'Neptun Deep ajunge la platou: redevențele aduc circa 0,1% din PIB pe an.', 'bun'); }
     if (rng() < 0.1) stire(st, 'Un urs a fost filmat de camerele de pe un șantier al secțiunii montane. Lucrările continuă.', 'neutru');
 
-    // Ritmul și nevoia de bani pentru fiecare lot activ
+    // Autorizațiile de construire: execuția începe doar după ele
+    var pAC = sc && sc.pAC != null ? sc.pAC : 0.5;
+    if (k.avize != null && k.avize <= st.sem) pAC = Math.max(pAC, 0.75);
+    for (i = 0; i < st.loturi.length; i++) {
+      l = st.loturi[i]; inf = LOTURI[i];
+      var pLot = (inf.id === '2A' && k.deblocari != null) ? Math.max(pAC, 0.8) : pAC;
+      if (l.stare === 'autorizare' && l.blocat === 0 && rng() < pLot) {
+        l.stare = 'executie'; l.semnat = st.sem;
+        stire(st, inf.nume + ': se emite autorizația de construire, începe execuția.', 'bun');
+      }
+    }
+
+    // Ritmul și cât s-ar lucra în semestru; loturile cu facturi neplătite intră și ele la plată
     var plan = [];
     for (i = 0; i < st.loturi.length; i++) {
       l = st.loturi[i]; inf = LOTURI[i];
-      if (l.blocat > 0) { l.blocat--; if (l.blocat === 0) stire(st, inf.nume + ': un nou constructor preia lucrările.', 'neutru'); continue; }
-      if (!activ(l)) continue;
-      var ev = 1;
-      if (inf.munte && iarna) ev *= 0.75;
-      if (inf.munte && rng() < (k.exproprieri != null ? 0.05 : 0.11) * (sc && sc.riscMunte || 1)) {
-        var plus = 0.5 + rng() * 0.5; l.left += plus;
-        stire(st, inf.nume + ': ' + (rng() < 0.5 ? 'alunecare de teren pe traseu, proiectul se reface parțial.' : 'terenuri neexpropriate și utilități nedeviate la timp.'), 'rau');
+      var eraBlocat = l.blocat > 0;
+      if (eraBlocat) { l.blocat--; if (l.blocat === 0) stire(st, inf.nume + ': un nou constructor preia lucrările.', 'neutru'); }
+      var lucreaza = !eraBlocat && activ(l);
+      if (!lucreaza && !(l.facturi > 0.0005)) continue;
+      var P = 0, Eplan = 0;
+      if (lucreaza) {
+        var ev = 1, proiect = l.stare === 'proiectare';
+        if (inf.munte && iarna && !proiect) ev *= 0.75;
+        if (inf.munte && rng() < (k.exproprieri != null ? 0.05 : 0.11) * (sc && sc.riscMunte || 1)) {
+          var plus = 0.5 + rng() * 0.5; l.left += plus; if (proiect) l.leftP += plus;
+          stire(st, inf.nume + ': ' + (rng() < 0.5 ? 'alunecare de teren pe traseu, proiectul se reface parțial.' : 'terenuri neexpropriate și utilități nedeviate la timp.'), 'rau');
+        }
+        if (!proiect && (inf.id === 'T1' || inf.id === 'T3') && rng() < 0.08) { l.left += 0.5; stire(st, inf.nume + ': descărcare arheologică de urgență.', 'rau'); }
+        if (l.semnat === st.sem) ev *= 0.5;   // mobilizare
+        if (inf.lent && k.recuperare == null) ev *= 0.8;
+        P = mult * comun * (lo + (1.1 - lo) * rng()) * ev * (l.intarziere > 0 ? 0.85 : 1);
+        Eplan = proiect ? l.costP * Math.min(1, P / Math.max(l.leftP, 0.01)) : l.cost * Math.min(1, P / Math.max(l.left - l.leftP, 0.01));
       }
-      if ((inf.id === 'T1' || inf.id === 'T3') && rng() < 0.08) { l.left += 0.5; stire(st, inf.nume + ': descărcare arheologică de urgență.', 'rau'); }
-      if (l.semnat === st.sem) ev *= 0.5;   // mobilizare
-      if (inf.lent && k.recuperare == null) ev *= 0.8;
-      var P = mult * comun * (lo + (1.1 - lo) * rng()) * ev * (l.intarziere > 0 ? 0.85 : 1);
-      var cere = l.cost * Math.min(1, P / Math.max(l.left, 0.01)) * (k.schimburi != null ? 1.12 : 1);
-      plan.push({ l: l, inf: inf, P: P, cere: cere, dat: 0 });
+      plan.push({ l: l, inf: inf, lucreaza: lucreaza, P: P, cere: Eplan + l.facturi, dat: 0, surse: [] });
     }
 
-    // Finanțare: SAFE (Est) + CEF, Programul Transport (până în 2029) + BEI (Vest și munte), restul din buget
-    var safeRamas = y <= ULTIMUL_AN_SAFE ? Math.max(0, SAFE_COR * st.safeA8 - st.safeFolosit) : 0, lipsa = 0, p, x;
+    // Finanțare: SAFE (Est) + CEF, Programul Transport (până în 2029) + BEI (vest și munte), fonduri UE noi, apoi bugetul.
+    // Un plafon total pe semestru (scenariul „Necesarul MVA strict”) limitează toate sursele la un loc.
+    var safeRamas = y <= ULTIMUL_AN_SAFE ? Math.max(0, SAFE_COR * st.safeA8 - st.safeFolosit) : 0, lipsa = 0, p, x, totalDat = 0;
     if (y >= st.mffDe) st.mff += st.mffSem;   // fondurile europene 2028–2034 (Planul național și regional de parteneriat)
+    function ia(pp, src, suma) {
+      if (st.plafon != null) suma = Math.min(suma, Math.max(0, st.plafon - totalDat));
+      if (suma > 0) { pp.dat += suma; pp.surse.push([src, suma]); totalDat += suma; }
+      return Math.max(0, suma);
+    }
     plan = ordoneaza(st, plan);
     var secvential = st.prioritate && st.prioritate !== 'prorata';
     for (i = 0; i < plan.length; i++) {
       p = plan[i];
       if (p.inf.sursa === 'SAFE') {
-        x = Math.min(p.cere, safeRamas); safeRamas -= x; st.safeFolosit += x; p.dat += x;
-        x = Math.min(p.cere - p.dat, st.cef); st.cef -= x; p.dat += x;
+        x = ia(p, 'safe', Math.min(p.cere, safeRamas)); safeRamas -= x; st.safeFolosit += x;
+        x = ia(p, 'cef', Math.min(p.cere - p.dat, st.cef)); st.cef -= x;
       } else {
-        if (y <= ULTIMUL_AN_PT) { x = Math.min(p.cere, st.pt); st.pt -= x; p.dat += x; }
-        if (st.beiDe <= st.sem) { x = Math.min(p.cere - p.dat, st.bei); st.bei -= x; p.dat += x; }
+        if (y <= ULTIMUL_AN_PT) { x = ia(p, 'pt', Math.min(p.cere, st.pt)); st.pt -= x; }
+        if (st.beiDe <= st.sem) { x = ia(p, 'bei', Math.min(p.cere - p.dat, st.bei)); st.bei -= x; }
       }
-      x = Math.min(p.cere - p.dat, st.mff); st.mff -= x; p.dat += x;
+      x = ia(p, 'mff', Math.min(p.cere - p.dat, st.mff)); st.mff -= x;
       lipsa += p.cere - p.dat;
     }
     var nat = nationalEfectiv(st) + (k.plata30 != null ? 1.5 : 0), natFolosit = Math.min(nat, lipsa), natRamas = natFolosit;
-    var arierate = 0, kmNou = 0;
+    if (st.plafon != null) { natFolosit = Math.min(natFolosit, Math.max(0, st.plafon - totalDat)); natRamas = natFolosit; }
+    var arierate = 0, kmNou = 0, platitNat = 0;
+    var reg = st.registru[y] = st.registru[y] || { safe: 0, cef: 0, pt: 0, bei: 0, mff: 0, nat: 0 };
     for (i = 0; i < plan.length; i++) {
       p = plan[i];
-      if (secvential) { x = Math.min(p.cere - p.dat, natRamas); natRamas -= x; p.dat += x; }
-      else if (lipsa > 0) p.dat += (p.cere - p.dat) * natFolosit / lipsa;
+      if (secvential) { x = Math.min(p.cere - p.dat, natRamas); natRamas -= x; if (x > 0) { p.dat += x; p.surse.push(['nat', x]); } }
+      else if (lipsa > 0) { x = (p.cere - p.dat) * natFolosit / lipsa; if (x > 0) { p.dat += x; p.surse.push(['nat', x]); } }
       var f = p.cere > 0 ? Math.min(1, p.dat / p.cere) : 1;
       l = p.l;
-      l.left -= p.P * (0.3 + 0.7 * f);
-      l.cost = Math.max(0, l.cost - p.dat);
-      st.cheltuitA8 += p.dat;
-      if (f < 0.95) {
-        l.intarziere++; arierate++;
-        if (l.intarziere >= 3 && rng() < (k.raportare != null ? 0.12 : 0.2)) { l.blocat = 2; l.intarziere = 0; stire(st, p.inf.nume + ': constructorul, neplătit de luni de zile, intră în insolvență. Lotul stă un an.', 'rau'); }
-      } else l.intarziere = Math.max(0, l.intarziere - 1);
-      if (p.inf.etapa && !l.etapa && l.left > 0.001 && 1 - l.left / p.inf.ramas >= p.inf.etapa.la) {
-        l.etapa = st.sem; kmNou += p.inf.etapa.km;
-        stire(st, p.inf.nume + ': se deschid primii ' + fmt(p.inf.etapa.km) + ' km (' + p.inf.etapa.nume + ').', 'bun');
+      // lucrul făcut efectiv (și valoarea lui), cu ritm redus când banii nu ajung
+      var E = 0;
+      if (p.lucreaza) {
+        var Pact = p.P * (0.3 + 0.7 * f);
+        if (l.stare === 'proiectare') {
+          var d = Math.min(Pact, l.leftP);
+          E = l.costP * (l.leftP > 0 ? d / l.leftP : 1);
+          l.costP = Math.max(0, l.costP - E); l.leftP -= d; l.left -= d;
+          if (l.leftP <= 0.001) {
+            l.leftP = 0; l.costP = 0;
+            // contractele includ obținerea autorizației în durata proiectării: întârzierea apare doar dacă ea nu vine la timp
+            if (rng() < ((p.inf.id === '2A' && k.deblocari != null) ? Math.max(pAC, 0.8) : pAC)) {
+              l.stare = 'executie';
+              stire(st, p.inf.nume + ': proiectarea s-a încheiat și autorizația de construire a venit la timp.', 'bun');
+            } else {
+              l.stare = 'autorizare';
+              stire(st, p.inf.nume + ': proiectarea s-a încheiat, dar autorizația de construire întârzie.', 'rau');
+            }
+          }
+        } else {
+          var leftE = Math.max(l.left - l.leftP, 0.0001), dE = Math.min(Pact, leftE);
+          E = l.cost * dE / leftE;
+          l.cost = Math.max(0, l.cost - E); l.left -= dE;
+        }
       }
-      if (l.left <= 0.001) {
-        l.left = 0; l.deschis = st.sem; l.stare = 'deschis'; l.cost = 0; kmNou += p.inf.km - (l.etapa != null ? p.inf.etapa.km : 0);
-        stire(st, 'Se deschide circulația pe ' + p.inf.nume + ' (' + fmt(p.inf.km) + ' km).', 'bun');
-      } else if (l.stare === 'proiectare' && l.left <= p.inf.ramas * 0.75) l.stare = 'executie';
+      // plata: întâi facturile vechi, apoi lucrul de acum; ce nu se plătește rămâne datorie, și după deschiderea circulației
+      var datorat = l.facturi + E, platit = Math.min(p.dat, datorat), surplus = p.dat - platit;
+      for (var j = p.surse.length - 1; j >= 0 && surplus > 1e-9; j--) {   // banii nefolosiți se întorc la sursă
+        var src = p.surse[j], back = Math.min(src[1], surplus);
+        src[1] -= back; surplus -= back;
+        if (src[0] === 'safe') st.safeFolosit -= back; else if (src[0] === 'cef') st.cef += back;
+        else if (src[0] === 'pt') st.pt += back; else if (src[0] === 'bei') st.bei += back; else if (src[0] === 'mff') st.mff += back;
+      }
+      p.surse.forEach(function (sx) { reg[sx[0]] += sx[1]; if (sx[0] === 'nat') platitNat += sx[1]; if (sx[0] === 'bei') st.beiCheltuit[y] = (st.beiCheltuit[y] || 0) + sx[1]; });
+      l.facturi = Math.max(0, datorat - platit);
+      st.cheltuitA8 += platit;
+      if (p.lucreaza) {
+        if (f < 0.95) {
+          l.intarziere++; arierate++;
+          if (l.intarziere >= 3 && rng() < (k.raportare != null ? 0.12 : 0.2)) { l.blocat = 2; l.intarziere = 0; stire(st, p.inf.nume + ': constructorul, neplătit de luni de zile, intră în insolvență. Lotul stă un an.', 'rau'); }
+        } else l.intarziere = Math.max(0, l.intarziere - 1);
+      }
+      if (l.stare === 'executie' && l.deschis == null) {
+        var gataE = 1 - (l.left - l.leftP) / Math.max(p.inf.ramasE, 0.01);
+        if (p.inf.etapa && l.etapa == null && l.left > 0.001 && gataE >= p.inf.etapa.la) {
+          l.etapa = st.sem; kmNou += p.inf.etapa.km;
+          stire(st, p.inf.nume + ': se deschid primii ' + fmt(p.inf.etapa.km) + ' km (' + p.inf.etapa.nume + ').', 'bun');
+        }
+        if (l.left <= 0.001) {
+          l.left = 0; l.deschis = st.sem; l.stare = 'deschis'; l.cost = 0; kmNou += p.inf.km - (l.etapa != null ? p.inf.etapa.km : 0);
+          stire(st, 'Se deschide circulația pe ' + p.inf.nume + ' (' + fmt(p.inf.km) + ' km)' + (l.facturi > 0.01 ? '; rămân de plătit ' + fmt(l.facturi) + ' mld. lei.' : '.'), 'bun');
+        }
+      }
     }
     if (arierate) { st.capital -= Math.min(4, arierate); stire(st, 'Arierate pe ' + arierate + (arierate === 1 ? ' lot' : ' loturi') + ': constructorii încetinesc lucrul.', 'rau'); }
     st.capital += kmNou / 10;
-    st.natCheltuit[y] = (st.natCheltuit[y] || 0) + natFolosit;
+    st.natCheltuit[y] = (st.natCheltuit[y] || 0) + platitNat;
 
     if (st.interimat > 0) st.interimat--;
     if (st.reevaluare > 0) st.reevaluare--;
@@ -423,6 +502,7 @@
     return {
       km: Math.round(km * 10) / 10, deschise: deschise, complet: deschise === LOTURI.length,
       est: gata(EST), iasiUngheni: gata(['T4']), tgNeamtIasi: gata(['T1', 'T2', 'T3']), vest: gata(['I', '1B', '1C', '1D', '2A', '2B', '2C', 'III']),
+      datorii: Math.round(st.loturi.reduce(function (a, l) { return a + (l.facturi || 0); }, 0) * 100) / 100,
       deficit2030: st.deficit[2030], subTrei: st.deficit[2030] != null && st.deficit[2030] < 3, rating: st.rating, datorie: st.datorie
     };
   }
@@ -497,23 +577,25 @@
         national: 3, safeA8: 0.85, mffDe: 2029, mffSem: 2.5, soc: 0, carti: ['bei', 'cef', 'plata30'] },
       program: { nume: 'Ca în program', descriere: '1,5 mld. lei/semestru din buget, 61% din SAFE pe A8 (proporțional cu necesarul; restul pe A7 și Suceava – Siret), fonduri UE 2028–2034 de la 2030 (1,5 mld. lei/semestru), plata în 30 de zile.',
         national: 1.5, safeA8: 0.61, mffDe: 2030, mffSem: 1.5, soc: 0, carti: ['plata30'] },
-      mva: { nume: 'Necesarul MVA', descriere: 'Moldova Vrea Autostradă: ≈800–900 mil. euro pe an pentru A8 (≈2,2 mld. lei pe semestru din toate sursele), resurse bugetare multianuale pentru Ungheni – Iași – Târgu Neamț și A8 prioritară în CFM 2028–2034.',
+      mva: { nume: 'Finanțare asigurată (MVA)', descriere: 'Cererea MVA de resurse multianuale, cu finanțarea asigurată pe toată durata contractelor: plafoane de până la 2,5 mld. lei/semestru din buget, plus încă până la 1,5 mld. prin plata la 30 de zile, 75% din SAFE pe A8 și 2,5 mld. lei/semestru din fondurile UE 2028–2034 din 2029 (A8 prioritară în CFM). Sunt plafoane, nu cheltuieli automate.',
         national: 2.5, safeA8: 0.75, mffDe: 2029, mffSem: 2.5, soc: 0, carti: ['plata30', 'cfm'] },
+      mva850: { nume: 'Plafon 850 mil. €/an', descriere: 'Aceleași surse, dar cu un plafon total de ≈2,2 mld. lei pe semestru (≈850 mil. euro pe an) din toate sursele la un loc – estimarea MVA a necesarului pentru 2025, aplicată ca plafon pe toți anii.',
+        national: 2.5, safeA8: 0.75, mffDe: 2029, mffSem: 2.5, soc: 0, plafon: 2.2, carti: ['plata30', 'cfm'] },
       austeritate: { nume: 'Austeritate', descriere: '1 mld. lei/semestru, A7 și Suceava – Siret iau mai mult din SAFE (55% A8), fonduri UE noi abia din 2031, derapaje de deficit și plafonări.',
         national: 1, safeA8: 0.55, mffDe: 2031, mffSem: 1, soc: 0.3, carti: [] }
     },
     prioritate: PRIORITATI,
     procedural: {
       rapid: { nume: 'Program + contestații rapide', descriere: 'Tot ce e în program, plus contestații judecate accelerat la CNSC și în instanță (măsură care nu e în program).',
-        pSemn: 0.7, pReluare: 0.75, riscMunte: 0.8, carti: ['avize', 'uip', 'credite', 'exproprieri', 'contestatii'] },
+        pSemn: 0.7, pReluare: 0.75, riscMunte: 0.8, pAC: 0.75, carti: ['avize', 'uip', 'credite', 'exproprieri', 'contestatii'] },
       program: { nume: 'Ca în program', descriere: 'Platforma de avize cu aprobare tacită, exproprieri înainte de lucrări, UIP întărite, credite multianuale (Transporturi M2, M13); contestațiile rămân în ritmul de azi.',
-        pSemn: 0.4, pReluare: 0.5, riscMunte: 0.8, carti: ['avize', 'uip', 'credite', 'exproprieri'] },
+        pSemn: 0.4, pReluare: 0.5, riscMunte: 0.8, pAC: 0.7, carti: ['avize', 'uip', 'credite', 'exproprieri'] },
       mva: { nume: 'Agenda MVA', descriere: 'Ce cere bilanțul MVA din aug. 2026: ordin pentru 2C, autorizație pentru 1B, PAC pentru 2A, program de recuperare pe Leghin – Moțca, raportare publică lunară; plus avizele, exproprierile și UIP din program. Contestațiile, în ritmul de azi.',
-        pSemn: 0.45, pReluare: 0.55, pOrdin: 0.9, riscMunte: 0.8, carti: ['avize', 'uip', 'credite', 'exproprieri', 'deblocari', 'recuperare', 'raportare'] },
+        pSemn: 0.45, pReluare: 0.55, pOrdin: 0.9, riscMunte: 0.8, pAC: 0.85, carti: ['avize', 'uip', 'credite', 'exproprieri', 'deblocari', 'recuperare', 'raportare'] },
       actual: { nume: 'Ca acum', descriere: 'Contestațiile se judecă în ritmul obișnuit, avizele și exproprierile merg cum au mers până acum.',
-        pSemn: 0.33, pReluare: 0.45, riscMunte: 1, carti: ['credite'] },
+        pSemn: 0.33, pReluare: 0.45, riscMunte: 1, pAC: 0.5, carti: ['credite'] },
       blocaje: { nume: 'Blocaje', descriere: 'Contestații în lanț, suspendări în instanță, refaceri de proiect pe munte.',
-        pSemn: 0.15, pReluare: 0.25, pOrdin: 0.2, riscMunte: 1.6, carti: [] }
+        pSemn: 0.15, pReluare: 0.25, pOrdin: 0.2, riscMunte: 1.6, pAC: 0.3, carti: [] }
     }
   };
   var SCENARII = [
@@ -549,7 +631,8 @@
     var s = stareInitiala(seed), rng = rngStare(s);
     s.orizont = ORIZONT_MAX;
     s.prioritate = prioritate || 'prorata';
-    s.scen = { pAlegeri: P.pAlegeri, pMotiune: P.pMotiune, pSemn: R.pSemn, pReluare: R.pReluare, pOrdin: R.pOrdin, riscMunte: R.riscMunte, soc: B.soc };
+    s.scen = { pAlegeri: P.pAlegeri, pMotiune: P.pMotiune, pSemn: R.pSemn, pReluare: R.pReluare, pOrdin: R.pOrdin, pAC: R.pAC, riscMunte: R.riscMunte, soc: B.soc };
+    s.plafon = B.plafon != null ? B.plafon : null;
     B.carti.concat(R.carti, P.carti || []).forEach(function (id) { aplicaCarte(s, id, rng); });
     s.national = B.national; s.safeA8 = B.safeA8; s.mffDe = B.mffDe; s.mffSem = B.mffSem;
     s.capital = 55;

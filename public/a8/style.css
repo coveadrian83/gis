@@ -277,3 +277,9 @@ table.strategic td.num { white-space: normal; min-width: 7em; }
 .joclink span { font-size: .85rem; color: var(--muted); }
 .joclink:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 .h2mare.cab { margin: 26px 0 12px; }
+
+.lot.s-autorizare .fond { stroke: color-mix(in srgb, var(--design) 60%, var(--road)); stroke-dasharray: 4 6; }
+.lot.s-autorizare .gata { stroke: var(--design); }
+.pill.s-autorizare { background: color-mix(in srgb, var(--design) 30%, transparent); }
+#descompunere tr.baza td { color: var(--muted); }
+#descompunere tr.mva td { background: color-mix(in srgb, var(--ok) 8%, transparent); }
