@@ -63,12 +63,12 @@ test('Pipirig – Leghin pornește doar după ordinul de începere; deblocările
 test('prioritizarea: în planul MVA, banii naționali merg întâi la Est', () => {
   const s = C.stareInitiala(5);
   s.prioritate = 'mva';
-  for (const id of ['T2', 'T4']) C.lot(s, id).stare = 'proiectare';
+  for (const id of ['T2', 'T3', 'T4']) C.lot(s, id).stare = 'proiectare';
   s.safeA8 = 0; s.pt = 0; s.national = 0.5;          // bani puțini: doar 0,5 mld. lei pe semestru
   const rng = C.rngStare(s);
   C.pas(s, rng);
   // T4 e primul în ordinea MVA și primește banii; ultimele loturi montane rămân neplătite
-  assert.ok(C.lot(s, 'T4').cost < 3.5);
+  assert.ok(C.lot(s, 'T4').cost < 3.57);
   assert.equal(C.lot(s, '1C').cost, 4.5);
   assert.equal(C.lot(s, '2B').cost, 5.97);
 });

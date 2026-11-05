@@ -21,7 +21,8 @@
   var ORIZONT_MAX = 28;              // calendarul merge până la finalul lui 2040
   var ALEGERI = [3, 11, 19];        // alegeri parlamentare: dec. 2028, dec. 2032, dec. 2036
   var BAZA_NATIONAL = 1.5;          // mld. lei/semestru din bugetul național pentru A8, presupus deja în traiectorie
-  var SAFE_COR = 4.2 * EUR_LEI;     // cota SAFE pentru coridoare (≈4,2 mld. euro), împărțită A8 / Pașcani–Siret
+  var SAFE_COR = 4.2 * EUR_LEI;     // cota SAFE pentru coridoare (≈4,2 mld. euro), împărțită A8 / A7 Pașcani – Siret
+                                    // A7 Pașcani – Suceava (contracte SAFE din 1.05.2026) ≈1,16 mld. euro + Suceava – Siret → A8 ≈ 67%
   var PT_A8 = 6;                    // ipoteză: bani din Programul Transport 2021–2027 rămași pentru A8 (eligibili până la 31.12.2029)
   var ULTIMUL_AN_PT = 2029;
   var ULTIMUL_AN_SAFE = 2030;       // plățile SAFE se fac până la finalul lui 2030
@@ -38,14 +39,14 @@
   ];
 
   /* Loturile, la începutul lui 2027. Stadiul de bază: bilanțul A. Covăsnianu (Moldova Vrea Autostradă), Ziarul de Iași,
-   * situație la 29.08.2026 (fișe de proiect CNIR/CNAIR, autorizații de construire), completat cu presa de specialitate.
+   * situație la 29.08.2026, actualizat cu analiza din 2.11.2026 (date la 30.10.2026) și presa de specialitate.
    * ramas = semestre de lucru rămase la ritmul din contract; parte = partea din cost încă neplătită; est = cost estimat;
    * etapa = segment care se poate deschide înainte de restul lotului (la = fracțiunea din lucrare); lent = mobilizare slabă. */
   var LOTURI = [
-    { id: 'I', mva: 'Deschidere în prima parte a lui 2027 (reper prudent); predicția 2025 – plauzibilă.', nume: 'Târgu Mureș – Miercurea Nirajului', sectiune: 'Vest', km: 24.4, cost: 2.46, parte: 0.35, ramas: 1.2,
-      stare: 'executie', sursa: 'PT', munte: false, constructor: 'Nurol (Turcia)', info: 'Lot 1A. 63,79% progres general / 60,09% fizic la 31.07.2026; patru autorizații (2025–2026). Reper prudent: deschidere în prima parte a lui 2027.' },
-    { id: '1B', mva: '2028 (estimarea din 2025) – întârziată cu câteva luni.', nume: 'Miercurea Nirajului – Sărățeni', sectiune: 'Montană', km: 23.4, cost: 2.98, parte: 1, ramas: 5,
-      stare: 'proiectare', sursa: 'PT', munte: true, constructor: 'Özaltın – Infravis', info: 'Proiectare tehnică finalizată, documentația în avizare; se așteaptă autorizația și ordinul de începere a execuției (24 de luni). Întârziere de câteva luni față de 2025.' },
+    { id: 'I', mva: 'Deschidere în prima parte a lui 2027 (reper prudent); predicția 2025 – plauzibilă.', nume: 'Târgu Mureș – Miercurea Nirajului', sectiune: 'Vest', km: 24.4, cost: 2.46, parte: 0.3, ramas: 1.1,
+      stare: 'executie', sursa: 'PT', munte: false, constructor: 'Nurol (Turcia)', info: 'Lot 1A. ≈66% progres fizic în oct. 2026 (60% la 31.07.2026); CNAIR anunță finalizarea în 2027. Reper prudent MVA: prima parte a lui 2027.' },
+    { id: '1B', mva: '2028 (estimarea din 2025) – întârziată; autorizația așteptată de ≈6 luni.', nume: 'Miercurea Nirajului – Sărățeni', sectiune: 'Montană', km: 23.4, cost: 2.98, parte: 1, ramas: 5.5,
+      stare: 'proiectare', sursa: 'PT', munte: true, constructor: 'Özaltın – Infravis', info: 'Constructorul așteaptă autorizația de construire de ≈6 luni; la 5.10.2026 CNAIR spunea că proiectarea nu e încheiată, iar autorizația e legată de rectificarea bugetară. Apoi: 24 de luni de execuție.' },
     { id: '1C', mva: 'Execuție 2027–2032; finalizare 2031/2032 – predicție confirmată până acum.', nume: 'Sărățeni – Joseni', sectiune: 'Montană', km: 32.4, cost: 4.5, est: true, parte: 1, ramas: 9,
       stare: 'proiectare', sursa: 'PT', munte: true, constructor: 'SA&PE – Euro-Asfalt – Tehnostrade – Spedition UMB', info: 'Contract 26.11.2025, proiectare din 30.03.2026 (14 luni; campaniile de teren pot prelungi etapa). Circa jumătate din traseu sunt lucrări de artă; execuție estimată 2027–2032.' },
     { id: '1D', mva: '2028 – devansat.', nume: 'Joseni – Ditrău', sectiune: 'Montană', km: 14.4, cost: 1.8, est: true, parte: 0.85, ramas: 3.5,
@@ -58,16 +59,16 @@
       stare: 'neactivat', sursa: 'PT', munte: true, constructor: 'SA&PE – Spedition UMB – Tehnostrade – Euro-Asfalt', info: 'Contract semnat la 29.04.2025, dar ordinul de începere a proiectării nu era emis la 29.08.2026 (întârziere > 1 an). După ordin: 12 luni de proiectare, apoi execuția.' },
     { id: 'III', mva: '2027 (estimarea din 2025) – risc confirmat; e nevoie de un program de recuperare.', nume: 'Leghin – Târgu Neamț (Moțca)', sectiune: 'Vest', km: 29.9, cost: 1.56, parte: 0.85, ramas: 4, lent: true,
       stare: 'executie', sursa: 'PT', munte: false, constructor: 'SA&PE – Spedition UMB – Tehnostrade', info: 'Lot 2D. Scos din PNRR; progres fizic 12% (aug. 2026) după o mobilizare slabă; ritmul actual nu susține termenul. Necesită un program realist de recuperare.' },
-    { id: 'T1', mva: '5,5 km: 24.08.2027; tot tronsonul: 24.06.2030 (termene contractuale) – parțial confirmată.', nume: 'Târgu Neamț (Moțca) – Târgu Frumos', sectiune: 'Est', km: 27.0, cost: 4.8, parte: 1, ramas: 7,
-      etapa: { km: 5.5, la: 0.22, nume: 'legătura cu A7 și DN2' },
-      stare: 'proiectare', sursa: 'SAFE', munte: false, constructor: 'SA&PE – Tehnostrade – Spedition UMB – Euro-Asfalt', info: 'Contract SAFE semnat la sfârșitul lui mai 2026 (4,8 mld. lei), proiectare din 24.08.2026. 5,5 km prioritari (legătura cu A7 și DN2): 24.08.2027; tot tronsonul: 24.06.2030.' },
-    { id: 'T2', mva: 'Estimarea 2025 (T I/II 2029) – prea optimistă; încă fără calendar.', nume: 'Târgu Frumos – Lețcani', sectiune: 'Est', km: 28.6, cost: 5.0, est: true, parte: 1, ramas: 8,
-      stare: 'neatribuit', sursa: 'SAFE', munte: false, constructor: '—', info: 'Singurul tronson fără contract: contestațiile Strabag, Makyol și Kalyon admise în parte de CNSC (31.07.2026), reevaluare. După semnare: 46 de luni.' },
-    { id: 'T3', mva: 'Reper prudent: T II 2030; 2029 doar în scenariu accelerat.', nume: 'Lețcani – Iași (DN24)', sectiune: 'Est', km: 17.7, cost: 3.9, parte: 1, ramas: 7,
-      stare: 'proiectare', sursa: 'SAFE', munte: false, constructor: 'FCC Construcción (Spania)', info: 'Contract 29.05.2026 (3,9 mld. lei), proiectare din 24.08.2026; termen contractual 24.06.2030. Anul 2029 rămâne doar scenariu accelerat.' },
-    { id: 'T4', mva: 'Calendar incert până la soluția instanței; Golăiești – pod (2,77 km) prioritar.', nume: 'Iași (DN24) – Vama Ungheni', sectiune: 'Est', km: 15.5, cost: 3.5, parte: 1, ramas: 7,
-      etapa: { km: 2.77, la: 0.5, nume: 'nodul Golăiești – podul peste Prut' },
-      stare: 'suspendat', sursa: 'SAFE', munte: false, constructor: 'Itinera – ICM – Saipem (Italia)', info: 'Contract iul. 2026 (3,5 mld. lei; 15,47 km în România + ≈5 km în R. Moldova). Efecte suspendate de Curtea de Apel București (5.08.2026). Segment prioritar Golăiești – pod (2,77 km). Podul de la Ungheni e în execuție din aprilie 2025.' }
+    { id: 'T1', mva: 'Proiectare din 24.08.2026, autorizare înscrisă pentru aug. 2027; fișele CNIR: iunie 2030. Accesul pentru arheologie se discuta la Prefectură (8.10.2026).', nume: 'Târgu Neamț (Moțca) – Târgu Frumos', sectiune: 'Est', km: 27.0, cost: 4.8, parte: 1, ramas: 7,
+      etapa: { km: 5.5, la: 0.45, nume: 'legătura cu A7 și DN2' },
+      stare: 'proiectare', sursa: 'SAFE', munte: false, constructor: 'SA&PE – Tehnostrade – Spedition UMB – Euro-Asfalt', info: 'Singurul tronson ieșean cu proiectarea în curs (oct. 2026). Contract SAFE 29.05.2026 (4,8 mld. lei); 87 de zile până la ordinul de proiectare (24.08.2026). 5,5 km prioritari spre A7 și DN2: 10 luni de proiectare + 12 de execuție. Fișa CNIR: 10 luni de proiectare + 36 de execuție, final iunie 2030.' },
+    { id: 'T2', mva: 'Minimum 48 de luni de la semnare (2 + 10 + 36); în scenariile prudente, 2031 (MVA, nov. 2026).', nume: 'Târgu Frumos – Lețcani', sectiune: 'Est', km: 28.6, cost: 4.57, parte: 1, ramas: 8,
+      stare: 'neatribuit', sursa: 'SAFE', munte: false, constructor: '— (oferta Danlin XXL în reevaluare)', info: 'Fără contract. Hotărârea definitivă a Curții de Apel București din 13.10.2026 impune reevaluarea ofertei asocierii Danlin XXL (4,57 mld. lei); termen pentru chestiunile rămase: 11.11.2026. Urmează atribuirea, semnarea și ordinul de începere. Nod prioritar Podu Iloaiei: 3,9 km.' },
+    { id: 'T3', mva: 'Proiectarea s-a oprit după 2 luni; reluarea depinde de instanță; în scenariile prudente, 2031 (MVA, nov. 2026).', nume: 'Lețcani – Iași (DN24)', sectiune: 'Est', km: 17.7, cost: 3.93, parte: 1, ramas: 7,
+      stare: 'suspendat', sursa: 'SAFE', munte: false, constructor: 'FCC Construcción (Spania)', info: 'Contract 29.05.2026 (3,93 mld. lei), proiectare din 24.08.2026. La 28.10.2026, Curtea de Apel București a suspendat executarea contractului până la soluționarea cauzei (contestația în anulare a Concelex); termen 18.11.2026. Termenul nu garantează reluarea proiectării.' },
+    { id: 'T4', mva: 'Calendar incert până la reevaluare; în scenariile prudente, 2031 (MVA, nov. 2026). Golăiești – pod: 6 luni de proiectare + 12 de execuție.', nume: 'Iași (DN24) – Vama Ungheni', sectiune: 'Est', km: 15.5, cost: 3.57, parte: 1, ramas: 7,
+      etapa: { km: 2.77, la: 0.4, nume: 'nodul Golăiești – podul peste Prut' },
+      stare: 'suspendat', sursa: 'SAFE', munte: false, constructor: 'Itinera – Saipem – ICM (Italia)', info: 'Contract iul. 2026 (3,57 mld. lei; 15,47 km în România + ≈5 km în R. Moldova), suspendat de instanță la 5.08.2026. Hotărârea definitivă din 13.10.2026: CNIR reevaluează oferta Itinera în 20 de zile de la primirea deciziei (Construcții Erbașu era la 0,06 puncte). Podul de la Ungheni: 56% progres fizic la 20.10.2026, termen dec. 2027.' },
   ];
   var KM_TOTAL = LOTURI.reduce(function (s, l) { return s + l.km; }, 0);
   var EST = ['T1', 'T2', 'T3', 'T4'];
@@ -150,7 +151,7 @@
       loturi: LOTURI.map(function (l) {
         return { id: l.id, left: l.ramas, cost: Math.round(l.cost * l.parte * 100) / 100, stare: l.stare, intarziere: 0, blocat: 0, deschis: null, semnat: null, etapa: null };
       }),
-      national: BAZA_NATIONAL, safeA8: 0.7, safeFolosit: 0, pt: PT_A8, bei: 0, beiDe: 99, cef: 0, cefDe: null, mff: 0, mffSem: 1.5, mffDe: 2030,
+      national: BAZA_NATIONAL, safeA8: 0.67, safeFolosit: 0, pt: PT_A8, bei: 0, beiDe: 99, cef: 0, cefDe: null, mff: 0, mffSem: 1.5, mffDe: 2030,
       carti: {}, prioritate: 'prorata', fiscal: [], natCheltuit: {}, soc: {}, deficit: { 2026: 6.0 }, datorie: 60.4,
       rating: 1, avertismente: 0, aniLaTinta: 0, capital: 55, ajustare: 0, interimat: 0, reevaluare: 0,
       cheltuitA8: 0, stiri: [], terminat: false
@@ -290,14 +291,21 @@
     // Contestații și instanțe
     var pSemn = sc && sc.pSemn != null ? sc.pSemn : 0.33, pReluare = sc && sc.pReluare != null ? sc.pReluare : 0.45;
     if (k.contestatii != null) { pSemn = Math.max(pSemn, 0.7); pReluare = Math.max(pReluare, 0.75); }
-    l = lot(st, 'T2');
-    if (l.stare === 'neatribuit' && rng() < pSemn) { l.stare = 'proiectare'; l.semnat = st.sem; stire(st, 'S-a semnat contractul pentru Târgu Frumos – Lețcani. Urmează 46 de luni de proiectare și execuție.', 'bun'); }
-    l = lot(st, 'T4');
-    if (l.stare === 'suspendat' && rng() < pReluare) { l.stare = 'proiectare'; l.semnat = st.sem; stire(st, 'Instanța ridică suspendarea: Iași – Vama Ungheni pornește.', 'bun'); }
+    for (i = 0; i < st.loturi.length; i++) {
+      l = st.loturi[i]; inf = LOTURI[i];
+      if (l.stare === 'neatribuit' && rng() < pSemn) {
+        l.stare = 'proiectare'; l.semnat = st.sem; l.left = inf.ramas;
+        stire(st, 'S-a semnat contractul pentru ' + inf.nume + '. Urmează ordinul de începere și 46 de luni de proiectare și execuție.', 'bun');
+      } else if (l.stare === 'suspendat' && rng() < pReluare) {
+        // Iași – Ungheni: reevaluarea ofertei Itinera poate schimba câștigătorul (Erbașu era la 0,06 puncte)
+        if (inf.id === 'T4' && rng() < 0.25) { l.stare = 'neatribuit'; stire(st, 'După reevaluare, ' + inf.nume + ' are alt câștigător: contractul se reface de la zero.', 'rau'); }
+        else { l.stare = 'proiectare'; l.semnat = st.sem; stire(st, 'Instanța ridică suspendarea: pe ' + inf.nume + ' proiectarea se reia.', 'bun'); }
+      }
+    }
     l = lot(st, '2C');
     if (l.stare === 'neactivat' && rng() < (sc && sc.pOrdin != null ? sc.pOrdin : 0.4)) { l.stare = 'proiectare'; l.semnat = st.sem; stire(st, 'CNIR emite, în sfârșit, ordinul de începere a proiectării pentru Pipirig – Leghin.', 'bun'); }
 
-    if (st.sem === 0) stire(st, 'Podul peste Prut de la Ungheni e aproape gata. Autostrada care să ajungă la el – încă nu.', 'neutru');
+    if (st.sem === 0) stire(st, 'Podul peste Prut de la Ungheni e la 56%, cu termen în decembrie 2027. Autostrada care să ajungă la el – încă nu.', 'neutru');
     if (st.cefDe === st.sem) {
       if (rng() < (k.securitate != null ? 0.75 : 0.5)) { st.cef += 2.5; stire(st, 'Comisia aprobă cererea CEF – mobilitate militară: 2,5 mld. lei pentru A8 Est.', 'bun'); }
       else stire(st, 'Cererea CEF pentru A8 Est este respinsă: alte coridoare ale Flancului Estic au fost mai mature.', 'rau');
@@ -480,8 +488,8 @@
     buget: {
       generos: { nume: 'Bani din belșug', descriere: '3 mld. lei/semestru din buget, 85% din SAFE pe A8, fonduri UE 2028–2034 consistente de la 2029 (2,5 mld. lei/semestru), cerere CEF.',
         national: 3, safeA8: 0.85, mffDe: 2029, mffSem: 2.5, soc: 0, carti: ['bei', 'cef', 'plata30'] },
-      program: { nume: 'Ca în program', descriere: '1,5 mld. lei/semestru din buget, 70% din SAFE pe A8, fonduri UE 2028–2034 de la 2030 (1,5 mld. lei/semestru), plata în 30 de zile.',
-        national: 1.5, safeA8: 0.7, mffDe: 2030, mffSem: 1.5, soc: 0, carti: ['plata30'] },
+      program: { nume: 'Ca în program', descriere: '1,5 mld. lei/semestru din buget, 67% din SAFE pe A8 (restul pe A7), fonduri UE 2028–2034 de la 2030 (1,5 mld. lei/semestru), plata în 30 de zile.',
+        national: 1.5, safeA8: 0.67, mffDe: 2030, mffSem: 1.5, soc: 0, carti: ['plata30'] },
       mva: { nume: 'Necesarul MVA', descriere: 'Moldova Vrea Autostradă: ≈800–900 mil. euro pe an pentru A8 (≈2,2 mld. lei pe semestru din toate sursele), resurse bugetare multianuale pentru Ungheni – Iași – Târgu Neamț și A8 prioritară în CFM 2028–2034.',
         national: 2.5, safeA8: 0.75, mffDe: 2029, mffSem: 2.5, soc: 0, carti: ['plata30', 'cfm'] },
       austeritate: { nume: 'Austeritate', descriere: '1 mld. lei/semestru, Pașcani – Siret ia mai mult din SAFE (60% A8), fonduri UE noi abia din 2031, derapaje de deficit și plafonări.',
@@ -515,7 +523,7 @@
       url: 'https://www.adrse.ro/Documente/Planificare/PDR/2014/Programe/MasterPlan_Transport_Sinteza.pdf' },
     { de: 2031, la: 2031, scurt: 'Legea A8 și programul: 2030', cine: 'Legea 291/2018 (OUG 105/2020, aprobată în sept. 2021) și Programul de guvernare 2026–2028', text: 'Legea: Ungheni – Iași – Târgu Neamț până la 31.12.2026, Târgu Mureș – Târgu Neamț până la 31.12.2030. Programul: coridoarele principale TEN-T „se închid până în 2030”.',
       url: 'https://economedia.ro/parlamentarii-obliga-statul-sa-termine-autostrada-unirii-pana-in-2030-cu-patru-ani-intarziere-fata-de-termenul-initial-drula-cel-mai-greu-proiect-de-infrastructura-al-romaniei.html' },
-    { de: 2031, la: 2034, scurt: 'MVA: 2031–2033', cine: 'Adrian Covăsnianu, Moldova Vrea Autostradă', text: 'Estimări fundamentate pe fișele de proiect, autorizațiile de construire și analize cartografice pe fiecare lot. Aug. 2025: implementare integrală în 2032–2033. Ian. 2026: 2031–2032, dacă 2026 devine an de accelerare (proiectare riguroasă, resurse, studii geotehnice, antreprenori proactivi, beneficiar atent, societate civilă vigilentă). Aug. 2026: „anul contractelor” trebuie urmat de „anul șantierelor”.',
+    { de: 2031, la: 2034, scurt: 'MVA: 2031–2033', cine: 'Adrian Covăsnianu, Moldova Vrea Autostradă', text: 'Estimări fundamentate pe fișele de proiect, autorizațiile de construire și analize cartografice pe fiecare lot. Aug. 2025: implementare integrală în 2032–2033. Ian. 2026: 2031–2032, dacă 2026 devine an de accelerare (proiectare riguroasă, resurse, studii geotehnice, antreprenori proactivi, beneficiar atent, societate civilă vigilentă). Aug. 2026: „anul contractelor” trebuie urmat de „anul șantierelor”. Nov. 2026: cu ≈70% din sectorul ieșean în reevaluări sau litigii, în scenariile prudente T2–T4 trec în 2031; testul propus e vara lui 2027.',
       url: 'https://economedia.ro/expert-in-infrastructura-autostrada-a8-nu-poate-fi-gata-integral-pana-in-2030-in-actualul-stadiu-tehnic-si-administrativ-care-este-termenul-realist.html' },
     { de: 2033.8, la: 2034.8, scurt: 'Pro Infrastructură: 7–8 ani', cine: 'Asociația Pro Infrastructură (oct. 2026)', text: 'Nu dă un termen fix și nu vede A8 gata în următorii 7–8 ani; pe Moldova lipsesc peste 1 mld. euro (≈5,5 mld. euro de lucrări, 4,2 mld. din SAFE).',
       url: 'https://business24.ro/infrastructura-rutiera/deficit-cincisprezece-miliarde-euro-proiecte-drumuri-1671231' }
