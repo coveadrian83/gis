@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Metodologie – Rețeaua urbană (Legea 351/2001)</title>
+  <meta name="author" content="dr. geogr. Adrian Covăsnianu">
+  <meta name="description" content="Metodologia hărții rețelei urbane a României: indicatorii minimali ai Legii 351/2001 (anexa II), sursele de date pe UAT, estimările și regula de calificare.">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <style>
+    :root { --ink: #15171a; --paper: #f7f4ec; --teal: #1f7a99; --line: #ddd8cc; --muted: #555; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+    main { max-width: 900px; margin: 0 auto; padding: 24px 16px 48px; }
+    h1 { font-size: 30px; line-height: 1.1; margin: 0 0 4px; } h1 span { color: var(--teal); }
+    h2 { font-size: 20px; margin: 28px 0 8px; border-top: 1px solid var(--line); padding-top: 16px; }
+    h3 { font-size: 16px; margin: 18px 0 6px; }
+    table { border-collapse: collapse; width: 100%; font-size: 14px; margin: 8px 0; }
+    th, td { border-bottom: 1px solid var(--line); padding: 5px 6px; text-align: left; vertical-align: top; }
+    td.n { text-align: right; white-space: nowrap; }
+    .tw { overflow-x: auto; }
+    code { font-size: 13px; background: #ece7da; padding: 0 3px; border-radius: 3px; }
+    .formula { background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: 8px 12px; margin: 8px 0; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; overflow-x: auto; }
+    .note { color: var(--muted); font-size: 13px; }
+    .warn { background: #fff7e6; border-left: 3px solid #e8a13a; padding: 8px 12px; margin: 10px 0; }
+    .tag { display: inline-block; font-size: 11px; padding: 0 6px; border-radius: 8px; background: #ece7da; }
+    .tag.est { background: #fde7c4; } .tag.na { background: #eee; color: #777; }
+    a { color: var(--teal); }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Rețeaua urbană<br><span>Metodologie</span></h1>
+  <p class="note">Prelucrarea și integrarea datelor: dr. geogr. Adrian Covăsnianu · <a href="./">înapoi la hartă</a></p>
+
+  <h2>1. Cadrul legal</h2>
+  <p><b>Legea nr. 351/2001</b> privind aprobarea Planului de amenajare a teritoriului național – Secțiunea a IV-a <i>Rețeaua de localități</i> ierarhizează localitățile pe ranguri (anexa I) și stabilește, în <b>anexa II</b>, <i>indicatorii cantitativi și calitativi minimali de definire a localităților urbane</i>, cu praguri diferite pentru <b>municipiu</b> și <b>oraș</b>. Legea a fost modificată și completată, între altele, prin <b>Legea nr. 100/2007</b>; indicatorii 1–5 sunt marcați în anexă cu asterisc (<i>indicatori de bază</i>). Textul consolidat: <a href="https://legislatie.just.ro/Public/DetaliiDocumentAfis/29780" target="_blank" rel="noopener">legislatie.just.ro</a>.</p>
+  <h3>Rangurile localităților (anexa I)</h3>
+  <table>
+    <tr><th>Rang</th><th>Localități</th><th>Pe hartă</th></tr>
+    <tr><td>0</td><td>Capitala României, municipiu de importanță europeană</td><td>București</td></tr>
+    <tr><td>I</td><td>Municipii de importanță națională, cu influență potențială la nivel european</td><td>Bacău, Brașov, Brăila, Cluj-Napoca, Constanța, Craiova, Galați, Iași, Oradea, Ploiești, Timișoara</td></tr>
+    <tr><td>II</td><td>Municipii de importanță interjudețeană, județeană sau cu rol de echilibru în rețeaua de localități</td><td>celelalte municipii (reședințele de județ – simbol mai mare)</td></tr>
+    <tr><td>III</td><td>Orașe</td><td>orașele</td></tr>
+    <tr><td>IV</td><td>Sate reședință de comună</td><td>reședințele de comună (primul sat din codificarea SIRUTA a comunei)</td></tr>
+    <tr><td>V</td><td>Sate componente ale comunelor și sate aparținătoare municipiilor și orașelor</td><td>în fișa fiecărui UAT, cu populația RPL 2021</td></tr>
+  </table>
+  <p class="note">Rangurile I–II sunt atribuite după statutul actual (municipiu) și lista celor 11 municipii de rang I din lege; municipiile declarate după 2001 sunt trecute la rangul II.</p>
+
+  <h2>2. Unitatea de analiză</h2>
+  <p>Analiza se face pe <b>unitate administrativ-teritorială</b> (UAT, cod SIRUTA): 103 municipii (inclusiv București), 217 orașe (cu Băneasa) și 2.861 de comune – 3.181 de UAT-uri. Statisticile INS pe „localități” sunt, de fapt, pe UAT: populația unui oraș include și satele care aparțin de el. Fișa fiecărui UAT arată separat populația localității de reședință, pentru comparație.</p>
+  <p><b>Statutul</b> e cel din SIRUTA / RPL 2021, cu o corecție: Băneasa (Constanța) e trecută drept comună în ANCPI și în RPL 2021, dar a fost declarată oraș prin Legea 83/2004; harta o tratează ca oraș. Fiind în afara listei INS a orașelor, nu are date la indicatorii 11–13 și 16.</p>
+  <p>Limitele UAT: Eurostat GISCO, <i>Local Administrative Units</i> 2024, scara 1:1 milion (simplificate pentru web); codul LAU al României este codul SIRUTA. Populația și satele componente: RPL 2021, tabelul 1.22.</p>
+
+  <h2>3. Indicatorii și sursele</h2>
+  <p>Pentru fiecare indicator se folosește cel mai recent an disponibil în TEMPO-Online (pe UAT): 2025 pentru străzi, rețele, spații verzi, paturi, învățământ, cazare și biblioteci, 2024 pentru medici, 1 ianuarie 2026 pentru populația după domiciliu. Un UAT care lipsește dintr-o matrice INS pe localități (care listează doar localitățile cu unități sau rețea) are valoarea 0. Indicatorii pe care INS nu îi publică pe UAT sunt <span class="tag est">estimați</span> sau rămân <span class="tag na">fără date</span> și nu intră în evaluare.</p>
+  <div class="tw"><table id="indTable"><tr><td class="note">Se încarcă…</td></tr></table></div>
+
+  <h3>Detalii</h3>
+  <ul>
+    <li><b>1. Locuitori</b> – implicit populația <b>rezidentă</b> la RPL 2021 (cea folosită de lege și de statistica europeană); se poate alege populația <b>după domiciliu</b> la 1 ianuarie (TEMPO POP107D), care e mai mare acolo unde emigrația e importantă.</li>
+    <li><b>2. Populația ocupată în activități neagricole</b> – RPL 2021, tabelul 5.30: 100 × (1 − ocupați în agricultură, silvicultură și pescuit / total ocupați), pe locul de reședință al persoanelor (nu pe locul de muncă).</li>
+    <li><b>6. Paturi în spitale</b> – paturile pentru internare continuă din spitale (inclusiv centrele de sănătate cu paturi de spital), toate formele de proprietate, la 1.000 de locuitori rezidenți (RPL 2021). Fără datele TEMPO, UAT-urile în care registrul ANMCS al unităților sanitare (prin „Unde locuiesc românii?”) nu are nicio unitate primesc 0 paturi – indicator sigur neîndeplinit; pentru celelalte, numărul paturilor rămâne necunoscut. Fișa UAT-ului arată numărul unităților ANMCS (spitale, dar și clinici, centre de dializă etc.).</li>
+    <li><b>7. Medici</b> – medicii din toate formele de proprietate (inclusiv medicii de familie), la 1.000 de locuitori rezidenți.</li>
+    <li><b>8. Învățământ</b> – oraș: cel puțin o unitate de nivel liceal sau profesional (învățământ secundar superior); municipiu: cel puțin o unitate de nivel postliceal (sau universitar). Se reunesc două surse: unitățile pe niveluri din TEMPO (SCL101C) și Rețeaua școlară 2025–2026 a Ministerului Educației (licee, colegii, seminarii și școli postliceale, după denumire).</li>
+    <li><b>9. Dotări culturale și sportive</b> – oraș: bibliotecă publică și bază sportivă (sală de gimnastică sau teren de sport, din statistica școlară); municipiu: în plus, cel puțin o instituție de spectacole sau concerte. Seria INS a instituțiilor de spectacole pe localități se oprește în 2017 (ultimul an folosit). Sălile de spectacol ale caselor de cultură, stadioanele și sălile de sport ne-școlare nu apar în statistica pe localități, deci indicatorul e o aproximare.</li>
+    <li><b>10. Locuri în hoteluri</b> – locurile din hoteluri, hoteluri-apartament și moteluri clasificate, din registrul SITUR al Ministerului Turismului (octombrie 2026), localizate după coordonate; pensiunile, vilele și apartamentele nu intră. Fișa arată și totalul locurilor în toate structurile clasificate.</li>
+    <li><b>11. Străzi modernizate</b> – lungimea străzilor orășenești modernizate / lungimea totală a străzilor orășenești (doar municipii și orașe; INS nu publică lungimea străzilor pentru comune).</li>
+    <li><b>12–13. Străzi cu rețea de apă / canalizare</b> – legea cere procentul din lungimea străzilor care au rețea; INS publică doar lungimea rețelei, deci se folosește raportul <i>lungimea rețelei / lungimea străzilor</i>, plafonat la 100%. Este o <b>aproximare</b>: pe unele străzi există mai multe conducte, iar o parte din rețea poate fi în afara străzilor orășenești.</li>
+    <li><b>16. Spații verzi</b> – suprafața spațiilor verzi (parcuri, grădini publice, scuaruri) raportată la populația rezidentă (doar municipii și orașe).</li>
+    <li><b>14, 15, 17</b> – stația de epurare cu treaptă biologică, hidranții exteriori și depozitul controlat de deșeuri nu au date publice pe UAT (seria INS a stațiilor de epurare pe localități se oprește în 2004). Rămân în tabel, marcați „fără date”, și pot fi completați din PUG-uri, de la operatorii regionali sau din raportările Directivei 91/271/CEE.</li>
+  </ul>
+
+  <h2>4. Dotarea locuințelor (indicatorii 3–5)</h2>
+  <p>RPL 2021 publică dotarea locuințelor (apă curentă, baie și WC, încălzire centrală) doar pe județe și medii de rezidență, nu pe UAT. Valorile pe UAT vin din <b>RPL 2011</b> (ultimul recensământ cu dotarea publicată pe UAT) și sunt aduse la 2021 cu evoluția județului: fiecărui UAT i se aplică schimbarea județului său între 2011 și 2021, pe scară logit, ca valoarea să rămână între 0 și 100%.</p>
+  <div class="formula">logit(p<sub>UAT, 2021</sub>) = logit(p<sub>UAT, 2011</sub>) + [logit(p<sub>județ, 2021</sub>) − logit(p<sub>județ, 2011</sub>)]</div>
+  <p>Pe țară, locuințele cu apă în locuință cresc de la 67% la 87%, cele cu canalizare de la 65% la 89%, iar cele cu încălzire centrală de la 44% la 60%. Pentru baie, care nu are serie județeană în 2021, se folosește schimbarea la canalizare. Fișa fiecărui UAT arată și valorile observate în 2011, precum și procentul de locuințe cu canalizare (varianta indicatorului 4 din fișele-model ale anexelor VI–VII).</p>
+  <p class="warn">Estimarea presupune că toate UAT-urile unui județ au evoluat în același ritm: subestimează suburbiile cu creștere rapidă și supraestimează comunele izolate. Pe hartă, estimările se pot exclude („Folosește estimările” debifat), caz în care indicatorii 3–5 nu intră în evaluare. Datele pe UAT din RPL 2011, liceele, hotelurile SITUR și zonele din anexa II pct. 6 provin din harta de lucru „Orașe după Legea 351” a autorului (preluate cu <code>scripts/urban_harta_import.py</code>); fără ele, scriptul folosește o estimare de rezervă, repartizând totalurile județene RPL 2021 după consumurile casnice de apă și gaze (TEMPO GOS108A, GOS118A, GOS109A).</p>
+
+  <h2>5. Regula de calificare</h2>
+  <p>Fiecare UAT este comparat atât cu pragurile pentru oraș, cât și cu cele pentru municipiu. Pentru o categorie, un indicator este <i>îndeplinit</i> dacă atinge pragul (pentru indicatorii da/nu – dacă dotarea există). Un UAT <b>îndeplinește criteriile</b> categoriei dacă:</p>
+  <ul>
+    <li>atinge pragul de populație (indicatorul 1 – întotdeauna obligatoriu);</li>
+    <li>îndeplinește toți indicatorii de bază (1–5) care au date – opțiune activă implicit;</li>
+    <li>are cel mult <i>N</i> indicatori neîndepliniți dintre cei cu date (implicit <i>N</i> = 0, litera legii; pe hartă se poate alege 1–3).</li>
+  </ul>
+  <p>Indicatorii fără date nu se iau în calcul nici ca îndepliniți, nici ca neîndepliniți. Pentru comparație se calculează și un <b>scor</b>, ca în Covăsnianu &amp; Covăsnianu (2014): media gradului de atingere a pragurilor, fiecare plafonat la 100%:</p>
+  <div class="formula">scor = Σ min(valoare<sub>i</sub> / prag<sub>i</sub>, 1) / n<sub>indicatori cu date</sub> × 100</div>
+  <h3>Categoriile hărții</h3>
+  <table>
+    <tr><th>Statut actual</th><th>Categorie</th><th>Condiție</th></tr>
+    <tr><td rowspan="3">Municipiu</td><td>îndeplinește criteriile de municipiu</td><td>regula de mai sus, cu pragurile de municipiu</td></tr>
+    <tr><td>doar criteriile de oraș</td><td>nu le îndeplinește pe cele de municipiu, dar le îndeplinește pe cele de oraș</td></tr>
+    <tr><td>sub criteriile de oraș</td><td>nu îndeplinește nici criteriile de oraș</td></tr>
+    <tr><td rowspan="3">Oraș</td><td>ar îndeplini și criteriile de municipiu</td><td>candidat la statutul de municipiu</td></tr>
+    <tr><td>îndeplinește criteriile de oraș</td><td></td></tr>
+    <tr><td>nu îndeplinește criteriile de oraș</td><td></td></tr>
+    <tr><td rowspan="3">Comună</td><td>ar îndeplini criteriile de oraș</td><td>candidat la statutul de oraș</td></tr>
+    <tr><td>aproape de criteriile de oraș</td><td>cel puțin 80% din pragul de populație (8.000 de locuitori) și cel mult două neîndepliniri peste toleranța aleasă</td></tr>
+    <tr><td>comună</td><td>celelalte</td></tr>
+  </table>
+  <p class="note">Pentru comune, indicatorii 11–13 și 16 nu au date (INS nu publică lungimea străzilor și spațiile verzi pentru mediul rural), deci evaluarea se face pe indicatorii 1–10. Declararea unui oraș cere, în plus, referendum local și o lege; harta arată doar îndeplinirea indicatorilor.</p>
+  <p id="stats" class="note"></p>
+
+  <h2>6. Zonele fără oraș</h2>
+  <p>Anexa II a Legii 351/2001 delimitează „zonele lipsite de orașe pe o rază de circa 25–30 km, care necesită acțiuni prioritare pentru dezvoltarea de localități cu rol de servire intercomunală” (17 areale, între circa 900 și 4.200 km² și între 31.500 și 215.000 de locuitori, după SDTR). <b>Strategia de Dezvoltare Teritorială a României</b> (anexa 1, 2016) constată că prevederea „nu a fost urmată decât parțial” (#155): între 1990 și 2010 au fost declarate 60 de orașe noi, cele mai multe fără dotările și serviciile pe care trebuie să le îndeplinească un oraș (#96), în timp ce zone întinse au rămas fără centru urban, cu rolul de loc central preluat de comune (Bozovici, Lechința, Podu Turcului – #135). Tot SDTR arată (#137) că lipsește „un sistem de indicatori verificabili” care să cuantifice îndeplinirea criteriilor – ceea ce harta încearcă să ofere.</p>
+  <p>Harta arată, implicit, <b>zonele din lege</b>: cele 17 zone, cu 452 de comune. Dintre ele, 14 au devenit între timp orașe: Băneasa, Căzănești, Bechet, Dăbuleni, Băbeni, Bălcești, Berbești, Șomcuta Mare, Ulmeni, Sărmașu, Flămânzi, Ștefănești (BT), Murgeni și Pătârlagele. Lista din lege trece Ungheni în zona 4, la Argeș, dar trimiterea de acolo (Legea 45/2004) privește orașul Ungheni din Mureș; comuna Ungheni din Argeș a rămas comună.</p>
+  <p>Varianta „calculat azi” măsoară distanța în linie dreaptă, de la centrul fiecărui UAT la centrul celui mai apropiat municipiu sau oraș (centrul geometric al poligonului UAT, nu centrul localității; pentru UAT-uri foarte alungite poate diferi cu câțiva kilometri). Pragul implicit este 25 km (se poate alege 20 sau 30). Comunele din aceste zone care îndeplinesc sau se apropie de criteriile de oraș sunt candidatele naturale la rolul de centru de servire intercomunală.</p>
+
+  <h2>7. Surse</h2>
+  <ul>
+    <li>Legea nr. 351/2001 privind aprobarea PATN – Secțiunea a IV-a Rețeaua de localități, cu modificările ulterioare (Legea nr. 100/2007 ș.a.).</li>
+    <li>INS – Recensământul populației și locuințelor 2021, rezultate definitive (<a href="https://www.recensamantromania.ro/rezultate-rpl-2021/" target="_blank" rel="noopener">recensamantromania.ro</a>): tabelele 1.22, 5.30, 7.12, 8.9, 8.13, 8.22.</li>
+    <li>INS – TEMPO-Online (<a href="http://statistici.insse.ro:8077/tempo-online/" target="_blank" rel="noopener">statistici.insse.ro</a>), matricele pe localități: POP107D, GOS103A–GOS110A, GOS108A, GOS109A, GOS118A, SAN102C, SAN104B, SCL101C, SCL107C, SCL110B, TUR102C, ART101B, ART103B.</li>
+    <li>Ministerul Dezvoltării Regionale și Administrației Publice (2016), <i>Strategia de Dezvoltare Teritorială a României – România policentrică 2035</i>, anexa 1.</li>
+    <li>geo-spatial.org, <i>Unde locuiesc românii?</i> (<a href="https://github.com/geospatialorg/unde-locuiesc-romanii" target="_blank" rel="noopener">github.com/geospatialorg/unde-locuiesc-romanii</a>): grila RPL 2021 de 1 km cu intravilanul ANCPI/CNGCFT și accesul la gaze pe localitate, registrul ANMCS al unităților sanitare.</li>
+    <li>MDLPA, platforma <a href="https://datelocale.mdlpa.ro/ro/planning/registru-pug/" target="_blank" rel="noopener">Date Locale</a> – registrul documentațiilor de urbanism (PUG).</li>
+    <li>Ministerul Educației – Rețeaua școlară 2025–2026; Ministerul Turismului – SITUR, structuri de primire turistică clasificate (oct. 2026); INS – RPL 2011, dotarea locuințelor pe UAT (prin harta „Orașe după Legea 351”).</li>
+    <li>Eurostat GISCO – Local Administrative Units 2024 (© EuroGeographics pentru limitele administrative).</li>
+    <li>Covăsnianu A., Covăsnianu L.-E. (2014), <i>An Urban Perspective upon Moldavian Settlements. From Political Desideratum to Territorial Reality</i>, Romanian Review of Regional Studies, X(2), 39–46.</li>
+  </ul>
+  <p class="note">Reproducere: <code>scripts/urban_tempo.py</code> (descărcarea din TEMPO, în GitHub Actions – „Date urbane (Legea 351/2001)”) și <code>scripts/urban_351.py</code> (indicatorii, estimările și fișierele hărții); pragurile legii sunt în <code>config/urban_351.json</code>.</p>
+</main>
+<script src="metodologie.js"></script>
+</body>
+</html>
