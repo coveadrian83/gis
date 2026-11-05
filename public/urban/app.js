@@ -130,7 +130,8 @@
     return '#ccc';
   }
   function keyOf(u) { return view === 'eval' ? u.ev.st : view === 'retea' ? u.t : view === 'pug' ? pugKey(u) : indClass(u); }
-  function isGap(u) { return $('gapShow').checked && u.t === 'C' && u.du >= +$('gapKm').value; }
+  function inZone(u) { return $('gapMode').value === 'lege' ? !!u.z : u.t === 'C' && u.du >= +$('gapKm').value; }
+  function isGap(u) { return $('gapShow').checked && inZone(u); }
   function inSel(u) {
     var j = $('judSel').value, t = $('tipSel').value;
     return (!j || u.j === j) && (!t || u.t === t);
@@ -223,9 +224,12 @@
     ];
     $('summary').innerHTML = cards.map(function (k) { return '<div><b>' + k[0] + '</b><small>' + esc(k[1]) + '</small></div>'; }).join('');
     var r = rule();
-    var km = +$('gapKm').value, gaps = sel.filter(function (u) { return u.t === 'C' && u.du >= km; });
+    var km = +$('gapKm').value, lege = $('gapMode').value === 'lege', gaps = sel.filter(inZone);
+    $('gapKmLbl').hidden = lege;
     var gc = gaps.filter(function (u) { return u.ev.st === 'C_oras' || u.ev.st === 'C_aproape'; });
-    $('gapNote').innerHTML = '<b>' + fmt(gaps.length) + '</b> comune (' + fmt(gaps.reduce(function (a, u) { return a + u.p21; }, 0)) + ' locuitori) sunt la cel puțin ' + km + ' km de un municipiu sau oraș; dintre ele, ' + fmt(gc.length) + ' ar îndeplini sau se apropie de criteriile de oraș' +
+    var gu = gaps.filter(function (u) { return u.t !== 'C'; }).length;
+    $('gapNote').innerHTML = (lege ? '<b>' + fmt(gaps.length) + '</b> UAT-uri (' + fmt(gaps.reduce(function (a, u) { return a + u.p21; }, 0)) + ' locuitori) sunt în cele 17 zone fără orașe din 2001; ' + fmt(gu) + ' au devenit între timp orașe. Dintre comunele rămase, '
+      : '<b>' + fmt(gaps.length) + '</b> comune (' + fmt(gaps.reduce(function (a, u) { return a + u.p21; }, 0)) + ' locuitori) sunt la cel puțin ' + km + ' km de un municipiu sau oraș; dintre ele, ') + fmt(gc.length) + ' ar îndeplini sau se apropie de criteriile de oraș' +
       (gc.length ? ': ' + gc.sort(function (a, b) { return b.p21 - a.p21; }).slice(0, 12).map(function (u) { return esc(u.n) + ' (' + esc(u.j) + ')'; }).join(', ') + (gc.length > 12 ? '…' : '') : '') + '.';
     $('ruleNote').textContent = 'Un UAT „îndeplinește” criteriile unei categorii dacă atinge pragul de populație' +
       (r.baseReq ? ', toți indicatorii de bază evaluabili (1–5)' : '') +
@@ -272,7 +276,8 @@
       '<br>SIRUTA ' + u.s + (u.km2 ? ' · ' + fmt(u.km2, 1) + ' km²' : '') +
       (u.loc ? ' · ' + (u.t === 'C' ? 'reședința: ' : 'localitatea de reședință: ') + esc(u.loc) + ' (' + fmt(u.lp) + ' loc.)' : '') +
       (u.ns ? ' · ' + u.ns + ' localități componente' : '') + (u.sp !== undefined ? ' · ' + u.sp + ' unități sanitare în registrul ANMCS' : '') +
-      (u.nu ? '<br>Cel mai apropiat municipiu / oraș: ' + esc(u.nu) + ', ' + fmt(u.du, 0) + ' km în linie dreaptă' + (u.t === 'C' && u.du >= 25 ? ' – <b>zonă fără oraș pe 25 km</b>' : '') : '') + '</div>';
+      (u.nu ? '<br>Cel mai apropiat municipiu / oraș: ' + esc(u.nu) + ', ' + fmt(u.du, 0) + ' km în linie dreaptă' + (u.t === 'C' && u.du >= 25 ? ' – <b>zonă fără oraș pe 25 km</b>' : '') : '') +
+      (u.z ? '<br><b>Zona ' + u.z + ' fără orașe</b> din anexa II pct. 6 a Legii 351/2001' + (u.t !== 'C' ? ' – devenit oraș între timp' : '') : '') + '</div>';
     h += verdict(u);
     if (u.pug) {
       var p = u.pug, yr = function (d) { return d ? d.slice(0, 4) : ''; };
@@ -290,6 +295,8 @@
         '<td title="' + esc(prag(ind, 'oras')) + '">' + mark(co) + ' <span class="src">' + esc(prag(ind, 'oras', true)) + '</span></td><td title="' + esc(prag(ind, 'municipiu')) + '">' + mark(cm) + ' <span class="src">' + esc(prag(ind, 'municipiu', true)) + '</span></td></tr>';
     });
     h += '</tbody></table>';
+    if (u.d11) h += '<div class="src">Dotarea locuințelor la RPL 2011 (valori observate pe UAT): apă ' + fmt(u.d11[0], 1) + '%, baie ' + fmt(u.d11[1], 1) + '%, încălzire centrală ' + fmt(u.d11[2], 1) + '%, canalizare ' + fmt(u.d11[3], 1) + '% (estimare 2021: ' + fmt(u.d11[4], 1) + '% – varianta din fișele-model ale anexelor VI–VII).</div>';
+    if (u.li) h += '<div class="src">Rețeaua școlară 2025–2026: ' + u.li[0] + ' licee / colegii, ' + u.li[1] + ' școli postliceale' + (u.ht ? ' · SITUR: ' + fmt(u.ht) + ' locuri în toate structurile de cazare clasificate' : '') + '.</div>';
     h += '<div class="src">Populația: ' + fmt(u.p21) + ' locuitori rezidenți (RPL 2021)' + (u.pd ? ', ' + fmt(u.pd) + ' după domiciliu (1 ian. ' + D.an_domiciliu + ')' : '') +
       '. Indicatorii marcați „est.” sunt estimați (vezi metodologia); treceți cu mouse-ul peste un rând pentru sursă și an.</div>';
     if (u.sate && u.sate.length) {
@@ -306,7 +313,7 @@
     return LIST.filter(function (u) {
       if (!inSel(u) || hidden[view + ':' + keyOf(u)]) return false;
       if (mode === 'urban') return u.t !== 'C';
-      if (mode === 'gap') return u.t === 'C' && u.du >= +$('gapKm').value;
+      if (mode === 'gap') return inZone(u);
       if (mode === 'cand') return u.ev.st === 'C_oras' || u.ev.st === 'C_aproape' || u.ev.st === 'O_mun';
       return true;
     });
@@ -370,7 +377,7 @@
   // ---------------------------------------------------------------- controale
   function reclassify() { var r = rule(); LIST.forEach(function (u) { classify(u, r); }); restyle(); }
   ['tol', 'baseReq', 'useEst', 'popSrc'].forEach(function (id) { $(id).addEventListener('change', reclassify); });
-  ['judSel', 'tipSel', 'tableMode', 'indSel', 'indPrag', 'gapShow', 'gapKm'].forEach(function (id) { $(id).addEventListener('change', function () {
+  ['judSel', 'tipSel', 'tableMode', 'indSel', 'indPrag', 'gapShow', 'gapKm', 'gapMode'].forEach(function (id) { $(id).addEventListener('change', function () {
     if (id === 'judSel') zoomJud();
     restyle();
   }); });

@@ -76,3 +76,8 @@ label.inline { font-size: 13px; margin: 4px 0; }
 .leaflet-popup-content { width: 400px !important; max-width: 78vw; }
 .pop table { table-layout: auto; width: 100%; }
 .pop td:first-child { max-width: 170px; }
+[hidden] { display: none !important; }
+#gapBox select { max-width: 100%; }
+#gapBox label.inline { flex-wrap: wrap; }
+.leaflet-popup-content { width: 460px !important; }
+.pop td:not(:first-child) { white-space: nowrap; font-size: 11.5px; }

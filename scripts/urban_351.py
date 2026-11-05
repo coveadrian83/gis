@@ -331,8 +331,37 @@ def ulr_uat():
     return out
 
 
+HP = {}
+
+
+def harta_proprie():
+    """data/urban/harta_proprie.csv (scripts/urban_harta_import.py): dotarea locuințelor RPL 2011 / estimare 2021 pe UAT,
+    liceele, hotelurile SITUR, zonele fără orașe din anexa II pct. 6, statutul corectat."""
+    p = os.path.join(ROOT, 'data', 'urban', 'harta_proprie.csv')
+    if not os.path.exists(p):
+        return {}
+    out = {}
+    for r in csv.DictReader(open(p, encoding='utf-8')):
+        d = {}
+        for k, v in r.items():
+            if k in ('n', 't'):
+                d[k] = v
+            elif v != '':
+                d[k] = float(v) if '.' in v else int(v)
+            else:
+                d[k] = None
+        out[int(r['s'])] = d
+    return out
+
+
 def calculeaza():
     uat, ordine = citeste_rpl()
+    HP.update(harta_proprie())
+    for sir, hp in HP.items():
+        # corecții de statut (ex. Băneasa, Constanța: oraș prin Legea 83/2004, comună în ANCPI și RPL 2021)
+        if sir in uat and hp.get('t') and hp['t'] != uat[sir]['tip']:
+            print('statut corectat:', uat[sir]['nume'], uat[sir]['tip'], '→', hp['t'])
+            uat[sir]['tip'] = hp['t']
     locuinte_uat(uat)
     centre(uat)
     J, H, ratio = calibrare()
@@ -411,9 +440,17 @@ def calculeaza():
         if u.get('ocupati'):
             v['i2'] = round(100 * (1 - u['ocupati_agricol'] / u['ocupati']), 1)
         # 3–5. dotarea locuințelor – estimări calibrate pe totalurile RPL 2021 ale județului
-        for k in ('i3', 'i4', 'i5'):
-            if est.get(s, {}).get(k) is not None:
-                v[k] = round(est[s][k], 1); x[k] = 1
+        hp = HP.get(s)
+        if hp and hp.get('a2') is not None:
+            # dotarea pe UAT din RPL 2011, actualizată cu evoluția județului 2011–2021 (harta proprie)
+            for k, c in (('i3', 'a2'), ('i4', 'b2'), ('i5', 'h2')):
+                if hp.get(c) is not None:
+                    v[k] = hp[c]; x[k] = 1
+            u['_d11'] = [hp.get(c) for c in ('a', 'b', 'h', 'cn')] + [hp.get('cn2')]
+        else:
+            for k in ('i3', 'i4', 'i5'):
+                if est.get(s, {}).get(k) is not None:
+                    v[k] = round(est[s][k], 1); x[k] = 1
         # 6. paturi în spitale (internare continuă) ‰
         b = suma(T['SAN102C'], s, AN['SAN102C'], lambda c: 'spitale' in c and 'continua' in c)
         if b is not None:
@@ -431,6 +468,10 @@ def calculeaza():
         if T['SCL101C']:
             post = suma(T['SCL101C'], s, AN['SCL101C'], lambda c: c.startswith('postliceal') or c.startswith('universitar'))
             lic = suma(T['SCL101C'], s, AN['SCL101C'], lambda c: c.startswith('liceal') or c.startswith('profesional'))
+            if hp:
+                # Rețeaua școlară 2025–2026 (harta proprie): licee și școli postliceale după denumire
+                post = (post or 0) + (hp.get('pl') or 0)
+                lic = (lic or 0) + (hp.get('li') or 0)
             v['i8'] = 2 if post else 1 if lic else 0; an['i8'] = AN['SCL101C']
         # 9. dotări culturale și sportive: 2 = bibliotecă publică + instituție de spectacole + bază sportivă,
         #    1 = bibliotecă publică + bază sportivă, 0 = altfel
@@ -441,9 +482,13 @@ def calculeaza():
             v['i9'] = 2 if lib and spec and sport else 1 if lib and sport else 0; an['i9'] = AN['ART101B']
             u['_cult'] = [int(lib or 0), int(spec or 0), int(sport or 0)]
         # 10. locuri în hoteluri
-        h = suma(T['TUR102C'], s, AN['TUR102C'], lambda c: c.startswith('hoteluri') and 'tineret' not in c and 'apartament' not in c)
-        if h is not None:
-            v['i10'] = int(h); an['i10'] = AN['TUR102C']
+        if hp and hp.get('ho') is not None:
+            # SITUR, structuri clasificate: hoteluri, hoteluri-apartament și moteluri (harta proprie)
+            v['i10'] = int(hp['ho']); an['i10'] = 'SITUR'
+        else:
+            h = suma(T['TUR102C'], s, AN['TUR102C'], lambda c: c.startswith('hoteluri') and 'tineret' not in c and 'apartament' not in c)
+            if h is not None:
+                v['i10'] = int(h); an['i10'] = AN['TUR102C']
         # 11–13. străzi (doar municipii și orașe: INS publică lungimea străzilor numai pentru urban)
         L = suma(T['GOS104A'], s, AN['GOS104A']) if u['tip'] in 'MO' else None
         if L:
@@ -457,7 +502,7 @@ def calculeaza():
             if ca is not None:
                 v['i13'] = round(min(100, 100 * ca / L), 1); an['i13'] = AN['GOS110A']; x['i13'] = 1
         # 16. spații verzi m²/locuitor (doar municipii și orașe)
-        if u['tip'] in 'MO' and T['GOS103A']:
+        if u['tip'] in 'MO' and T['GOS103A'] and s in T['GOS103A']:
             g = suma(T['GOS103A'], s, AN['GOS103A'])
             v['i16'] = round(g * 10000 / p, 1); an['i16'] = AN['GOS103A']
         pd = suma(T['POP107D'], s, AN['POP107D']) if T['POP107D'] else None
@@ -478,6 +523,15 @@ def calculeaza():
             rec['pd'] = int(pd)
         if '_spitale' in u:
             rec['sp'] = u['_spitale']
+        if u.get('_d11'):
+            rec['d11'] = u['_d11']
+        hp = HP.get(s)
+        if hp:
+            if hp.get('z'):
+                rec['z'] = hp['z']
+            rec['li'] = [hp.get('li') or 0, hp.get('pl') or 0]
+            if hp.get('ht'):
+                rec['ht'] = hp['ht']
         if rj:
             rec['rj'] = 1
         if x:
@@ -555,14 +609,14 @@ def scrie(out, AN):
     surse = {
         'i1': 'INS, RPL 2021 (populația rezidentă) / TEMPO POP107D (după domiciliu)',
         'i2': 'INS, RPL 2021, tabelul 5.30 (populația ocupată pe activități ale economiei naționale)',
-        'i3': 'Estimare: RPL 2021 (tabelul 8.22, pe județ) repartizat pe UAT după apa distribuită pentru uz casnic (TEMPO GOS108A)',
-        'i4': 'Estimare: indicatorul 3 × raportul „baie și WC în locuință / apă în locuință” din RPL 2021 (tabelul 8.13, pe medii)',
-        'i5': 'Estimare: RPL 2021 (tabelul 8.9, pe județ și mediu) repartizat după energia termică (GOS109A) și gazele casnice (GOS118A) sau, în lipsa lor, după populația din localitățile cu acces la gaze (intravilanul ANCPI, prin geo-spatial.org „Unde locuiesc românii?”)',
+        'i3': 'Estimare 2021: valoarea UAT-ului la RPL 2011 ajustată cu evoluția județului 2011–2021 (scară logit)',
+        'i4': 'Estimare 2021: valoarea UAT-ului la RPL 2011 ajustată cu evoluția județului (la canalizare) 2011–2021',
+        'i5': 'Estimare 2021: valoarea UAT-ului la RPL 2011 ajustată cu evoluția județului 2011–2021 (scară logit)',
         'i6': 'INS TEMPO SAN102C – paturi în spitale, internare continuă; în lipsa lor, 0 pentru UAT-urile fără nicio unitate în registrul ANMCS',
         'i7': 'INS TEMPO SAN104B – medici (toate formele de proprietate)',
-        'i8': 'INS TEMPO SCL101C – unități de învățământ pe niveluri',
+        'i8': 'INS TEMPO SCL101C – unități de învățământ pe niveluri și Rețeaua școlară 2025–2026 (Ministerul Educației)',
         'i9': 'INS TEMPO ART101B (biblioteci publice), ART103B (instituții de spectacole), SCL107C/SCL110B (săli de gimnastică și terenuri de sport școlare)',
-        'i10': 'INS TEMPO TUR102C – capacitatea de cazare existentă în hoteluri',
+        'i10': 'SITUR (Ministerul Turismului), structuri clasificate, oct. 2026: hoteluri, hoteluri-apartament, moteluri',
         'i11': 'INS TEMPO GOS105A / GOS104A – străzi orășenești modernizate / lungimea străzilor',
         'i12': 'Aproximare: lungimea rețelei de apă (GOS106B) / lungimea străzilor (GOS104A), plafonată la 100%',
         'i13': 'Aproximare: lungimea canalizării (GOS110A) / lungimea străzilor (GOS104A), plafonată la 100%',

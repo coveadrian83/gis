@@ -59,9 +59,10 @@
 
   <details id="gapBox" open>
     <summary>Zone fără oraș (PATN / SDTR)</summary>
-    <label class="inline"><input type="checkbox" id="gapShow" checked> Conturează comunele aflate la cel puțin
-      <select id="gapKm"><option>20</option><option selected>25</option><option>30</option></select> km de orice municipiu sau oraș</label>
-    <p class="note">Legea 351/2001 (anexa II) delimitează „zonele lipsite de orașe pe o rază de circa 25–30 km, care necesită acțiuni prioritare pentru dezvoltarea de localități cu rol de servire intercomunală”; Strategia de Dezvoltare Teritorială a României (2016) constată că prevederea „nu a fost urmată decât parțial”. Distanța e calculată în linie dreaptă, între centrele UAT-urilor. Comunele din aceste zone care se apropie de criteriile de oraș sunt primele candidate la rolul de centru de servire intercomunală.</p>
+    <label class="inline"><input type="checkbox" id="gapShow" checked> Conturează
+      <select id="gapMode"><option value="lege">comunele din zonele anexei II pct. 6 (2001)</option><option value="km">comunele aflate la cel puțin…</option></select></label>
+    <label class="inline" id="gapKmLbl" hidden><select id="gapKm"><option>20</option><option selected>25</option><option>30</option></select> km de orice municipiu sau oraș (calculat azi)</label>
+    <p class="note">Legea 351/2001 (anexa II) delimitează „zonele lipsite de orașe pe o rază de circa 25–30 km, care necesită acțiuni prioritare pentru dezvoltarea de localități cu rol de servire intercomunală”; Strategia de Dezvoltare Teritorială a României (2016) constată că prevederea „nu a fost urmată decât parțial”. Legea din 2001 a delimitat 17 zone (452 de comune); 14 dintre ele au devenit între timp orașe. Varianta „calculat azi” măsoară distanța în linie dreaptă, între centrele UAT-urilor, față de rețeaua urbană actuală. Comunele din aceste zone care se apropie de criteriile de oraș sunt primele candidate la rolul de centru de servire intercomunală.</p>
     <p class="note" id="gapNote"></p>
   </details>
 
