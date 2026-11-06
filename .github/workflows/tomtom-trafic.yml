@@ -1,0 +1,60 @@
+# Colectarea traficului real TomTom la orele de vârf, pe relațiile principale din studiu (scripts/tomtom-trafic.js).
+# Marți, miercuri și joi, dimineața (07:00–09:00) și seara (17:00–19:00), ora României, până la finalul colectării
+# (30 aprilie 2027). Rezultatele se salvează pe branch-ul date/tomtom, NU pe main: niciun commit automat pe main,
+# nicio publicare Netlify în producție. ~190 de cereri TomTom pe rulare, ~380 pe zi de colectare.
+# Cheia: secretul TOMTOM_KEY (Settings → Secrets and variables → Actions). Poate fi pornită și manual
+# (Actions → „Trafic TomTom (vârf)” → Run workflow), cu „forteaza” pentru o colectare în afara ferestrelor.
+name: Trafic TomTom (vârf)
+
+on:
+  schedule:
+    # GitHub folosește UTC; România e UTC+2 iarna și UTC+3 vara. Rulăm la 4:10/5:10 și 14:10/15:10 UTC:
+    # scriptul colectează doar dacă e în fereastra de vârf și doar o dată pe fereastră și zi (restul rulărilor ies imediat).
+    - cron: "10 4,5,14,15 * * 2,3,4"
+  workflow_dispatch:
+    inputs:
+      forteaza:
+        description: "Colectează acum, chiar în afara orelor de vârf"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tomtom-trafic
+  cancel-in-progress: false
+
+jobs:
+  colectare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Pregătește branch-ul de date (date/tomtom)
+        run: |
+          if [ "$(date -u +%F)" \> "2027-04-30" ]; then echo "Colectarea s-a încheiat (30 aprilie 2027)."; echo "GATA=1" >> "$GITHUB_ENV"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898699+github-actions[bot]@users.noreply.github.com"
+          if git fetch --depth=1 origin date/tomtom; then
+            git worktree add -B date/tomtom ../date FETCH_HEAD
+          else
+            git worktree add -b date/tomtom ../date HEAD
+          fi
+      - name: Colectează
+        if: env.GATA != '1'
+        env:
+          TOMTOM_KEY: ${{ secrets.TOMTOM_KEY }}
+        run: node scripts/tomtom-trafic.js --out ../date/data/tomtom/colectare ${{ github.event.inputs.forteaza == 'true' && '--forteaza' || '' }}
+      - name: Salvează pe branch-ul date/tomtom
+        if: env.GATA != '1'
+        working-directory: ../date
+        run: |
+          git add data/tomtom/colectare
+          if git diff --cached --quiet; then echo "Nimic nou."; exit 0; fi
+          git commit -m "Trafic TomTom: $(ls -t data/tomtom/colectare | head -1)"
+          for i in 1 2 3; do git push origin date/tomtom && exit 0; sleep $((i * 5)); git pull --rebase origin date/tomtom || true; done
+          exit 1
