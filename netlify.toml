@@ -46,6 +46,25 @@
     X-Robots-Tag = "noindex, nofollow"
     Cache-Control = "no-cache"
 
+# imaginea de previzualizare pentru rețelele sociale: robotul Facebook o descarcă de ~1.800 de ori pe zi (trafic =
+# credite Netlify) – cache lung; la o imagine nouă, schimbați numele fișierului (și og:image din public/index.html)
+[[headers]]
+  for = "/og-image.png"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000, immutable"
+
+# transportul public în timp real e pe pauză (netlify/lib/pauza.mjs): paginile rămân accesibile prin link direct,
+# dar nu sunt indexate de motoarele de căutare
+[[headers]]
+  for = "/transport/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/live/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+
 [[headers]]
   for = "/data/*"
   [headers.values]

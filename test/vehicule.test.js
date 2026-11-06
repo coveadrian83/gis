@@ -20,7 +20,7 @@ test('simplify: câmpurile hărții, sensul din trip_id, fără vehiculele făr�
 });
 
 test('handler: fără cheie → 503; cu cheie → datele, apoi din cache', async () => {
-  const { default: handler } = await import('../netlify/functions/vehicule.mjs');
+  const { serve: handler } = await import('../netlify/functions/vehicule.mjs');
   delete process.env.TRANZY_API_KEY;
   assert.strictEqual((await handler()).status, 503);
   process.env.TRANZY_API_KEY = 'test';
@@ -40,7 +40,18 @@ test('handler: cheia copiată cu spații / ghilimele e curățată', async () =>
   const mod = await import('../netlify/functions/vehicule.mjs?curat');
   process.env.TRANZY_API_KEY = ' "abc123"\n';
   let key = null;
-  await mod.default(null, null, async (_u, o) => { key = o.headers['X-API-KEY']; return { ok: false, status: 403, json: async () => ({}) }; });
+  await mod.serve(null, null, async (_u, o) => { key = o.headers['X-API-KEY']; return { ok: false, status: 403, json: async () => ({}) }; });
   assert.strictEqual(key, 'abc123');
+  delete process.env.TRANZY_API_KEY;
+});
+
+test('pe pauză: /live/vehicule răspunde 503 fără să contacteze Tranzy', async () => {
+  const { default: handler } = await import('../netlify/functions/vehicule.mjs');
+  const { PAUZA } = await import('../netlify/lib/pauza.mjs');
+  if (!PAUZA) return;
+  process.env.TRANZY_API_KEY = 'test';
+  const r = await handler(null, null);
+  assert.strictEqual(r.status, 503);
+  assert.match((await r.json()).eroare, /pauză/);
   delete process.env.TRANZY_API_KEY;
 });

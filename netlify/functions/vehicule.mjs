@@ -3,6 +3,7 @@
 // păstrează 30 s (în funcție și în CDN-ul Netlify), ca vizitatorii să nu consume cota cheii: 5.000 de cereri pe zi.
 // Bugetul zilnic: cel mult 2.880 de cereri de aici (una la 30 s) + 1.440 ale colectării GPS (una pe minut) = 4.320.
 import { apiKey, fetchVehicles } from '../lib/tranzy.mjs';
+import { PAUZA, pauseResponse } from '../lib/pauza.mjs';
 
 export { simplify } from '../lib/tranzy.mjs';
 
@@ -20,7 +21,10 @@ function json(status, data, maxAge = 0) {
   });
 }
 
-export default async function handler(_req, _ctx, fetchImpl = fetch) {
+// pe pauză (netlify/lib/pauza.mjs): 503, fără nicio cerere către Tranzy
+export default (req, ctx) => (PAUZA ? pauseResponse() : serve(req, ctx));
+
+export async function serve(_req, _ctx, fetchImpl = fetch) {
   const key = apiKey();
   if (!key) return json(503, { eroare: 'Pozițiile în timp real nu sunt configurate (lipsește TRANZY_API_KEY).' });
   if (cache && Date.now() - cache.at < TTL_MS) return json(200, cache.body, TTL_MS / 1000);

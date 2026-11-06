@@ -6,6 +6,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { getStore } from '@netlify/blobs';
 import { run } from '../lib/raport.mjs';
+import { PAUZA } from '../lib/pauza.mjs';
 
 async function load(p) {
   try {
@@ -18,6 +19,7 @@ async function load(p) {
 }
 
 export default async function handler() {
+  if (PAUZA) return new Response('pauză', { status: 200 });
   try {
     const [plan, zones] = await Promise.all([load('/data/transport/sanatate_plan.json'), load('/data/iasi_17_zone_mva_mvi.geojson')]);
     const zile = await run(getStore({ name: 'gps', consistency: 'strong' }), plan, zones, Math.round(Date.now() / 1000));
@@ -28,4 +30,5 @@ export default async function handler() {
   }
 }
 
-export const config = { schedule: '7 * * * *' };
+// PAUZĂ (netlify/lib/pauza.mjs): fără program. Repornire: export const config = { schedule: '7 * * * *' };
+export const config = {};

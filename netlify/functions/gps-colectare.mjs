@@ -5,6 +5,7 @@
 import { getStore } from '@netlify/blobs';
 import { apiKey, fetchVehicles } from '../lib/tranzy.mjs';
 import { save, bundle } from '../lib/gps-store.mjs';
+import { PAUZA } from '../lib/pauza.mjs';
 
 export async function collect(store, key, fetchImpl = fetch, now = Math.round(Date.now() / 1000)) {
   const r = await fetchVehicles(key, fetchImpl);
@@ -15,6 +16,7 @@ export async function collect(store, key, fetchImpl = fetch, now = Math.round(Da
 }
 
 export default async function handler() {
+  if (PAUZA) return new Response('pauză', { status: 200 });
   const key = apiKey();
   if (!key) return new Response('lipsește TRANZY_API_KEY', { status: 200 });
   const res = await collect(getStore({ name: 'gps', consistency: 'strong' }), key);
@@ -22,4 +24,5 @@ export default async function handler() {
   return new Response(JSON.stringify(res), { status: 200 });
 }
 
-export const config = { schedule: '* * * * *' };
+// PAUZĂ (netlify/lib/pauza.mjs): fără program. Repornire: export const config = { schedule: '* * * * *' };
+export const config = {};
