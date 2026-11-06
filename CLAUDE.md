@@ -18,6 +18,9 @@
   `netlify.toml` sau dependențele.
 - Cota cheii Tranzy: 5.000 de cereri pe zi (colectarea GPS 1.440 + `/live/vehicule` cel mult 2.880; acțiunea
   „Rute Tranzy” – o cerere pe săptămână).
+- Trafic TomTom: `.github/workflows/tomtom-trafic.yml` (marți–joi, vârf dimineața și seara) salvează pe branch-ul
+  `date/tomtom` (niciodată pe `main`), ~380 de cereri pe zi de colectare din cota gratuită de 2.500/zi; cheia e secretul
+  GitHub `TOMTOM_KEY`, nu se pune în cod.
 
 ## Harta sănătății – referințe
 - Câte vehicule trebuie pe stradă: `data/transport/ctp_planificare.json` (planificarea S.C.T.P. din 8 sept. 2025),
