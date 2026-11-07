@@ -10,7 +10,10 @@ const mii = (v) => String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 const pct = (v, d = 0) => (v == null ? '–' : fmt(100 * v, d) + '%');
 // „de” după numerele întregi ≥ 20 (20 de minute), nu după zecimale sau 1–19
 const de = (n) => { const x = Math.round(+n); if (!Number.isInteger(+n)) return ''; const r = x % 100; return x >= 20 && !(r >= 1 && r <= 19) ? ' de' : ''; };
-const nde = (n, noun, d = 1) => fmt(n, d) + de(n) + ' ' + noun;
+const nde = (n, noun, d = 1) => {
+  if (typeof n === 'string') { const m = n.match(/(\d+(?:,\d+)?)\D*$/); const last = m ? +m[1].replace(',', '.') : NaN; return n + (Number.isNaN(last) ? '' : de(last)) + ' ' + noun; }
+  return fmt(n, d) + de(+fmt(n, d).replace(',', '.')) + ' ' + noun;
+};
 const lista = (a) => (a.length <= 1 ? a.join('') : a.slice(0, -1).join(', ') + ' și ' + a[a.length - 1]);
 
 // ancoră pentru etichete: din atlasul inițial sau centrul poligonului
