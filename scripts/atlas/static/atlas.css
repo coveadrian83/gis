@@ -1,0 +1,174 @@
+/* Atlas: foaie de hartă tipărită — antet de atlas, apoi plăci cu câte două panouri (ZMI + Iași mărit). */
+:root {
+  --paper: #F6F4EE; --panel: #FFFDF8; --ink: #14294A; --ink-2: #3B4A5C; --muted: #6B7280; --rule: #E2DCCB;
+  --accent: #8A5A00; --amber: #E8A500; --good: #1F7A3A; --bad: #B3261E;
+  --land: #ECE8DE; --ctx: #F1EEE6; --edge: #FFFDF8; --edge-zone: #FFFDF8; --halo: #FFFDF8; --on-strong: #FFFFFF;
+  --q0: #ECE8DE; --q1: #F4F1E9; --hatch: #B8B09C; --q2: #9EC5F4; --q3: #3987E5; --q4: #1C5CAB;
+  --t1: #1A9641; --t2: #A6D96A; --t3: #FDAE61; --t4: #D7191C;
+  --dot-o: #2A78D6; --dot-d: #EB6834; --f1: #DDF1EA; --f2: #9BD5C2; --f3: #3FA586; --f4: #1A6A54; --p1: #EEE8F7; --p2: #CDBDEB; --p3: #9277D3; --p4: #50319E; --tram: #C0392B; --metro: #A86B00; --busln: #8C93A0; --u1: #D6E6FA; --u2: #9EC5F4; --u3: #3987E5; --u4: #1C5CAB;
+  --fl1: #A9C3E3; --fl2: #3987E5; --fl3: #14294A;
+  --f-display: 'Libre Baskerville', Georgia, 'Times New Roman', serif;
+  --f-body: 'Public Sans', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #10151D; --panel: #161C26; --ink: #ECE8DD; --ink-2: #C4C8CF; --muted: #9AA1AB; --rule: #2A323E;
+    --accent: #E8B13A; --amber: #E8A500; --good: #5CC27A; --bad: #F08A80;
+    --land: #232A35; --ctx: #1B212B; --edge: #10151D; --edge-zone: #161C26; --halo: #161C26; --on-strong: #0E1420;
+    --q0: #232A35; --q1: #262D38; --hatch: #4D5664; --q2: #256ABF; --q3: #5598E7; --q4: #9EC5F4;
+    --t1: #2FA85A; --t2: #9CCB5E; --t3: #F29B4E; --t4: #E0413A;
+    --dot-o: #3987E5; --dot-d: #E0662F; --f1: #173A31; --f2: #1F6B56; --f3: #43B395; --f4: #A5E3CF; --p1: #241C38; --p2: #44317C; --p3: #8D72D8; --p4: #CDBCF3; --tram: #F07C70; --metro: #E8B13A; --busln: #6B7280; --u1: #1B2C45; --u2: #256ABF; --u3: #5598E7; --u4: #9EC5F4;
+    --fl1: #34557D; --fl2: #5598E7; --fl3: #CDE2FB;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #10151D; --panel: #161C26; --ink: #ECE8DD; --ink-2: #C4C8CF; --muted: #9AA1AB; --rule: #2A323E;
+  --accent: #E8B13A; --amber: #E8A500; --good: #5CC27A; --bad: #F08A80;
+  --land: #232A35; --ctx: #1B212B; --edge: #10151D; --edge-zone: #161C26; --halo: #161C26; --on-strong: #0E1420;
+  --q0: #232A35; --q1: #262D38; --hatch: #4D5664; --q2: #256ABF; --q3: #5598E7; --q4: #9EC5F4;
+  --t1: #2FA85A; --t2: #9CCB5E; --t3: #F29B4E; --t4: #E0413A;
+  --dot-o: #3987E5; --dot-d: #E0662F; --f1: #173A31; --f2: #1F6B56; --f3: #43B395; --f4: #A5E3CF; --p1: #241C38; --p2: #44317C; --p3: #8D72D8; --p4: #CDBCF3; --tram: #F07C70; --metro: #E8B13A; --busln: #6B7280; --u1: #1B2C45; --u2: #256ABF; --u3: #5598E7; --u4: #9EC5F4;
+  --fl1: #34557D; --fl2: #5598E7; --fl3: #CDE2FB;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--paper); color: var(--ink-2); font-family: var(--f-body); font-size: 16px; line-height: 1.55; }
+.wrap { max-width: 1200px; margin: 0 auto; padding-inline: 20px; padding-block: 40px 56px; display: flex; flex-direction: column; gap: 40px; }
+h1, h2 { font-family: var(--f-display); color: var(--ink); text-wrap: balance; margin: 0; }
+p { margin: 0; }
+
+/* antet */
+.mast { display: grid; gap: 14px; border-bottom: 3px solid var(--ink); padding-bottom: 28px; }
+.org { font-size: 13px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--accent); }
+.mast h1 { font-size: clamp(34px, 5.4vw, 60px); line-height: 1.08; }
+.sub { max-width: 62ch; font-size: 18px; }
+.stamp { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin: 10px 0 0; border-top: 1px solid var(--rule); }
+.stamp div { padding: 14px 16px 0 0; display: grid; gap: 2px; }
+.stamp dt { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.stamp dd { margin: 0; font-family: var(--f-display); font-size: 22px; color: var(--ink); font-variant-numeric: tabular-nums; }
+
+/* notă de citire */
+.caveat { display: grid; gap: 12px; padding: 22px 24px; background: var(--panel); border: 1px solid var(--rule); border-left: 6px solid var(--amber); border-radius: 4px; max-width: 900px; }
+.caveat h2 { font-size: 20px; }
+.thr { list-style: none; margin: 4px 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.thr li { font-size: 14px; padding: 4px 12px; border: 1px solid var(--rule); border-radius: 999px; background: var(--paper); }
+.thr b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.fine { font-size: 14px; color: var(--muted); }
+
+/* cuprins */
+.toc { display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 15px; }
+.toc a { color: var(--ink); text-decoration: none; display: inline-flex; gap: 8px; align-items: baseline; border-bottom: 1px solid transparent; }
+.toc a:hover, .toc a:focus-visible { border-bottom-color: var(--ink); }
+.toc a span { font-family: var(--f-display); color: var(--accent); }
+
+/* plăci */
+.fig { display: grid; gap: 18px; padding-top: 28px; border-top: 1px solid var(--rule); scroll-margin-top: 16px; }
+.fh { display: grid; gap: 8px; max-width: 820px; }
+.kicker { font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); display: flex; gap: 12px; align-items: baseline; }
+.fno { font-family: var(--f-display); letter-spacing: 0; text-transform: none; font-size: 15px; color: var(--muted); font-weight: 400; }
+.fh h2 { font-size: clamp(24px, 3.2vw, 34px); line-height: 1.2; }
+.lead { font-size: 16px; max-width: 70ch; }
+.panels { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.panel { margin: 0; background: var(--panel); border: 1px solid var(--rule); border-radius: 4px; overflow: hidden; }
+.map { display: block; width: 100%; height: auto; }
+
+/* elemente de hartă */
+.map [data-u], .map [data-f], .map [data-t], .map [data-a], .map [data-r], .map [data-s] { cursor: pointer; }
+.map path[data-u]:hover, .map path[data-u].hl, .map path[data-t]:hover, .map path[data-t].hl, .map path[data-a]:hover, .map path[data-a].hl, .map path[data-r]:hover, .map path[data-r].hl, .map path[data-s]:hover, .map path[data-s].hl { stroke: var(--ink) !important; stroke-width: 2.4; }
+.map text { font-family: var(--f-body); fill: var(--ink); }
+.lbl { font-size: 13px; font-weight: 600; }
+.num { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.sm { font-size: 11px; fill: var(--ink-2) !important; }
+.on-dark { fill: var(--on-strong) !important; }
+.halo { paint-order: stroke; stroke: var(--halo); stroke-width: 3.5px; stroke-linejoin: round; }
+.ptag { font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; fill: var(--muted) !important; paint-order: stroke; stroke: var(--panel); stroke-width: 4px; }
+.inset { fill: none; stroke: var(--ink); stroke-width: 1.2; stroke-dasharray: 4 3; }
+.scale line { stroke: var(--ink); stroke-width: 1.5; }
+.scale text, .north text { font-size: 11px; fill: var(--muted) !important; }
+.north path { fill: var(--ink); }
+.dot-o { fill: var(--dot-o); fill-opacity: .8; stroke: var(--panel); stroke-width: 1.5; }
+.dot-d { fill: var(--dot-d); fill-opacity: .8; stroke: var(--panel); stroke-width: 1.5; }
+.flow { fill: none; stroke-linecap: round; }
+.flow.fl1 { stroke: var(--fl1); } .flow.fl2 { stroke: var(--fl2); } .flow.fl3 { stroke: var(--fl3); }
+.flow:hover, .flow.hl { stroke: var(--amber); }
+.node { fill: var(--panel); stroke: var(--ink); stroke-width: 1.2; pointer-events: none; }
+
+/* legendă */
+.legend { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; font-size: 14px; }
+.lt { font-weight: 700; color: var(--ink); }
+.li { display: inline-flex; align-items: center; gap: 8px; }
+.sw { width: 22px; height: 14px; border-radius: 2px; border: 1px solid var(--rule); display: inline-block; }
+.sw-hatch { background: repeating-linear-gradient(45deg, var(--hatch) 0 2px, var(--q1) 2px 6px); }
+.sw-dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; }
+.sw-dot.dot-o { background: var(--dot-o); } .sw-dot.dot-d { background: var(--dot-d); }
+.sw-line { width: 26px; height: 0; border-top-style: solid; display: inline-block; }
+.sw-line.fl1 { border-top-width: 3px; border-color: var(--fl1); }
+.sw-line.fl2 { border-top-width: 6px; border-color: var(--fl2); }
+.sw-line.fl3 { border-top-width: 10px; border-color: var(--fl3); }
+
+/* note și tabel */
+.notes { margin: 0; padding-left: 20px; display: grid; gap: 6px; max-width: 80ch; }
+.notes b { color: var(--ink); }
+.data summary { cursor: pointer; font-weight: 600; color: var(--ink); width: fit-content; }
+.data summary:focus-visible, .toc a:focus-visible { outline: 2px solid var(--amber); outline-offset: 3px; }
+.tw { overflow-x: auto; margin-top: 10px; }
+table { border-collapse: collapse; min-width: 420px; font-size: 14px; }
+th, td { padding: 6px 14px 6px 0; border-bottom: 1px solid var(--rule); text-align: left; }
+th { color: var(--muted); font-weight: 600; }
+td { color: var(--ink-2); }
+.n { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* tooltip */
+.tip { position: fixed; z-index: 10; pointer-events: none; background: var(--ink); color: var(--paper); padding: 8px 12px; border-radius: 4px; font-size: 13px; line-height: 1.45; max-width: 260px; box-shadow: 0 4px 14px rgb(0 0 0 / .18); }
+.tip b { display: block; font-size: 14px; }
+
+.foot { display: grid; gap: 4px; font-size: 13px; color: var(--muted); border-top: 1px solid var(--rule); padding-top: 18px; }
+
+@media (max-width: 760px) {
+  .panels { grid-template-columns: minmax(0, 1fr); }
+  .stamp { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .wrap { padding-inline: 16px; gap: 32px; }
+}
+@media (prefers-reduced-motion: no-preference) { .toc a { transition: border-color .15s; } }
+
+/* evoluția acoperirii */
+.evo { display: grid; gap: 6px; max-width: 900px; }
+.evo h2 { font-size: 20px; }
+.evo table { min-width: 0; width: 100%; }
+.evo td b { color: var(--ink); }
+.tr { font-weight: 700; font-variant-numeric: tabular-nums; }
+.tr.up { color: var(--good); } .tr.dn { color: var(--bad); } .tr.eq { color: var(--muted); font-weight: 400; }
+
+/* dotări */
+.dot-d.hollow { fill: none; stroke: var(--dot-d); stroke-width: 2.5; }
+.grid { stroke: var(--rule); stroke-width: 1; }
+.axis { stroke: var(--ink-2); stroke-width: 1.2; }
+.ax { font-size: 12px; fill: var(--muted) !important; font-variant-numeric: tabular-nums; }
+.axt { font-size: 13px; font-weight: 600; fill: var(--ink-2) !important; }
+.pt { fill: var(--f3); stroke: var(--panel); stroke-width: 1.5; }
+.pt-hl { fill: var(--dot-d); }
+
+/* transport public */
+.ln-tram { fill: none; stroke: var(--tram); stroke-width: 2.6; stroke-linejoin: round; stroke-linecap: round; }
+.ln-tram-ext { fill: none; stroke: var(--tram); stroke-width: 2.2; stroke-dasharray: 5 4; }
+.ln-bus { fill: none; stroke: var(--busln); stroke-width: 0.8; opacity: .7; }
+.ln-metro { fill: none; stroke: var(--metro); stroke-width: 1.4; opacity: .85; }
+.ln-cf { fill: none; stroke: var(--ink-2); stroke-width: 1; stroke-dasharray: 2 3; opacity: .6; }
+.mk-gara { fill: var(--ink); stroke: var(--panel); stroke-width: 1; }
+.mk-tm { fill: var(--panel); stroke: var(--metro); stroke-width: 1.8; }
+.mk-stop { fill: var(--ink); opacity: .55; }
+.sw-ln { width: 26px; height: 0; display: inline-block; border-top: 3px solid; }
+.sw-ln.ln-tram { border-color: var(--tram); } .sw-ln.ln-metro { border-color: var(--metro); }
+.sw-mk { width: 11px; height: 11px; display: inline-block; }
+.sw-mk.mk-gara { background: var(--ink); } .sw-mk.mk-tm { border: 2px solid var(--metro); background: var(--panel); }
+
+/* participare */
+.bar-bg { fill: var(--land); }
+.bar { fill: var(--u3); }
+.bar-ok { fill: var(--u4); }
+.ax-l { font-size: 13px; fill: var(--ink) !important; }
+.ln-lane { fill: none; stroke: var(--u4); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; }
+.ln-lane-c { fill: none; stroke: var(--panel); stroke-width: 10; stroke-linecap: round; stroke-linejoin: round; }
+.sw-ln.ln-lane { border-color: var(--u4); border-top-width: 6px; }
