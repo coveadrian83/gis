@@ -4,6 +4,7 @@
   function unitHtml(u) {
     var h = '<b>' + u.n + '</b>' + u.o + ' plecări · ' + u.d + ' sosiri';
     if (u.o >= 10) h += '<br>durată mediană la plecare: ' + fmt(u.med) + ' min';
+    if (u.o > 0) h += '<br>cu mașina: ' + u.c + (u.c >= 10 ? ' drumuri · ' + fmt(u.occ) + ' persoane' : ' drumuri (sub 10)') + ' · cu transportul public: ' + u.tp;
     if (u.t === 0) h = '<b>' + u.n + '</b>nicio deplasare încă';
     else if (u.t < 10) h += '<br><i>sub 10 observații: doar semnalare</i>';
     return h;
