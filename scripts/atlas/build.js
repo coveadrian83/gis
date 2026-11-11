@@ -349,6 +349,109 @@ async function main() {
       table('Datele graficului', ['Mod', 'Deplasări', 'Cota modală', 'Durata mediană', ...RG.map(([l]) => `${l} (mediană, n)`)], T.map((t) => [t.l, t.n, pct(t.share, 1), fmt(t.med) + ' min', ...t.g.map((g) => (g.n ? `${fmt(g.med)} min (${g.n})` : '–'))]));
     sections.push(section('moduri', 'Cota modală și durata', 'Graficul 13', 'Cât durează drumul, după modul de transport', 'Stânga: ce pondere are fiecare mod în deplasările raportate și durata lui mediană. Dreapta: durata mediană pe mod, comparată pe aceleași tipuri de relații (drumuri în interiorul Iașului, din comuna Bârnova spre Iași, din celelalte comune spre Iași). Grupurile cu sub 5 drumuri nu sunt afișate.', body));
   }
+  // ---------- Scopul drumului
+  {
+    const P = [['work', 'La muncă'], ['education', 'La școală sau facultate'], ['home', 'Spre casă'], ['leisure', 'Timp liber'], ['shopping', 'Cumpărături'], ['escort', 'Însoțire'], ['medical', 'Sănătate'], ['other', 'Altele']];
+    const tpm = (r) => ['bus', 'tram', 'train', 'multimodal'].includes(r.mode);
+    const T = P.map(([k, l]) => { const X = R.filter((r) => r.purpose === k); return { k, l, n: X.length, share: X.length / D.n, med: median(X.map((r) => r.duration_min)), car: X.filter((r) => r.mode === 'car').length / X.length, tp: X.filter(tpm).length / X.length, act: X.filter((r) => ['walk', 'bike'].includes(r.mode)).length / X.length, km: median(X.map((r) => r.distance_km)) }; });
+    const dest = (k) => { const c = {}; R.filter((r) => r.purpose === k && isZ(r.d)).forEach((r) => { c[r.d] = (c[r.d] || 0) + 1; }); return c; };
+    const dw = dest('work'), de_ = dest('education'), mx = Math.max(...Object.values(dw), ...Object.values(de_));
+    const pan = (c, cls, aria, ptag) => mapPanel('ias', { fill: (id) => (isZ(id) ? 'var(--land)' : 'var(--ctx)'), aria, ptag,
+      extra: Object.entries(c).sort((a, b) => b[1] - a[1]).map(([id, n]) => { const a = anchor('ias', id); return `<circle cx="${a[0]}" cy="${a[1]}" r="${((46 * Math.sqrt(n)) / Math.sqrt(mx)).toFixed(1)}" class="${cls}" data-u="${id}"/>`; }).join(''),
+      labels: Object.entries(c).filter(([, n]) => n >= 15).map(([id, n]) => ({ id, lines: [['lbl', shortName(id)], ['num', String(n)]] })) });
+    const top = (c, k) => Object.entries(c).sort((a, b) => b[1] - a[1]).slice(0, k);
+    const sw_ = Object.values(dw).reduce((a, b) => a + b, 0), se = Object.values(de_).reduce((a, b) => a + b, 0);
+    const w = T[0], e = T[1];
+    S.scop = T.map((t) => ({ l: t.l, n: t.n, share: t.share, med: t.med, car: t.car, tp: t.tp }));
+    const body = fig(pan(dw, 'dot-o', 'Destinațiile drumurilor la muncă, pe zonele Iașului', 'La muncă · sosiri'), pan(de_, 'dot-d', 'Destinațiile drumurilor la școală sau facultate, pe zonele Iașului', 'La școală sau facultate · sosiri')) + '\n' +
+      legend('Cercuri proporționale, aceeași scară', [['<span class="sw-dot dot-o"></span>', 'sosiri la muncă'], ['<span class="sw-dot dot-d"></span>', 'sosiri la școală sau facultate']]) + '\n' +
+      notes([`<b>${pct(w.share)}</b> din drumuri sunt spre muncă și <b>${pct(e.share)}</b> spre școală sau facultate: împreună, ${pct(w.share + e.share)} din tot ce s-a raportat. Drumurile spre casă (${pct(T[2].share)}) sunt puține, pentru că cei mai mulți participanți raportează doar dusul.`,
+        `Munca e răspândită în oraș: primele trei zone (${top(dw, 3).map(([id, n]) => `${uname(id)} ${n}`).join(', ')}) adună ${pct(top(dw, 3).reduce((a, x) => a + x[1], 0) / sw_)} din sosiri. Școala și facultatea sunt concentrate: <b>${uname(top(de_, 1)[0][0])}</b> singur primește ${pct(top(de_, 1)[0][1] / se)} (${top(de_, 1)[0][1]} din ${se}).`,
+        `La muncă se merge mai ales cu mașina (<b>${pct(w.car)}</b>; transport public ${pct(w.tp)}). La școală sau facultate, mașina are ${pct(e.car)}, iar transportul public <b>${pct(e.tp)}</b>. Drumul la școală e și cel mai lung: ${nde(e.med, 'minute')}, față de ${fmt(w.med)} la muncă.`,
+        `Cumpărăturile și timpul liber sunt drumuri scurte (${fmt(T[4].med)}, respectiv ${nde(T[3].med, 'minute')}) și se fac rar cu transportul public (${pct(T[4].tp)}, ${pct(T[3].tp)}). Sunt puține în eșantion: studiul surprinde mai ales naveta de dimineață.`]) + '\n' +
+      table('Datele hărții', ['Scop', 'Drumuri', 'Pondere', 'Durata mediană', 'Distanța mediană', 'Cu mașina', 'Transport public', 'Pe jos sau bicicletă'], T.filter((t) => t.n).map((t) => [t.l, t.n, pct(t.share, 1), fmt(t.med) + ' min', fix(t.km) + ' km', pct(t.car), pct(t.tp), pct(t.act)]), '<p class="fine">Distanța e măsurată în linie dreaptă între punctul de plecare și cel de sosire.</p>');
+    sections.push(section('scop', 'Scopul drumului', 'Harta', 'Munca e răspândită în oraș, școala se adună în Copou', 'Unde ajung drumurile la muncă (stânga) și cele la școală sau facultate (dreapta), pe zonele Iașului. Aria cercului e proporțională cu numărul de sosiri, la aceeași scară în ambele hărți.', body));
+  }
+
+  // ---------- Viteza din ușă în ușă
+  {
+    const ok = (r) => r.distance_km != null && r.distance_km >= 0.3 && r.duration_min > 0 && r.duration_min <= 180;
+    const spd = (r) => r.distance_km / (r.duration_min / 60);
+    const C = R.filter((r) => r.mode === 'car' && ok(r) && !isGPS(r));
+    const byO = {}; C.forEach((r) => { (byO[r.o] = byO[r.o] || []).push(spd(r)); });
+    const V = Object.entries(byO).filter(([id, a]) => U[id] && a.length >= 10).map(([id, a]) => ({ id, n: a.length, v: median(a), km: median(C.filter((r) => r.o === id).map((r) => r.distance_km)) })).sort((a, b) => a.v - b.v);
+    const vv = Object.fromEntries(V.map((x) => [x.id, x]));
+    const c = (id) => (!vv[id] ? 'hatch' : vv[id].v < 7 ? 'var(--t4)' : vv[id].v < 9 ? 'var(--t3)' : vv[id].v < 12 ? 'var(--t2)' : 'var(--t1)');
+    const fz = (id) => (id === IASI_UAT ? 'var(--q0)' : c(id)), fi = (id) => (isZ(id) ? c(id) : id === IASI_UAT ? 'var(--q0)' : 'var(--ctx)');
+    const lz = V.filter((x) => !isZ(x.id)).map((x) => ({ id: x.id, lines: [['num', fix(x.v)], ['sm', `${uname(x.id)} · n=${x.n}`]] }));
+    const li = V.filter((x) => isZ(x.id)).map((x) => ({ id: x.id, lines: [['lbl', shortName(x.id)], ['num', fix(x.v)], ['sm', 'n=' + x.n, 16]] }));
+    const MODES = [['Bicicletă / trotinetă', ['bike'], 'var(--t3)'], ['Autoturism', ['car'], 'var(--u4)'], ['Autobuz', ['bus'], 'var(--p3)'], ['Tramvai', ['tram'], 'var(--tram)'], ['Pe jos', ['walk'], 'var(--f3)']];
+    const M = MODES.map(([l, m, col]) => { const X = R.filter((r) => m.includes(r.mode) && ok(r)); return { l, col, n: X.length, v: median(X.map(spd)), km: median(X.map((r) => r.distance_km)), min: median(X.map((r) => r.duration_min)) }; });
+    const HB = [['06–07', 360, 420], ['07–08', 420, 480], ['08–09', 480, 540], ['09–12', 540, 720], ['12–15', 720, 900], ['15–18', 900, 1080], ['18–22', 1080, 1320]];
+    const CW = C.filter((r) => r.day_type === 'weekday' && !vac(r.trip_date));
+    const Hh = HB.map(([l, a, z]) => { const X = CW.filter((r) => mm(r.departure_time) >= a && mm(r.departure_time) < z); return { l, n: X.length, v: median(X.map(spd)) }; });
+    const g1 = hbarChart({ title: 'Viteza mediană din ușă în ușă, pe mod (km/h, în linie dreaptă)', aria: 'Grafic: viteza mediană din ușă în ușă pe mod de transport', max: 14, ticks: [0, 3, 6, 9, 12], unit: '', rows: M.map((m) => ({ label: m.l, v: m.v, color: m.col, text: `${fix(m.v)} km/h · n=${m.n}` })) });
+    const g2 = barChart({ title: 'Viteza cu mașina după ora plecării (km/h, zile lucrătoare)', aria: 'Grafic: viteza mediană cu mașina după ora plecării', groups: Hh.map((h) => ({ label: h.l, sub: 'n=' + h.n, values: [h.n >= 5 ? +h.v.toFixed(1) : null] })), series: [{ color: 'var(--u4)' }], max: 16, step: 4 });
+    const car = M[1], bike = M[0], all = median(C.map(spd)), slow = V.slice(0, 3), fast = V.slice(-3).reverse();
+    S.viteza = { auto: car.v, bicicleta: bike.v, autobuz: M[2].v, tramvai: M[3].v, peJos: M[4].v, ore: Hh };
+    const body = fig(mapPanel('zmi', { fill: fz, aria: 'Viteza mediană cu mașina, din ușă în ușă, după comuna de plecare', ptag: 'Zona Metropolitană · cu mașina', labels: lz }), mapPanel('ias', { fill: fi, aria: 'Viteza mediană cu mașina, din ușă în ușă, după zona de plecare', ptag: 'Municipiul Iași, mărit', labels: li })) + '\n' +
+      legend('Viteza cu mașina, km/h în linie dreaptă', [[sw('var(--t4)'), 'sub 7'], [sw('var(--t3)'), '7–8,9'], [sw('var(--t2)'), '9–11,9'], [sw('var(--t1)'), '12 sau mai mult'], [swHatch, 'sub 10 drumuri cu mașina']]) + '\n' + fig(g1, g2) + '\n' +
+      notes([`Un drum cu mașina înaintează, din ușă în ușă, cu <b>${fix(all)} km/h</b> în linie dreaptă (mediană, ${nde(C.length, 'drumuri')}). Bicicleta face <b>${fix(bike.v)} km/h</b>, pe ${nde(bike.n, 'drumuri')}: practic la fel, pe drumuri mai scurte. Autobuzul: ${fix(M[2].v)} km/h, tramvaiul: ${fix(M[3].v)}, mersul pe jos: ${fix(M[4].v)}.`,
+        `Cele mai lente plecări cu mașina: ${slow.map((x) => `${comName(x.id)} (${fix(x.v)} km/h)`).join(', ')}. Cele mai rapide: ${fast.map((x) => `${comName(x.id)} (${fix(x.v)} km/h)`).join(', ')}. Viteza scoate distanța din comparație: arată unde drumul e lent, nu doar lung.`,
+        `Ora contează: cu mașina, cine pleacă între 6 și 7 înaintează cu ${fix(Hh[0].v)} km/h, între 7 și 8 cu ${fix(Hh[1].v)}, iar între 9 și 12 cu ${fix(Hh[3].v)} km/h.`,
+        'Cum citim: e viteza „pe hartă”, adică distanța în linie dreaptă împărțită la durata declarată, cu tot cu mersul până la mașină, parcare și opriri. Drumul real e mai lung decât linia dreaptă, deci viteza pe șosea e mai mare, dar comparația între locuri și moduri rămâne corectă.']) + '\n' +
+      table('Datele hărții', ['Unitate de plecare', 'Drumuri cu mașina', 'Viteza mediană', 'Distanța mediană'], V.map((x) => [comName(x.id), x.n, fix(x.v) + ' km/h', fix(x.km) + ' km']));
+    sections.push(section('viteza', 'Viteza din ușă în ușă', 'Harta', `Cu mașina, din ușă în ușă: ${fmt(all)} km/h, cât cu bicicleta`, 'Viteza mediană a drumurilor cu mașina care pornesc din fiecare unitate: distanța în linie dreaptă împărțită la durata declarată. Doar unitățile cu cel puțin 10 drumuri cu mașina, fără jurnalul GPS. Dedesubt: viteza pe moduri și, pentru mașină, după ora plecării.', body));
+  }
+
+  // ---------- Drumuri scurte
+  {
+    const ok = (r) => r.distance_km != null && r.duration_min > 0 && r.duration_min <= 180;
+    const X = R.filter(ok);
+    const BD = [['sub 1 km', 0, 1], ['1–2 km', 1, 2], ['2–3 km', 2, 3], ['3–5 km', 3, 5], ['5–8 km', 5, 8], ['8–12 km', 8, 12], ['peste 12 km', 12, 1e9]];
+    const G = [['Pe jos', ['walk'], 'var(--f3)'], ['Bicicletă', ['bike'], 'var(--t3)'], ['Transport public', ['bus', 'tram', 'train', 'multimodal'], 'var(--p3)'], ['Autoturism', ['car', 'taxi', 'moto'], 'var(--u4)']];
+    const B = BD.map(([l, a, z]) => { const Y = X.filter((r) => r.distance_km >= a && r.distance_km < z); return { l, n: Y.length, g: G.map(([, m]) => Y.filter((r) => m.includes(r.mode)).length) }; });
+    const g1 = (() => { let s = `<svg class="map" viewBox="0 0 640 600" role="img" aria-label="Grafic: modul de transport după distanța drumului"><text x="16" y="28" class="axt">Cu ce mergem, după distanța în linie dreaptă</text>`;
+      const x0 = 120, w = 440; [0, 25, 50, 75, 100].forEach((t) => { s += `<line x1="${x0 + (w * t) / 100}" y1="56" x2="${x0 + (w * t) / 100}" y2="${70 + B.length * 62}" class="grid"/><text x="${x0 + (w * t) / 100}" y="${90 + B.length * 62}" text-anchor="middle" class="ax">${t}%</text>`; });
+      B.forEach((b, i) => { const y = 70 + i * 62; let x = x0; s += `<text x="${x0 - 8}" y="${y + 22}" text-anchor="end" class="ax-l">${b.l}</text><text x="${x0 - 8}" y="${y + 40}" text-anchor="end" class="sm">n=${b.n}</text>`;
+        b.g.forEach((v, j) => { const ww = b.n ? (w * v) / b.n : 0; if (ww > 0) s += `<rect x="${x.toFixed(1)}" y="${y}" width="${ww.toFixed(1)}" height="40" style="fill:${G[j][2]}"/>` + (ww > 34 ? `<text x="${(x + ww / 2).toFixed(1)}" y="${y + 26}" text-anchor="middle" class="sm on-dark">${Math.round((100 * v) / b.n)}%</text>` : ''); x += ww; }); });
+      return s + '</svg>'; })();
+    const sh = X.filter((r) => r.distance_km < 3);
+    const SM = G.map(([l, m, col]) => { const Y = sh.filter((r) => m.includes(r.mode)); return { l, col, n: Y.length, med: median(Y.map((r) => r.duration_min)) }; });
+    const g2 = hbarChart({ title: 'Drumuri sub 3 km: durata mediană pe mod (minute)', aria: 'Grafic: durata mediană a drumurilor sub 3 km, pe mod', max: 55, ticks: [0, 10, 20, 30, 40, 50], unit: '', rows: SM.filter((m) => m.n >= 5).map((m) => ({ label: m.l, v: m.med, color: m.col, text: `${fmt(m.med)} min · n=${m.n}` })) });
+    const carAll = X.filter((r) => r.mode === 'car'), car3 = carAll.filter((r) => r.distance_km < 3), car5 = carAll.filter((r) => r.distance_km < 5);
+    const kids3 = car3.filter((r) => /escort_child/.test(r.stops || '')).length;
+    const walk = SM[0], carS = SM[3];
+    S.scurte = { auto3: car3.length, auto5: car5.length, auto: carAll.length, medAuto3: carS.med, medJos3: walk.med, sub3: sh.length };
+    const body = fig(g1, g2) + '\n' + legend('Mod', G.map(([l, , col]) => [sw(col), l.toLowerCase()])) + '\n' +
+      notes([`<b>${nde(car3.length, 'drumuri')} cu mașina</b> (${pct(car3.length / carAll.length)} din toate drumurile cu mașina) au sub 3 km în linie dreaptă, iar ${car5.length} (${pct(car5.length / carAll.length)}) au sub 5 km: distanțe de mers pe jos, cu bicicleta sau câteva stații.`,
+        `Pe drumurile sub 3 km, mașina nu e mai rapidă: durează median <b>${nde(carS.med, 'minute')}</b>, iar mersul pe jos ${nde(walk.med, 'minute')}. Transportul public: ${nde(SM[2].med, 'minute')}.`,
+        `Sub 1 km, ${pct(B[0].g[0] / B[0].n)} din drumuri se fac pe jos. Între 2 și 3 km, mașina are deja ${pct(B[2].g[3] / B[2].n)}, iar peste 8 km, ${pct(B[5].g[3] / B[5].n)}.`,
+        `Din cele ${car3.length} drumuri scurte cu mașina, ${kids3} includ copii lăsați la școală sau grădiniță. Pentru planificare: trasee sigure spre școli și piste pentru biciclete pe distanțe de 1–3 km ar putea scoate din trafic o parte din aceste drumuri. Drumurile scurte sunt însă raportate mai rar, deci ponderea lor reală e probabil mai mare.`]) + '\n' +
+      table('Datele graficului', ['Distanța', 'Drumuri', ...G.map((g) => g[0])], B.map((b) => [b.l, b.n, ...b.g.map((v) => (b.n ? `${v} (${Math.round((100 * v) / b.n)}%)` : '–'))]), '<p class="fine">Distanța e în linie dreaptă între punctul de plecare și cel de sosire. Taxiul și motocicleta sunt numărate la autoturism, trenul și drumurile combinate la transport public.</p>');
+    sections.push(section('drumuri-scurte', 'Drumuri scurte', 'Graficul', `Unul din ${Math.round(carAll.length / car3.length)} drumuri cu mașina are sub 3 km`, 'Cum se împart drumurile între moduri, în funcție de distanța în linie dreaptă, și cât durează drumurile scurte cu fiecare mod.', body));
+  }
+
+  // ---------- Liniile de transport public
+  {
+    const ok = (r) => r.pt_line && r.duration_min > 0 && r.duration_min <= 180;
+    const X = R.filter(ok), by = {};
+    X.forEach((r) => { const k = String(r.pt_line).trim().toUpperCase(); (by[k] = by[k] || []).push(r); });
+    const Lr = Object.entries(by).map(([k, a]) => ({ k, n: a.length, p: new Set(a.map((r) => r.participant_id)).size, med: median(a.map((r) => r.duration_min)), km: median(a.map((r) => r.distance_km)), v: median(a.filter((r) => r.distance_km >= 0.3).map((r) => r.distance_km / (r.duration_min / 60))), tram: a.filter((r) => r.mode === 'tram').length > a.length / 2 })).sort((a, b) => b.n - a.n);
+    const T5 = Lr.filter((l) => l.n >= 5), T10 = Lr.filter((l) => l.n >= 10 && l.p >= 5);
+    const colL = (l) => (l.tram ? 'var(--tram)' : 'var(--p3)');
+    const g1 = hbarChart({ title: 'Liniile raportate (cel puțin 5 drumuri)', aria: 'Grafic: liniile de transport public cele mai raportate', max: Math.ceil(T5[0].n / 10) * 10, ticks: [0, 10, 20, 30, 40].filter((t) => t <= Math.ceil(T5[0].n / 10) * 10), unit: '', x0: 110, rows: T5.map((l) => ({ label: 'Linia ' + l.k, v: l.n, color: colL(l), text: `${l.n} · ${fmt(l.med)} min` })) });
+    const g2 = hbarChart({ title: 'Viteza din ușă în ușă pe linie (km/h, cel puțin 10 drumuri și 5 participanți)', aria: 'Grafic: viteza mediană din ușă în ușă pe linie', max: 10, ticks: [0, 2, 4, 6, 8, 10], unit: '', x0: 110, rows: [...T10].sort((a, b) => b.v - a.v).map((l) => ({ label: 'Linia ' + l.k, v: l.v, color: colL(l), text: `${fix(l.v)} km/h · ${fix(l.km)} km` })) });
+    const tpAll = R.filter((r) => ['bus', 'tram'].includes(r.mode)).length;
+    const f = [...T10].sort((a, b) => b.v - a.v);
+    S.linii = T10.map((l) => ({ linia: l.k, n: l.n, med: l.med, v: l.v }));
+    const body = fig(g1, g2) + '\n' + legend('Tip', [[sw('var(--p3)'), 'autobuz'], [sw('var(--tram)'), 'tramvai']]) + '\n' +
+      notes([`Din ${nde(tpAll, 'drumuri')} cu autobuzul sau tramvaiul, ${X.length} au linia completată. Cele mai raportate: ${T5.slice(0, 5).map((l) => `<b>${l.k}</b> (${l.n})`).join(', ')}.`,
+        f.length >= 2 ? `Dintre liniile cu cel puțin 10 drumuri de la cel puțin 5 participanți, cea mai rapidă din ușă în ușă e linia <b>${f[0].k}</b> (${fix(f[0].v)} km/h), iar cea mai lentă linia <b>${f[f.length - 1].k}</b> (${fix(f[f.length - 1].v)} km/h). Durata include mersul până la stație, așteptarea și eventualele schimbări, iar distanța e în linie dreaptă, ceea ce dezavantajează traseele ocolite.` : '',
+        'Volumele sunt mici (cel mult câteva zeci de drumuri pe linie), deci e o primă imagine, nu un clasament. Cu mai multe răspunsuri de la călători, putem compara liniile cu și fără bandă dedicată direct din experiența oamenilor, nu doar din GPS-ul vehiculelor.'].filter(Boolean)) + '\n' +
+      table('Datele graficului', ['Linia', 'Drumuri', 'Participanți', 'Durata mediană', 'Distanța mediană', 'Viteza din ușă în ușă'], T5.map((l) => ['Linia ' + l.k, l.n, l.p, fmt(l.med) + ' min', fix(l.km) + ' km', fix(l.v) + ' km/h']), '<p class="fine">Linia e cea declarată de participant (câmp opțional). Sub 10 drumuri: doar semnalare.</p>');
+    sections.push(section('linii-tp', 'Liniile de transport public', 'Graficul', 'Ce linii folosesc participanții și cât de repede ajung', 'Liniile de autobuz și tramvai declarate de participanți, cu durata mediană a drumului din ușă în ușă. Câmpul e opțional, deci acoperă doar o parte din drumurile cu transportul public.', body));
+  }
   for (const s of ['jurnal-gps', 'tomtom', 'piste', 'urgenta', 'regional', 'scenarii']) sections.push(fs.readFileSync(path.join(STATIC, s + '.html'), 'utf8'));
 
   // ---------- antet, evoluție, cuprins, subsol
@@ -358,7 +461,7 @@ async function main() {
     [evoRow('Deplasări', prev.n, S.n), evoRow('Participanți', prev.participanti, S.participanti), evoRow('Zone din Iași cu cel puțin 10', prev.zone10, S.zone10, (v) => v + ' / 17'), evoRow('Zone din Iași cu cel puțin 50', prev.zone50, S.zone50, (v) => v + ' / 17'),
       evoRow('Comune cu cel puțin 10', prev.com10, S.com10, (v) => v + ' / 27'), evoRow('Comune fără nicio deplasare', prev.com0, S.com0, (v) => v + ' / 27'), evoRow('Relații O–D cu cel puțin 10', prev.rel10, S.rel10)]
       .map((r) => `<tr>${r.map((c, i) => `<td${i ? ' class="n"' : ''}>${c}</td>`).join('')}</tr>`).join('') + '</tbody></table></div></section>' : '';
-  const TOC = [['acoperire', 'Acoperire teritorială'], ['plecari-sosiri', 'Plecări și sosiri'], ['fluxuri', 'Fluxuri Origine → Destinație'], ['durata', 'Durata mediană'], ['durata-timp', 'Durata în timp'], ['vacanta', 'Vacanța școlară, 26–30 octombrie'], ['ocupare', 'Persoane în mașină'], ['dotari', 'Dotări publice și sosiri'], ['transport-public', 'Rețeaua de transport public'], ['benzi-dedicate', 'Benzi dedicate · date GPS ale vehiculelor CTP'], ['tp-domiciliu', 'Transportul public după domiciliu'], ['participare', 'Participare și țintă'], ['moduri', 'Cota modală și durata'], ['jurnal-gps', 'Jurnal GPS · un participant'], ['tomtom', 'Timp declarat vs. timp de condus'], ['piste', 'Piste de lucru pentru planificare'], ['urgenta', 'Accesibilitate · spitalele de urgență'], ['regional', 'Spitalul Regional de Urgență'], ['scenarii', 'Scenariu · inele și radiale']];
+  const TOC = [['acoperire', 'Acoperire teritorială'], ['plecari-sosiri', 'Plecări și sosiri'], ['fluxuri', 'Fluxuri Origine → Destinație'], ['durata', 'Durata mediană'], ['durata-timp', 'Durata în timp'], ['vacanta', 'Vacanța școlară, 26–30 octombrie'], ['ocupare', 'Persoane în mașină'], ['dotari', 'Dotări publice și sosiri'], ['transport-public', 'Rețeaua de transport public'], ['benzi-dedicate', 'Benzi dedicate · date GPS ale vehiculelor CTP'], ['tp-domiciliu', 'Transportul public după domiciliu'], ['participare', 'Participare și țintă'], ['moduri', 'Cota modală și durata'], ['scop', 'Scopul drumului'], ['viteza', 'Viteza din ușă în ușă'], ['drumuri-scurte', 'Drumuri scurte'], ['linii-tp', 'Liniile de transport public'], ['jurnal-gps', 'Jurnal GPS · un participant'], ['tomtom', 'Timp declarat vs. timp de condus'], ['piste', 'Piste de lucru pentru planificare'], ['urgenta', 'Accesibilitate · spitalele de urgență'], ['regional', 'Spitalul Regional de Urgență'], ['scenarii', 'Scenariu · inele și radiale']];
   const UNITS = Object.fromEntries(Object.values(U).map((u) => [u.id, { n: u.n, o: u.o, d: u.d, t: u.t, po: u.po, med: u.med, p90: u.p90 == null ? null : Math.round(u.p90 * 10) / 10 }]));
   const rd = (n) => fs.readFileSync(path.join(STATIC, n), 'utf8');
   const html = `<title>Atlasul deplasărilor ZMI Iași</title>
@@ -385,7 +488,7 @@ async function main() {
 </aside>
 ${evo}
 <nav class="toc" aria-label="Hărți">${TOC.map(([id, t], i) => `<a href="#${id}"><span>${i + 1}</span>${t}</a>`).join('')}</nav>
-${sections.join('\n')}
+${sections.map((x, i) => x.replace(/<span class="fno">(Harta|Graficul)(?: \d+)?<\/span>/, (m, w) => `<span class="fno">${w} ${i + 1}</span>`)).join('\n')}
 <footer class="foot"><p>Studiu participativ O–D · Zona Metropolitană Iași · date preliminare ${per} · ${nde(S.n, 'deplasări')}, ${nde(S.participanti, 'participanți')}. Timpi de condus: TomTom (trafic istoric, marți 10 noiembrie 2026). Inele și radiale: MVA × MVI, rev. 3.3. Limite administrative: ANCPI (UAT), zonare de analiză MVA–MVI.</p><p>mobilitate-iasi.netlify.app · contact@moldovavreainfrastructura.ro</p></footer>
 </div>
 <div id="tip" class="tip" role="status" hidden></div>

@@ -12,7 +12,7 @@ node scripts/atlas/build.js --export <trips_raw_AAAAMMZZ.jsonl> --out <dosar> --
 - Calculele folosesc aceleași reguli ca analiza din `server/analysis.js` (VALID și de verificat, fără EXCLUDE).
 
 ## Fișiere
-- `build.js`: secțiunile 1–9 și 11–13, antetul, cuprinsul și subsolul.
+- `build.js`: secțiunile calculate din export (1–9, 11–17), antetul, cuprinsul și subsolul. Numerotarea hărților și graficelor se face automat, după ordinea secțiunilor.
 - `compute.js`, `stats.js`: agregatele pe unități și relații.
 - `lib.js`: formatare (română: „45 de minute”, „62,5 minute”) și desenul hărților și graficelor.
 - `geom.json`: contururile zonelor și comunelor în coordonatele panourilor, pozițiile etichetelor și rețeaua de transport public (harta 9).
