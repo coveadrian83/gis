@@ -7,7 +7,7 @@ pentru harta /urban/ – acolo unde INS nu publică date pe UAT:
 
   git clone --depth 1 https://github.com/geospatialorg/unde-locuiesc-romanii.git <dir>
   python scripts/urban_ulr.py <dir>      → data/urban/ulr_uat.csv
-Necesită pyarrow, pyogrio, shapely; limitele UAT vin din cache/urban (scripts/urban_351.py).
+Necesită pyarrow, shapely; limitele UAT: public/data/urban/uat.geojson.
 """
 import csv, json, os, sys
 
@@ -17,7 +17,7 @@ OUT = os.path.join(ROOT, 'data', 'urban', 'ulr_uat.csv')
 
 def main(repo):
     import pyarrow.parquet as pq
-    import pyogrio.raw, shapely
+    import shapely
     d = os.path.join(repo, 'data', 'out')
     core = pq.read_table(os.path.join(d, 'core.parquet'), columns=['cell_id', 'pop_total']).to_pydict()
     env = pq.read_table(os.path.join(d, 'env.parquet'), columns=['cell_id', 'siruta', 'acces_gaz']).to_pydict()
@@ -36,13 +36,12 @@ def main(repo):
     # spitalele ANMCS în poligoanele UAT (GISCO LAU 2024)
     hosp = json.load(open(os.path.join(d, 'hospitals.geojson'), encoding='utf-8'))['features']
     pts = shapely.points([f['geometry']['coordinates'] for f in hosp])
-    _m, _f, geom, fields = pyogrio.raw.read(os.path.join(ROOT, 'cache', 'urban', 'LAU_RG_01M_2024_4326.gpkg'),
-                                           where="CNTR_CODE='RO'")
-    polys = shapely.from_wkb(geom)
+    uat = json.load(open(os.path.join(ROOT, 'public', 'data', 'urban', 'uat.geojson'), encoding='utf-8'))['features']
+    polys = [shapely.geometry.shape(f['geometry']) for f in uat]
     tree = shapely.STRtree(polys)
     sp = {}
     for i, j in zip(*tree.query(pts, predicate='within')):
-        s = int(fields[0][j].split('_')[1])
+        s = uat[j]['properties']['s']
         sp.setdefault(s, []).append(hosp[i]['properties'].get('nume') or '')
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     with open(OUT, 'w', encoding='utf-8', newline='') as f:

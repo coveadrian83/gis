@@ -49,7 +49,7 @@
   <h2>2. Unitatea de analiză</h2>
   <p>Analiza se face pe <b>unitate administrativ-teritorială</b> (UAT, cod SIRUTA): 103 municipii (inclusiv București), 217 orașe (cu Băneasa) și 2.861 de comune – 3.181 de UAT-uri. Statisticile INS pe „localități” sunt, de fapt, pe UAT: populația unui oraș include și satele care aparțin de el. Fișa fiecărui UAT arată separat populația localității de reședință, pentru comparație.</p>
   <p><b>Statutul</b> e cel din SIRUTA / RPL 2021, cu o corecție: Băneasa (Constanța) e trecută drept comună în ANCPI și în RPL 2021, dar a fost declarată oraș prin Legea 83/2004; harta o tratează ca oraș. Fiind în afara listei INS a orașelor, nu are date la indicatorii 11–13 și 16.</p>
-  <p>Limitele UAT: Eurostat GISCO, <i>Local Administrative Units</i> 2024, scara 1:1 milion (simplificate pentru web); codul LAU al României este codul SIRUTA. Populația și satele componente: RPL 2021, tabelul 1.22.</p>
+  <p>Limitele UAT, ale județelor și ale regiunilor de dezvoltare: ANCPI, setul INSPIRE „Unități administrative” (versiunea din 7 aprilie 2025), simplificate pentru afișare (preluate din harta „Orașe după Legea 351”). Centrul fiecărui UAT, suprafața lui și distanțele până la cel mai apropiat oraș se calculează pe aceste limite. Populația și satele componente: RPL 2021, tabelul 1.22.</p>
 
   <h2>3. Indicatorii și sursele</h2>
   <p>Pentru fiecare indicator se folosește cel mai recent an disponibil în TEMPO-Online (pe UAT): 2025 pentru străzi, rețele, spații verzi, paturi, învățământ, cazare și biblioteci, 2024 pentru medici, 1 ianuarie 2026 pentru populația după domiciliu. Un UAT care lipsește dintr-o matrice INS pe localități (care listează doar localitățile cu unități sau rețea) are valoarea 0. Indicatorii pe care INS nu îi publică pe UAT sunt <span class="tag est">estimați</span> sau rămân <span class="tag na">fără date</span> și nu intră în evaluare.</p>
@@ -115,7 +115,7 @@
     <li>geo-spatial.org, <i>Unde locuiesc românii?</i> (<a href="https://github.com/geospatialorg/unde-locuiesc-romanii" target="_blank" rel="noopener">github.com/geospatialorg/unde-locuiesc-romanii</a>): grila RPL 2021 de 1 km cu intravilanul ANCPI/CNGCFT și accesul la gaze pe localitate, registrul ANMCS al unităților sanitare.</li>
     <li>MDLPA, platforma <a href="https://datelocale.mdlpa.ro/ro/planning/registru-pug/" target="_blank" rel="noopener">Date Locale</a> – registrul documentațiilor de urbanism (PUG).</li>
     <li>Ministerul Educației – Rețeaua școlară 2025–2026; Ministerul Turismului – SITUR, structuri de primire turistică clasificate (oct. 2026); INS – RPL 2011, dotarea locuințelor pe UAT (prin harta „Orașe după Legea 351”).</li>
-    <li>Eurostat GISCO – Local Administrative Units 2024 (© EuroGeographics pentru limitele administrative).</li>
+    <li>ANCPI – setul INSPIRE „Unități administrative” (7 aprilie 2025): limitele UAT, ale județelor și ale regiunilor. Rezervă: Eurostat GISCO – Local Administrative Units 2024 (© EuroGeographics), cu <code>scripts/urban_351.py --geometrie</code>.</li>
     <li>Covăsnianu A., Covăsnianu L.-E. (2014), <i>An Urban Perspective upon Moldavian Settlements. From Political Desideratum to Territorial Reality</i>, Romanian Review of Regional Studies, X(2), 39–46.</li>
   </ul>
   <p class="note">Reproducere: <code>scripts/urban_tempo.py</code> (descărcarea din TEMPO, în GitHub Actions – „Date urbane (Legea 351/2001)”) și <code>scripts/urban_351.py</code> (indicatorii, estimările și fișierele hărții); pragurile legii sunt în <code>config/urban_351.json</code>.</p>

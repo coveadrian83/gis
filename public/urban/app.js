@@ -1,10 +1,12 @@
 /* Rețeaua urbană a României prin filtrul Legii 351/2001 (anexa II, modificată prin Legea 100/2007).
- * Datele: ../data/urban/uat.geojson (limitele UAT, GISCO LAU 2024) și ../data/urban/urban_351.json (indicatorii pe UAT),
+ * Datele: ../data/urban/uat.geojson (limitele UAT, ANCPI 2025), ../data/urban/limite.geojson (județe și regiuni) și
+ * ../data/urban/urban_351.json (indicatorii pe UAT),
  * generate de scripts/urban_351.py. Evaluarea (pragurile pentru oraș și municipiu) se face aici, ca regula de calificare
  * să poată fi schimbată din pagină. */
 (function () {
   'use strict';
   var GEO_URL = '../data/urban/uat.geojson';
+  var LIM_URL = '../data/urban/limite.geojson';   // liniile de județ și de regiune (opțional)
   var DATA_URL = '../data/urban/urban_351.json';
 
   var $ = function (id) { return document.getElementById(id); };
@@ -60,7 +62,7 @@
   var map = L.map('map', { maxZoom: 14, minZoom: 5.5, zoomSnap: 0.25 }).fitBounds(RO);
   var base = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 14, className: 'basemap',
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">contribuitorii OpenStreetMap</a> · limite UAT © EuroGeographics'
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">contribuitorii OpenStreetMap</a> · limite UAT © ANCPI'
   }).addTo(map);
   var tileErrors = 0;
   base.on('tileerror', function () { if (++tileErrors === 8) $('baseNote').textContent = 'Harta de fundal nu se încarcă; UAT-urile sunt afișate fără fundal.'; });
@@ -421,6 +423,15 @@
         l.on('mouseover', function () { var u = UAT[f.properties.s]; if (u) l.bindTooltip(esc(u.n) + ' · ' + esc(ST[u.ev.st].label), { sticky: true }).openTooltip(); });
       }
     }).addTo(map);
+    // contururile județelor și regiunilor, peste UAT-uri, fără interacțiune
+    map.createPane('lim').style.zIndex = 420;
+    map.getPane('lim').style.pointerEvents = 'none';
+    fetch(LIM_URL).then(function (r) { return r.ok ? r.json() : null; }).then(function (lim) {
+      if (!lim) return;
+      L.geoJSON(lim, { pane: 'lim', interactive: false, style: function (f) {
+        return f.properties.t === 'regiune' ? { color: '#2b59c3', weight: 2.2, opacity: 0.8 } : { color: '#555', weight: 1, opacity: 0.7 };
+      } }).addTo(map);
+    }).catch(function () {});
     $('dataInfo').innerHTML = esc(D.info || '');
     restyle();
   }).catch(function (e) {

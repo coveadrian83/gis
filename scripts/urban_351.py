@@ -138,18 +138,21 @@ def geometrie(uat):
 
 
 def centre(uat):
-    """Punctul reprezentativ al fiecărui UAT (în interiorul poligonului) – pentru simbolurile localităților."""
-    import pyogrio.raw, shapely
-    meta, _f, geom, fields = pyogrio.raw.read(fisier('LAU_RG_01M_2024_4326.gpkg'), where="CNTR_CODE='RO'")
-    for i, g in enumerate(geom):
-        s = int(fields[0][i].split('_')[1])
-        if s in uat:
-            p = shapely.from_wkb(g)
-            c = p.centroid
-            if not p.contains(c):
-                c = p.representative_point()
-            uat[s]['xy'] = [round(c.x, 4), round(c.y, 4)]
-            uat[s]['km2'] = round(float(fields[5][i]), 1)
+    """Punctul reprezentativ al fiecărui UAT (în interiorul poligonului) și suprafața – din limitele afișate pe hartă
+    (public/data/urban/uat.geojson: ANCPI, preluate cu scripts/urban_harta_import.py, sau GISCO cu --geometrie)."""
+    import shapely
+    from pyproj import Geod
+    geod = Geod(ellps='WGS84')
+    for f in json.load(open(os.path.join(OUT, 'uat.geojson'), encoding='utf-8'))['features']:
+        s = f['properties']['s']
+        if s not in uat:
+            continue
+        p = shapely.geometry.shape(f['geometry'])
+        c = p.centroid
+        if not p.contains(c):
+            c = p.representative_point()
+        uat[s]['xy'] = [round(c.x, 4), round(c.y, 4)]
+        uat[s]['km2'] = round(abs(geod.geometry_area_perimeter(p)[0]) / 1e6, 1)
 
 
 # ------------------------------------------------------------------ RPL 2021 pe județe (calibrarea estimărilor)
