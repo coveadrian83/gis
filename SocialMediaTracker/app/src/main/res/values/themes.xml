@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Base application theme -->
+    <style name="Theme.SocialMediaTracker" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+        <!-- Primary brand colour -->
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryVariant">@color/primary_dark</item>
+        <item name="colorOnPrimary">@android:color/white</item>
+
+        <!-- Secondary brand colour -->
+        <item name="colorSecondary">@color/primary</item>
+        <item name="colorSecondaryVariant">@color/primary_dark</item>
+        <item name="colorOnSecondary">@android:color/white</item>
+
+        <!-- Status bar colour -->
+        <item name="android:statusBarColor">@color/primary_dark</item>
+
+        <!-- Window background -->
+        <item name="android:windowBackground">@color/background</item>
+    </style>
+
+    <!-- No-action-bar variant (keeps Material Components available) -->
+    <style name="Theme.SocialMediaTracker.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+</resources>

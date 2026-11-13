@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Simple phone / chart icon in white -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M38,30 C35.8,30 34,31.8 34,34 L34,74 C34,76.2 35.8,78 38,78
+                          L70,78 C72.2,78 74,76.2 74,74 L74,34 C74,31.8 72.2,30 70,30 Z
+                          M38,34 L70,34 L70,70 L38,70 Z
+                          M54,72 C55.1,72 56,72.9 56,74 C56,75.1 55.1,76 54,76
+                          C52.9,76 52,75.1 52,74 C52,72.9 52.9,72 54,72 Z" />
+    <!-- Bar chart inside screen -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M42,60 L42,65 L46,65 L46,60 Z
+                          M50,55 L50,65 L54,65 L54,55 Z
+                          M58,50 L58,65 L62,65 L62,50 Z" />
+</vector>
