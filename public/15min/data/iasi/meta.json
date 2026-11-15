@@ -15,22 +15,22 @@
   27.5842
  ],
  "radius_m": 9500,
- "nodes": 20883,
- "edges": 27081,
- "pois": 1910,
+ "nodes": 20951,
+ "edges": 27178,
+ "pois": 1928,
  "counts": {
-  "Alimentație": 425,
-  "Sănătate": 340,
+  "Alimentație": 427,
+  "Sănătate": 343,
   "Educație": 178,
-  "Parcuri și locuri de joacă": 299,
-  "Cafenele și restaurante": 385,
-  "Bănci de odihnă": 41,
-  "Stații de transport public": 242
+  "Parcuri și locuri de joacă": 301,
+  "Cafenele și restaurante": 393,
+  "Bănci de odihnă": 43,
+  "Stații de transport public": 243
  },
  "steps": 411,
  "steps_with_wheelchair_ramp": 6,
  "osmnx": "2.1.1",
- "generated": "2026-10-16T04:57Z",
+ "generated": "2026-11-15T15:09Z",
  "elevation": {
   "source": "Copernicus GLO-30 (DSM), deschidere morfologică 5 px + gauss σ=1",
   "min_m": 34.3,
@@ -40,9 +40,9 @@
    "3-5": 17.7,
    "5-8": 16.5,
    "8-12": 14.9,
-   "12+": 17.8
+   "12+": 17.9
   },
   "osm_incline_edges": 250,
-  "generated": "2026-10-16T04:57Z"
+  "generated": "2026-11-15T15:09Z"
  }
 }
