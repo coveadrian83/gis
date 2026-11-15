@@ -17,6 +17,7 @@ on:
       - scripts/puz_iasi.py
       - data/puz_parcele.geojson
       - scripts/puz_mobilitate.py
+      - scripts/puz_gpkg.py
       - config/puz_mobilitate.json
       - public/15min/data/iasi/pois.json
       - public/15min/data/iasi/graph.bin
@@ -51,11 +52,15 @@ jobs:
         run: python scripts/puz_iasi.py --reimprospateaza
       - name: Estimează deplasările generate (scenariile PMUD și RPL)
         run: python scripts/puz_mobilitate.py
+      - name: GeoPackage pentru QGIS și lista de verificare manuală
+        run: |
+          pip install -q geopandas pyogrio shapely
+          python scripts/puz_gpkg.py
       - name: Salvează datele în branch
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898699+github-actions[bot]@users.noreply.github.com"
-          git add public/data/puz_iasi.geojson public/data/puz_iasi.csv public/data/puz_iasi_de_verificat.csv public/data/puz_iasi_parcele.geojson public/data/puz_mobilitate.json public/data/puz_mobilitate.csv
+          git add public/data/puz_iasi.geojson public/data/puz_iasi.csv public/data/puz_iasi_de_verificat.csv public/data/puz_iasi_parcele.geojson public/data/puz_mobilitate.json public/data/puz_mobilitate.csv data/puz_iasi_impact_mobilitate.gpkg data/puz_iasi_verificare_manuala.csv
           if git diff --cached --quiet; then echo "Datele nu s-au schimbat."; exit 0; fi
           git commit -m "PUZ Iași: date actualizate"
           git pull --rebase origin "${GITHUB_REF_NAME}"

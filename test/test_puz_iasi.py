@@ -219,5 +219,23 @@ class PuzMobilitate(unittest.TestCase):
         self.assertTrue(M.transit_access(p, stations, 1200, net)["acces_tramvai_tren_800m"])
 
 
+class PuzGpkg(unittest.TestCase):
+    def test_verification_rows(self):
+        import puz_gpkg as G
+        feat = lambda hcl, prec, cad, area: {"properties": {"hcl": hcl, "statut": "aprobat", "precizie": prec, "cadastral": cad,
+                                                            "suprafata_mp": area}, "geometry": {"coordinates": [27.6, 47.16]}}
+        features = [feat("1/2025", "stradă", "", 5000.0), feat("2/2025", "număr", "161244", 19000.0),
+                    feat("3/2025", "parcelă", "999", 100.0), feat("4/2025", "zonă", "777, 888", 12000.0)]
+        mob = {"1/2025": {"realist_RPL_auto_varf": 5}, "2/2025": {"realist_RPL_auto_varf": 30, "realist_locuitori": 400},
+               "4/2025": {"realist_RPL_auto_varf": 1, "realist_atractie_lm_auto_varf": 1}}
+        rows = G.verification_rows(features, mob, {"777": 500.0})
+        self.assertEqual([r["hcl"] for r in rows], ["2/2025", "1/2025", "4/2025"])     # PUZ-ul pe parcelă lipsește
+        self.assertEqual([r["prioritate"] for r in rows], ["A", "B", "B"])             # 4/2025: B prin suprafață (≥ 1 ha)
+        self.assertEqual(rows[1]["motiv_fara_parcela"], "fără număr cadastral în hotărâre")
+        self.assertIn("nu e în extrasul", rows[0]["motiv_fara_parcela"])
+        self.assertIn("1 din 2 numere lipsesc", rows[2]["motiv_fara_parcela"])
+        self.assertEqual(rows[0]["rang"], 1)
+
+
 if __name__ == "__main__":
     unittest.main()

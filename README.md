@@ -203,6 +203,23 @@ de Consiliul Local Iași din 2016 până azi, pe hartă, peste cele 17 zone MVA�
   zonelor după densitate sau acces, tabelul „densitate umană și acces la transport public”, **izocrona de 10 minute
   pe jos** la trecerea cu mouse-ul peste un PUZ (cu stațiile din ea; `public/15min/core.js`) și mărimea cercurilor
   după suprafață, deplasări produse, autoturisme în ora de vârf sau deplasări atrase.
+- **GeoPackage pentru QGIS** (`data/puz_iasi_impact_mobilitate.gpkg`, EPSG:3844 Stereo 70), generat de
+  `python scripts/puz_gpkg.py` (necesită `pip install geopandas pyogrio shapely`), cu straturile:
+  - `puz_iasi` – toate PUZ-urile, cu indicatorii urbanistici și de mobilitate (`m_…`);
+  - `puz_parcele_ocpi2023` – parcelele PUZ din extrasul OCPI;
+  - `puz_de_verificat` – PUZ-urile aprobate care nu sunt pe parcelă, ordonate după impact;
+  - `zone_mva_mvi_impact`, `uat_zmi_impact` – totaluri pe zonele MVA–MVI și pe UAT-urile ZMI;
+  - `statii_transport_public`, `izocrone_10min_pe_jos` – stațiile și zona atinsă în 10 minute (800 m) din fiecare PUZ;
+  - `despre` – autor, surse, sistem de coordonate.
+
+  Pe UAT-uri, totalurile arată unde se generează deplasările. Impactul supralocal cere matricea O–D a studiului
+  MVA × MVI. Fișierul e determinist: același conținut dă același fișier, deci workflow-ul nu face commit-uri inutile.
+- **Verificare manuală**: `data/puz_iasi_verificare_manuala.csv` (separator `;`, pentru Excel), generat de același
+  script, cu aceleași PUZ-uri ca stratul `puz_de_verificat`, ordonate după autoturismele din ora de vârf. Are prioritățile
+  A / B / C, motivul pentru care parcela nu a fost găsită și linkul la HCL. Coloanele `lat`, `lon`, `sursa`, `nota`
+  completate se păstrează la rulările următoare. Pe hartă intră după ce sunt copiate în `data/puz_iasi_completari.csv`.
+  Căutarea parcelelor se face manual, de exemplu pe hărțile cadastrale publice: interogarea automată a serviciilor
+  comerciale, de exemplu CadRaport, e interzisă de termenii lor.
 - **Teste**: `python3 -m unittest discover -s test -p 'test_puz*.py'`.
 
 ## Transport public – Iași și Zona Metropolitană (`/transport/`)
@@ -422,10 +439,13 @@ public/transport/raport/    raportul zilnic din GPS (agregare.js = rezumatul zil
 scripts/puz_iasi.py         colectarea PUZ-urilor (hcl.usr.ro + apix.ro), extragerea indicatorilor, localizarea
 scripts/puz_parcele.py      extrasul parcelelor PUZ din parcelarul OCPI (data/puz_parcele.geojson)
 scripts/puz_mobilitate.py   deplasările generate de PUZ-uri (scenariile PMUD și RPL; config/puz_mobilitate.json)
+scripts/puz_gpkg.py         GeoPackage QGIS cu PUZ-urile și impactul lor + lista de verificare manuală
 scripts/transport_titluri.py  titlurile de călătorie CTP pe comune ZMI și luni (din centralizatoarele Excel)
 scripts/transport_linii.py  traseele și stațiile din KML / GeoPackage / Shapefile (data/transport/linii/)
 scripts/transport_sanatate.py  planul de referință al hărții de sănătate (orar GTFS + forme → sanatate_plan.json)
 data/puz_iasi_completari.csv  corecturi și completări manuale pentru PUZ-uri
+data/puz_iasi_impact_mobilitate.gpkg  GeoPackage QGIS (scripts/puz_gpkg.py)
+data/puz_iasi_verificare_manuala.csv  PUZ-urile de pus pe parcelă, ordonate după impact (scripts/puz_gpkg.py)
 scripts/export_15min.py     exportul rețelei pietonale și al facilităților din OSM (osmnx)
 scripts/elevatie_15min.py   panta: elevația Copernicus GLO-30 pe fiecare segment (elev.bin)
 scripts/export_micro15.py   rețeaua pentru micromobilitate: piste, limite de viteză, sens unic (osmnx)
