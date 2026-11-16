@@ -81,8 +81,9 @@ KPIS = [
     dict(k="birouri", n="Birouri", d="Oportunități economice", u_km2="birouri / km²", u_pop="birouri / 1.000 loc.",
          w=0.05, osm="office=*"),
 ]
-# sub acest număr total de obiecte în tot orașul, stratul e considerat insuficient cartografiat (pondere implicită 0)
-MIN_TOTAL = 60
+# stâlpii de iluminat sunt mii în realitate; sub acest număr în tot orașul stratul e considerat insuficient cartografiat
+# (pondere implicită 0). Celelalte straturi sunt rare prin natura lor (ex. ~25 de unități de poliție și pompieri).
+MIN_TOTAL = {"iluminat": 1000}
 
 
 def norm(s):
@@ -316,7 +317,7 @@ out geom qt;"""
     totals = {k["k"]: sum(z["raw"][k["k"]] for z in out_z) for k in KPIS}
     kpis = []
     for k in KPIS:
-        ok = k["k"] in ("strazi", "parcuri") or totals[k["k"]] >= MIN_TOTAL
+        ok = totals[k["k"]] >= MIN_TOTAL.get(k["k"], 1)
         kpis.append(dict(k, total=totals[k["k"]], ok=ok, w=k["w"] if ok else 0.0))
     doc = dict(generated=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%MZ"), osm_base=stamp,
                crs="EPSG:3844 (Stereo 70) pentru suprafețe și lungimi",
