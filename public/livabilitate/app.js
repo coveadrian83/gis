@@ -22,7 +22,30 @@
   }
   function vals(k) { return Z.map(function (z) { return z[mode === 'km2' ? 'km2v' : 'popv'][k]; }); }
   function unit(k) { return k[mode === 'km2' ? 'u_km2' : 'u_pop']; }
-  function digits(k) { return mode === 'pop' && k.k !== 'parcuri' ? 2 : 1; }
+  function digits(k) { return k.k === 'arbori' ? 0 : mode === 'pop' && k.k !== 'parcuri' && k.k !== 'sv' ? 2 : 1; }
+
+  // Registrul Spațiilor Verzi (data/rsv.json, scripts/livabilitate_rsv.py): înlocuiește parcurile din OSM cu spațiile
+  // verzi publice amenajate și adaugă arborii inventariați
+  function mergeRSV(d, rsv) {
+    var by = {}; rsv.zones.forEach(function (r) { by[r.id] = r; });
+    d.zones.forEach(function (z) {
+      var r = by[z.id]; if (!r) return;
+      z.rsv = r;
+      z.raw.sv = r.sv_pub; z.raw.arbori = r.arbori;
+      z.km2v.sv = Math.round(r.sv_pub / (z.km2 * 1e6) * 10000) / 100;
+      z.popv.sv = z.pop ? Math.round(r.sv_pub / z.pop * 100) / 100 : null;
+      z.km2v.arbori = Math.round(r.arbori / z.km2 * 10) / 10;
+      z.popv.arbori = z.pop ? Math.round(r.arbori / z.pop * 1000 * 10) / 10 : null;
+    });
+    var i = d.kpis.findIndex(function (k) { return k.k === 'parcuri'; });
+    var sum = function (f) { return d.zones.reduce(function (s, z) { return s + (z.rsv ? z.rsv[f] : 0); }, 0); };
+    d.kpis.splice(i, 1,
+      { k: 'sv', n: 'Spații verzi publice amenajate', d: 'Spații verzi și recreere', u_km2: '% din suprafața zonei', u_pop: 'm² / locuitor',
+        w: 0.10, ok: true, total: sum('sv_pub'), osm: 'Registrul Spațiilor Verzi (parcuri, scuaruri, spații dintre blocuri, aliniamente; fără pădure și fără curțile școlilor, spitalelor, bisericilor, cimitirelor)' },
+      { k: 'arbori', n: 'Arbori inventariați', d: 'Spații verzi și recreere', u_km2: 'arbori / km²', u_pop: 'arbori / 1.000 loc.',
+        w: 0.05, ok: true, total: sum('arbori'), osm: 'Registrul Spațiilor Verzi, stratul arborilor' });
+    d.rsv = rsv;
+  }
 
   function compute() {
     var tot = K.reduce(function (s, k) { return s + W[k.k]; }, 0) || 1;
@@ -45,7 +68,7 @@
       l.setPopupContent(popup(i));
     });
     var k = view === 'idx' ? null : K.filter(function (x) { return x.k === view; })[0];
-    $('viewNote').textContent = k ? k.n + ' – ' + unit(k) + '. Sursa OSM: ' + k.osm + '.' :
+    $('viewNote').textContent = k ? k.n + ' – ' + unit(k) + '. Sursa: ' + (k.k === 'sv' || k.k === 'arbori' ? '' : 'OpenStreetMap, ') + k.osm + '.' :
       'Indicele unificat: media ponderată a celor ' + K.filter(function (x) { return W[x.k] > 0; }).length + ' indicatori activi, scalată la 1–10.';
     $('rankRaw').textContent = k ? 'Valoare' : '';
     var order = Z.map(function (z, i) { return i; }).sort(function (a, b) { return (current(b) || 0) - (current(a) || 0); });
@@ -74,7 +97,11 @@
     K.forEach(function (k) {
       h += '<tr><td>' + k.n + (W[k.k] ? '' : ' <span class="u">(pondere 0)</span>') + '<div class="u">' + nf(vals(k.k)[i], digits(k)) + ' ' + unit(k) + '</div></td><td><b>' + nf(scores.per[k.k][i], 1) + '</b></td></tr>';
     });
-    return h + '</table><p class="u">Scoruri 1–10 față de celelalte zone.</p></div>';
+    if (z.rsv && z.pop) h += '</table><p class="u">Registrul Spațiilor Verzi: ' + nf(z.rsv.sv_pub / z.pop, 1) + ' m²/loc. amenajat cu acces public; ' +
+      nf(z.rsv.sv_tot / z.pop, 1) + ' m²/loc. cu tot cu pădure și spațiile cu acces restricționat (norma OUG 114/2007: 26 m²/loc.)' +
+      (z.rsv.padure ? '; pădure ' + nf(z.rsv.padure / 1e4, 1) + ' ha' : '') + '.</p>';
+    else h += '</table>';
+    return h + '<p class="u">Scoruri 1–10 față de celelalte zone.</p></div>';
   }
 
   function select(i, zoom) {
@@ -160,10 +187,13 @@
     setMode(mode);
     var bad = K.filter(function (k) { return !k.ok; });
     $('status').textContent = bad.length ? 'Puțin cartografiat în OSM (pornește cu ponderea 0): ' + bad.map(function (k) { return k.n.toLowerCase(); }).join(', ') + '.' : '';
-    $('foot').innerHTML = 'Date OpenStreetMap din ' + (d.osm_base ? new Date(d.osm_base).toLocaleDateString('ro-RO') : '–') +
+    $('foot').innerHTML = (d.rsv ? 'Spațiile verzi și arborii: Registrul Spațiilor Verzi al municipiului Iași (Primăria Iași, actualizat ' +
+      new Date(d.rsv.updated).toLocaleDateString('ro-RO') + '). ' : '') + 'Restul: date OpenStreetMap din ' + (d.osm_base ? new Date(d.osm_base).toLocaleDateString('ro-RO') : '–') +
       ' (© contribuitorii OSM, ODbL). Suprafețe și lungimi în Stereo 70. Populația: caroiajul de 100 m din <a href="../accesibilitate/">analiza accesibilității</a>. Metoda: „The Livability Index” (Urban Analytics, cap. 6), adaptată.';
   }
 
-  fetch('data/livabilitate.json').then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }).then(init)
+  var get = function (u) { return fetch(u).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }); };
+  Promise.all([get('data/livabilitate.json'), get('data/rsv.json').catch(function () { return null; })])
+    .then(function (a) { if (a[1]) mergeRSV(a[0], a[1]); init(a[0]); })
     .catch(function () { $('status').textContent = 'Datele nu sunt încă generate (scripts/livabilitate.py).'; });
 })();

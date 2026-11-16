@@ -48,7 +48,8 @@
 <tbody>
 <tr><td rowspan="2">Accesibilitate și mobilitate</td><td>Densitatea străzilor</td><td><code>highway=*</code> (toate căile)</td><td>km / km²</td><td>km / 1.000 loc.</td><td class="r">10%</td></tr>
 <tr><td>Stații de transport public</td><td><code>public_transport=platform|stop_position</code>, <code>highway=bus_stop</code>, <code>railway=tram_stop</code></td><td>stații / km²</td><td>stații / 1.000 loc.</td><td class="r">15%</td></tr>
-<tr><td rowspan="2">Spații verzi și recreere</td><td>Suprafața parcurilor</td><td><code>leisure=park</code> (poligoane unite)</td><td>% din suprafață</td><td>m² / locuitor</td><td class="r">10%</td></tr>
+<tr><td rowspan="3">Spații verzi și recreere</td><td>Spații verzi publice amenajate</td><td><b>Registrul Spațiilor Verzi</b> (vezi secțiunea 3); fără registru: OSM <code>leisure=park</code></td><td>% din suprafață</td><td>m² / locuitor</td><td class="r">10%</td></tr>
+<tr><td>Arbori inventariați</td><td><b>Registrul Spațiilor Verzi</b>, stratul arborilor</td><td>/ km²</td><td>/ 1.000 loc.</td><td class="r">5%</td></tr>
 <tr><td>Terenuri de sport</td><td><code>leisure=pitch</code></td><td>/ km²</td><td>/ 1.000 loc.</td><td class="r">10%</td></tr>
 <tr><td rowspan="2">Servicii publice</td><td>Farmacii</td><td><code>amenity=pharmacy</code></td><td>/ km²</td><td>/ 1.000 loc.</td><td class="r">10%</td></tr>
 <tr><td>Școli</td><td><code>amenity=school</code></td><td>/ km²</td><td>/ 1.000 loc.</td><td class="r">10%</td></tr>
@@ -59,7 +60,16 @@
 </tbody></table></div>
 <p>* Stâlpii de iluminat sunt mii în realitate, dar în OSM sunt cartografiați doar câteva zeci în tot Iașul (concentrați în 3–4 zone). Sub 1.000 de stâlpi în tot orașul, stratul e marcat ca insuficient cartografiat și pornește cu ponderea 0 (se poate activa manual). Poliția și pompierii sunt puțini și în realitate (circa 25 de unități), deci indicatorul rămâne, dar e grosier: multe zone au 0.</p>
 
-<h2>3. Adaptări față de metoda originală</h2>
+<h2>3. Registrul Spațiilor Verzi</h2>
+<p>Spațiile verzi și arborii vin din <b>Registrul Spațiilor Verzi al municipiului Iași</b>, aprobat de Primăria Municipiului Iași (date GIS cu ultima editare în octombrie 2022): 1.492 de imobile, 35.024 de parcele cu categoria de folosință și 136.577 de arbori. Fișierele originale nu sunt publicate; pe pagină intră doar totalurile pe zone (<code>scripts/livabilitate_rsv.py</code> → <code>data/rsv.json</code>).</p>
+<ul>
+  <li><b>Suprafața verde</b> = parcelele cu vegetație: categoriile SV (spațiu verde), AF și GN (aliniamente, arbuști, gard viu), tăiate exact pe limita zonei. Aleile și drumurile (DR), construcțiile (CO, CC), lacurile (HB), terenurile de sport (CS), locurile de joacă (CSJ) și terenurile libere (TLN) nu intră.</li>
+  <li><b>Pădurea</b> (PD: Pădurea Ciric, 218 ha, și partea împădurită a Grădinii Botanice) e raportată separat. Altfel, Aviației și Moara de Vânt ar avea de 10 ori mai mult „spațiu verde” decât restul orașului doar datorită pădurii.</li>
+  <li><b>Accesul public</b> nu e un câmp al registrului. Se deduce din denumirea imobilului: grădinițele, școlile, universitățile, spitalele, bisericile și mănăstirile, cimitirele, instituțiile, stadioanele, ștrandurile și Grădina Botanică (cu acces cu plată) sunt spații verzi cu <b>folosință specializată sau acces restricționat</b> (Legea 24/2007). Asta înseamnă 345 din cele 1.492 de imobile. Restul (parcuri, scuaruri, spațiile dintre blocuri, aliniamentele stradale, taluzuri) sunt considerate cu acces public.</li>
+  <li>Pe hartă, fiecare zonă arată și totalul (cu pădure și cu spațiile cu acces restricționat), comparat cu norma de 26 m²/locuitor din OUG 114/2007. Pe cele 17 zone: circa 10 m²/loc. de spațiu verde public amenajat și circa 22 m²/loc. în total.</li>
+</ul>
+
+<h2>4. Adaptări față de metoda originală</h2>
 <ul>
   <li><b>Zone în loc de sectoare</b>: Iașul nu are subdiviziuni administrative; zonele MVA–MVI sunt unitățile studiului O–D și ale celorlalte hărți ale proiectului.</li>
   <li><b>Raportarea la populație</b> (în plus): densitatea pe km² dezavantajează zonele mari, cu mult teren nelocuit – Bucium (16,5 km²) și Bularga – Zona Industrială (10,2 km²) au de 10–20 de ori suprafața Studențescului. Populația 2020 vine din caroiajul de 100 m al <a href="../accesibilitate/">analizei accesibilității</a>. Pentru parcuri, raportarea la populație dă m² de parc pe locuitor, comparabil cu norma de spațiu verde din OUG 114/2007 (26 m²/loc.) – cu mențiunea că OSM <code>leisure=park</code> nu acoperă toate spațiile verzi din registrul oficial.</li>
@@ -67,11 +77,12 @@
   <li><b>Comerț și birouri separate corect</b>: în capitolul original, cele două straturi ieșiseră identice (aceleași 1.378 de obiecte în Hietzing), deci indicatorul de „locuri de muncă” dubla de fapt comerțul.</li>
   <li><b>Fără dublă numărare la limite</b>: în loc de „intersectează limita” (un parc mare la granița a două zone s-ar număra în ambele), fiecare obiect punctual intră într-o singură zonă; suprafețele și lungimile se împart exact.</li>
   <li><b>Poliție și pompieri</b> împreună (în loc de doar poliție), pentru că în Iași fiecare are doar câteva unități.</li>
+  <li><b>Date locale</b>: spațiile verzi vin din registrul oficial în loc de OSM (în OSM lipseau aproape complet în Galata–Mircea, Aviației, Frumoasa, Cantemir–Socola), iar arborii sunt un indicator nou.</li>
   <li><b>Proiecția</b>: Stereo 70 (EPSG:3844) pentru suprafețe și lungimi.</li>
   <li><b>Culorile</b>: o singură nuanță, de la deschis (scor mic) la închis (scor mare), în loc de roșu–galben–verde (lizibilă și pentru daltoniști).</li>
 </ul>
 
-<h2>4. Limite</h2>
+<h2>5. Limite</h2>
 <ul>
   <li>OSM e o limită inferioară: un cartier bine cartografiat iese mai bine decât unul la fel de dotat, dar cartografiat mai puțin.</li>
   <li>Numărul de obiecte nu spune nimic despre calitate, capacitate sau program; o școală mică și un liceu mare cântăresc la fel.</li>
@@ -80,7 +91,7 @@
   <li>Ponderile reflectă un set de priorități; schimbați-le și comparați clasamentele – zonele care rămân sus (sau jos) indiferent de ponderi sunt rezultatul cel mai solid.</li>
 </ul>
 
-<h2>5. Reproducere</h2>
+<h2>6. Reproducere</h2>
 <p>Scriptul <code>scripts/livabilitate.py</code> (Python, <code>shapely</code> + <code>pyproj</code>) descarcă datele și scrie <code>public/livabilitate/data/livabilitate.json</code> – valorile brute, valorile pe km² și pe populație, pentru fiecare zonă. Rulează automat în GitHub Actions (<code>.github/workflows/livabilitate.yml</code>). Tabelul complet, cu valori, scoruri și ponderi, se descarcă de pe hartă (CSV).</p>
 <p><a href="./">← Înapoi la hartă</a></p>
 </main>
