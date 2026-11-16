@@ -14,3 +14,5 @@ data/chestionar_velo/
 data/accidente/
 # fișierele de lucru ale Masterplanului velo (DXF de 18 MB) – se publică doar rețeaua propusă convertită (public/micromobilitate/data/retea_propusa.geojson)
 data/masterplan/
+# datele Defensive Pedal (scorul pe străzi, ADT VISUM 2022) – doar pentru uz intern, nu se publică
+data/defensive_pedal/
