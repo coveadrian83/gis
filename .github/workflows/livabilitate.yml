@@ -1,0 +1,43 @@
+# Indicele de locuibilitate pe cele 17 zone MVA–MVI (scripts/livabilitate.py → public/livabilitate/data/livabilitate.json):
+# descarcă din OpenStreetMap (Overpass) străzile, parcurile, stațiile, serviciile, magazinele și birourile din Iași.
+# Rulează când se modifică scriptul sau acest fișier; manual: Actions → „Indicele de locuibilitate” → Run workflow.
+name: Indicele de locuibilitate
+
+on:
+  workflow_dispatch:
+  push:
+    # pe main nu rulează la push: rulează pe branch-ul PR-ului (publicările de acolo sunt gratuite), iar datele intră pe
+    # main odată cu merge-ul – altfel, după fiecare merge, un commit automat în plus = încă o publicare (15 credite)
+    branches-ignore: [main]
+    paths:
+      - scripts/livabilitate.py
+      - .github/workflows/livabilitate.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: livabilitate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  livabilitate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install shapely pyproj numpy
+      - name: Descarcă din Overpass și calculează indicatorii
+        run: python scripts/livabilitate.py
+      - name: Salvează datele în branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898699+github-actions[bot]@users.noreply.github.com"
+          git add public/livabilitate/data
+          if git diff --cached --quiet; then echo "Datele nu s-au schimbat."; exit 0; fi
+          git commit -m "Locuibilitate: date OSM descărcate"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
