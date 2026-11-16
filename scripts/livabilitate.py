@@ -22,7 +22,7 @@ Adaptări pentru Iași (vezi și public/livabilitate/metodologie.html):
 Utilizare (rulează automat în GitHub Actions – .github/workflows/livabilitate.yml):
     pip install shapely pyproj
     python scripts/livabilitate.py                     # descarcă din Overpass și scrie public/livabilitate/data/
-    python scripts/livabilitate.py --cache osm.json    # păstrează / refolosește răspunsul Overpass
+    python scripts/livabilitate.py --cache osm    # păstrează / refolosește răspunsurile (osm.fac.json, osm.str.json)
 """
 import argparse
 import json
@@ -99,7 +99,7 @@ def overpass(query, cache=None):
         url = OVERPASS_SERVERS[attempt % len(OVERPASS_SERVERS)]
         try:
             req = urllib.request.Request(url, data=data, headers={"User-Agent": "mobilitate-iasi-livabilitate/1.0"})
-            with urllib.request.urlopen(req, timeout=400) as r:
+            with urllib.request.urlopen(req, timeout=300) as r:
                 res = json.loads(r.read())
             if cache:
                 Path(cache).write_text(json.dumps(res))
@@ -218,7 +218,8 @@ def main():
     if missing:
         print("Fără populație:", ", ".join(missing), file=sys.stderr)
 
-    q = f"""[out:json][timeout:360][bbox:{bbox}];
+    head = f"[out:json][timeout:240][bbox:{bbox}];"
+    q_feat = head + """
 (
   nwr[shop]; nwr[office];
   nwr[amenity~"^(pharmacy|school|police|fire_station)$"];
@@ -226,12 +227,12 @@ def main():
   node[highway~"^(street_lamp|bus_stop)$"];
   node[public_transport~"^(platform|stop_position)$"]; way[public_transport=platform];
   node[railway=tram_stop];
-  way[highway][area!=yes];
 );
 out geom qt;"""
-    print("Descarc din Overpass…", file=sys.stderr)
-    res = overpass(q, a.cache)
-    els = res.get("elements", [])
+    q_road = head + "\nway[highway][area!=yes];\nout tags geom qt;"
+    print("Descarc din Overpass (facilități, apoi străzi)…", file=sys.stderr)
+    res = overpass(q_feat, a.cache and a.cache + ".fac.json")
+    els = res.get("elements", []) + overpass(q_road, a.cache and a.cache + ".str.json").get("elements", [])
     stamp = res.get("osm3s", {}).get("timestamp_osm_base")
     print(f"  {len(els)} obiecte OSM (bază din {stamp})", file=sys.stderr)
 

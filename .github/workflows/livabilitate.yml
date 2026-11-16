@@ -31,7 +31,7 @@ jobs:
           python-version: "3.12"
       - run: pip install shapely pyproj numpy
       - name: Descarcă din Overpass și calculează indicatorii
-        run: python scripts/livabilitate.py
+        run: python -u scripts/livabilitate.py
       - name: Salvează datele în branch
         run: |
           git config user.name "github-actions[bot]"
