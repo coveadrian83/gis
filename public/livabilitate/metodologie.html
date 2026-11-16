@@ -51,8 +51,9 @@
 <tr><td rowspan="3">Spații verzi și recreere</td><td>Spații verzi publice amenajate</td><td><b>Registrul Spațiilor Verzi</b> (vezi secțiunea 3); fără registru: OSM <code>leisure=park</code></td><td>% din suprafață</td><td>m² / locuitor</td><td class="r">10%</td></tr>
 <tr><td>Arbori inventariați</td><td><b>Registrul Spațiilor Verzi</b>, stratul arborilor</td><td>/ km²</td><td>/ 1.000 loc.</td><td class="r">5%</td></tr>
 <tr><td>Terenuri de sport</td><td><code>leisure=pitch</code></td><td>/ km²</td><td>/ 1.000 loc.</td><td class="r">10%</td></tr>
-<tr><td rowspan="2">Servicii publice</td><td>Farmacii</td><td><code>amenity=pharmacy</code></td><td>/ km²</td><td>/ 1.000 loc.</td><td class="r">10%</td></tr>
-<tr><td>Școli</td><td><code>amenity=school</code></td><td>/ km²</td><td>/ 1.000 loc.</td><td class="r">10%</td></tr>
+<tr><td rowspan="3">Servicii publice</td><td>Farmacii</td><td><code>amenity=pharmacy</code></td><td>/ km²</td><td>/ 1.000 loc.</td><td class="r">10%</td></tr>
+<tr><td>Locuri în școli</td><td><b>Rețeaua școlară</b>: elevii din primar, gimnaziu, liceu, profesional și postliceal (fără rețea: OSM <code>amenity=school</code>)</td><td>elevi / km²</td><td>elevi / 1.000 loc.</td><td class="r">10%</td></tr>
+<tr><td>Locuri în grădinițe</td><td><b>Rețeaua școlară</b>: educația timpurie</td><td>copii / km²</td><td>copii / 1.000 loc.</td><td class="r">5%</td></tr>
 <tr><td rowspan="2">Siguranță</td><td>Poliție și pompieri</td><td><code>amenity=police|fire_station</code></td><td>/ km²</td><td>/ 1.000 loc.</td><td class="r">10%</td></tr>
 <tr><td>Stâlpi de iluminat</td><td><code>highway=street_lamp</code></td><td>/ km²</td><td>/ 1.000 loc.</td><td class="r">10%*</td></tr>
 <tr><td rowspan="2">Oportunități economice</td><td>Magazine</td><td><code>shop=*</code></td><td>/ km²</td><td>/ 1.000 loc.</td><td class="r">10%</td></tr>
@@ -69,7 +70,17 @@
   <li>Pe hartă, fiecare zonă arată și totalul (cu pădure și cu spațiile cu acces restricționat), comparat cu norma de 26 m²/locuitor din OUG 114/2007. Pe cele 17 zone: circa 10 m²/loc. de spațiu verde public amenajat și circa 22 m²/loc. în total.</li>
 </ul>
 
-<h2>4. Adaptări față de metoda originală</h2>
+<h2>4. Rețeaua școlară</h2>
+<p>Școlile și grădinițele vin din stratul rețelei școlare a ZMI (193 de unități, cu nivelul de învățământ și numărul de elevi; surse: ISJ Iași, site-urile școlilor, ANCPI, OSM, prelucrări GIS – Covăsnianu 2025). Fișierul original nu e publicat; pe pagină intră doar totalurile pe zone (<code>scripts/livabilitate_scoli.py</code> → <code>data/scoli.json</code>).</p>
+<ul>
+  <li><b>Locuri în școli</b> = elevii înscriși în unitățile de nivel primar, gimnazial, liceal, profesional și tehnic, terțiar nonuniversitar, din zonă. Numărul de elevi măsoară capacitatea, nu doar prezența: un liceu cu 1.000 de elevi nu mai cântărește cât o școală primară cu 100.</li>
+  <li><b>Locuri în grădinițe</b> = copiii din unitățile de educație timpurie. Pentru multe grădinițe valoarea e o estimare (75 de copii), deci indicatorul e apropiat de numărul de grădinițe.</li>
+  <li><b>Învățământul superior</b> (40 de unități, aproape 50.000 de studenți) nu intră: e un serviciu metropolitan, nu de cartier.</li>
+  <li>Unitățile fără număr de elevi primesc mediana nivelului lor (gimnaziu 588, liceu 865 etc.).</li>
+  <li>Indicatorul arată unde sunt locurile, nu de unde vin elevii: liceele din Centru, Copou și Bularga (grupurile școlare de pe Calea Chișinăului) servesc tot orașul.</li>
+</ul>
+
+<h2>5. Adaptări față de metoda originală</h2>
 <ul>
   <li><b>Zone în loc de sectoare</b>: Iașul nu are subdiviziuni administrative; zonele MVA–MVI sunt unitățile studiului O–D și ale celorlalte hărți ale proiectului.</li>
   <li><b>Raportarea la populație</b> (în plus): densitatea pe km² dezavantajează zonele mari, cu mult teren nelocuit – Bucium (16,5 km²) și Bularga – Zona Industrială (10,2 km²) au de 10–20 de ori suprafața Studențescului. Populația 2020 vine din caroiajul de 100 m al <a href="../accesibilitate/">analizei accesibilității</a>. Pentru parcuri, raportarea la populație dă m² de parc pe locuitor, comparabil cu norma de spațiu verde din OUG 114/2007 (26 m²/loc.) – cu mențiunea că OSM <code>leisure=park</code> nu acoperă toate spațiile verzi din registrul oficial.</li>
@@ -82,7 +93,7 @@
   <li><b>Culorile</b>: o singură nuanță, de la deschis (scor mic) la închis (scor mare), în loc de roșu–galben–verde (lizibilă și pentru daltoniști).</li>
 </ul>
 
-<h2>5. Limite</h2>
+<h2>6. Limite</h2>
 <ul>
   <li>OSM e o limită inferioară: un cartier bine cartografiat iese mai bine decât unul la fel de dotat, dar cartografiat mai puțin.</li>
   <li>Numărul de obiecte nu spune nimic despre calitate, capacitate sau program; o școală mică și un liceu mare cântăresc la fel.</li>
@@ -91,7 +102,7 @@
   <li>Ponderile reflectă un set de priorități; schimbați-le și comparați clasamentele – zonele care rămân sus (sau jos) indiferent de ponderi sunt rezultatul cel mai solid.</li>
 </ul>
 
-<h2>6. Reproducere</h2>
+<h2>7. Reproducere</h2>
 <p>Scriptul <code>scripts/livabilitate.py</code> (Python, <code>shapely</code> + <code>pyproj</code>) descarcă datele și scrie <code>public/livabilitate/data/livabilitate.json</code> – valorile brute, valorile pe km² și pe populație, pentru fiecare zonă. Rulează automat în GitHub Actions (<code>.github/workflows/livabilitate.yml</code>). Tabelul complet, cu valori, scoruri și ponderi, se descarcă de pe hartă (CSV).</p>
 <p><a href="./">← Înapoi la hartă</a></p>
 </main>

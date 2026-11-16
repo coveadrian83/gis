@@ -6,7 +6,7 @@
   // rampă secvențială albastră, o singură nuanță (deschis = scor mic, închis = scor mare)
   var RAMP = ['#cde2fb', '#9ec5f4', '#6da7ec', '#3987e5', '#256abf', '#184f95', '#0d366b'];
   var nf = function (x, d) { return x == null ? '–' : x.toLocaleString('ro-RO', { minimumFractionDigits: d, maximumFractionDigits: d }); };
-  var D, K, Z, mode = 'km2', view = 'idx', W = {}, sel = null, layers = [], map, scores;
+  var d0, D, K, Z, mode = 'km2', view = 'idx', W = {}, sel = null, layers = [], map, scores;
 
   function hex2rgb(h) { return [1, 3, 5].map(function (i) { return parseInt(h.substr(i, 2), 16); }); }
   function color(s) {
@@ -22,7 +22,7 @@
   }
   function vals(k) { return Z.map(function (z) { return z[mode === 'km2' ? 'km2v' : 'popv'][k]; }); }
   function unit(k) { return k[mode === 'km2' ? 'u_km2' : 'u_pop']; }
-  function digits(k) { return k.k === 'arbori' ? 0 : mode === 'pop' && k.k !== 'parcuri' && k.k !== 'sv' ? 2 : 1; }
+  function digits(k) { return k.k === 'arbori' || (d0 && d0.sc && (k.k === 'scoli' || k.k === 'gradinite')) ? 0 : mode === 'pop' && k.k !== 'parcuri' && k.k !== 'sv' ? 2 : 1; }
 
   // Registrul Spațiilor Verzi (data/rsv.json, scripts/livabilitate_rsv.py): înlocuiește parcurile din OSM cu spațiile
   // verzi publice amenajate și adaugă arborii inventariați
@@ -47,6 +47,28 @@
     d.rsv = rsv;
   }
 
+  // Rețeaua școlară (data/scoli.json, scripts/livabilitate_scoli.py): locuri (elevi) în loc de numărul de școli din OSM
+  function mergeScoli(d, sc) {
+    var by = {}; sc.zones.forEach(function (r) { by[r.id] = r; });
+    d.zones.forEach(function (z) {
+      var r = by[z.id]; if (!r) return;
+      z.sc = r;
+      [['scoli', r.scoli_loc], ['gradinite', r.grad_loc]].forEach(function (a) {
+        z.raw[a[0]] = a[1];
+        z.km2v[a[0]] = Math.round(a[1] / z.km2);
+        z.popv[a[0]] = z.pop ? Math.round(a[1] / z.pop * 1000 * 10) / 10 : null;
+      });
+    });
+    var i = d.kpis.findIndex(function (k) { return k.k === 'scoli'; });
+    var sum = function (f) { return d.zones.reduce(function (s, z) { return s + (z.sc ? z.sc[f] : 0); }, 0); };
+    d.kpis.splice(i, 1,
+      { k: 'scoli', n: 'Locuri în școli', d: 'Servicii publice', u_km2: 'elevi / km²', u_pop: 'elevi / 1.000 loc.', w: 0.10, ok: true,
+        total: sum('scoli_loc'), osm: 'rețeaua școlară (ISJ Iași, site-urile școlilor; Covăsnianu 2025): elevii din învățământul primar, gimnazial, liceal, profesional și postliceal' },
+      { k: 'gradinite', n: 'Locuri în grădinițe', d: 'Servicii publice', u_km2: 'copii / km²', u_pop: 'copii / 1.000 loc.', w: 0.05, ok: true,
+        total: sum('grad_loc'), osm: 'rețeaua școlară (ISJ Iași, site-urile școlilor; Covăsnianu 2025): educația timpurie' });
+    d.sc = sc;
+  }
+
   function compute() {
     var tot = K.reduce(function (s, k) { return s + W[k.k]; }, 0) || 1;
     var per = {};
@@ -68,7 +90,7 @@
       l.setPopupContent(popup(i));
     });
     var k = view === 'idx' ? null : K.filter(function (x) { return x.k === view; })[0];
-    $('viewNote').textContent = k ? k.n + ' – ' + unit(k) + '. Sursa: ' + (k.k === 'sv' || k.k === 'arbori' ? '' : 'OpenStreetMap, ') + k.osm + '.' :
+    $('viewNote').textContent = k ? k.n + ' – ' + unit(k) + '. Sursa: ' + (k.k === 'sv' || k.k === 'arbori' || (d0.sc && (k.k === 'scoli' || k.k === 'gradinite')) ? '' : 'OpenStreetMap, ') + k.osm.replace(/\.$/, '') + '.' :
       'Indicele unificat: media ponderată a celor ' + K.filter(function (x) { return W[x.k] > 0; }).length + ' indicatori activi, scalată la 1–10.';
     $('rankRaw').textContent = k ? 'Valoare' : '';
     var order = Z.map(function (z, i) { return i; }).sort(function (a, b) { return (current(b) || 0) - (current(a) || 0); });
@@ -187,13 +209,14 @@
     setMode(mode);
     var bad = K.filter(function (k) { return !k.ok; });
     $('status').textContent = bad.length ? 'Puțin cartografiat în OSM (pornește cu ponderea 0): ' + bad.map(function (k) { return k.n.toLowerCase(); }).join(', ') + '.' : '';
-    $('foot').innerHTML = (d.rsv ? 'Spațiile verzi și arborii: Registrul Spațiilor Verzi al municipiului Iași (Primăria Iași, actualizat ' +
+    $('foot').innerHTML = (d.sc ? 'Școlile și grădinițele: ' + d.sc.source + '. ' : '') + (d.rsv ? 'Spațiile verzi și arborii: Registrul Spațiilor Verzi al municipiului Iași (Primăria Iași, actualizat ' +
       new Date(d.rsv.updated).toLocaleDateString('ro-RO') + '). ' : '') + 'Restul: date OpenStreetMap din ' + (d.osm_base ? new Date(d.osm_base).toLocaleDateString('ro-RO') : '–') +
       ' (© contribuitorii OSM, ODbL). Suprafețe și lungimi în Stereo 70. Populația: caroiajul de 100 m din <a href="../accesibilitate/">analiza accesibilității</a>. Metoda: „The Livability Index” (Urban Analytics, cap. 6), adaptată.';
   }
 
   var get = function (u) { return fetch(u).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }); };
-  Promise.all([get('data/livabilitate.json'), get('data/rsv.json').catch(function () { return null; })])
-    .then(function (a) { if (a[1]) mergeRSV(a[0], a[1]); init(a[0]); })
+  var opt = function (u) { return get(u).catch(function () { return null; }); };
+  Promise.all([get('data/livabilitate.json'), opt('data/rsv.json'), opt('data/scoli.json')])
+    .then(function (a) { d0 = a[0]; if (a[1]) mergeRSV(a[0], a[1]); if (a[2]) mergeScoli(a[0], a[2]); init(a[0]); })
     .catch(function () { $('status').textContent = 'Datele nu sunt încă generate (scripts/livabilitate.py).'; });
 })();
