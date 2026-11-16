@@ -1,0 +1,67 @@
+:root { --ink: #15171a; --paper: #f7f4ec; --teal: #1f7a99; --line: #ddd8cc; --muted: #555; --warn: #8a5a00; }
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: var(--ink); }
+body { display: flex; background: var(--paper); }
+#panel { width: 420px; padding: 14px 20px 18px; background: var(--paper); overflow-y: auto; font-size: 14px; z-index: 2; }
+.crumb { margin: 0 0 8px; font-size: 12px; color: var(--muted); }
+.crumb a, .note a { color: var(--teal); }
+h1 { font-weight: 800; font-size: 32px; line-height: 1; margin: 0 0 6px; }
+h1 span { color: var(--teal); }
+.sub { margin: 0 0 8px; font-weight: 600; }
+.ctl { margin: 12px 0; }
+.lbl { display: block; margin-bottom: 6px; font-weight: 600; font-size: 13px; }
+.note { font-size: 12px; line-height: 1.4; color: var(--muted); }
+.note.warn { color: var(--warn); }
+.note.warn:empty { display: none; }
+ul.note { padding-left: 18px; margin: 4px 0; }
+ul.note li { margin: 3px 0; }
+button, select, input { font: inherit; }
+button, select { padding: 5px 8px; cursor: pointer; }
+select { width: 100%; }
+button.link { background: none; border: 0; padding: 0; color: var(--teal); text-decoration: underline; font-size: 12px; }
+.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.seg button { text-align: left; border: 1px solid var(--line); background: #fff; border-radius: 6px; padding: 6px 8px; font-weight: 600; font-size: 13px; }
+.seg button small { display: block; font-weight: 400; color: var(--muted); font-size: 11px; }
+.seg button[aria-pressed=true] { border-color: var(--teal); box-shadow: inset 0 0 0 1px var(--teal); }
+.row { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0 10px; }
+#legend { display: flex; align-items: center; gap: 6px; font-size: 12px; margin: 8px 0 2px; color: var(--muted); }
+#legend .bar { flex: 1; height: 10px; border-radius: 5px; }
+#summary { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin: 12px 0; }
+#summary div { background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: 6px 8px; }
+#summary b { display: block; font-size: 17px; }
+#summary small { color: var(--muted); font-size: 11px; }
+details { border-top: 1px solid var(--line); padding-top: 10px; margin: 14px 0; }
+details summary { cursor: pointer; font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 13px; font-variant-numeric: tabular-nums; }
+td, th { padding: 3px 4px 3px 0; border-bottom: 1px solid var(--line); }
+th { text-align: left; font-weight: 600; font-size: 12px; }
+td:not(:nth-child(2)), th:not(:nth-child(2)) { text-align: right; white-space: nowrap; }
+td:first-child, th:first-child { color: var(--muted); width: 24px; }
+.tablewrap { max-height: 360px; overflow-y: auto; }
+#rank tbody tr { cursor: pointer; }
+#rank tbody tr:hover, #rank tbody tr.sel { background: #ece7da; }
+#rank .sw { display: inline-block; width: 10px; height: 10px; margin-right: 6px; border-radius: 2px; vertical-align: -1px; }
+.dim { margin: 12px 0 4px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); }
+.w { display: grid; grid-template-columns: 1fr 96px 40px; gap: 6px; align-items: center; margin: 3px 0; font-size: 13px; }
+.w small { display: block; color: var(--muted); font-size: 11px; }
+.w.bad small { color: var(--warn); }
+.w output { text-align: right; font-variant-numeric: tabular-nums; font-size: 12px; }
+.w input { width: 100%; accent-color: var(--teal); }
+#map { flex: 1; }
+.leaflet-container { background: #f1efe9; }
+.basemap { filter: grayscale(1) contrast(.85) brightness(1.08); opacity: .7; }
+.zone-label { background: rgba(255,255,255,.85); border: 0; box-shadow: none; font-size: 11px; font-weight: 600; padding: 1px 4px; }
+.zone-label::before { display: none; }
+.pop h3 { margin: 0 0 2px; font-size: 14px; }
+.pop .big { font-size: 13px; margin: 0 0 6px; }
+.pop table { font-size: 12px; margin: 4px 0; }
+.pop td, .pop th { padding: 2px 6px 2px 0; }
+.pop td:first-child { color: var(--ink); width: auto; text-align: left; }
+.pop td:nth-child(2) { text-align: right; }
+.pop .u { color: var(--muted); font-size: 11px; }
+@media (max-width: 760px) {
+  body { flex-direction: column-reverse; }
+  #panel { width: 100%; height: 55%; padding: 12px 16px; }
+  #map { min-height: 45%; }
+  h1 { font-size: 26px; }
+}

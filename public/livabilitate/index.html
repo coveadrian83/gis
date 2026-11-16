@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Indicele de locuibilitate – Iași</title>
+  <meta name="author" content="dr. geogr. Adrian Covăsnianu">
+  <meta name="description" content="Un indice simplu de locuibilitate pentru cele 17 zone MVA–MVI ale Iașului, din OpenStreetMap: zece indicatori în cinci dimensiuni, scalați 1–10 și ponderați explicit. Ponderile se pot schimba pe pagină.">
+  <meta property="og:title" content="Indicele de locuibilitate – Iași">
+  <meta property="og:description" content="Zece indicatori OpenStreetMap, cinci dimensiuni, 17 zone. Schimbați ponderile și vedeți cum se schimbă clasamentul.">
+  <meta name="color-scheme" content="light">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<aside id="panel">
+  <p class="crumb"><a href="/">mobilitate-iasi</a> · locuibilitate</p>
+  <h1>Indicele de<br><span>locuibilitate</span></h1>
+  <p class="sub">Cele 17 zone MVA–MVI ale Iașului, comparate pe zece indicatori din OpenStreetMap</p>
+  <p class="note">Fiecare indicator e scalat de la 1 (cea mai slabă zonă) la 10 (cea mai bună), înmulțit cu ponderea lui și adunat; suma e scalată din nou la 1–10. Scorul e <b>relativ</b>: compară zonele între ele, nu cu un etalon. Măsoară doar ce e cartografiat în OSM, iar ponderile sunt o alegere – schimbați-le mai jos. <a href="metodologie.html">Metodologia</a></p>
+  <p class="note warn" id="status" role="status">Se încarcă datele…</p>
+
+  <div class="ctl">
+    <div class="lbl">Raportarea indicatorilor</div>
+    <div class="seg" role="group" aria-label="Raportarea indicatorilor">
+      <button data-m="km2" aria-pressed="true">pe km²<small>ca în metoda originală</small></button>
+      <button data-m="pop" aria-pressed="false">la 1.000 de locuitori<small>populația 2020</small></button>
+    </div>
+  </div>
+
+  <div class="ctl">
+    <label class="lbl" for="view">Harta arată</label>
+    <select id="view"></select>
+    <div id="legend"><span>1</span><div class="bar"></div><span>10</span></div>
+    <p class="note" id="viewNote"></p>
+  </div>
+
+  <div id="summary"></div>
+
+  <details open>
+    <summary>Clasamentul</summary>
+    <div class="tablewrap"><table id="rank"><thead><tr><th>#</th><th>Zona</th><th>Scor</th><th id="rankRaw">Valoare</th></tr></thead><tbody></tbody></table></div>
+    <p class="note"><button id="csv" class="link">Descarcă tabelul complet (CSV)</button></p>
+  </details>
+
+  <details open>
+    <summary>Ponderile</summary>
+    <p class="note">Ponderile se normalizează automat la 100%. O pondere 0 scoate indicatorul din indice.</p>
+    <div class="row">
+      <button id="wChapter">Ponderile din metodă</button>
+      <button id="wEqual">Egale</button>
+    </div>
+    <div id="weights"></div>
+  </details>
+
+  <details>
+    <summary>Limite</summary>
+    <ul class="note">
+      <li>OSM e o limită inferioară: ce nu e cartografiat nu există pentru indice. Straturile cu prea puține obiecte în tot orașul sunt marcate și pornesc cu ponderea 0.</li>
+      <li>Densitatea pe km² dezavantajează zonele mari cu mult teren nelocuit (Bularga – Zona Industrială, Bucium); raportarea la locuitori dezavantajează zonele dense. Comparați ambele.</li>
+      <li>Numărul de obiecte nu spune nimic despre calitate, program sau capacitate (o farmacie mică = un spital).</li>
+      <li>Scalarea min–max depinde de extreme: un singur cartier foarte bun pe un indicator îi strivește pe ceilalți spre 1.</li>
+    </ul>
+  </details>
+
+  <p class="note" id="foot"></p>
+  <p class="note"><a href="../accesibilitate/">Accesibilitatea la transportul public</a> · <a href="../15min/">Harta 15 minute</a> · <a href="../puz/">Harta PUZ</a> · <a href="../">Studiul O–D</a></p>
+</aside>
+<div id="map"></div>
+<script src="../vendor/leaflet/leaflet.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

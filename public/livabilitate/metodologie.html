@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Metodologie – Indicele de locuibilitate, Iași</title>
+  <meta name="author" content="dr. geogr. Adrian Covăsnianu">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <style>
+    :root { --ink: #15171a; --paper: #f7f4ec; --teal: #1f7a99; --line: #ddd8cc; --muted: #555; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+    main { max-width: 780px; margin: 0 auto; padding: 20px 16px 40px; }
+    a { color: var(--teal); }
+    h1 { font-size: 28px; line-height: 1.15; margin: 8px 0 12px; }
+    h2 { font-size: 18px; margin: 28px 0 8px; }
+    .crumb { font-size: 12px; color: var(--muted); }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 8px 0; }
+    th, td { text-align: left; padding: 5px 6px 5px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { font-size: 12px; }
+    td.r, th.r { text-align: right; white-space: nowrap; }
+    code { font-size: 12px; background: #ece7da; padding: 0 3px; border-radius: 3px; }
+    .formula { background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 8px 12px; font-family: ui-monospace, Menlo, monospace; font-size: 13px; overflow-x: auto; }
+    .tbl { overflow-x: auto; }
+  </style>
+</head>
+<body>
+<main>
+<p class="crumb"><a href="/">mobilitate-iasi</a> · <a href="./">locuibilitate</a> · metodologie</p>
+<h1>Indicele de locuibilitate – metodologie</h1>
+<p>Un indice <b>simplu</b> și <b>transparent</b>, construit numai din OpenStreetMap, care compară cele 17 zone MVA–MVI ale municipiului Iași (zonele studiului de mobilitate Origine–Destinație). Metoda urmează capitolul 6, „The Livability Index”, din materialul <i>Urban Analytics</i> (aplicat acolo pe cele 23 de sectoare ale Vienei), cu câteva adaptări descrise mai jos. Este o demonstrație de metodă și un instrument de discuție, nu un clasament definitiv.</p>
+
+<h2>1. Pașii</h2>
+<ol>
+  <li><b>Unitatea de analiză</b>: cele 17 zone MVA–MVI (<code>public/data/iasi_17_zone_mva_mvi.geojson</code>), 91,5 km² în total.</li>
+  <li><b>Datele</b>: o singură interogare Overpass pentru tot orașul; fiecare obiect e atribuit unei singure zone după punctul său reprezentativ (deci nu se numără de două ori la limita dintre zone). Străzile și parcurile se taie exact pe limita zonei.</li>
+  <li><b>Indicatorii</b>: zece, câte doi pe dimensiune (tabelul de mai jos), fiecare raportat la suprafața zonei (pe km²) sau, la alegere, la populație (la 1.000 de locuitori).</li>
+  <li><b>Scalarea</b> min–max la 1–10, pentru fiecare indicator:
+    <div class="formula">scor = 1 + 9 × (x − min) / (max − min)</div>
+    Zona cu valoarea cea mai mică primește 1, cea cu valoarea cea mai mare primește 10.</li>
+  <li><b>Ponderarea</b> explicită: ponderile se normalizează la 100%, iar indicele brut e media ponderată a scorurilor.</li>
+  <li><b>Scalarea finală</b> a indicelui brut, din nou la 1–10, ca harta să folosească toată plaja.</li>
+</ol>
+<p>Pașii 4–6 se fac în browser, așa că ponderile și modul de raportare se pot schimba pe hartă; adresa paginii păstrează alegerea (se poate trimite cuiva).</p>
+
+<h2>2. Indicatorii și ponderile implicite</h2>
+<div class="tbl"><table>
+<thead><tr><th>Dimensiune</th><th>Indicator</th><th>Etichete OSM</th><th>Pe km²</th><th>La populație</th><th class="r">Pondere</th></tr></thead>
+<tbody>
+<tr><td rowspan="2">Accesibilitate și mobilitate</td><td>Densitatea străzilor</td><td><code>highway=*</code> (toate căile)</td><td>km / km²</td><td>km / 1.000 loc.</td><td class="r">10%</td></tr>
+<tr><td>Stații de transport public</td><td><code>public_transport=platform|stop_position</code>, <code>highway=bus_stop</code>, <code>railway=tram_stop</code></td><td>stații / km²</td><td>stații / 1.000 loc.</td><td class="r">15%</td></tr>
+<tr><td rowspan="2">Spații verzi și recreere</td><td>Suprafața parcurilor</td><td><code>leisure=park</code> (poligoane unite)</td><td>% din suprafață</td><td>m² / locuitor</td><td class="r">10%</td></tr>
+<tr><td>Terenuri de sport</td><td><code>leisure=pitch</code></td><td>/ km²</td><td>/ 1.000 loc.</td><td class="r">10%</td></tr>
+<tr><td rowspan="2">Servicii publice</td><td>Farmacii</td><td><code>amenity=pharmacy</code></td><td>/ km²</td><td>/ 1.000 loc.</td><td class="r">10%</td></tr>
+<tr><td>Școli</td><td><code>amenity=school</code></td><td>/ km²</td><td>/ 1.000 loc.</td><td class="r">10%</td></tr>
+<tr><td rowspan="2">Siguranță</td><td>Poliție și pompieri</td><td><code>amenity=police|fire_station</code></td><td>/ km²</td><td>/ 1.000 loc.</td><td class="r">10%</td></tr>
+<tr><td>Stâlpi de iluminat</td><td><code>highway=street_lamp</code></td><td>/ km²</td><td>/ 1.000 loc.</td><td class="r">10%*</td></tr>
+<tr><td rowspan="2">Oportunități economice</td><td>Magazine</td><td><code>shop=*</code></td><td>/ km²</td><td>/ 1.000 loc.</td><td class="r">10%</td></tr>
+<tr><td>Birouri</td><td><code>office=*</code></td><td>/ km²</td><td>/ 1.000 loc.</td><td class="r">5%</td></tr>
+</tbody></table></div>
+<p>* Un strat cu mai puțin de 60 de obiecte în tot orașul e considerat insuficient cartografiat: e marcat pe hartă și pornește cu ponderea 0 (se poate activa manual). În Iași, stâlpii de iluminat sunt foarte rar cartografiați în OSM.</p>
+
+<h2>3. Adaptări față de metoda originală</h2>
+<ul>
+  <li><b>Zone în loc de sectoare</b>: Iașul nu are subdiviziuni administrative; zonele MVA–MVI sunt unitățile studiului O–D și ale celorlalte hărți ale proiectului.</li>
+  <li><b>Raportarea la populație</b> (în plus): densitatea pe km² dezavantajează zonele mari, cu mult teren nelocuit – Bucium (16,5 km²) și Bularga – Zona Industrială (10,2 km²) au de 10–20 de ori suprafața Studențescului. Populația 2020 vine din caroiajul de 100 m al <a href="../accesibilitate/">analizei accesibilității</a>. Pentru parcuri, raportarea la populație dă m² de parc pe locuitor, comparabil cu norma de spațiu verde din OUG 114/2007 (26 m²/loc.) – cu mențiunea că OSM <code>leisure=park</code> nu acoperă toate spațiile verzi din registrul oficial.</li>
+  <li><b>Stațiile deduplicate</b>: același nume la mai puțin de 150 m (cele două sensuri, peronul și punctul de oprire) = o stație; fără nume, punctele la mai puțin de 30 m. Metoda originală numără fiecare <code>stop_position</code>.</li>
+  <li><b>Comerț și birouri separate corect</b>: în capitolul original, cele două straturi ieșiseră identice (aceleași 1.378 de obiecte în Hietzing), deci indicatorul de „locuri de muncă” dubla de fapt comerțul.</li>
+  <li><b>Fără dublă numărare la limite</b>: în loc de „intersectează limita” (un parc mare la granița a două zone s-ar număra în ambele), fiecare obiect punctual intră într-o singură zonă; suprafețele și lungimile se împart exact.</li>
+  <li><b>Poliție și pompieri</b> împreună (în loc de doar poliție), pentru că în Iași fiecare are doar câteva unități.</li>
+  <li><b>Proiecția</b>: Stereo 70 (EPSG:3844) pentru suprafețe și lungimi.</li>
+  <li><b>Culorile</b>: o singură nuanță, de la deschis (scor mic) la închis (scor mare), în loc de roșu–galben–verde (lizibilă și pentru daltoniști).</li>
+</ul>
+
+<h2>4. Limite</h2>
+<ul>
+  <li>OSM e o limită inferioară: un cartier bine cartografiat iese mai bine decât unul la fel de dotat, dar cartografiat mai puțin.</li>
+  <li>Numărul de obiecte nu spune nimic despre calitate, capacitate sau program; o școală mică și un liceu mare cântăresc la fel.</li>
+  <li>Scorurile sunt relative la cele 17 zone: un 10 nu înseamnă „excelent”, ci „cel mai bun din Iași” pe acel indicator. Min–max e sensibil la extreme: o singură zonă foarte bună împinge restul spre 1.</li>
+  <li>Indicatorii nu se uită peste limita zonei: un locuitor de la marginea unei zone folosește și serviciile din zona vecină. <a href="../15min/">Harta 15 minute</a> și <a href="../accesibilitate/">accesibilitatea la stații</a> măsoară accesul real, pe rețeaua pietonală.</li>
+  <li>Ponderile reflectă un set de priorități; schimbați-le și comparați clasamentele – zonele care rămân sus (sau jos) indiferent de ponderi sunt rezultatul cel mai solid.</li>
+</ul>
+
+<h2>5. Reproducere</h2>
+<p>Scriptul <code>scripts/livabilitate.py</code> (Python, <code>shapely</code> + <code>pyproj</code>) descarcă datele și scrie <code>public/livabilitate/data/livabilitate.json</code> – valorile brute, valorile pe km² și pe populație, pentru fiecare zonă. Rulează automat în GitHub Actions (<code>.github/workflows/livabilitate.yml</code>). Tabelul complet, cu valori, scoruri și ponderi, se descarcă de pe hartă (CSV).</p>
+<p><a href="./">← Înapoi la hartă</a></p>
+</main>
+</body>
+</html>
