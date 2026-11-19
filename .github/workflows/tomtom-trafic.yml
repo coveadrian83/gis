@@ -1,5 +1,5 @@
 # Colectarea traficului real TomTom la orele de vârf, pe relațiile principale din studiu (scripts/tomtom-trafic.js).
-# Marți, miercuri și joi, dimineața (07:00–09:00) și seara (17:00–19:00), ora României, până la finalul colectării
+# Marți, miercuri și joi, la 07:30 și 17:30 ora României (pornită din Netlify, vezi mai jos), până la finalul colectării
 # (30 aprilie 2027). Rezultatele se salvează pe branch-ul date/tomtom, NU pe main: niciun commit automat pe main,
 # nicio publicare Netlify în producție. ~190 de cereri TomTom pe rulare, ~380 pe zi de colectare.
 # Cheia: secretul TOMTOM_KEY (Settings → Secrets and variables → Actions). Poate fi pornită și manual
@@ -7,10 +7,9 @@
 name: Trafic TomTom (vârf)
 
 on:
-  schedule:
-    # GitHub folosește UTC; România e UTC+2 iarna și UTC+3 vara. Rulăm la 4:10/5:10 și 14:10/15:10 UTC:
-    # scriptul colectează doar dacă e în fereastra de vârf și doar o dată pe fereastră și zi (restul rulărilor ies imediat).
-    - cron: "10 4,5,14,15 * * 2,3,4"
+  # Pornirea la oră fixă vine din funcția programată Netlify netlify/functions/tomtom-pornire.mjs (marți–joi, 07:29 și
+  # 17:29 ora României, prin workflow_dispatch): rulările „schedule” ale GitHub întârziau ore întregi și cădeau în afara
+  # ferestrelor de vârf, așa că nu le mai folosim.
   workflow_dispatch:
     inputs:
       forteaza:

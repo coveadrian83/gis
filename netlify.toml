@@ -3,6 +3,8 @@
 #  - API-ul (/api/*) rulează ca funcție Netlify: netlify/functions/api.mjs
 #  - datele se salvează în Netlify Blobs (în contul Netlify, fără configurare suplimentară)
 #  - pozițiile vehiculelor în timp real (/live/vehicule) vin din funcția netlify/functions/vehicule.mjs
+#  - pornirea colectării TomTom la orele de vârf (funcție programată netlify/functions/tomtom-pornire.mjs, marți–joi
+#    la 07:29 și 17:29, prin GitHub workflow_dispatch; are nevoie de variabila GITHUB_ACTIONS_TOKEN)
 #  - colectarea GPS la fiecare minut (funcție programată netlify/functions/gps-colectare.mjs, în Netlify Blobs, store-ul „gps”)
 #    și istoricul ei (/live/istoric) – pentru harta /transport/sanatate/
 #  - aplicația Iași Live (/live/, public/live/): harta vectorială OpenFreeMap (tiles.openfreemap.org) cu MapLibre,
