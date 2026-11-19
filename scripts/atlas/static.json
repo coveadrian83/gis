@@ -1,0 +1,276 @@
+{
+ "dotari": {
+  "Centru": {
+   "scoli": 11,
+   "univ": 3,
+   "sanatate": 19,
+   "admin": 15,
+   "comert": 15,
+   "total": 63
+  },
+  "Copou": {
+   "scoli": 9,
+   "univ": 21,
+   "sanatate": 18,
+   "admin": 6,
+   "comert": 6,
+   "total": 60
+  },
+  "Cantemir – Socola": {
+   "scoli": 18,
+   "univ": 0,
+   "sanatate": 12,
+   "admin": 2,
+   "comert": 9,
+   "total": 41
+  },
+  "Tătărași": {
+   "scoli": 16,
+   "univ": 1,
+   "sanatate": 10,
+   "admin": 1,
+   "comert": 13,
+   "total": 41
+  },
+  "Păcurari": {
+   "scoli": 10,
+   "univ": 0,
+   "sanatate": 11,
+   "admin": 4,
+   "comert": 15,
+   "total": 40
+  },
+  "Nicolina": {
+   "scoli": 9,
+   "univ": 0,
+   "sanatate": 11,
+   "admin": 1,
+   "comert": 16,
+   "total": 37
+  },
+  "Alexandru cel Bun": {
+   "scoli": 10,
+   "univ": 0,
+   "sanatate": 8,
+   "admin": 1,
+   "comert": 16,
+   "total": 35
+  },
+  "Bularga – Zona Industrială": {
+   "scoli": 12,
+   "univ": 0,
+   "sanatate": 3,
+   "admin": 9,
+   "comert": 8,
+   "total": 32
+  },
+  "Țicău – Sărărie": {
+   "scoli": 6,
+   "univ": 3,
+   "sanatate": 7,
+   "admin": 1,
+   "comert": 2,
+   "total": 19
+  },
+  "Dacia": {
+   "scoli": 6,
+   "univ": 0,
+   "sanatate": 0,
+   "admin": 2,
+   "comert": 8,
+   "total": 16
+  },
+  "Moara de Vânt": {
+   "scoli": 6,
+   "univ": 0,
+   "sanatate": 4,
+   "admin": 1,
+   "comert": 1,
+   "total": 12
+  },
+  "Galata – Mircea": {
+   "scoli": 5,
+   "univ": 0,
+   "sanatate": 2,
+   "admin": 0,
+   "comert": 5,
+   "total": 12
+  },
+  "Studențesc": {
+   "scoli": 1,
+   "univ": 3,
+   "sanatate": 2,
+   "admin": 2,
+   "comert": 2,
+   "total": 10
+  },
+  "CUG": {
+   "scoli": 2,
+   "univ": 0,
+   "sanatate": 2,
+   "admin": 1,
+   "comert": 3,
+   "total": 8
+  },
+  "Aviației": {
+   "scoli": 0,
+   "univ": 0,
+   "sanatate": 1,
+   "admin": 3,
+   "comert": 2,
+   "total": 6
+  },
+  "Bucium": {
+   "scoli": 0,
+   "univ": 0,
+   "sanatate": 1,
+   "admin": 0,
+   "comert": 5,
+   "total": 6
+  },
+  "Frumoasa": {
+   "scoli": 1,
+   "univ": 0,
+   "sanatate": 0,
+   "admin": 2,
+   "comert": 2,
+   "total": 5
+  }
+ },
+ "tp_acoperire": {
+  "Tătărași": {
+   "tram400": 86.3,
+   "statii300": 69.8
+  },
+  "Alexandru cel Bun": {
+   "tram400": 95.5,
+   "statii300": 78.5
+  },
+  "Studențesc": {
+   "tram400": 72.8,
+   "statii300": 55.0
+  },
+  "Nicolina": {
+   "tram400": 88.4,
+   "statii300": 93.0
+  },
+  "CUG": {
+   "tram400": 33.6,
+   "statii300": 38.8
+  },
+  "Copou": {
+   "tram400": 18.1,
+   "statii300": 32.5
+  },
+  "Frumoasa": {
+   "tram400": 0.4,
+   "statii300": 48.3
+  },
+  "Dacia": {
+   "tram400": 24.4,
+   "statii300": 22.2
+  },
+  "Bularga – Zona Industrială": {
+   "tram400": 42.9,
+   "statii300": 45.9
+  },
+  "Ciurea": {
+   "tram400": 0.0,
+   "statii300": 4.7
+  },
+  "Aviației": {
+   "tram400": 18.3,
+   "statii300": 25.6
+  },
+  "Păcurari": {
+   "tram400": 38.9,
+   "statii300": 66.3
+  },
+  "Galata – Mircea": {
+   "tram400": 10.4,
+   "statii300": 24.8
+  },
+  "Holboca": {
+   "tram400": 0.6,
+   "statii300": 6.9
+  },
+  "Cantemir – Socola": {
+   "tram400": 97.3,
+   "statii300": 91.3
+  },
+  "Centru": {
+   "tram400": 99.3,
+   "statii300": 81.4
+  },
+  "Moara de Vânt": {
+   "tram400": 4.8,
+   "statii300": 22.0
+  },
+  "Tomești": {
+   "tram400": 0.0,
+   "statii300": 8.7
+  },
+  "Prisăcani": {
+   "tram400": 0.0,
+   "statii300": 0.0
+  },
+  "Rediu": {
+   "tram400": 0.1,
+   "statii300": 9.4
+  },
+  "Miroslava": {
+   "tram400": 0.1,
+   "statii300": 12.9
+  },
+  "Țicău – Sărărie": {
+   "tram400": 9.5,
+   "statii300": 61.8
+  },
+  "Valea Lupului": {
+   "tram400": 0.0,
+   "statii300": 33.1
+  },
+  "Bucium": {
+   "tram400": 0.0,
+   "statii300": 24.9
+  },
+  "Bârnova": {
+   "tram400": 0.0,
+   "statii300": 13.6
+  },
+  "Aroneanu": {
+   "tram400": 0.0,
+   "statii300": 9.7
+  }
+ },
+ "populatie": {
+  "Municipiul Iași": 271692,
+  "Miroslava": 28534,
+  "Ciurea": 17254,
+  "Valea Lupului": 14510,
+  "Holboca": 13697,
+  "Tomești": 12169,
+  "Rediu": 8295,
+  "Bârnova": 7913,
+  "Popricani": 7236,
+  "Voinești": 7105,
+  "Lețcani": 6845,
+  "Scânteia": 5505,
+  "Mogoșești": 4706,
+  "Aroneanu": 4338,
+  "Comarna": 4221,
+  "Țigănăși": 4114,
+  "Costuleni": 4080,
+  "Victoria": 3819,
+  "Grajduri": 3687,
+  "Prisăcani": 3638,
+  "Schitu Duca": 3619,
+  "Ungheni": 3582,
+  "Golăiești": 3563,
+  "Movileni": 2895,
+  "Horlești": 2529,
+  "Dobrovăț": 2128,
+  "Țuțora": 2063,
+  "Românești": 1524
+ }
+}

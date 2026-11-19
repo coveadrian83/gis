@@ -20,7 +20,9 @@
   „Rute Tranzy” – o cerere pe săptămână).
 - Trafic TomTom: `.github/workflows/tomtom-trafic.yml` (marți–joi, vârf dimineața și seara) salvează pe branch-ul
   `date/tomtom` (niciodată pe `main`), ~380 de cereri pe zi de colectare din cota gratuită de 2.500/zi; cheia e secretul
-  GitHub `TOMTOM_KEY`, nu se pune în cod.
+  GitHub `TOMTOM_KEY`, nu se pune în cod. Rulările „schedule” ale GitHub întârziau ore întregi, așa că acțiunea e pornită
+  la oră fixă de funcția Netlify `netlify/functions/tomtom-pornire.mjs` (workflow_dispatch; variabila Netlify
+  `GITHUB_ACTIONS_TOKEN`, token GitHub cu „Actions: read and write” doar pe depozit).
 
 ## Harta sănătății – referințe
 - Câte vehicule trebuie pe stradă: `data/transport/ctp_planificare.json` (planificarea S.C.T.P. din 8 sept. 2025),
