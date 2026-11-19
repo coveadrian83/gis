@@ -11,6 +11,12 @@ on:
     # GitHub folosește UTC; România e UTC+2 iarna și UTC+3 vara. Rulăm la 4:10/5:10 și 14:10/15:10 UTC:
     # scriptul colectează doar dacă e în fereastra de vârf și doar o dată pe fereastră și zi (restul rulărilor ies imediat).
     - cron: "10 4,5,14,15 * * 2,3,4"
+  # Pornire la ora exactă: un commit pe branch-ul declansare/tomtom (programat din sesiunea Claude, marți–joi
+  # la 07:30 și 17:30), pentru că rulările „schedule” ale GitHub întârzie ore întregi. Cu „forteaza” în mesajul
+  # commit-ului se colectează și în afara ferestrei de vârf (test).
+  push:
+    branches: [declansare/tomtom]
+    paths: [declansare.txt]
   workflow_dispatch:
     inputs:
       forteaza:
@@ -48,7 +54,7 @@ jobs:
         if: env.GATA != '1'
         env:
           TOMTOM_KEY: ${{ secrets.TOMTOM_KEY }}
-        run: node scripts/tomtom-trafic.js --out ../date/data/tomtom/colectare ${{ github.event.inputs.forteaza == 'true' && '--forteaza' || '' }}
+        run: node scripts/tomtom-trafic.js --out ../date/data/tomtom/colectare ${{ (github.event.inputs.forteaza == 'true' || (github.event_name == 'push' && contains(github.event.head_commit.message, 'forteaza'))) && '--forteaza' || '' }}
       - name: Salvează pe branch-ul date/tomtom
         if: env.GATA != '1'
         working-directory: ../date
