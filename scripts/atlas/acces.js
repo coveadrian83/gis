@@ -4,17 +4,22 @@
 //   node scripts/atlas/acces.js
 const fs = require('node:fs');
 const path = require('node:path');
-const { GEOM, mii, fmt, fix, esc, fig, legend, sw, notes, table, section, mapPanel, lista, nde } = require('./lib.js');
+const { GEOM, shortName, mii, fmt, fix, esc, fig, legend, sw, notes, table, section, mapPanel, lista, nde } = require('./lib.js');
 const D = JSON.parse(fs.readFileSync(path.join(__dirname, 'static', 'acces.json'), 'utf8'));
 const U = D.unitati;
 const BANDS = [[15, 'var(--f4)', '≤ 15 min'], [30, 'var(--f3)', '15–30'], [45, 'var(--f2)', '30–45'], [60, 'var(--t3)', '45–60'], [90, 'var(--t4)', '60–90'], [Infinity, 'var(--hatch)', 'peste 90']];
 const col = (v) => (v == null ? 'none' : BANDS.find(([m]) => v <= m)[1]);
 const contur = (panel) => GEOM[panel].units.map((u) => `<path d="${u.d}" style="fill:none;stroke:var(--paper)" stroke-width="${u.id.startsWith('IAS') ? 0.5 : 0.9}" stroke-linejoin="round" pointer-events="none"/>`).join('');
 const centru = (panel) => { const a = GEOM[panel].anchors['IAS-Z15'] || GEOM[panel].units.find((u) => u.id === 'IAS-Z15').c; return `<circle cx="${a[0]}" cy="${a[1]}" r="5" style="fill:var(--ink);stroke:var(--paper);stroke-width:2"/>`; };
-function harta(cells, k, ptag, aria) {
-  const under = (D.iz[k] || []).map((d, i) => (d ? `<path d="${d}" fill-rule="evenodd" style="fill:${BANDS[i][1]};stroke:var(--paper);stroke-width:0.6"/>` : '')).join('');
-  return mapPanel('zmi', { fill: () => 'var(--q1)', aria, ptag, under, extra: contur('zmi') + centru('zmi') });
+// etichete: comunele pe harta ZMI, cartierele pe harta mărită a Iașului
+const etZ = Object.entries(U).filter(([id]) => id.startsWith('UAT')).map(([id, u]) => ({ id, lines: [['sm', u.n.replace(/ş/g, 'ș').replace(/ţ/g, 'ț').replace(/Ş/g, 'Ș').replace(/Ţ/g, 'Ț')]] }));
+const etI = Object.keys(U).filter((id) => id.startsWith('IAS')).map((id) => ({ id, lines: [['lbl', shortName(id) || U[id].n]] }));
+function harta(cells, k, ptag, aria, panel = 'zmi') {
+  const iz = panel === 'zmi' ? D.iz[k] : D.iz_ias[k];
+  const under = (iz || []).map((d, i) => (d ? `<path d="${d}" fill-rule="evenodd" style="fill:${BANDS[i][1]};stroke:var(--paper);stroke-width:0.6"/>` : '')).join('');
+  return mapPanel(panel, { fill: () => 'var(--q1)', aria, ptag, under, extra: contur(panel) + centru(panel), labels: panel === 'zmi' ? etZ : etI });
 }
+const zoom = (k1, k2, t1, t2) => fig(harta(null, k1, 'Iași, mărit · ' + t1, 'Hartă mărită pe Iași: ' + t1, 'ias'), harta(null, k2, 'Iași, mărit · ' + t2, 'Hartă mărită pe Iași: ' + t2, 'ias'));
 const km2 = (k, upto) => (D.iz_km2[k] || []).slice(0, upto).reduce((a, b) => a + b, 0);
 const g = (a, b, k1, k2, t1, t2, ar1, ar2) => fig(harta(a, k1, t1, ar1), harta(b, k2, t2, ar2));
 const comune = Object.entries(U).filter(([id]) => id.startsWith('UAT')).map(([id, u]) => ({ id, ...u }));
@@ -33,8 +38,11 @@ const tpv = (v) => (v == null ? '–' : v > 120 ? '> 120' : fmt(v, 0));
 const bic = comune.filter((u) => u.bic != null && u.bic <= 45 && u.cs != null);
 const body =
   g(D.c15, D.c15, 'cs', 'cl', 'Mașina spre centru, marți 07:30', 'Mașina, fără trafic', 'Hartă: minute cu mașina până în centru, marți la 07:30 (trafic tipic TomTom)', 'Hartă: minute cu mașina până în centru, fără trafic') + '\n' +
+  zoom('cs', 'cl', 'mașina 07:30', 'fără trafic') + '\n' +
   g(D.c1, D.c1, 'tps', 'tpd', 'Transport public spre centru, 07:00–08:00', 'Transport public din centru, 17:00–18:00', 'Hartă: minute cu transportul public până în centru, plecare între 07:00 și 08:00', 'Hartă: minute cu transportul public din centru, plecare între 17:00 și 18:00') + '\n' +
+  zoom('tps', 'tpd', 'TP 07:00–08:00', 'TP 17:00–18:00') + '\n' +
   g(D.c1, D.c1, 'bic', 'jos', 'Bicicleta (în ambele sensuri)', 'Pe jos (în ambele sensuri)', 'Hartă: minute cu bicicleta până în centru', 'Hartă: minute pe jos până în centru') + '\n' +
+  zoom('bic', 'jos', 'bicicleta', 'pe jos') + '\n' +
   legend('Minute până în Piața Unirii (sau înapoi)', BANDS.map(([, c, t]) => [sw(c), t])) + '\n' +
   notes([
     `<b>Mașina</b>, marți la 07:30: din comunele limitrofe, centrul e la ${lista(top(comune, 'cs').map((u) => `${nm(u)} ${fmt(u.cs, 0)}`))} de minute (mediana punctelor din zona construită); din ${lista([...comune].filter((u) => u.cs != null).sort((a, b) => b.cs - a.cs).slice(0, 2).map((u) => `${nm(u)} (${fmt(u.cs, 0)})`))}, cel mai departe. Traficul de dimineață lungește drumul din comune de ${fix(trafic, 2)} ori față de drumul liber; seara, din centru spre comune, ${fix(med(comune.map((u) => (u.cd && u.cl ? u.cd / u.cl : null))), 2)}.`,
