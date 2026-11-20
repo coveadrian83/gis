@@ -18,7 +18,7 @@ async function compute(file) {
     const cars = O.filter((r) => r.mode === 'car' && r.occupancy != null && !isGPS(r));
     const tp = O.filter((r) => TPM.includes(r.mode));
     D.units[u.id] = { id: u.id, n: u.n, zone: u.zone, o: O.length, d: Dd.length, t: O.length + Dd.length, po: new Set(O.map((r) => r.participant_id)).size,
-      med: median(O.map((r) => r.duration_min)), p90: quant(O.map((r) => r.duration_min), 0.9),
+      med: median(O.map((r) => r.duration_min)), p90: quant(O.map((r) => r.duration_min), 0.9), medD: median(Dd.filter((r) => !isGPS(r)).map((r) => r.duration_min)), dG: Dd.filter((r) => !isGPS(r)).length,
       car: cars.length, carP: new Set(cars.map((r) => r.participant_id)).size, occ: cars.length ? cars.reduce((a, r) => a + Math.min(r.occupancy, 5), 0) / cars.length : null,
       solo: cars.length ? cars.filter((r) => r.occupancy === 1).length / cars.length : null, kids: cars.filter((r) => String(r.stops || '').includes('escort_child')).length,
       tp: tp.length, tpShare: O.length ? tp.length / O.length : null };
@@ -26,7 +26,7 @@ async function compute(file) {
   // relații
   const rel = {};
   for (const r of rows) { const k = r.o + '>' + r.d; (rel[k] = rel[k] || []).push(r); }
-  D.rel = Object.entries(rel).map(([k, L]) => { const [o, d] = k.split('>'); return { o, d, n: L.length, p: new Set(L.map((r) => r.participant_id)).size, med: median(L.map((r) => r.duration_min)) }; })
+  D.rel = Object.entries(rel).map(([k, L]) => { const [o, d] = k.split('>'); return { o, d, n: L.length, p: new Set(L.map((r) => r.participant_id)).size, med: median(L.map((r) => r.duration_min)), p90: quant(L.map((r) => r.duration_min), 0.9) }; })
     .sort((a, b) => b.n - a.n || b.p - a.p);
   D.rows = rows; // doar în memorie, pentru grafice; nu se scrie
   return D;
