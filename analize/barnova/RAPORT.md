@@ -1,6 +1,6 @@
 # Comuna Bârnova – analiza hotărârilor Consiliului Local, 2020 – 2026
 
-*Situație la 5 noiembrie 2026. Sursa principală: Monitorul Oficial Local, [emol.ro/barnova-is](https://emol.ro/barnova-is/registru-hcl/)
+*Situație la 5 noiembrie 2026, completată pe 23 noiembrie 2026 cu răspunsul primăriei nr. 26365/20.11.2026 (secțiunea 4.4). Sursa principală: Monitorul Oficial Local, [emol.ro/barnova-is](https://emol.ro/barnova-is/registru-hcl/)
 (1.014 hotărâri: 157 în 2020, 116 în 2021, 156 în 2022, 133 în 2023, 162 în 2024, 172 în 2025, 118 în 2026 până la HCL 118/28.10.2026).*
 
 Fișiere însoțitoare:
@@ -178,7 +178,59 @@ Comuna a „înființat drumuri publice” pe teren donat sau preluat, mai ales 
 - **drumurile SC Agroindustriala Bucium SA** (HCL 140/2020 și 141/2024): 11 parcele cu folosință de drum, circa 43.000 mp;
   în 2026 s-a aprobat un avocat pentru **exproprierea unor drumuri** de utilitate publică (HCL 84/2026, max. 40.000 lei).
 
-### 4.4. Transport public (context)
+### 4.4. Stadiul investițiilor rutiere din 2026 (răspuns al primăriei, 20.11.2026)
+Primăria a răspuns la o cerere de informații publice (nr. 24384/29.10.2026) prin adresa nr. 26365/20.11.2026.
+Anexele răspunsului sunt: pagina 3 din lista de investiții 2026, un extras din contul de execuție, adresa
+compartimentului Achiziții și referatul de verificare al proiectului de trotuare. Ce arată:
+
+- **Banii.** Extrasul e din contul de execuție al secțiunii de dezvoltare, pentru sursa „integral de la buget”
+  (bugetul local), la 19.10.2026. Pentru capitolul 84 (Transporturi, Titlul XVI) s-au deschis credite de
+  **1.814.000 lei** și s-au plătit **313.742,19 lei (17 %)**. Suma plătită e aceeași cu cea din datele Forexebug
+  pentru ianuarie–iulie. Deci **între august și 19 octombrie nu s-a plătit nimic pe drumuri din bugetul local.**
+  Bugetul 2026 prevedea 9.226 mii lei investiții pe acest capitol, inclusiv Anghel Saligny, care e finanțat din
+  altă sursă și nu apare în acest extras.
+  - Pe toată secțiunea de dezvoltare din bugetul local: credite de 2.850.250 lei și plăți de 419.558,21 lei.
+    S-a încasat excedentul din 2025 (4.823.106,47 lei).
+- **Lista de investiții 2026 a fost rectificată** prin HCL 100/31.08.2026 și HCL 116/28.10.2026, nu doar prin HCL 59/2026.
+  Pozițiile rutiere (mii lei):
+
+  | Poz. | Obiectiv | Alocat 2026 | Plăți |
+  |---|---|---:|---|
+  | 2 | Lărgirea str. Sf. Ilie, sat Vișan | 1.090,00 | **nicio plată** |
+  | 3 | Execuție trotuare prin asfaltare, comuna Bârnova | 1.090,00 | **nicio plată** |
+  | 4 | Proiectare și avize pentru trotuare, Vișan, zona Mega Image | 50,00 | **nicio plată** |
+  | 5 | Reabilitare prin pietruire/plombare asfalt | 1.300,00 | nedetaliat |
+  | 6 | Modernizare drumuri de interes local, etapa 1 | 1.500,00 | nedetaliat |
+  | 7 | Modernizare drumuri, etapa 2 | 811,00 | nedetaliat |
+  | 8 | Modernizare drumuri, etapa 3 (str. Stejarului, G. E. Palade) | 150,00 | nedetaliat |
+  | 9 | **Asfaltare str. Eroilor, sat Vișan (biserică–școală)** – poziție nouă | 45,94 | nedetaliat |
+
+  Pe pagina din listă e o notă de mână a contabilității: la pozițiile 2–4 nu s-au făcut plăți, iar contabilitatea
+  „nu cunoaște stadiul investiției”.
+- **Stadiul fizic** (adresa Achiziții, Programul anual de achiziții 2026):
+
+  | Poz. PAAP | Obiectiv | Valoare estimată | Procedură | Stadiu |
+  |---|---|---:|---|---|
+  | 46 | Proiectare trotuare Mega Image și alte servicii (fonduri grădinița Vișan) | 82.644 lei | cumpărare directă | **proiectare** |
+  | 61 | Execuție construire trotuare în comuna Bârnova | 900.000 lei | cumpărare directă | **autorizare** |
+  | 58 | Proiect și execuție lărgire str. Sf. Ilie, sat Vișan | 900.000 lei | cumpărare directă | **intabulare la OCPI** |
+
+  Niciunul dintre cele trei obiective nu era în execuție în noiembrie 2026. Execuția trotuarelor (900.000 lei,
+  estimat) și lărgirea străzii Sf. Ilie (900.000 lei) apar în program ca **achiziții directe**. Merită verificat dacă
+  valorile fără TVA se încadrează în pragul legal al cumpărării directe pentru lucrări (Legea 98/2016) și dacă
+  lucrările n-au fost împărțite pe obiective ca să rămână sub prag.
+- **Proiectul de trotuare** (referat de verificare A4, B2, D; verificator atestat Grădinariu T. Ioan; proiectant
+  SC D&G Print Line SRL; faza PTH + DDE; prezentat spre verificare pe 08.12.2025):
+  „Construire trotuare, str. Sf. Ilie, str. Regele Ferdinand I, str. Sf. Ap. Petru și Pavel”, **2.426 m** în total:
+  - str. Sf. Ilie (Vișan): trotuar pe dreapta, km 0+000 – 0+735, **735 m**;
+  - str. Sf. Ap. Petru și Pavel (Păun): **628 m**, pe tronsoane de 280, 170, 150 și 28 m, pe ambele părți;
+  - str. Regele Ferdinand I (Păun): trotuar pe dreapta, km 0+000 – 1+063, **1.063 m**;
+  - structură: 5 cm nisip, 10 cm beton C30/37, 3 cm mixtură asfaltică BA8; 75 m de taluz armat; 4 podețe reparate.
+
+  Satul pentru str. Sf. Ap. Petru și Pavel și Regele Ferdinand I e dedus din HCL 92/2023, 143/2024 și 68/2025.
+  Proiectul există de la sfârșitul lui 2025, dar în noiembrie 2026 lucrarea era încă în autorizare.
+
+### 4.5. Transport public (context)
 - Bârnova e membru fondator al Asociației Metropolitane de Transport Public Iași (HCL 122/2020). AMTPI a fost mandatată
   pentru transportul local (HCL 119/2022), iar gestiunea a fost delegată către CTP Iași (HCL 148/2022 și 162/2024).
   Facilități de transport în comun: HCL 32/2024.
@@ -190,7 +242,9 @@ Comuna a „înființat drumuri publice” pe teren donat sau preluat, mai ales 
 ---
 
 ## Ce ar mai trebui făcut
-1. De cerut de la primărie (Legea 544/2001): **contul de execuție 2025**, anexele HCL 7/2023 și 31/2024 (lista
+1. De cerut de la primărie (Legea 544/2001): **contul de execuție 2025**, contul de execuție 2026 complet
+   (inclusiv sursa din care se plătește Anghel Saligny), HCL 100/2026 și 116/2026 cu anexele, procedurile de
+   cumpărare directă pentru trotuare și pentru str. Sf. Ilie, anexele HCL 7/2023 și 31/2024 (lista
    străzilor Anghel Saligny), anexa la HCL 97/2026 (cei 3.187 m), bugetul rectificat final al fiecărui an și planșele PUZ.
 2. De localizat cadastral PUZ-urile „nespecificat”, pentru o hartă pe sate. Se pot integra cu harta PUZ existentă în proiect.
 3. De verificat cele două PUZ-uri „extravilan Municipiul Iași” aprobate de CL Bârnova (HCL 87/2023 și 27/2024).
